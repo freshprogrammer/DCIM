@@ -482,7 +482,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note = "These badges need to be verified in badge list and badge server.";
+		$note = "These badges need to be verified in badge server.";
 		CreateReport($reportTitle,$shortResult,$longResult,$note);
 	}
 	
