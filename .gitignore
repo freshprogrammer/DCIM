@@ -1,0 +1,5 @@
+# User-specific files
+*.sql
+*.xcf
+*Thumbs.db
+dcim/_customization.php
