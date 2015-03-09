@@ -83,7 +83,13 @@
 	
 	//this edits cookies which should be done in the header
 	$permissionLevel = UpdatePermissionLevel();
-	
+
+
+	if(UserHasReadPermission())
+		BuildDeviceModelArrays();
+	 
+	if(UserHasWritePermission())
+		ProcessFormActions();
 ?>
 <head>
 
@@ -93,12 +99,6 @@
 <link rel="stylesheet" href="dcimStyles.css">
 
 <?php 
-	
-	if(UserHasReadPermission())
-	    BuildDeviceModelArrays();
-	    
-	if(UserHasWritePermission())
-	    ProcessFormActions();
 	
 	//START PAGE CODE **************************************************************************************************
 	//TODO Move this js to its own file
