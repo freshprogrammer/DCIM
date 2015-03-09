@@ -3,3 +3,4 @@
 *.xcf
 *Thumbs.db
 dcim/_customization.php
+notes/*
