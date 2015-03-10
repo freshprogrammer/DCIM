@@ -575,8 +575,9 @@
 	}
 	function UserHasDevPermission()
 	{
+		//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
 	    global $userID;
-		return (int)$userID==1;//dcrafts only
+		return (int)$userID==0;//admin only
 	}
 	function DescribeUserPermissionLevel($permission, $simple=false, $showVal=false)
 	{

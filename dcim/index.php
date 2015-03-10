@@ -258,6 +258,7 @@
 	}
 	if(UserHasDevPermission())
 	{
+		//this is only setup for local phpmyadmin access 
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 		$menuItems .= "	<a href='/phpmyadmin/' target='_blank'>PHPMyAdmin</a>\n";
 		$menuItems .= "</td>\n";
