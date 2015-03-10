@@ -3649,15 +3649,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{			
-			//location search for locations to append to badge visit info
-			
 			//hack to limit badges to site 0 (IRV01)
 			$searchSiteID = 0;
 			
+			//location search for locations to append to badge visit info
 			$locQuery = "SELECT l.siteid, CAST(l.colo AS UNSIGNED) AS colo, l.name 
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-			WHERE l.siteid=? AND d.hno=? AND d.type IN ('C','F','H')";
+			WHERE l.siteid=? AND d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
 		
 			if (!($stmt = $mysqli->prepare($locQuery)))
 			{
