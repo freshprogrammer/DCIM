@@ -220,5 +220,15 @@
 		}
 		return $grandTotal;
 	}
+	
+	function outputCSV($data) 
+	{
+		$output = fopen("php://output", "w");
+		foreach ($data as $row) 
+		{
+			fputcsv($output, $row); // here you can change delimiter/enclosure
+		}
+		fclose($output);
+	}
 
 ?>
