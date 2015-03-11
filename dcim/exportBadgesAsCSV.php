@@ -25,7 +25,7 @@
 		$result = array();
 		
 		//select empty as customer to keep return results to match search query
-		$query = "SELECT cur.hno, cur.cno, cur.name AS customer, cur.name, cur.badgeno, cur.issue, cur.hand, GROUP_CONCAT(cur.fullloc SEPARATOR ', ') AS alllocs
+		$query = "SELECT cur.hno, cur.cno, cur.customer, cur.name, cur.badgeno, cur.issue, cur.hand, GROUP_CONCAT(cur.fullloc SEPARATOR ', ') AS alllocs
 						FROM (SELECT b.badgeid, c.hno, c.cno, c.name AS customer, b.name, b.badgeno, b.issue, b.hand,
 							CONCAT(s.name,' CA',CAST(l.colo AS UNSIGNED),' ',l.name) AS fullloc
 							FROM dcim_badge AS b
