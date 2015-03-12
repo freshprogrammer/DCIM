@@ -1,0 +1,13 @@
+<?php 
+	//customazation data
+	$siteName = "DCIM Name";
+	$pageTitle = "DCIM Title";
+	$versionNote = "note";
+	//$versionNote = "Latest feature: Customer link";
+
+	//DB connect
+	$db_host = "localhost";
+	$db_user = "root";
+	$db_password = "superScurePswd1";
+	$database = "dcimdb";
+?>
