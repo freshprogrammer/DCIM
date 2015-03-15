@@ -1184,7 +1184,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						else if(strcmp($cNo,$cNoDB)==0)
 							$errorMessage[] = "Error: Existing Customer with C# found. input(C$cNo) found(C$cNoDB).";
 						else
-							$errorMessage[] = "Unknown Error matching H# & H# input(H$hNo,C$cNo) found(H$hNoDB,C$cNoDB).";
+							$errorMessage[] = "Unknown Error matching H# & C# input(H$hNo,C$cNo) found(H$hNoDB,C$cNoDB).";
 					}
 					
 				}
