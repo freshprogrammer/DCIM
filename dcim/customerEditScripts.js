@@ -916,7 +916,6 @@ function SaveLocation()
 	/*
 	var add = document.getElementById("EditConnection_action").value == "Connection_Add";
 	document.getElementById("EditConnectionMsg").className = "hidden";
-
 	//all data is from selects (or blah notes) data cant be wrong unless hacking
 	if(document.getElementById("EditConnection_childdeviceid").value.length < 1 || isNaN(document.getElementById("EditConnection_childdeviceid").value)){ 
 		errorMsg = "Invalid Child Device";
@@ -940,7 +939,6 @@ function SaveLocation()
 	}
 	else
 		valid = true;
-
 	if(add && valid)
 	{
 		var cancel = confirm("Are you sure you want to create this Connection?") == false;
@@ -1117,41 +1115,42 @@ function DeleteSubnet()
 		document.getElementById("EditSubnetForm").submit();
 	}
 }
-function QARecord(table,key, formAction, instanceID)
+function QARecord(table, key, formAction, instanceID)
 {
 	var cont = confirm("Are you sure this data is correct");
-	if(!cont)return;
-	
-    var form = document.createElement("form");
-    var action = document.createElement("input"); 
-    var element1 = document.createElement("input"); 
-    var element2 = document.createElement("input");  
-    var instanceIDInput = document.createElement("input");  
+	if (!cont)
+		return;
 
-    form.method = "POST";
-    form.action = formAction;   
+	var form = document.createElement("form");
+	var actionInput = document.createElement("input");
+	var tableInput = document.createElement("input");
+	var idInput = document.createElement("input");
+	var instanceIDInput = document.createElement("input");
 
-    action.name="action";
-    action.value="QA_Record";
-    action.hidden=true;
-    form.appendChild(action);  
+	form.method = "POST";
+	form.action = formAction;
 
-    element1.name="table";
-    element1.value=table;
-    element1.hidden=true;
-    form.appendChild(element1);
+	actionInput.name = "action";
+	actionInput.value = "QA_Record";
+	actionInput.hidden = true;
+	form.appendChild(actionInput);
 
-    element2.name="id";
-    element2.value=key;
-    element2.hidden=true;
-    form.appendChild(element2);
+	tableInput.name = "table";
+	tableInput.value = table;
+	tableInput.hidden = true;
+	form.appendChild(tableInput);
 
-    instanceIDInput.name="page_instance_id";
-    instanceIDInput.value=instanceID;
-    instanceIDInput.hidden=true;
-    form.appendChild(instanceIDInput);
+	idInput.name = "id";
+	idInput.value = key;
+	idInput.hidden = true;
+	form.appendChild(idInput);
 
-    document.body.appendChild(form);
+	instanceIDInput.name = "page_instance_id";
+	instanceIDInput.value = instanceID;
+	instanceIDInput.hidden = true;
+	form.appendChild(instanceIDInput);
 
-    form.submit();
+	document.body.appendChild(form);
+
+	form.submit();
 }

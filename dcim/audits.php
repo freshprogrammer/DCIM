@@ -30,8 +30,21 @@
     {
         global $pageSubTitle;
         $pageSubTitle = "Data Audits";
+
+        //Data functions
+        echo "<div class=\"panel\">\n";
+        echo "<div class=\"panel-header\">Data Functions</div>\n";
+        echo "<div class=\"panel-body\">\n\n";
+
+        echo "<a href='../dcim/exportBadgesAsCSV.php'>Export Active Badge List as CSV</a>";
         
-		//top panel - cust info / form / search fail 
+        echo "</div>\n";//end panel and panel body
+        echo "</div>\n\n";
+        echo "<BR>\n";
+        
+        
+        
+		//data panel - cust info / form / search fail 
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Audits</div>\n";
 		echo "<div class=\"panel-body\">\n\n";
@@ -47,7 +60,6 @@
     	//Check_SwitchIsMainDeviceOnDevicePortRecords();
     	
 		
-		
 		//generic stuff
 		Check_BadgesToQA();echo "</BR></BR>\n";
 		Check_CustomerToQA();echo "</BR></BR>\n";
@@ -59,6 +71,7 @@
 		echo "</div>\n\n";
 		echo "<BR>\n";
     	
+		
 		//admin only stuff - just because its stuff they cant fix
 	    if(UserHasAdminPermission())
 	    {
@@ -482,7 +495,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note = "These badges need to be verified in badge list and badge server.";
+		$note = "These badges need to be verified in badge server.";
 		CreateReport($reportTitle,$shortResult,$longResult,$note);
 	}
 	
