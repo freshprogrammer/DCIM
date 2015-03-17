@@ -3134,7 +3134,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
         //get device info
     	$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, d.locationid, l.colo, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
             FROM dcim_device AS d
-            	INNER JOIN dcim_customer AS c ON c.hno=d.hno
+            	LEFT JOIN dcim_customer AS c ON c.hno=d.hno
             	LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
     			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
             WHERE deviceid=? 
