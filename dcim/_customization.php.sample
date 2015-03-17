@@ -3,7 +3,6 @@
 	$siteName = "DCIM Name";
 	$pageTitle = "DCIM Title";
 	$versionNote = "note";
-	//$versionNote = "Latest feature: Customer link";
 
 	//DB connect
 	$db_host = "localhost";
