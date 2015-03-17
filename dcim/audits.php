@@ -68,13 +68,13 @@
     	Check_CircuitInactiveWithLoad();echo "\n";
     	
     	echo "</div>\n";//end panel and panel body
-		echo "</div>\n\n";
-		echo "<BR>\n";
+		echo "</div>\n";
     	
 		
 		//admin only stuff - just because its stuff they cant fix
 	    if(UserHasAdminPermission())
 	    {
+			echo "<BR>\n\n";
     		echo "<div class=\"panel\">\n";
     		echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
     		echo "<div class=\"panel-body\">\n\n";
@@ -88,10 +88,11 @@
         	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "</BR></BR>\n";
         	
     		Check_BadgesWithoutCustomers();echo "</BR></BR>\n";
-    		Check_DevicesWithoutCustomers();echo "\n";
+    		Check_DevicesWithoutCustomers();echo "</BR></BR>\n";
+    		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
         	
         	echo "</div>\n";//end panel and panel body
-    		echo "</div>\n\n";
+    		echo "</div>\n";
 	    }
     }
     
@@ -554,7 +555,7 @@
 
 		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model
 			FROM dcim_device AS  d
-				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE c.name IS NULL
 			ORDER BY d.name";
 		
@@ -598,6 +599,73 @@
 			}
 			$longResult.= "</table>\n";
 		
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicePortsWithoutCustomersOrDevices()
+	{
+		global $mysqli;
+	
+		$reportTitle = "Device Ports Without Customers or Devices";
+		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
+	
+		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
+			FROM dcim_deviceport AS  dp
+				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
+				LEFT JOIN dcim_customer AS c ON dp.hno=c.hno
+			WHERE c.name IS NULL
+			ORDER BY d.name,d.member,dp.pic,dp.port";
+	
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_DevicePortsLinkedToInvalidCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return -1;
+		}
+	
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName, $member, $model, $pic, $port, $type);
+		$count = $stmt->num_rows;
+	
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			//show results
+			$longResult.= "<table class='data-table'>\n";
+			$longResult.= "<tr>\n";
+			//headers
+			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
+			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
+			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
+			$longResult.= "</tr>\n";
+	
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+	
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$portFullName = FormatPort($member, $model, $pic, $port, $type);
+	
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($portFullName)."</td>\n";
+				$longResult.= "</tr>";
+			}
+			$longResult.= "</table>\n";
+	
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Errors",3);
 		}
