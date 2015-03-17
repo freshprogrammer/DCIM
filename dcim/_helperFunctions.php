@@ -1,4 +1,6 @@
 <?php 
+//these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
+
 	function SQLIConnect()
 	{
 		global $mysqli;

@@ -5662,5 +5662,131 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "</div>\n";
 		return $count;
 	}
-	
+
+	function ChangeHNo($old, $new, $renameDevices)
+	{
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		
+		
+		//maybe should test old here - not explicitly necisary but better to be safe
+		$continueWithChange = (ValidHNo($new));
+		
+		if($continueWithChange)
+		{
+			//check for exising new hno conflict
+			// - NOTE: this doesnt actualy check if the old HNO exists - not 
+			$query = "SELECT hno FROM dcim_customer WHERE hno=?";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+			{
+				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-1 (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{
+				$stmt->bind_Param('s', $new);
+				$stmt->execute();
+				$stmt->store_result();
+				$custCount = $stmt->num_rows;
+				$continueWithChange = $custCount==0;
+					
+				if(!$continueWithChange)
+				{
+					//build error msg
+					$stmt->bind_result($hNoDB);
+					$stmt->fetch();
+			
+					$errorMessage[] = "Error: Existing Customer with H# found. input(H$new) found(H$hNoDB).";	
+				}
+				$stmt->close();
+			}
+		}
+		
+		//proceed with changes
+		if($continueWithChange)
+		{
+			//update to new in cust, badge, device, deviceport
+			// - NOTE: the update of the root key value is changed in a seperate cmd to ensure all depencancies are changed first
+			$query1 = "UPDATE dcim_customer AS c
+						INNER JOIN dcim_badge AS b ON c.hno=b.hno
+						INNER JOIN dcim_device AS d ON  c.hno=d.hno
+						INNER JOIN dcim_deviceport AS dp ON c.hno=dp.hno
+					SET b.hno=?, d.hno=?, dp.hno=?
+					WHERE c.hno=?";
+			$query2 = "UPDATE dcim_customer AS c
+					SET c.hno=?
+					WHERE c.hno=?";
+
+			if (!($stmt1 = $mysqli->prepare($query1)))
+			{
+				$continueWithChange = false;
+				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-2a (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else if (!($stmt2 = $mysqli->prepare($query2)))
+			{
+				$continueWithChange = false;
+				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-2b (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{//                    nnno
+				$stmt1->bind_Param('iiii', $new,$new,$new,$old);
+				if (!$stmt1->execute())//execute
+				{
+					//failed (errorNo-error)
+					$continueWithChange = false;
+					$errorMessage[] = "Failed to change HNo ($new,$old) (" . $stmt1->errno . "-" . $stmt1->error . ") ";
+				}
+				else
+				{
+					$affectedCount = $stmt1->affected_rows;
+					$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount rows.";
+				}
+				$stmt1->close();
+				
+				if($continueWithChange)
+				{//                     no
+					$stmt2->bind_Param('ii', $new,$old);
+					if (!$stmt2->execute())//execute
+					{
+						//failed (errorNo-error)
+						$continueWithChange = false;
+						$errorMessage[] = "Failed to change HNo ($new,$old) (" . $stmt2->errno . "-" . $stmt2->error . ") ";
+					}
+					else
+					{
+						$affectedCount = $stmt2->affected_rows;
+						$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount rows.";
+					}
+					$stmt2->close();
+				}
+			}
+			
+
+			if($continueWithChange && $renameDevices)
+			{
+				//update device names to match
+				$query = "UPDATE dcim_device AS d
+					SET d.name=REPLACE(d.name, '$old-', '$new-')
+					WHERE d.hno=?";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-3 (" . $mysqli->errno . ") " . $mysqli->error;
+				}
+				else
+				{//                    n
+					$stmt->bind_Param('i', $new);
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to change HNo / rename devices ($new,$old) (" . $stmt->errno . "-" . $stmt->error . ") ";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) - Renamed $affectedCount devices.";
+					}
+				}
+			}
+		}
+	}
 ?>
