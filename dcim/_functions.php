@@ -5709,9 +5709,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//update to new in cust, badge, device, deviceport
 			// - NOTE: the update of the root key value is changed in a seperate cmd to ensure all depencancies are changed first
 			$query1 = "UPDATE dcim_customer AS c
-						INNER JOIN dcim_badge AS b ON c.hno=b.hno
-						INNER JOIN dcim_device AS d ON  c.hno=d.hno
-						INNER JOIN dcim_deviceport AS dp ON c.hno=dp.hno
+						LEFT JOIN dcim_badge AS b ON c.hno=b.hno
+						LEFT JOIN dcim_device AS d ON  c.hno=d.hno
+						LEFT JOIN dcim_deviceport AS dp ON c.hno=dp.hno
 					SET b.hno=?, d.hno=?, dp.hno=?
 					WHERE c.hno=?";
 			$query2 = "UPDATE dcim_customer AS c
@@ -5740,7 +5740,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else
 				{
 					$affectedCount = $stmt1->affected_rows;
-					$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount rows.";
+					$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount detail rows.";
 				}
 				$stmt1->close();
 				
@@ -5756,7 +5756,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else
 					{
 						$affectedCount = $stmt2->affected_rows;
-						$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount rows.";
+						if($affectedCount!=1)
+							$errorMessage[] = "Failed to change HNo ($new,$old) Went through but processed $affectedCount rows";
+						else
+							$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) affecting $affectedCount core rows.";
 					}
 					$stmt2->close();
 				}

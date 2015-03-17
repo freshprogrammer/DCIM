@@ -620,7 +620,7 @@
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON dp.hno=c.hno
-			WHERE c.name IS NULL
+			WHERE c.name IS NULL OR dp.hno!=d.hno
 			ORDER BY d.name,d.member,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
