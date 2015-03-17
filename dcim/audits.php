@@ -87,7 +87,8 @@
         	$lineCount = CountLinesInDir($output);
         	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "</BR></BR>\n";
         	
-    		Check_BadgesWithoutCustomers();echo "\n";
+    		Check_BadgesWithoutCustomers();echo "</BR></BR>\n";
+    		Check_DevicesWithoutCustomers();echo "\n";
         	
         	echo "</div>\n";//end panel and panel body
     		echo "</div>\n\n";
@@ -97,8 +98,9 @@
     function Check_CircuitInactiveWithLoad()
     {
 		global $mysqli;
-		
-        $reportTitle = "Circuits off but still reporting load";
+
+		$reportTitle = "Circuits off but still reporting load";
+        $reportNote = "";
         
         //could properly sort circuits, but meh
         $query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload FROM dcim_power AS p 
@@ -166,7 +168,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		CreateReport($reportTitle,$shortResult,$longResult,"");
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
     }
     
     function Check_VLANLinkedToDisabledPort()
@@ -174,6 +176,7 @@
         global $mysqli;
 		
         $reportTitle = "VLAN Linked to Disabled Port";
+		$reportNote = "These are VLANs linked to ports marked diabled.";
         
         $query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
         		FROM dcim_portvlan AS pv
@@ -241,7 +244,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		CreateReport($reportTitle,$shortResult,$longResult,"");
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
     }
 	
 	function Check_CustomersWithoutBadges()
@@ -275,6 +278,7 @@
 		global $mysqli;
 		
         $reportTitle = "Badges Without Customers";
+		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
         
         $query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
     		FROM dcim_badge AS b 
@@ -333,8 +337,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
-		CreateReport($reportTitle,$shortResult,$longResult,$note);
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_ColoPatch0()
@@ -342,6 +345,7 @@
 		global $mysqli;
 		
         $reportTitle = "Colos with patch 0";
+		$reportNote= "These are impossible connections left over from old system.";
         
         //could properly sort circuits, but meh
         $query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, l.colo, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
@@ -415,8 +419,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note= "These are impossible connections left over from old system.";
-		CreateReport($reportTitle,$shortResult,$longResult,$note);
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesToQA()
@@ -424,6 +427,7 @@
 		global $mysqli;
 		
         $reportTitle = "Badges Pending QA";
+		$reportNote = "These badges need to be verified in badge server.";
         
         //could properly sort circuits, but meh
         $query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate 
@@ -495,8 +499,7 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note = "These badges need to be verified in badge server.";
-		CreateReport($reportTitle,$shortResult,$longResult,$note);
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_CustomerToQA()
@@ -504,6 +507,7 @@
 		global $mysqli;
 		
         $reportTitle = "Customers Pending QA";
+		$reportNote = "These just  need the name, status, and account numbers of the customer validated.";
         
         //could properly sort circuits, but meh
         $query = "SELECT c.name, c.hno, c.cno, c.note, c.status, c.edituser, c.editdate, c.qauser, c.qadate 
@@ -573,24 +577,77 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		
-		$note = "These just  need the name, status, and account numbers of the customer validated.";
-		CreateReport($reportTitle,$shortResult,$longResult,$note);
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_DevicesWithoutCustomers()
 	{
-		$query = "SELECT c.name AS customer, c.hno, d.name AS name 
-		FROM dcim_device AS  d
-			LEFT JOIN dcim_customer AS c ON c.hno=d.hno 
-		WHERE d.name IS NULL 
-		ORDER BY c.name";
+
+		global $mysqli;
 		
-		echo "Check_DevicesWithoutCustomers() - ";
+		$reportTitle = "Devices Without Customers";
+		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
+
+		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model
+			FROM dcim_device AS  d
+				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+			WHERE c.name IS NULL
+			ORDER BY d.name";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_DevicesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return -1;
+		}
+		
+		//$stmt->bind_Param('s', $input);
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			//show results
+			$longResult.= "<table class='data-table'>\n";
+			$longResult.= "<tr>\n";
+			//headers
+			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
+			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
+			$longResult.= "</tr>\n";
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
+		
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "</tr>";
+			}
+			$longResult.= "</table>\n";
+		
+		
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
-	
-	
 	
 	function Check_SwitchIsMainDeviceOnDevicePortRecords()
 	{
