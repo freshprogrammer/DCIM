@@ -31,12 +31,13 @@
         global $pageSubTitle;
         $pageSubTitle = "Data Audits";
 
-        //Data functions
+        //Audit functions
         echo "<div class=\"panel\">\n";
-        echo "<div class=\"panel-header\">Data Functions</div>\n";
+        echo "<div class=\"panel-header\">Audit Functions</div>\n";
         echo "<div class=\"panel-body\">\n\n";
 
-        echo "<a href='../dcim/exportBadgesAsCSV.php'>Export Active Badge List as CSV</a>";
+        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./exportBadgesAsCSV.php\"'>Export Active Badge List as CSV</button> ";
+        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
         
         echo "</div>\n";//end panel and panel body
         echo "</div>\n\n";
