@@ -3825,11 +3825,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else if($qaStatus==0)
 		{
-		    $resultHTML .= "<font color='green'>Good<font>";
+		    $resultHTML .= "<font color='green'>Good</font>";
 		}
 		else if($qaStatus==2)
 		{
-		    $resultHTML .= "<font color='black'>Pending<font>";
+		    $resultHTML .= "<font color='black'>Pending</font>";
 		}
 	    if($cell)
 		    $resultHTML .= "</td>\n";
