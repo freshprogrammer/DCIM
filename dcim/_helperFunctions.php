@@ -209,10 +209,10 @@
 		echo "<span class='tableTitle'>$title</span>\n";
 		if($enableSwitcher)
 		    echo " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
-		echo "</BR>\n";
+		echo "<BR>\n";
 		
 		if(strlen($note)>0)
-		    echo "$note</BR>\n";
+		    echo "$note<BR>\n";
 		
 		if($enableSwitcher)
 		{

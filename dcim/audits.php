@@ -51,7 +51,7 @@
 		echo "<div class=\"panel-body\">\n\n";
 		
 	
-    	//echo "Systems Check...</BR></BR>";
+    	//echo "Systems Check...<BR><BR>";
     	
     	//Check_CustomersWithoutDevices();
     	//Check_CustomersWithoutBadges();
@@ -62,10 +62,10 @@
     	
 		
 		//generic stuff
-		Check_BadgesToQA();echo "</BR></BR>\n";
-		Check_CustomerToQA();echo "</BR></BR>\n";
-		Check_ColoPatch0();echo "</BR></BR>\n";
-    	Check_VLANLinkedToDisabledPort();echo "</BR></BR>\n";
+		Check_BadgesToQA();echo "<BR><BR>\n";
+		Check_CustomerToQA();echo "<BR><BR>\n";
+		Check_ColoPatch0();echo "<BR><BR>\n";
+    	Check_VLANLinkedToDisabledPort();echo "<BR><BR>\n";
     	Check_CircuitInactiveWithLoad();echo "\n";
     	
     	echo "</div>\n";//end panel and panel body
@@ -82,14 +82,14 @@
         	
         	$output = "";
         	$recCount = CountDBRecords($output);
-        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "</BR></BR>\n";
+        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "<BR><BR>\n";
         	
         	
         	$lineCount = CountLinesInDir($output);
-        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "</BR></BR>\n";
+        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "<BR><BR>\n";
         	
-    		Check_BadgesWithoutCustomers();echo "</BR></BR>\n";
-    		Check_DevicesWithoutCustomers();echo "</BR></BR>\n";
+    		Check_BadgesWithoutCustomers();echo "<BR><BR>\n";
+    		Check_DevicesWithoutCustomers();echo "<BR><BR>\n";
     		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
         	
         	echo "</div>\n";//end panel and panel body
@@ -128,10 +128,9 @@
 		//data title
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='data-table-subheadercell'>Location</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Panel</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Circuit</th>\n";
@@ -198,10 +197,9 @@
 		//data title
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Status</th>\n";
@@ -250,7 +248,7 @@
 		
 		echo "Check_CustomersWithoutBadges() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_CustomersWithoutDevices()
@@ -263,7 +261,7 @@
 		
 		echo "Check_CustomersWithoutDevices() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_BadgesWithoutCustomers()
@@ -294,10 +292,9 @@
 		//data title
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Name</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Badgeno</th>\n";
@@ -362,10 +359,9 @@
 		//data title
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>Location</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>Device</th>\n";
@@ -433,10 +429,9 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>Name&#x25B2;</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>Badge#</th>\n";
@@ -504,10 +499,9 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>H#</th>\n";
 			$longResult.= "<th class='date-table-subheadercell'>C#</th>\n";
@@ -575,10 +569,9 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
 			$longResult.= "</tr>\n";
@@ -639,10 +632,9 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
+			//show results - headers
 			$longResult.= "<table class='data-table'>\n";
 			$longResult.= "<tr>\n";
-			//headers
 			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
 			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
@@ -681,7 +673,7 @@
 	{
 		echo "Check_SwitchIsMainDeviceOnDevicePortRecords() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_DeviceWithInvalidLocation()
@@ -694,7 +686,7 @@
 		</script>
 		<a onclick="if(active){document.getElementById('stuffID').className = 'show'; active=false;}else  {document.getElementById('stuffID').className = 'hide';active = true;}" href="#">Morer/Lesser</a>
 		*/
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_MultiplePortConnections()

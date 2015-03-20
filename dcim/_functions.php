@@ -2815,7 +2815,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else 
 		{
 	        //TODO fix this to say something better - some locations dont have units or no devices
-            echo "User not Found.\n";
+            echo "User not Found\n";
 		}
 		echo "</div>\n";
 		echo "</div>\n\n";
@@ -5560,17 +5560,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function PowerAuditPage()
+	function PowerAuditPanel($pa_siteid,$pa_room,$pa_panel)
 	{
 		global $mysqli;
 
-		//TODO filter this by siteid 
 		//TODO show customer or device per circuit
 		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid 
+				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
+			WHERE s.siteid=? AND l.colo=? AND p.panel=?
 			GROUP BY p.panel, p.circuit
 			ORDER BY l.colo, LPAD(p.panel, 4, '0'),p.circuit % 2 = 0, CAST(p.circuit AS UNSIGNED)";
 		
@@ -5579,7 +5579,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//TODO handle errors better
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
-		
+
+		$stmt->bind_Param('iss', $pa_siteid,$pa_room,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
@@ -5588,18 +5589,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
-		echo "Power Audit list.\n";
+		echo "Power Audit list for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
 		echo "</div>\n";
 		
 		echo "<div class='panel-body'>\n\n";
 		if($count>0)
 		{
 			//show results
-
-			echo "<span class='tableTitle'>Ports</span>\n";
-			//edit button
-			
-			echo "<BR>";
+			echo "<span class='tableTitle'>Circuits</span><BR>\n";
 			echo "<table class='data-table'>\n";
 			echo "<tr>";
 			//headers
@@ -5614,21 +5611,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//list result data
 			$oddRow = false;
-			$lastColo = "pie";
 			while ($stmt->fetch()) 
 			{
                 $fullLocationName = FormatLocation($site, $colo, $location);
                 
-				if($colo!=$lastColo)
-				{
-					//new colo - colo header
-					echo "<tr>";
-					echo "<th colspan=9 class='date-table-subheadercell'>CA#$colo</th>";
-					echo "</tr>";
-					$oddRow = false;
-				}
-				$lastColo= $colo;
-			
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
@@ -5653,10 +5639,75 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</tr>";
 			}
 			echo "</table>";
-			echo "<BR>";
 		}
 		else
-			echo "No Power data found<BR>";
+			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>";
+						
+		echo "</div>\n";
+		echo "</div>\n";
+		return $count;
+	}
+	
+	function PowerAuditPanelList()
+	{
+		global $mysqli;
+		
+		$query = "SELECT s.name,s.siteid, l.colo, p.panel
+			FROM dcim_power AS p
+				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
+				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			GROUP BY l.siteid, l.colo, p.panel
+			ORDER BY s.name, l.colo, p.panel";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			//TODO handle errors better
+			echo "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($site,$siteID, $colo, $panel);
+		$count = $stmt->num_rows;
+		
+		
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>\n";
+		echo "Power Panel list\n";
+		echo "</div>\n";
+		
+		echo "<div class='panel-body'>\n\n";
+		if($count>0)
+		{
+			//show results
+			echo "<span class='tableTitle'>Panels</span><BR>\n";
+			echo "<table class='data-table'>\n";
+			echo "<tr>";
+			//headers
+			echo "<th class='date-table-subheadercell'>Site</th>";
+			echo "<th class='date-table-subheadercell'>CA#</th>";
+			echo "<th class='date-table-subheadercell'>Panel</th>";
+			echo "</tr>";
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+                $oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				echo "<tr class='$rowClass'>";
+				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
+				echo "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+				echo "</tr>";
+			}
+			echo "</table>";
+		}
+		else
+			echo "No Power panel data found<BR>";
 						
 		echo "</div>\n";
 		echo "</div>\n";
