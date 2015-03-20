@@ -56,7 +56,7 @@
 	$chassisnameInput = GetInput("chassisname");
 	$deviceIDInput = GetInput("deviceid");
 	$locationIDInput = GetInput("locationid");
-	$userIDIDInput = GetInput("userid");
+	$userIDInput = GetInput("userid");
 	$loc = GetInput("loc");
 	$row = GetInput("row");
 	$ca = GetInput("ca");
@@ -344,8 +344,7 @@
 			$searchPlaceHolders[] = "e.g. Device Name";
 			$searchPlaceHolders[] = "e.g. Badge Holder";
 			$searchPlaceHolders[] = "e.g. Location Name";
-			shuffle($searchPlaceHolders);
-			$placeholder = $searchPlaceHolders[0];
+			$placeholder = $searchPlaceHolders[array_rand($searchPlaceHolders)];
 		}
 
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item'  align='right''>\n";
@@ -456,9 +455,9 @@
 		{
 			ShowLocationPage($locationIDInput);
 		}
-		else if(strlen($userIDIDInput) > 0)
+		else if(strlen($userIDInput) > 0)
 		{
-			ShowUsersPage($userIDIDInput);
+			ShowUsersPage($userIDInput);
 		}
     	else if(isset($dbChecksPage) && $dbChecksPage)
     	{
