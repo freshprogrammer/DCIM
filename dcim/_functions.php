@@ -3621,10 +3621,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{			
-			//hack to limit badges to site 0 (IRV01)
+			//hack to limit badges to site 0
 			$searchSiteID = 0;
 			
-			//location search for locations to append to badge visit info
+			//location search for locations to append to badge visit info - this is outdated and not used any more anyways - delete this
 			$locQuery = "SELECT l.siteid, CAST(l.colo AS UNSIGNED) AS colo, l.name 
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
@@ -3651,14 +3651,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if(!$first) $customerLocations .= " & ";
 					$first = false;
 					
-					$customerLocations .= $colo;
-					if($siteID==0)
-					{ 
-						//weird  space vs period naming on colo 3 and 5 in IRV01 - IE CA4.10.10 vs CA5 J3
-						if($colo==3 || $colo==5)$customerLocations .= " ";
-						else $customerLocations .= ".";
-					}
-					$customerLocations .= $locationName;
+					$customerLocations .= $colo." ".$locationName;
 				}
 			}
 			
@@ -3780,11 +3773,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else if($qaStatus==0)
 		{
-		    $resultHTML .= "<font color='green'>Good<font>";
+		    $resultHTML .= "<font color='green'>Good</font>";
 		}
 		else if($qaStatus==2)
 		{
-		    $resultHTML .= "<font color='black'>Pending<font>";
+		    $resultHTML .= "<font color='black'>Pending</font>";
 		}
 	    if($cell)
 		    $resultHTML .= "</td>\n";
@@ -4384,10 +4377,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			if($siteID==0)
-				$searchTitle = "IRV01:";
-			else
-				$searchTitle = "SITEID#$siteID:";
+			$searchTitle = "SITEID#$siteID:";
 			
 			if(strlen($row) > 0)
 				$searchTitle = $searchTitle." Row ".substr($row,0,2). " ";
