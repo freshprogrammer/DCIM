@@ -31,12 +31,18 @@
         global $pageSubTitle;
         $pageSubTitle = "Data Audits";
 
-        //Data functions
+        //Audit functions
         echo "<div class=\"panel\">\n";
-        echo "<div class=\"panel-header\">Data Functions</div>\n";
+        echo "<div class=\"panel-header\">Audit Functions</div>\n";
         echo "<div class=\"panel-body\">\n\n";
 
-        echo "<a href='../dcim/exportBadgesAsCSV.php'>Export Active Badge List as CSV</a>";
+        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./exportBadgesAsCSV.php\"'>Export Active Badge List as CSV</button> ";
+        
+        if(UserHasDevPermission())
+        {
+        	//in development features
+        	echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
+        }
         
         echo "</div>\n";//end panel and panel body
         echo "</div>\n\n";
@@ -50,7 +56,7 @@
 		echo "<div class=\"panel-body\">\n\n";
 		
 	
-    	//echo "Systems Check...</BR></BR>";
+    	//echo "Systems Check...<BR><BR>";
     	
     	//Check_CustomersWithoutDevices();
     	//Check_CustomersWithoutBadges();
@@ -61,10 +67,10 @@
     	
 		
 		//generic stuff
-		Check_BadgesToQA();echo "</BR></BR>\n";
-		Check_CustomerToQA();echo "</BR></BR>\n";
-		Check_ColoPatch0();echo "</BR></BR>\n";
-    	Check_VLANLinkedToDisabledPort();echo "</BR></BR>\n";
+		Check_BadgesToQA();echo "<BR><BR>\n";
+		Check_CustomerToQA();echo "<BR><BR>\n";
+		Check_ColoPatch0();echo "<BR><BR>\n";
+    	Check_VLANLinkedToDisabledPort();echo "<BR><BR>\n";
     	Check_CircuitInactiveWithLoad();echo "\n";
     	
     	echo "</div>\n";//end panel and panel body
@@ -81,14 +87,14 @@
         	
         	$output = "";
         	$recCount = CountDBRecords($output);
-        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "</BR></BR>\n";
+        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "<BR><BR>\n";
         	
         	
         	$lineCount = CountLinesInDir($output);
-        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "</BR></BR>\n";
+        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "<BR><BR>\n";
         	
-    		Check_BadgesWithoutCustomers();echo "</BR></BR>\n";
-    		Check_DevicesWithoutCustomers();echo "</BR></BR>\n";
+    		Check_BadgesWithoutCustomers();echo "<BR><BR>\n";
+    		Check_DevicesWithoutCustomers();echo "<BR><BR>\n";
     		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
         	
         	echo "</div>\n";//end panel and panel body
@@ -127,17 +133,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='data-table-subheadercell'>Location</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Panel</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Circuit</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Volts</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Amps</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Load</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load"));
 			
 			//list result data
 			$oddRow = false;
@@ -197,16 +193,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Vlan</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Note</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Device","Port","Status","Vlan","Note"));
 			
 			//list result data
 			$oddRow = false;
@@ -249,7 +236,7 @@
 		
 		echo "Check_CustomersWithoutBadges() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_CustomersWithoutDevices()
@@ -262,7 +249,7 @@
 		
 		echo "Check_CustomersWithoutDevices() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_BadgesWithoutCustomers()
@@ -293,14 +280,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Name</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Badgeno</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Name","Badgeno"));
 			
 			//list result data
 			$oddRow = false;
@@ -361,16 +341,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Location</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","Location","Device","Status"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -432,18 +403,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Name&#x25B2;</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Badge#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Issue</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Enroll</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno","Status","Issue","Enroll"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -503,17 +463,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>C#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Note</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","H#","C#","Status","Note"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -574,13 +524,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Device"));
 				
 			//list result data
 			$oddRow = false;
@@ -620,7 +564,7 @@
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON dp.hno=c.hno
-			WHERE c.name IS NULL
+			WHERE c.name IS NULL OR dp.hno!=d.hno
 			ORDER BY d.name,d.member,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
@@ -638,14 +582,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			//headers
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Device","Port"));
 	
 			//list result data
 			$oddRow = false;
@@ -680,7 +617,7 @@
 	{
 		echo "Check_SwitchIsMainDeviceOnDevicePortRecords() - ";
 		
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_DeviceWithInvalidLocation()
@@ -693,7 +630,7 @@
 		</script>
 		<a onclick="if(active){document.getElementById('stuffID').className = 'show'; active=false;}else  {document.getElementById('stuffID').className = 'hide';active = true;}" href="#">Morer/Lesser</a>
 		*/
-		echo "Found 0 (stub)</BR></BR>";
+		echo "Found 0 (stub)<BR><BR>";
 	}
 	
 	function Check_MultiplePortConnections()

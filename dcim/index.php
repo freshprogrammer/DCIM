@@ -52,6 +52,9 @@
 	
 	$search = GetInput("search");
 	$page = GetInput("page");
+	$pa_siteid = GetInput("pa_siteid");
+	$pa_room = GetInput("pa_room");
+	$pa_panel = GetInput("pa_panel");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
 	$deviceIDInput = GetInput("deviceid");
@@ -233,12 +236,6 @@
 //		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 //		$menuItems .= "	<a href='./?vlanID='>Add VLAN</a>\n";
 //		$menuItems .= "</td>\n";
-	}
-	if(UserHasDevPermission())
-	{
-		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-		$menuItems .= "	<a href='./?page=PowerAudit'>Power Audit</a>\n";
-		$menuItems .= "</td>\n";
 	}
 	if(UserHasWritePermission())
 	{
@@ -424,7 +421,7 @@
 	if(!UserHasReadPermission())
 	{
 		echo "<!--  LOGIN PROMPT  -->\n";
-		echo "</BR>\n";
+		echo "<BR>\n";
 		LoginPrompt();
 	}
 	else 
@@ -468,7 +465,14 @@
 		{
 			if($page==="PowerAudit")
 			{
-				PowerAuditPage();
+				if(strlen($pa_siteid) > 0 && strlen($pa_room) > 0 && strlen($pa_panel) > 0)
+				{
+					PowerAuditPanel($pa_siteid,$pa_room,$pa_panel);
+				}
+				else
+				{
+					PowerAuditPanelList();
+				}
 			}
 		}
 		else
@@ -549,7 +553,7 @@
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust
-		echo "</BR>";
+		echo "<BR>";
 	}//end - page body vs login - //officaliy logged in with min read access
 	
 	//end of Body

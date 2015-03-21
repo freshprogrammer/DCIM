@@ -128,11 +128,15 @@
 }
 
 .editForm{
-	padding-left:50;;
+	padding-left:50;
 }
 
 .showAllToggleButton{
-	padding-right:20;;
+	padding-right:20;
+}
+
+.shortReport{
+	display:inline-block;
 }
 
 .hidden{
