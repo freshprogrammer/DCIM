@@ -216,7 +216,7 @@
 					$verboseResult .= "--$table - $count records.<BR>";
 				}
 			}
-			$verboseResult .= "-Colo DB total: - $grandTotal records.</BR>\n\n\n";
+			$verboseResult .= "-DB total: - $grandTotal records.</BR>\n\n\n";
 		}
 		return $grandTotal;
 	}
