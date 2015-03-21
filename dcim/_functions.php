@@ -2544,23 +2544,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		
     		if($count>0)
     		{
-    			//show results
     			//TODO for searches this should have some link, either device or hno or both
-    			
-    			echo "<table class='data-table'>\n";
-    			echo "<thead>\n";
-    			echo "<tr>";
-    			//headers
-    			echo "<th class='date-table-subheadercell'>Unit</th>";
-    			echo "<th class='date-table-subheadercell'>Customer</th>";
-    			echo "<th class='date-table-subheadercell'>Device</th>";
-    			echo "<th class='date-table-subheadercell'>Size</th>";
-    			echo "<th class='date-table-subheadercell'>Type</th>";
-    			echo "<th class='date-table-subheadercell'>Status</th>";
-    			echo "<th class='date-table-subheadercell'>Notes</th>";
-    			echo "<th class='date-table-subheadercell'>Tech</th>";
-    			echo "</tr>";
-    			echo "</thead>\n";
+
+    			echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
     			
     			//list result data
     			$oddRow = false;
@@ -2659,21 +2645,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		
     		if($count>0)
     		{
-    			//show results
-    			//TODO for searches this should have some link, either device or hno or both
-    			
-    			echo "<table class='data-table'>\n";
-    			echo "<thead>\n";
-    			echo "<tr>";
-    			//headers
-    			echo "<th class='date-table-subheadercell'>Name</th>";
-    			echo "<th class='date-table-subheadercell'>User Name</th>";
-    			echo "<th class='date-table-subheadercell'>Initials</th>";
-    			echo "<th class='date-table-subheadercell'>Permission</th>";
-    			echo "<th class='date-table-subheadercell'>Last Activity</th>";
-    			echo "<th class='date-table-subheadercell'>Tech</th>";
-    			echo "</tr>";
-    			echo "</thead>\n";
+    			echo CreateDataTableHeader(array("Name","User Name","Initials","Permission","Last Activity"),true);
     			
     			//list result data
     			$oddRow = false;
@@ -3001,7 +2973,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else //cust not found and/or no write access 
 		{
-			//not found or cant create new
+			//not found and can't create new
 			echo "Customer not Found (H#$hNo)<BR>";
 		}
 		
@@ -3724,27 +3696,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			//show results
-			echo "<table class='data-table'>\n";
-			echo "<tr>\n";
-			//headers
 			if($search)
-				echo "<th class='date-table-subheadercell'>Customer</th>\n";
-			echo "<th class='date-table-subheadercell'>Name&#x25B2;</th>\n";
-			echo "<th class='date-table-subheadercell'>Badge#</th>\n";
-			echo "<th class='date-table-subheadercell'>Status</th>\n";
-			echo "<th class='date-table-subheadercell'>Issue</th>\n";
-			echo "<th class='date-table-subheadercell'>Enroll</th>\n";
-			if(!$search)
-			{
-				echo "<th class='date-table-subheadercell'>Tech</th>\n";
-				if(UserHasWritePermission())
-				{
-					echo "<th class='date-table-subheadercell editButtons_hidden'>Edit</th>\n";
-					echo "<th class='date-table-subheadercell editButtons_hidden'>QA</th>\n";
-				}
-			}
-			echo "</tr>\n";
+				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"),false,false);
+			else
+				echo CreateDataTableHeader(array(           "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4067,33 +4022,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			//show results
-			//TODO for searches this should have some link, either device or hno or both
-			
-			echo "<table class='data-table'>\n";
-			echo "<thead>\n";
-			echo "<tr>";
-			//headers
 			if($search)
-			    echo "<th class='date-table-subheadercell'>Customer</th>";
-			echo "<th class='date-table-subheadercell'>Location&#x25B2;</th>";
-			echo "<th class='date-table-subheadercell'>Device</th>";
-			if(!$search)
-			{
-			    echo "<th class='date-table-subheadercell'>Unit</th>";
-    			echo "<th class='date-table-subheadercell'>Size</th>";
-    			echo "<th class='date-table-subheadercell'>Type</th>";
-    			echo "<th class='date-table-subheadercell'>Status</th>";
-    			echo "<th class='date-table-subheadercell'>Notes</th>";
-			    echo "<th class='date-table-subheadercell'>Tech</th>";
-			}
-			if(!$search && UserHasWritePermission())
-			{
-				echo "<th class='date-table-subheadercell  editButtons_hidden'>Edit</th>";
-				echo "<th class='date-table-subheadercell  editButtons_hidden'>QA</th>";
-			}
-			echo "</tr>";
-			echo "</thead>\n";
+				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"),false,false);
+			else
+				echo CreateDataTableHeader(array(           "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4357,16 +4289,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			//show results
-			echo "<table class='data-table'>\n";
-			echo "<tr>\n";
-			//headers
-			echo "<th class='date-table-subheadercell'>H#</th>";
-			echo "<th class='date-table-subheadercell'>C#</th>";
-			echo "<th class='date-table-subheadercell'>Name&#x25B2;</th>";
-			echo "<th class='date-table-subheadercell'>Status</th>";
-			echo "<th class='date-table-subheadercell'>Note</th>";
-			echo "</tr>\n";
+			echo CreateDataTableHeader(array("H#","C#","Name&#x25B2;","Status","Note"));
 			
 			//list result data
 			$oddRow = false;
@@ -4473,17 +4396,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$searchTitle = $searchTitle." Location(s)";				
 			
 			echo "<span class='tableTitle'>$searchTitle</span>\n";
-			//edit button here
-			
 			echo "<BR>";
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>Location</th>";
-			echo "<th class='date-table-subheadercell'>Customer</th>";
-			echo "<th class='date-table-subheadercell'>Device</th>";
-			echo "<th class='date-table-subheadercell'>Size</th>";
-			echo "</tr>";
+			
+			echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
 			
 			//list result data
 			$oddRow = false;
@@ -4512,7 +4427,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			echo "No Customers Found.<BR>\n";
 		}
-		
 		//end panel divs
 		echo "</div>\n";
 		echo "</div>\n";
@@ -4581,25 +4495,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if($count>0)
 		{
-			//show results
-			
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>Location</th>";
-			echo "<th class='date-table-subheadercell'>Panel</th>";
-			echo "<th class='date-table-subheadercell'>Circuit</th>";
-			echo "<th class='date-table-subheadercell'>Volts</th>";
-			echo "<th class='date-table-subheadercell'>Amps</th>";
-			echo "<th class='date-table-subheadercell'>Status</th>";
-			echo "<th class='date-table-subheadercell'>Load</th>";
-			echo "<th class='date-table-subheadercell'>Tech</th>";
-			if(UserHasCircuitPermission())
-			{
-				echo "<th class='date-table-subheadercell editButtons_hidden'>Edit</th>\n";
-				echo "<th class='date-table-subheadercell editButtons_hidden'>QA</th>\n";
-			}
-			echo "</tr>";
+			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,UserHasCircuitPermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4794,24 +4690,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<BR>";
 		if($count>0)
 		{
-			//show results
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>VLAN</th>";
-			echo "<th class='date-table-subheadercell'>Subnet</th>";
-			echo "<th class='date-table-subheadercell'>Mask</th>";
-			echo "<th class='date-table-subheadercell'>First</th>";
-			echo "<th class='date-table-subheadercell'>Last</th>";
-			echo "<th class='date-table-subheadercell'>Gateway</th>";
-			echo "<th class='date-table-subheadercell'>Note</th>";
-			echo "<th class='date-table-subheadercell'>Tech</th>\n";
-			if(UserHasWritePermission())
-			{
-			    echo "<th class='date-table-subheadercell editButtons_hidden'>Edit</th>\n";
-			    echo "<th class='date-table-subheadercell editButtons_hidden'>QA</th>\n";
-			}
-			echo "</tr>";
+			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -5229,29 +5108,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     	
 		if($portCount>0)
 		{
-		    $tableHeader = "";
 		    $tableWithAllData = "";
 		    $tableWithActiveData = "";
-		    
-			$tableHeader .= "<table class='data-table'>\n";
-			$tableHeader .= "<tr>";
-			//headers
-			$tableHeader .= "<th class='date-table-subheadercell'>Device</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Port&#x25B2;</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>MAC</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Connected Device</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Port</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Speed</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Status</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>VLANs</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Note</th>";
-			$tableHeader .= "<th class='date-table-subheadercell'>Tech</th>";
-			if(UserHasWritePermission())
-			{
-				$tableHeader .= "<th class='date-table-subheadercell editButtons_hidden'>Edit</th>\n";
-				$tableHeader .= "<th class='date-table-subheadercell editButtons_hidden'>QA</th>\n";
-			}
-			$tableHeader .= "</tr>";
+
+		    $tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5451,22 +5311,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>Child Device</th>";
-			echo "<th class='date-table-subheadercell'>Port&#x25B2;</th>";
-			echo "<th class='date-table-subheadercell'>Parent Device</th>";
-			echo "<th class='date-table-subheadercell'>Port</th>";
-			echo "<th class='date-table-subheadercell'>VLAN(s)</th>";
-			echo "<th class='date-table-subheadercell'>Patches</th>";
-			echo "<th class='date-table-subheadercell'>Tech</th>";
-			if(UserHasWritePermission())
-			{
-				echo "<th class='date-table-subheadercell editButtons_hidden'>Edit</th>\n";
-				echo "<th class='date-table-subheadercell editButtons_hidden'>QA</th>\n";
-			}
-			echo "</tr>";
+			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission());
 			
 			//list result data
 			$lastDevicePortID = -1;
@@ -5597,17 +5442,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			//show results
 			echo "<span class='tableTitle'>Circuits</span><BR>\n";
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>Location</th>";
-			echo "<th class='date-table-subheadercell'>Panel</th>";
-			echo "<th class='date-table-subheadercell'>Circuit</th>";
-			echo "<th class='date-table-subheadercell'>Volts</th>";
-			echo "<th class='date-table-subheadercell'>Amps</th>";
-			echo "<th class='date-table-subheadercell'>Status</th>";
-			echo "<th class='date-table-subheadercell'>Load</th>";
-			echo "</tr>";
+			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"));
 			
 			//list result data
 			$oddRow = false;
@@ -5682,13 +5517,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			//show results
 			echo "<span class='tableTitle'>Panels</span><BR>\n";
-			echo "<table class='data-table'>\n";
-			echo "<tr>";
-			//headers
-			echo "<th class='date-table-subheadercell'>Site</th>";
-			echo "<th class='date-table-subheadercell'>CA#</th>";
-			echo "<th class='date-table-subheadercell'>Panel</th>";
-			echo "</tr>";
+			echo CreateDataTableHeader(array("Site","CA#","Panel"));
 			
 			//list result data
 			$oddRow = false;

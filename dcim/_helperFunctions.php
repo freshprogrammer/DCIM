@@ -259,6 +259,28 @@
 		}
 		echo $result;
  	}
+	
+	function CreateDataTableHeader($headers, $showTech=false, $showEditAndQA=false)
+	{
+		$result = "<table class='data-table'>\n";
+		$result .= "<thead>\n";
+		$result .= "<tr>\n";
+		foreach($headers as $h) 
+		{
+			$result .= "<th class='date-table-subheadercell'>".MakeHTMLSafe($h)."</th>\n";
+		}
+		
+		if($showTech)
+			$result .= "<th class='date-table-subheadercell'>Tech</th>\n";
+		if($showEditAndQA)
+		{
+			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>Edit</th>\n";
+			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>QA</th>\n";
+		}
+		$result .= "</tr>\n";
+		$result .= "</thead>\n";
+		return $result;
+	}
  	
  	function FormatSimpleMessage($msg, $severity)
  	{

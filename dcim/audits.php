@@ -128,16 +128,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Location</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Panel</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Circuit</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Volts</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Amps</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Load</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load"));
 			
 			//list result data
 			$oddRow = false;
@@ -197,15 +188,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Vlan</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Note</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Device","Port","Status","Vlan","Note"));
 			
 			//list result data
 			$oddRow = false;
@@ -292,13 +275,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Name</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Badgeno</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Name","Badgeno"));
 			
 			//list result data
 			$oddRow = false;
@@ -359,15 +336,7 @@
 		//data title
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Location</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","Location","Device","Status"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -429,17 +398,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Name&#x25B2;</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Badge#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Issue</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Enroll</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno","Status","Issue","Enroll"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -499,16 +458,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Customer</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>C#</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Status</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Note</th>\n";
-			$longResult.= "<th class='date-table-subheadercell'>Tech</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("Customer","H#","C#","Status","Note"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -569,12 +519,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Device"));
 				
 			//list result data
 			$oddRow = false;
@@ -632,13 +577,7 @@
 		$longResult = "";
 		if($count>0)
 		{
-			//show results - headers
-			$longResult.= "<table class='data-table'>\n";
-			$longResult.= "<tr>\n";
-			$longResult.= "<th class='data-table-subheadercell'>H#</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Device</th>\n";
-			$longResult.= "<th class='data-table-subheadercell'>Port</th>\n";
-			$longResult.= "</tr>\n";
+			$longResult.= CreateDataTableHeader(array("H#","Device","Port"));
 	
 			//list result data
 			$oddRow = false;
