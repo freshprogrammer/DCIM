@@ -9,14 +9,12 @@
 
 	/*
 		::need to add::
-		Multiple Devices conenctd to a single device port
+		Multiple Devices connencted to a single device port
 		device with invalid location
 		location without 2x power
 		verify location.status if a device is linked
 		power without location
 		power amps at 0 or negative value
-		active device for inactive customer
-		&active badge for inactive customer
 		port with connection thats not active - or visa versa
 		port linked to invalid port - basicly any invalid ports in table
 		port linked to more than 1  port- portid in portconnectiontable more than once
@@ -43,38 +41,29 @@
         	//in development features
         	echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
         }
+        echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         
-        echo "</div>\n";//end panel and panel body
-        echo "</div>\n\n";
-        echo "<BR>\n";
+
+        echo "";
+        echo "<div class=\"panel\">\n";
+        echo "<div class=\"panel-header\">Data to QA</div>\n";
+        echo "<div class=\"panel-body\">\n\n";
+        Check_CustomerToQA();echo "<BR><BR>\n";
+        Check_BadgesToQA();echo "\n";
+        echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         
         
-        
-		//data panel - cust info / form / search fail 
 		echo "<div class=\"panel\">\n";
-		echo "<div class=\"panel-header\">Data Audits</div>\n";
+		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		echo "<div class=\"panel-body\">\n\n";
-		
-	
-    	//echo "Systems Check...<BR><BR>";
-    	
-    	//Check_CustomersWithoutDevices();
-    	//Check_CustomersWithoutBadges();
-    	//Check_BadgesWithoutCustomers();
-    	//Check_DevicesWithoutCustomers();
-    	//Check_DeviceWithInvalidLocation();
-    	//Check_SwitchIsMainDeviceOnDevicePortRecords();
-    	
-		
-		//generic stuff
-		Check_BadgesToQA();echo "<BR><BR>\n";
-		Check_CustomerToQA();echo "<BR><BR>\n";
+		Check_BadgesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
 		Check_ColoPatch0();echo "<BR><BR>\n";
+		Check_DevicesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
     	Check_VLANLinkedToDisabledPort();echo "<BR><BR>\n";
     	Check_CircuitInactiveWithLoad();echo "\n";
-    	
-    	echo "</div>\n";//end panel and panel body
-		echo "</div>\n";
+    	//Check_DeviceWithInvalidLocation();
+    	//Check_SwitchIsMainDeviceOnDevicePortRecords();
+        echo "</div>\n</div>\n";//end panel and panel body
     	
 		
 		//admin only stuff - just because its stuff they cant fix
@@ -89,7 +78,6 @@
         	$recCount = CountDBRecords($output);
         	CreateReport("Database Record Counts","$recCount records",$output,"");echo "<BR><BR>\n";
         	
-        	
         	$lineCount = CountLinesInDir($output);
         	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "<BR><BR>\n";
         	
@@ -97,8 +85,7 @@
     		Check_DevicesWithoutCustomers();echo "<BR><BR>\n";
     		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
         	
-        	echo "</div>\n";//end panel and panel body
-    		echo "</div>\n";
+        	echo "</div>\n</div>\n";//end panel and panel body
 	    }
     }
     
@@ -225,32 +212,6 @@
 		}
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
     }
-	
-	function Check_CustomersWithoutBadges()
-	{
-		$query = "SELECT c.name AS customer, c.hno, b.name AS name 
-		FROM dcim_customer AS c 
-			LEFT JOIN dcim_badge AS b ON c.hno=b.hno 
-		WHERE b.name IS NULL 
-		ORDER BY c.name";
-		
-		echo "Check_CustomersWithoutBadges() - ";
-		
-		echo "Found 0 (stub)<BR><BR>";
-	}
-	
-	function Check_CustomersWithoutDevices()
-	{
-		$query = "SELECT c.name AS customer, c.hno, d.name AS name 
-		FROM dcim_customer AS c 
-			LEFT JOIN dcim_device AS d ON c.hno=d.hno 
-		WHERE d.name IS NULL 
-		ORDER BY c.name";
-		
-		echo "Check_CustomersWithoutDevices() - ";
-		
-		echo "Found 0 (stub)<BR><BR>";
-	}
 	
 	function Check_BadgesWithoutCustomers()
 	{
@@ -613,37 +574,121 @@
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
+	function Check_BadgesActiveUnderInactiveCustomer()
+	{
+		global $mysqli;
+		
+        $reportTitle = "Active badges where customer is not active";
+		$reportNote = "These badges need to be deactivated.";
+        
+        $query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
+    		FROM dcim_badge AS b 
+                LEFT JOIN dcim_customer AS c ON c.hno=b.hno
+            WHERE c.status='I' AND NOT b.status IN ('D','R')";
+		
+        if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return -1;
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($cust, $name, $badgeNo, $hno);
+		$count = $stmt->num_rows;
+	
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>$name</td>\n";
+				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
+				$longResult.= "</tr>";
+			}
+			$longResult.= "</table>\n";
+		    
+		    //show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+
+	function Check_DevicesActiveUnderInactiveCustomer()
+	{
+		global $mysqli;
+	
+		$reportTitle = "Active devices/colos where parent customer is not active";
+		$reportNote = "These need to be deactivated.";
+	
+		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name
+    		FROM dcim_device AS d 
+                LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+            WHERE c.status='I' AND NOT d.status='I'";
+	
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return -1;
+		}
+	
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($cust, $hno, $deviceID, $deviceName);
+		$count = $stmt->num_rows;
+	
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Customer","Device"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+	
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>\n";
+				$longResult.= "</tr>";
+			}
+			$longResult.= "</table>\n";
+	
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
 	function Check_SwitchIsMainDeviceOnDevicePortRecords()
 	{
 		echo "Check_SwitchIsMainDeviceOnDevicePortRecords() - ";
 		
 		echo "Found 0 (stub)<BR><BR>";
-	}
-	
-	function Check_DeviceWithInvalidLocation()
-	{
-		echo "Check_DeviceWithInvalidLocation() - ";
-		/*
-		<script>
-		var Check_DeviceWithInvalidLocationVisibible=false;
-		//ToggleVisibility
-		</script>
-		<a onclick="if(active){document.getElementById('stuffID').className = 'show'; active=false;}else  {document.getElementById('stuffID').className = 'hide';active = true;}" href="#">Morer/Lesser</a>
-		*/
-		echo "Found 0 (stub)<BR><BR>";
-	}
-	
-	function Check_MultiplePortConnections()
-	{
-		/*
-	 	//will want the modifed to show counts of child and parent or something
-	 	
-	 	should be a select from device port into connection then group and count 
-	 	
-		SELECT count(*) AS count,pc1.* FROM dcim_portconnection AS pc1 GROUP BY pc1.childportid HAVING count>1
-UNION
-SELECT count(*) AS count,pc2.* FROM dcim_portconnection AS pc2 GROUP BY pc2.parentportid HAVING count>1
-		
-		 */
 	}
 ?>

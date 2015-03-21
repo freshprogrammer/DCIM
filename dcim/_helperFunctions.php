@@ -200,7 +200,7 @@
  	 	$hiddenCSSClass = "hidden";
  	 	$visibleCSSClass = "shortReport";
  		
- 		$reportID = MakeTextIntoUniqueID($title);
+ 		$reportID = MakeTextIntoUniqueJSVariableName($title);
  	 	$reportResultLongID = $reportID."_resultLong";
  	 	$reportResultShortID = $reportID."_resultShort";
  	 	$reportHideFunctionName = $reportID."_table_toggle";
