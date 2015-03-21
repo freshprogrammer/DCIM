@@ -32,7 +32,7 @@
         //Audit functions
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Audit Functions</div>\n";
-        echo "<div class=\"panel-body\">\n\n";
+        echo "<div class=\"panel-body\">\n";
 
         echo "<button type='button' style='display:inline;' onClick='parent.location=\"./exportBadgesAsCSV.php\"'>Export Active Badge List as CSV</button> ";
         
@@ -44,10 +44,9 @@
         echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         
 
-        echo "";
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Data to QA</div>\n";
-        echo "<div class=\"panel-body\">\n\n";
+        echo "<div class=\"panel-body\">\n";
         Check_CustomerToQA();echo "<BR><BR>\n";
         Check_BadgesToQA();echo "\n";
         echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
@@ -55,7 +54,7 @@
         
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
-		echo "<div class=\"panel-body\">\n\n";
+		echo "<div class=\"panel-body\">\n";
 		Check_BadgesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
 		Check_ColoPatch0();echo "<BR><BR>\n";
 		Check_DevicesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
@@ -63,16 +62,16 @@
     	Check_CircuitInactiveWithLoad();echo "\n";
     	//Check_DeviceWithInvalidLocation();
     	//Check_SwitchIsMainDeviceOnDevicePortRecords();
-        echo "</div>\n</div>\n";//end panel and panel body
+        echo "</div>\n</div>\n\n";//end panel and panel body
     	
 		
 		//admin only stuff - just because its stuff they cant fix
 	    if(UserHasAdminPermission())
 	    {
-			echo "<BR>\n\n";
+			echo "<BR>\n";
     		echo "<div class=\"panel\">\n";
     		echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
-    		echo "<div class=\"panel-body\">\n\n";
+    		echo "<div class=\"panel-body\">\n";
         	
         	$output = "";
         	$recCount = CountDBRecords($output);
@@ -530,7 +529,7 @@
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicePortsLinkedToInvalidCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			return -1;
 		}
 	
@@ -644,7 +643,7 @@
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			return -1;
 		}
 	
@@ -683,12 +682,5 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
-	}
-	
-	function Check_SwitchIsMainDeviceOnDevicePortRecords()
-	{
-		echo "Check_SwitchIsMainDeviceOnDevicePortRecords() - ";
-		
-		echo "Found 0 (stub)<BR><BR>";
 	}
 ?>
