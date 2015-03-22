@@ -198,7 +198,7 @@
  	function CreateReport($title,$shortResult,$longResult, $note)
  	{
  	 	$hiddenCSSClass = "hidden";
- 	 	$visibleCSSClass = "shortReport";
+ 	 	$visibleCSSClass = "auditDataTable";
  		
  		$reportID = MakeTextIntoUniqueJSVariableName($title);
  	 	$reportResultLongID = $reportID."_resultLong";
@@ -210,7 +210,8 @@
  	 	$enableSwitcher = strlen($longResult)>0;
  	 	
  	 	$result = "";
- 	 	
+
+ 	 	$result .= "<div class='auditReport'>\n";
 		$result .= "<span class='tableTitle'>$title</span>\n";
 		if($enableSwitcher)
 		 	$result .= " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
@@ -257,6 +258,7 @@
  	 	 	$result .= " 	$reportHideFunctionName();\n";
  	 	 	$result .= "</script>\n";
 		}
+ 	 	$result .= "</div>\n";
 		echo $result;
  	}
 	

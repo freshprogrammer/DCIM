@@ -47,7 +47,7 @@
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Data to QA</div>\n";
         echo "<div class=\"panel-body\">\n";
-        Check_CustomerToQA();echo "<BR><BR>\n";
+        Check_CustomerToQA();echo "\n";
         Check_BadgesToQA();echo "\n";
         echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         
@@ -55,10 +55,10 @@
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		echo "<div class=\"panel-body\">\n";
-		Check_BadgesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
-		Check_ColoPatch0();echo "<BR><BR>\n";
-		Check_DevicesActiveUnderInactiveCustomer();echo "<BR><BR>\n";
-    	Check_VLANLinkedToDisabledPort();echo "<BR><BR>\n";
+		Check_BadgesActiveUnderInactiveCustomer();echo "\n";
+		Check_ColoPatch0();echo "\n";
+		Check_DevicesActiveUnderInactiveCustomer();echo "\n";
+    	Check_VLANLinkedToDisabledPort();echo "\n";
     	Check_CircuitInactiveWithLoad();echo "\n";
     	//Check_DeviceWithInvalidLocation();
     	//Check_SwitchIsMainDeviceOnDevicePortRecords();
@@ -75,13 +75,13 @@
         	
         	$output = "";
         	$recCount = CountDBRecords($output);
-        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "<BR><BR>\n";
+        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "\n";
         	
         	$lineCount = CountLinesInDir($output);
-        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "<BR><BR>\n";
+        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "\n";
         	
-    		Check_BadgesWithoutCustomers();echo "<BR><BR>\n";
-    		Check_DevicesWithoutCustomers();echo "<BR><BR>\n";
+    		Check_BadgesWithoutCustomers();echo "\n";
+    		Check_DevicesWithoutCustomers();echo "\n";
     		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
         	
         	echo "</div>\n</div>\n";//end panel and panel body
@@ -105,7 +105,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 				
@@ -129,14 +129,14 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
 				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
 				$longResult.= "<td class='data-table-cell'>$cload</td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -165,7 +165,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 				
@@ -192,13 +192,13 @@
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 			    $portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$portFullName</td>\n";
 				$longResult.= "<td class='data-table-cell'>$status</td>\n";
 				$longResult.= "<td class='data-table-cell'>$vlan</td>\n";
 				$longResult.= "<td class='data-table-cell'>$note</td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -226,7 +226,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_BadgesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 		
@@ -250,11 +250,11 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>$hno</td>\n";
 				$longResult.= "<td class='data-table-cell'>$name</td>\n";
 				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -287,7 +287,7 @@
         
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 				
@@ -314,13 +314,13 @@
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 		        $fullLocationName = FormatLocation($site, $colo, $location);
 		        	
-				$longResult.= "<tr class='$rowClass'>";
-				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status,true)."</td>";
-				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
-				$longResult.= "</tr>";
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status,true)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>\n";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -350,7 +350,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 				
@@ -373,15 +373,15 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($badgeNo)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".BadgeStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$issue</td>\n";
 				$longResult.= "<td class='data-table-cell'>$hand</td>\n";
-				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
-				$longResult.= "</tr>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>\n";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -410,7 +410,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 		
@@ -435,14 +435,14 @@
 				
 				$note = Truncate($note);
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($name)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".$hNo."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".$cNo."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".CustomerStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
-				$longResult.= "</tr>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>\n";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -471,7 +471,7 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_DevicesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 		
@@ -496,10 +496,10 @@
 
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
 		
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		
@@ -529,7 +529,7 @@
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 	
@@ -555,11 +555,11 @@
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 	
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($portFullName)."</td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 	
@@ -587,7 +587,7 @@
 		
         if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 		
@@ -611,11 +611,11 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$name</td>\n";
 				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		    
@@ -643,7 +643,7 @@
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 	
@@ -667,10 +667,10 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 	
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>\n";
-				$longResult.= "</tr>";
+				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 	

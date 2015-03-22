@@ -135,7 +135,12 @@
 	padding-right:20;
 }
 
-.shortReport{
+.auditReport{
+	display:block;
+	margin-bottom: 15px;
+}
+
+.auditDataTable{
 	display:inline-block;
 }
 
@@ -148,7 +153,6 @@
 }
 
 .editButtons_visible{
-	
 }
 
 
