@@ -295,6 +295,20 @@ tr.dataRowTwo {
 	background-color: #EEE;
 }
 
+td.powerAuditCellOne {
+	background-color: #FFF;
+}
+
+td.powerAuditCellTwo, td.powerAuditCellOne {
+  height: 50px;
+  width: 250px;
+  font-size: 14px;
+}
+
+td.powerAuditCellTwo {
+	background-color: #EEE;
+}
+
 body { 
     background-color: #e6e6d2;
     font-size: 75%; 

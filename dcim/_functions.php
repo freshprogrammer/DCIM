@@ -5407,7 +5407,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
 			WHERE s.siteid=? AND l.colo=? AND p.panel=?
 			GROUP BY p.panel, p.circuit
-			ORDER BY l.colo, LPAD(p.panel, 4, '0'),p.circuit % 2 = 0, CAST(p.circuit AS UNSIGNED)";
+			ORDER BY CAST(p.circuit AS UNSIGNED)";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5424,49 +5424,100 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
-		echo "Power Audit list for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
+		echo "Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
 		echo "</div>\n";
 		
 		echo "<div class='panel-body'>\n\n";
 		if($count>0)
 		{
 			//show results
-			echo "<span class='tableTitle'>Circuits</span><BR>\n";
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"));
+			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
+			echo "<table class='data-table'>\n";
 			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
+			$stmt->fetch();
+			
+			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
+			$panelTextHeader = "UPS-";
+			$numberOfCircuitsPerPanel = 42;
+			$tableCircuitNo = 0;
+			$oddColor = false;
+			$prevWas208Left = false;
+			$prevWas208Right = false;
+			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 			{
-                $fullLocationName = FormatLocation($site, $colo, $location);
-                
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
+				//odd circutis are on the left 
+				$tableCircuitNo++;
+				$left = ($tableCircuitNo%2)!=0;
+
+				if(!$left)//only flip color for right cell
+					$oddColor = !$oddColor;
+				if($oddColor) $rowClass = "powerAuditCellOne";
+				else $rowClass = "powerAuditCellTwo";
+				
+				if($circuit<$tableCircuitNo)
+					$stmt->fetch();
+
+				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
+				$fullLocationName = FormatLocation($site, $colo, $location);
 				if($amps>0)
 				{
 					$percentLoad = round(100*$cLoad/$amps,2);
-					
 					if($percentLoad>80)
 						$percentLoad = "<font color=red>$percentLoad</font>";
 				}
 				else
 					$percentLoad = "?";
 				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>";
-				echo "<td class='data-table-cell'>$volts</td>";
-				echo "<td class='data-table-cell'>$amps</td>";
-				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A ($percentLoad%)</td>";
-				echo "</tr>";
+				if($left)
+				{//start a new row
+					echo "<tr>\n";
+				}
+				
+				$hasData = ($circuit==$tableCircuitNo);
+
+				echo "<td class='data-table-cell $rowClass'>\n";
+				if($hasData)
+				{
+					echo "<b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b> - ".$volts."V - ".$amps."A - ".PowerOnOff($status)."<BR>\n";
+					//echo "$fullLocationName ($percentLoad%) ";
+					echo "$fullLocationName ";
+					echo "<input id=EditCircuit_load type='number' tabindex=$tabIndex name='load$circuit' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>\n";
+				
+					if($volts==208)//208 volt circuits take up double
+					{
+						if($left)
+							$prevWas208Left = true;
+						else
+							$prevWas208Right = true;
+					}
+				}
+				else 
+				{
+
+					if($left && $prevWas208Left)
+					{
+						$prevWas208Left = false;
+						echo "208 Above";
+					}
+					else if(!$left && $prevWas208Right)
+					{
+						$prevWas208Right = false;
+						echo "208 Above";
+					}
+					else
+						echo "EMPTY";
+				}
+				echo "</td>\n";
+
+				if(!$left)
+				{//end row
+					echo "</tr>\n";
+				}
 			}
-			echo "</table>";
+			echo "</table>\n";
 		}
 		else
-			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>";
+			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>\n";
 						
 		echo "</div>\n";
 		echo "</div>\n";
