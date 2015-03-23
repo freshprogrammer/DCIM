@@ -47,19 +47,19 @@
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Data to QA</div>\n";
         echo "<div class=\"panel-body\">\n";
-        Check_CustomerToQA();echo "\n";
-        Check_BadgesToQA();echo "\n";
+        Check_CustomerToQA();
+        Check_BadgesToQA();
         echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         
         
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		echo "<div class=\"panel-body\">\n";
-		Check_BadgesActiveUnderInactiveCustomer();echo "\n";
-		Check_ColoPatch0();echo "\n";
-		Check_DevicesActiveUnderInactiveCustomer();echo "\n";
-    	Check_VLANLinkedToDisabledPort();echo "\n";
-    	Check_CircuitInactiveWithLoad();echo "\n";
+		Check_BadgesActiveUnderInactiveCustomer();
+		Check_ColoPatch0();
+		Check_DevicesActiveUnderInactiveCustomer();
+    	Check_VLANLinkedToDisabledPort();
+    	Check_CircuitInactiveWithLoad();
     	//Check_DeviceWithInvalidLocation();
     	//Check_SwitchIsMainDeviceOnDevicePortRecords();
         echo "</div>\n</div>\n\n";//end panel and panel body
@@ -75,15 +75,17 @@
         	
         	$output = "";
         	$recCount = CountDBRecords($output);
-        	CreateReport("Database Record Counts","$recCount records",$output,"");echo "\n";
+        	CreateReport("Database Record Counts","$recCount records",$output,"");
         	
         	$lineCount = CountLinesInDir($output);
-        	CreateReport("Lines of Code","$lineCount lines",$output,"");echo "\n";
+        	CreateReport("Lines of Code","$lineCount lines",$output,"");
         	
-    		Check_BadgesWithoutCustomers();echo "\n";
-    		Check_DevicesWithoutCustomers();echo "\n";
-    		Check_DevicePortsWithoutCustomersOrDevices();echo "\n";
-        	
+    		Check_BadgesWithoutCustomers();
+    		Check_DevicesWithoutCustomersOrLocation();
+    		Check_DevicePortsWithoutCustomersOrDevices();
+    		Check_LocationWithoutPowerLocOrSite();
+    		Check_PowerLocWithoutLocationOrPower();
+    		Check_PowerWithoutPowerLoc();
         	echo "</div>\n</div>\n";//end panel and panel body
 	    }
     }
@@ -217,7 +219,7 @@
 		global $mysqli;
 		
         $reportTitle = "Badges Without Customers";
-		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
+		$reportNote = "Disconnected record(s).";
         
         $query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
     		FROM dcim_badge AS b 
@@ -456,35 +458,36 @@
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DevicesWithoutCustomers()
+	function Check_DevicesWithoutCustomersOrLocation()
 	{
 		global $mysqli;
 		
-		$reportTitle = "Devices Without Customers";
-		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
+		$reportTitle = "Devices Without Customer or Location";
+		$reportNote = "Disconnected record(s).";
 
-		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model
+		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, l.locationid
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE c.name IS NULL
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+			WHERE c.name IS NULL OR l.locationid IS NULL
 			ORDER BY d.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
+			echo "Prepare failed: Check_DevicesWithoutCustomersOrLocation() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model);
+		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("H#","Device"));
+			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID"));
 				
 			//list result data
 			$oddRow = false;
@@ -497,8 +500,10 @@
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
 		
 				$longResult.= "<tr class='$rowClass'>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationid'>".MakeHTMLSafe($locationID)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -518,7 +523,7 @@
 		global $mysqli;
 	
 		$reportTitle = "Device Ports Without Customers or Devices";
-		$reportNote = "These are orphaned records. Something is bugged or crashed leaving impossible unconnected record(s).";
+		$reportNote = "Disconnected record(s).";
 	
 		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
@@ -676,6 +681,181 @@
 	
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_PowerWithoutPowerLoc()
+	{
+		global $mysqli;
+		
+		$reportTitle = "Power records without any linking location record";
+		$reportNote = "Disconnected record(s).";
+
+		$query = "SELECT p.powerid, p.panel, p.circuit
+			FROM dcim_power AS p
+				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
+			WHERE pl.powerid IS NULL
+			ORDER BY p.panel, p.circuit";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
+			return -1;
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($powerID, $panel, $circuit);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("PowerID","Panel","Circuit"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+		
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_PowerLocWithoutLocationOrPower()
+	{
+		global $mysqli;
+		
+		$reportTitle = "Power location records linked to missing records";
+		$reportNote = "Disconnected record(s).";
+
+		$query = "SELECT pl.powerlocid, pl.powerid, pl.locationid, p.powerid, l.locationid
+			FROM dcim_powerloc AS pl
+				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
+			WHERE l.locationid IS NULL OR p.powerid IS NULL
+			ORDER BY 1";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
+			return -1;
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($powerLocID, $powerID, $locationID,$refPowerID, $refLocationID);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerID","LocationID","RefPowerID","RefLocationID"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refPowerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refLocationID)."</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+		
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Errors",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationWithoutPowerLocOrSite()
+	{
+		global $mysqli;
+		
+		$reportTitle = "Location records linked to missing records";
+		$reportNote = "Disconnected from site or power.";
+
+		$query = "SELECT l.locationid, l.colo, l.name, l.siteid, s.siteid, COUNT(pl.locationid) AS powerCount
+			FROM dcim_location AS l
+				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			GROUP BY l.locationid
+			HAVING powerCount<1 OR s.siteid IS NULL";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
+			return -1;
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($locationID, $colo, $locationName,$siteID, $refSiteID, $powerCount);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("LocationID","Colo","Location Name","SiteID","RefSiteID","PowerCount"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationName)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($siteID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refSiteID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCount)."</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+		
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Records",2);
 		}
 		else
 		{
