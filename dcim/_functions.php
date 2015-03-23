@@ -5423,7 +5423,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 		
-		
+
+		echo "<script src='customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
 		echo "Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
@@ -5434,7 +5435,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			//show results
 			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
-			echo "<table class='data-table'>\n";
+			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
+			echo "<table style='border-collapse: collapse'>\n";
 			
 			$stmt->fetch();
 			
@@ -5486,7 +5488,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
 					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
-					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;<input id=EditCircuit_load type='number' tabindex=$tabIndex name='load$powerID' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''></td>\n";
+					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;<input id=PowerAuditPanel_Circuit".$circuit."_load type='number' tabindex=$tabIndex powerid='$powerID' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''></td>\n";
 					echo "</tr></table>\n";
 				
 					if($volts==208)//208 volt circuits take up double
@@ -5520,7 +5522,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "</tr>\n";
 				}
 			}
-			echo "</table>\n";
+			echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
+			//echo "<input id=EditBadge_badgeid type='hidden' name='badgeid' value=-1>\n";
+			echo "</table></form>\n";
 		}
 		else
 			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>\n";
