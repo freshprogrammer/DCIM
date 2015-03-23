@@ -5405,7 +5405,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid=? AND l.colo=? AND p.panel=?
 			GROUP BY s.siteid, p.panel, p.circuit
