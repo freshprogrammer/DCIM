@@ -1,0 +1,19 @@
+<?php 
+	//configuration data
+	$siteName = "DCIM Name";
+	$pageTitle = "DCIM Title";
+	$versionNote = "note";
+
+	//DB connect
+	$db_host = "localhost";
+	$db_user = "root";
+	$db_password = "superScurePswd1";
+	$database = "dcimdb";
+	
+	function UserHasDevPermission()
+	{
+		//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
+		global $userID;
+		return (int)$userID==0;//admin only
+	}
+?>

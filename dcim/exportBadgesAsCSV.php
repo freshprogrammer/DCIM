@@ -1,7 +1,7 @@
 <?php 
 	set_include_path('../'); 
 
-	include 'dcim/_customization.php';
+	include 'dcim/_dcimConfig.php';
 	include 'dcim/_genericFunctions.php';
 	include 'dcim/_helperFunctions.php';
 	include 'dcim/_functions.php';
