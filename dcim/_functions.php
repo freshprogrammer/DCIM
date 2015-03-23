@@ -5400,13 +5400,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 
 		//TODO show customer or device per circuit
-		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
+		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid=? AND l.colo=? AND p.panel=?
-			GROUP BY p.panel, p.circuit
+			GROUP BY s.siteid, p.panel, p.circuit
 			ORDER BY CAST(p.circuit AS UNSIGNED)";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -5418,7 +5420,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_Param('iss', $pa_siteid,$pa_room,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
+		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 		
 		
@@ -5451,14 +5453,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 				if(!$left)//only flip color for right cell
 					$oddColor = !$oddColor;
-				if($oddColor) $rowClass = "powerAuditCellOne";
-				else $rowClass = "powerAuditCellTwo";
+				if($oddColor) $cellClass = "powerAuditCellOne";
+				else $cellClass = "powerAuditCellTwo";
 				
 				if($circuit<$tableCircuitNo)
 					$stmt->fetch();
 
 				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$locationName = "CA $colo $location";
 				if($amps>0)
 				{
 					$percentLoad = round(100*$cLoad/$amps,2);
@@ -5475,13 +5477,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				$hasData = ($circuit==$tableCircuitNo);
 
-				echo "<td class='data-table-cell $rowClass'>\n";
 				if($hasData)
 				{
-					echo "<b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b> - ".$volts."V - ".$amps."A - ".PowerOnOff($status)."<BR>\n";
+					echo "<td class='$cellClass'>\n";
+					echo "<table width=100%><tr>\n";
+					echo "<td><b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b></td>\n";
+					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
+					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
-					echo "$fullLocationName ";
-					echo "<input id=EditCircuit_load type='number' tabindex=$tabIndex name='load$circuit' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>\n";
+					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
+					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;<input id=EditCircuit_load type='number' tabindex=$tabIndex name='load$powerID' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''></td>\n";
+					echo "</tr></table>\n";
 				
 					if($volts==208)//208 volt circuits take up double
 					{
@@ -5493,7 +5499,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else 
 				{
-
+					echo "<td class='$cellClass powerAuditCellEmpty'>\n";
 					if($left && $prevWas208Left)
 					{
 						$prevWas208Left = false;
