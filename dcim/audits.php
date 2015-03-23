@@ -503,7 +503,7 @@
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationid'>".MakeHTMLSafe($locationID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -844,7 +844,7 @@
 				else $rowClass = "dataRowTwo";
 				
 				$longResult.= "<tr class='$rowClass'>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationName)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($siteID)."</td>\n";
