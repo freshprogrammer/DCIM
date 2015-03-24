@@ -33,13 +33,13 @@
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Audit Functions</div>\n";
         echo "<div class=\"panel-body\">\n";
-
-        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./exportBadgesAsCSV.php\"'>Export Active Badge List as CSV</button> ";
-        
+		
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./exportBadgesAsCSV.php\"'>Export Active Badge List as CSV</button> ";
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
+		
         if(UserHasDevPermission())
         {
         	//in development features
-        	echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
         }
         echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
         

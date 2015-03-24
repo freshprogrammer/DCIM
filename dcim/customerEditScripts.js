@@ -1156,7 +1156,8 @@ function QARecord(table, key, formAction, instanceID)
 }
 function SavePowerAuditPanel()
 {
-	var valid = true;//nothing to validate here - real validation happening in input and its type 
+	var valid = true;//nothing to validate here - real validation happening in input and its type
+	valid = confirm("Are you sure you want to update all these records?");
 	return valid; 
 }
 function PowerAuditCircuit_StatusClicked(srcCheckbox, srcLoadField)

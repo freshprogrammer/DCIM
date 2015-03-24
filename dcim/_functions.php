@@ -267,16 +267,22 @@
 		$valid = false;
 		$powerIDs = array();
 		$loads = array();
+		$stati = array();
 		$circuitsPerPanel = 42;
 		
 		for($circuit=1; $circuit<=$circuitsPerPanel; $circuit++)
 		{
 			$powerID = GetInput("c".$circuit."powerid");
 			$load = GetInput("c".$circuit."load");
+			$status = GetInput("c".$circuit."status");
+			
 			if(strlen($powerID)>0 && strlen($load)>0)
 			{
 				$powerIDs[] = $powerID;
 				$loads[] = $load;
+				if(!isset($status) || strlen($status)==0)
+					$status = "D";
+				$stati[] = $status;
 			}
 		}
 		
@@ -284,10 +290,8 @@
 		$valid = $inputCount>0;
 		if($valid)
 		{
-			$resultMessage[] = "ProcessPowerAuditPanelUpdate: $i inputs";
-
 			$query = "UPDATE dcim_power
-					SET cload=?
+					SET cload=?, status=?
 					WHERE powerid=?
 					LIMIT 1";
 			
@@ -295,7 +299,7 @@
 				$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
-				$stmt->bind_Param('ii', $writeLoad, $writePowerID);
+				$stmt->bind_Param('isi', $writeLoad, $writeStatus, $writePowerID);
 
 				$goodCount = 0;
 				$badCount = 0;
@@ -303,11 +307,12 @@
 				{
 					$writePowerID = $powerIDs[$i];
 					$writeLoad = $loads[$i];
+					$writeStatus = $stati[$i];
 					$badCount++;
 						
 					if (!$stmt->execute())//execute
 						//failed (errorNo-error)
-						$errorMessage[] = "Failed to execute panel power circuit update($writePowerID,$writeLoad) (" . $stmt->errno . "-" . $stmt->error . ").";
+						$errorMessage[] = "Failed to execute panel power circuit update($writePowerID,$writeLoad,$writeStatus) (" . $stmt->errno . "-" . $stmt->error . ").";
 					else
 					{
 						$badCount--;
@@ -326,7 +331,7 @@
 						}
 						
 						//these moved out because i dont care if the values are the saem durring an audit - (probably just still 0)
-						$resultMessage[] = "Successfully updated power circuit (PowerID:$writePowerID Load:$writeLoad).";
+						$resultMessage[] = "Successfully updated power circuit (PowerID:$writePowerID Load:$writeLoad Status:$writeStatus).";
 						UpdateRecordEditUser("dcim_power","powerid",$writePowerID);//assume this is a full power audit so log it even if the data hasn't changed
 						LogDBChange("dcim_power",$writePowerID,"U");
 					}
@@ -5518,6 +5523,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
+			echo "<a href='./?page=PowerAudit'>Back to panel list</a><BR><BR>\n";
 			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
 			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
 			echo "<table style='border-collapse: collapse'>\n";
@@ -5658,7 +5664,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			echo "<span class='tableTitle'>Panels</span><BR>\n";
+			echo "<span class='tableTitle'>All Panels</span><BR>\n";
 			echo CreateDataTableHeader(array("Site","CA#","Panel"));
 			
 			//list result data
