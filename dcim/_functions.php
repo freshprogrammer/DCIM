@@ -5572,10 +5572,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
 					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
-					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;\n";
-					echo "<input id=PowerAuditPanel_Circuit".$circuit."_load type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='' class=''></td>\n";
+					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
+					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
+					$checked = ($status==="A") ? " checked" : "";
+					echo "<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
+					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
 					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
-					echo "</tr></table>\n";
+					echo "</td></tr></table>\n";
 				
 					if($volts==208)//208 volt circuits take up double
 					{
