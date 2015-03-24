@@ -218,6 +218,11 @@
 		    ProcessQAAction($action);
 		    $tookAction = true;
 		}
+		else if($action==="PowerAudit_PanelUpdate")
+		{
+		    ProcessPowerAuditPanelUpdate($action);
+		    $tookAction = true;
+		}
 		else if(strlen($action))
 		{
 			$errorMessage[] = "Unknown Form action sent ($action).";
@@ -249,11 +254,90 @@
         select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
         
         system($command);
-        */
-    }
-    
-    function ProcessQAAction($action)
-    {
+		*/
+	}
+	
+	function ProcessPowerAuditPanelUpdate($action)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+
+		$valid = false;
+		$powerIDs = array();
+		$loads = array();
+		$circuitsPerPanel = 42;
+		
+		for($circuit=1; $circuit<=$circuitsPerPanel; $circuit++)
+		{
+			$powerID = GetInput("c".$circuit."powerid");
+			$load = GetInput("c".$circuit."load");
+			if(strlen($powerID)>0 && strlen($load)>0)
+			{
+				$powerIDs[] = $powerID;
+				$loads[] = $load;
+			}
+		}
+		
+		$inputCount = count($powerIDs);
+		$valid = $inputCount>0;
+		if($valid)
+		{
+			$resultMessage[] = "ProcessPowerAuditPanelUpdate: $i inputs";
+
+			$query = "UPDATE dcim_power
+					SET cload=?
+					WHERE powerid=?
+					LIMIT 1";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+				$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+			else
+			{
+				$stmt->bind_Param('ii', $writeLoad, $writePowerID);
+
+				$goodCount = 0;
+				$badCount = 0;
+				for($i=0; $i<$inputCount; $i++)
+				{
+					$writePowerID = $powerIDs[$i];
+					$writeLoad = $loads[$i];
+					$badCount++;
+						
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute panel power circuit update($writePowerID,$writeLoad) (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$badCount--;
+						$goodCount++;
+						
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							//dif load
+						}
+						else
+						{
+							//load not changed
+							//$errorMessage[] = "Successfully updated power record (PowerID:$writePowerID Load:$writeLoad), but affected $affectedCount rows.";
+						}
+						
+						//these moved out because i dont care if the values are the saem durring an audit - (probably just still 0)
+						$resultMessage[] = "Successfully updated power circuit (PowerID:$writePowerID Load:$writeLoad).";
+						UpdateRecordEditUser("dcim_power","powerid",$writePowerID);//assume this is a full power audit so log it even if the data hasn't changed
+						LogDBChange("dcim_power",$writePowerID,"U");
+					}
+				}
+				$resultMessage[] = "Power Audit Panel - Updated: $inputCount ($goodCount Updates,$badCount Failures) Records.";
+			}
+		}
+	}
+	
+	function ProcessQAAction($action)
+	{
 		$valid = true;
 		
 		//$add = $action==="Badge_Add";
@@ -266,11 +350,11 @@
 		
 		if($valid)
 		{
-		    QARecord($table,$id);
+			QARecord($table,$id);
 		}
-    }
-    
-    function LogDBChange($table, $ukey, $action, $filter="")
+	}
+	
+	function LogDBChange($table, $ukey, $action, $filter="")
     {
         global $mysqli;
 		global $userID;
@@ -5488,7 +5572,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
 					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
-					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;<input id=PowerAuditPanel_Circuit".$circuit."_load type='number' tabindex=$tabIndex powerid='$powerID' size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''></td>\n";
+					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."&nbsp;\n";
+					echo "<input id=PowerAuditPanel_Circuit".$circuit."_load type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='' class=''></td>\n";
+					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
 					echo "</tr></table>\n";
 				
 					if($volts==208)//208 volt circuits take up double
@@ -5523,7 +5609,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 			echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
-			//echo "<input id=EditBadge_badgeid type='hidden' name='badgeid' value=-1>\n";
+			echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
+			echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
 			echo "</table></form>\n";
 		}
 		else

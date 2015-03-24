@@ -1156,67 +1156,6 @@ function QARecord(table, key, formAction, instanceID)
 }
 function SavePowerAuditPanel()
 {
-	var numberOfCircuitsPerPanel = 42;
-	alert("In development");
-	var valid = false;
-	var errorMsg = "";
-	//document.getElementById("EditCircuitMsg").className = "hidden";
-
-
-	var circuitIDs = [];
-	var circuitLoads = [];
-	
-	for (i = 1; i <= numberOfCircuitsPerPanel; i++) 
-	{
-		var circuitInput = document.getElementById("PowerAuditPanel_Circuit"+i+"_load");
-		if(circuitInput!=null)
-		{
-			var circuitID   = circuitInput.getAttribute('powerid');
-			var circuitLoad = circuitInput.value;
-		
-			circuitIDs.push(circuitID);
-			circuitLoads.push(circuitLoad);
-		}
-    }
-	
-	var breakHere = true;
-
-	/*
-	var panelInput = document.getElementById("EditCircuit_panel");
-	panelInput.value = panelInput.value.toLowerCase().replace("ups","").trim();
-	
-	if(add && !ValidPowerPanel(panelInput.value)){ 
-		errorMsg = "Invalid Panel";
-		panelInput.focus();
-	}
-	else if(add && (document.getElementById("EditCircuit_circuit").value.length < 1 || isNaN(document.getElementById("EditCircuit_circuit").value))){ 
-		errorMsg = "Invalid Circuit";
-		document.getElementById("EditCircuit_circuit").focus();
-	}
-	else
-		valid = true;
-
-	if(add && valid)
-	{
-		var cancel = confirm("Are you sure you want to create this Circuit?") == false;
-		valid = !cancel;
-	}
-	
-	//submit
-	if(valid)
-	{
-		document.getElementById("EditCircuit_volts").disabled = false;
-		
-		document.getElementById("EditCircuitForm").submit();
-	}
-	else
-	{
-		if(!cancel)
-		{
-			//show error msg
-			document.getElementById("EditCircuitMsg").innerHTML = errorMsg;
-			document.getElementById("EditCircuitMsg").className = "errorMessage";
-		}
-	}*/
+	var valid = true;//nothing to validate here - real validation happening in input and its type 
 	return valid; 
 }
