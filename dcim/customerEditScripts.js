@@ -1154,3 +1154,23 @@ function QARecord(table, key, formAction, instanceID)
 
 	form.submit();
 }
+function SavePowerAuditPanel()
+{
+	var valid = true;//nothing to validate here - real validation happening in input and its type
+	valid = confirm("Are you sure you want to update all these records?");
+	return valid; 
+}
+function PowerAuditCircuit_StatusClicked(srcCheckbox, srcLoadField)
+{
+	if(!document.getElementById(srcCheckbox).checked)
+	{
+		document.getElementById(srcLoadField).value = 0;
+	}
+}
+function PowerAuditCircuit_LoadChanged(srcLoadField, srcCheckbox)
+{
+	if(document.getElementById(srcLoadField).value > 0)
+	{
+		document.getElementById(srcCheckbox).checked = true;
+	}
+}

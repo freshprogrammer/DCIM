@@ -1,22 +1,29 @@
 <?php 
 	set_include_path('../'); 
 
-	include 'dcim/_customization.php';
+	include 'dcim/_dcimConfig.php';
 	include 'dcim/_genericFunctions.php';
 	include 'dcim/_helperFunctions.php';
 	include 'dcim/_functions.php';
 
 	//startup
 	SQLIConnect();
-
-	header("Content-Type: text/csv");
-	header("Content-Disposition: attachment; filename=badgelist.csv");
-	// Disable caching
-	header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
-	header("Pragma: no-cache"); // HTTP 1.0
-	header("Expires: 0"); // Proxies
 	
-	outputCSV(CreateBadgeExportArray());
+	$report = GetInput("report");
+	
+	if($report==="ActiveBadgeList")
+	{
+		OutputCSV("badgelist.csv",CreateBadgeExportArray());
+	}
+	else if($report==="OtherReport")
+	{
+		OutputCSV("badgelist.csv",CreateBadgeExportArray());
+	}
+	else 
+	{
+		echo "No Report Specified";
+	}
+	
 	
 	function CreateBadgeExportArray()
 	{

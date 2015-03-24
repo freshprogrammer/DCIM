@@ -61,13 +61,22 @@
 	}
 	
 	$uniqueIDNo = 0;
-	function MakeTextIntoUniqueID($input)
+	function MakeTextIntoUniqueJSVariableName($input)
 	{
 	    global $uniqueIDNo;
 	    $uniqueIDNo++;
-	    
-		$result = str_replace(" ","_", $input).$uniqueIDNo;
-		return $result;
+
+	    $result = str_replace("<","", $input);
+	    $result = str_replace(">","", $result);
+	    $result = str_replace("\\","", $result);
+	    $result = str_replace("/","", $result);
+	    $result = str_replace(".","", $result);
+	    $result = str_replace(";","", $result);
+	    $result = str_replace(",","", $result);
+	    $result = str_replace("'","", $result);
+	    $result = str_replace("\"","", $result);
+		$result = str_replace(" ","_", $result);
+		return $result.$uniqueIDNo;
 	}
 	
 	function MakeHTMLSafe($input)
@@ -221,8 +230,15 @@
 		return $grandTotal;
 	}
 	
-	function outputCSV($data) 
+	function OutputCSV($fileName,$data) 
 	{
+		header("Content-Type: text/csv");
+		header("Content-Disposition: attachment; filename=$fileName");
+		// Disable caching
+		header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
+		header("Pragma: no-cache"); // HTTP 1.0
+		header("Expires: 0"); // Proxies
+		
 		$output = fopen("php://output", "w");
 		foreach ($data as $row) 
 		{

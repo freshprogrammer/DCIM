@@ -218,6 +218,11 @@
 		    ProcessQAAction($action);
 		    $tookAction = true;
 		}
+		else if($action==="PowerAudit_PanelUpdate")
+		{
+		    ProcessPowerAuditPanelUpdate($action);
+		    $tookAction = true;
+		}
 		else if(strlen($action))
 		{
 			$errorMessage[] = "Unknown Form action sent ($action).";
@@ -249,11 +254,95 @@
         select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
         
         system($command);
-        */
-    }
-    
-    function ProcessQAAction($action)
-    {
+		*/
+	}
+	
+	function ProcessPowerAuditPanelUpdate($action)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+
+		$valid = false;
+		$powerIDs = array();
+		$loads = array();
+		$stati = array();
+		$circuitsPerPanel = 42;
+		
+		for($circuit=1; $circuit<=$circuitsPerPanel; $circuit++)
+		{
+			$powerID = GetInput("c".$circuit."powerid");
+			$load = GetInput("c".$circuit."load");
+			$status = GetInput("c".$circuit."status");
+			
+			if(strlen($powerID)>0 && strlen($load)>0)
+			{
+				$powerIDs[] = $powerID;
+				$loads[] = $load;
+				if(!isset($status) || strlen($status)==0)
+					$status = "D";
+				$stati[] = $status;
+			}
+		}
+		
+		$inputCount = count($powerIDs);
+		$valid = $inputCount>0;
+		if($valid)
+		{
+			$query = "UPDATE dcim_power
+					SET cload=?, status=?
+					WHERE powerid=?
+					LIMIT 1";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+				$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+			else
+			{
+				$stmt->bind_Param('isi', $writeLoad, $writeStatus, $writePowerID);
+
+				$goodCount = 0;
+				$badCount = 0;
+				for($i=0; $i<$inputCount; $i++)
+				{
+					$writePowerID = $powerIDs[$i];
+					$writeLoad = $loads[$i];
+					$writeStatus = $stati[$i];
+					$badCount++;
+						
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute panel power circuit update($writePowerID,$writeLoad,$writeStatus) (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$badCount--;
+						$goodCount++;
+						
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							//dif load
+						}
+						else
+						{
+							//load not changed
+							//$errorMessage[] = "Successfully updated power record (PowerID:$writePowerID Load:$writeLoad), but affected $affectedCount rows.";
+						}
+						
+						//these moved out because i dont care if the values are the saem durring an audit - (probably just still 0)
+						$resultMessage[] = "Successfully updated power circuit (PowerID:$writePowerID Load:$writeLoad Status:$writeStatus).";
+						UpdateRecordEditUser("dcim_power","powerid",$writePowerID);//assume this is a full power audit so log it even if the data hasn't changed
+						LogDBChange("dcim_power",$writePowerID,"U");
+					}
+				}
+				$resultMessage[] = "Power Audit Panel - Updated: $inputCount ($goodCount Updates,$badCount Failures) Records.";
+			}
+		}
+	}
+	
+	function ProcessQAAction($action)
+	{
 		$valid = true;
 		
 		//$add = $action==="Badge_Add";
@@ -266,11 +355,11 @@
 		
 		if($valid)
 		{
-		    QARecord($table,$id);
+			QARecord($table,$id);
 		}
-    }
-    
-    function LogDBChange($table, $ukey, $action, $filter="")
+	}
+	
+	function LogDBChange($table, $ukey, $action, $filter="")
     {
         global $mysqli;
 		global $userID;
@@ -5400,14 +5489,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 
 		//TODO show customer or device per circuit
-		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
+		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid=? AND l.colo=? AND p.panel=?
-			GROUP BY p.panel, p.circuit
-			ORDER BY l.colo, LPAD(p.panel, 4, '0'),p.circuit % 2 = 0, CAST(p.circuit AS UNSIGNED)";
+			GROUP BY s.siteid, p.panel, p.circuit
+			ORDER BY CAST(p.circuit AS UNSIGNED)";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5418,55 +5509,122 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_Param('iss', $pa_siteid,$pa_room,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
+		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 		
-		
+
+		echo "<script src='customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
-		echo "Power Audit list for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
+		echo "Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
 		echo "</div>\n";
 		
 		echo "<div class='panel-body'>\n\n";
 		if($count>0)
 		{
 			//show results
-			echo "<span class='tableTitle'>Circuits</span><BR>\n";
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"));
+			echo "<a href='./?page=PowerAudit'>Back to panel list</a><BR><BR>\n";
+			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
+			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
+			echo "<table style='border-collapse: collapse'>\n";
 			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
+			$stmt->fetch();
+			
+			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
+			$panelTextHeader = "UPS-";
+			$numberOfCircuitsPerPanel = 42;
+			$tableCircuitNo = 0;
+			$oddColor = false;
+			$prevWas208Left = false;
+			$prevWas208Right = false;
+			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 			{
-                $fullLocationName = FormatLocation($site, $colo, $location);
-                
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
+				//odd circutis are on the left 
+				$tableCircuitNo++;
+				$left = ($tableCircuitNo%2)!=0;
+
+				if(!$left)//only flip color for right cell
+					$oddColor = !$oddColor;
+				if($oddColor) $cellClass = "powerAuditCellOne";
+				else $cellClass = "powerAuditCellTwo";
+				
+				if($circuit<$tableCircuitNo)
+					$stmt->fetch();
+
+				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
+				$locationName = "CA $colo $location";
 				if($amps>0)
 				{
 					$percentLoad = round(100*$cLoad/$amps,2);
-					
 					if($percentLoad>80)
 						$percentLoad = "<font color=red>$percentLoad</font>";
 				}
 				else
 					$percentLoad = "?";
 				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>";
-				echo "<td class='data-table-cell'>$volts</td>";
-				echo "<td class='data-table-cell'>$amps</td>";
-				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A ($percentLoad%)</td>";
-				echo "</tr>";
+				if($left)
+				{//start a new row
+					echo "<tr>\n";
+				}
+				
+				$hasData = ($circuit==$tableCircuitNo);
+
+				if($hasData)
+				{
+					echo "<td class='$cellClass'>\n";
+					echo "<table width=100%><tr>\n";
+					echo "<td><b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b></td>\n";
+					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
+					echo "</tr></table><table width=100%><tr>\n";
+					//echo "$fullLocationName ($percentLoad%) ";
+					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
+					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
+					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
+					$checked = ($status==="A") ? " checked" : "";
+					echo "<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
+					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
+					echo "</td></tr></table>\n";
+				
+					if($volts==208)//208 volt circuits take up double
+					{
+						if($left)
+							$prevWas208Left = true;
+						else
+							$prevWas208Right = true;
+					}
+				}
+				else 
+				{
+					echo "<td class='$cellClass powerAuditCellEmpty'>\n";
+					if($left && $prevWas208Left)
+					{
+						$prevWas208Left = false;
+						echo "208 Above";
+					}
+					else if(!$left && $prevWas208Right)
+					{
+						$prevWas208Right = false;
+						echo "208 Above";
+					}
+					else
+						echo "EMPTY";
+				}
+				echo "</td>\n";
+
+				if(!$left)
+				{//end row
+					echo "</tr>\n";
+				}
 			}
-			echo "</table>";
+			echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
+			echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
+			echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
+			echo "</table></form>\n";
 		}
 		else
-			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>";
+			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>\n";
 						
 		echo "</div>\n";
 		echo "</div>\n";
@@ -5506,7 +5664,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			echo "<span class='tableTitle'>Panels</span><BR>\n";
+			echo "<span class='tableTitle'>All Panels</span><BR>\n";
 			echo CreateDataTableHeader(array("Site","CA#","Panel"));
 			
 			//list result data

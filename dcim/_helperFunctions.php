@@ -198,9 +198,9 @@
  	function CreateReport($title,$shortResult,$longResult, $note)
  	{
  	 	$hiddenCSSClass = "hidden";
- 	 	$visibleCSSClass = "shortReport";
+ 	 	$visibleCSSClass = "auditDataTable";
  		
- 		$reportID = MakeTextIntoUniqueID($title);
+ 		$reportID = MakeTextIntoUniqueJSVariableName($title);
  	 	$reportResultLongID = $reportID."_resultLong";
  	 	$reportResultShortID = $reportID."_resultShort";
  	 	$reportHideFunctionName = $reportID."_table_toggle";
@@ -210,7 +210,8 @@
  	 	$enableSwitcher = strlen($longResult)>0;
  	 	
  	 	$result = "";
- 	 	
+
+ 	 	$result .= "<div class='auditReport'>\n";
 		$result .= "<span class='tableTitle'>$title</span>\n";
 		if($enableSwitcher)
 		 	$result .= " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
@@ -257,6 +258,7 @@
  	 	 	$result .= " 	$reportHideFunctionName();\n";
  	 	 	$result .= "</script>\n";
 		}
+ 	 	$result .= "</div>\n";
 		echo $result;
  	}
 	
@@ -477,15 +479,22 @@
 	function DevicePortType($type, $formatted=true)
 	{
 		if($type === "E") return "Ethernet";
-		else if($type === "F") return  "Fiber";
-		else if($type === "O") return  "Other";
+		else if($type === "F") return "Fiber";
+		else if($type === "O") return "Other";
 		else return "Unknown";
 	}
 	
 	function PowerStatus($status, $formatted=true)
 	{
 		if($status === "A") return "Active";
-		else if($status === "D") return  $formatted==true ? "<font color=red>Disabled</font>" : "Disabled";
+		else if($status === "D") return $formatted==true ? "<font color=red>Disabled</font>" : "Disabled";
+		else return "Unknown";
+	}
+	
+	function PowerOnOff($status, $formatted=true)
+	{
+		if($status === "A") return $formatted==true ? "<font color=green>ON</font>" : "ON";
+		else if($status === "D") return $formatted==true ? "<font color=red>OFF</font>" : "OFF";
 		else return "Unknown";
 	}
 	
@@ -600,12 +609,6 @@
 	{
 	 	global $permissionLevel;
 		return ValidAdminPermission($permissionLevel);
-	}
-	function UserHasDevPermission()
-	{
-		//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
-	 	global $userID;
-		return (int)$userID==0;//admin only
 	}
 	function DescribeUserPermissionLevel($permission, $simple=false, $showVal=false)
 	{

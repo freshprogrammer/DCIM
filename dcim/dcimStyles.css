@@ -135,7 +135,12 @@
 	padding-right:20;
 }
 
-.shortReport{
+.auditReport{
+	display:block;
+	margin-bottom: 15px;
+}
+
+.auditDataTable{
 	display:inline-block;
 }
 
@@ -148,7 +153,6 @@
 }
 
 .editButtons_visible{
-	
 }
 
 
@@ -289,6 +293,31 @@ tr.dataRowOne {
 
 tr.dataRowTwo {
 	background-color: #EEE;
+}
+
+td.powerAuditCellTwo, td.powerAuditCellOne {
+	height: 50px;
+	width: 320px;
+	font-size: 14px;
+	padding: 5px 5px 5px 5px;
+	border: solid 1px #000;
+	color: #000;
+	font-family: Arial,Verdana,sans-serif;
+}
+
+td.powerAuditCellOne {
+	background-color: #FFF;
+}
+
+td.powerAuditCellTwo {
+	background-color: #EEE;
+}
+
+td.powerAuditCellEmpty {
+	//background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif");
+  	//background-repeat: round;
+	//background-size: 100%;
+	background-color: #CCC;
 }
 
 body { 
