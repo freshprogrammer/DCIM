@@ -80,7 +80,7 @@
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				INNER JOIN dcim_power AS p ON pl.powerid=p.powerid
 				INNER JOIN dcim_site AS s ON l.siteid=s.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE l.siteid=$siteID
 			GROUP BY s.siteid,l.colo,l.name,p.panel,p.circuit
