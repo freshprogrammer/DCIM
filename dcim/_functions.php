@@ -319,7 +319,6 @@
 						$goodCount++;
 						
 						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
 							//dif load

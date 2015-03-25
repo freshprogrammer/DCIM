@@ -33,9 +33,10 @@
         echo "<div class=\"panel\">\n";
         echo "<div class=\"panel-header\">Audit Functions</div>\n";
         echo "<div class=\"panel-body\">\n";
-		
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button> ";
+
+        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR>";
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button> ";
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
 		
         if(UserHasDevPermission())
         {
