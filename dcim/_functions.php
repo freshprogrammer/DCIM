@@ -5604,7 +5604,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "208 Above";
 					}
 					else
-						echo "EMPTY";
+						echo "$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
 				}
 				echo "</td>\n";
 

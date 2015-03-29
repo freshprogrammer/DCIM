@@ -465,3 +465,44 @@ h2 {
   margin-left: 15px;
   z-index: 999;
 }
+
+@media only screen and (device-width: 768px) {
+	/* For general iPad layouts */
+	
+	#appname {
+		//color: #F0F;
+	}
+	
+	.pageMinWidth {
+		min-width: 850px;
+	}
+	
+	td.powerAuditCellTwo, td.powerAuditCellOne {
+		width: 400px;
+		height: 60px;
+	}
+	
+	button, input, select, .panel-header, .panel-body, td.powerAuditCellTwo, td.powerAuditCellOne {
+		font-size: 18px;
+	}
+	
+	.dr-toolbar-int, .navLinks{
+		font-size: 18px;
+	} 
+	
+	h1 {
+		font-size: 20px;
+	}
+}
+@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
+	/* For iPad portrait layouts only */
+	#appname {
+		//color: #F00;
+	}
+}
+@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape) {
+	/* For iPad landscape layouts only */
+	#appname {
+		//color: #00F;
+	}
+}
