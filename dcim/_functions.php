@@ -94,15 +94,11 @@
 	
 	function UpdateLoginCookies($user, $password)
 	{
-	    //this should be the MD5 of the password so it is never stored on the local machie as original
-	    
+		global $loginCookieDurration;
 		//update cookie info
-		//$cookieLife = 8; // 8 hours - but this will be from last page call
-		$cookieLife = 24*2; // 2 days
-		
-		$cookieLife*=3600;//convert from hours to seconds
-		setcookie("dcim_user", $user, time()+$cookieLife);
-		setcookie("dcim_password", $password, time()+$cookieLife);
+		setcookie("dcim_user", $user, time()+$loginCookieDurration);
+		//this should be the MD5 of the password so it is never stored on the local machie as original
+		setcookie("dcim_password", $password, time()+$loginCookieDurration);
 		
 		//update the current var - seesion cookie in browser doesn't actualy update till the page is reloaded
 		$_COOKIE["dcim_user"] = $user;

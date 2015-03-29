@@ -10,7 +10,6 @@
 	SQLIConnect();
 	
 	//globals
-	$javascriptVariables = "";
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
@@ -317,7 +316,7 @@
 			
 			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
 			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
-			$searchPlaceHolders[] = "$linesOfCode lines but cutting back";
+			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
 			$searchPlaceHolders[] = "10K+ line club";
 			$searchPlaceHolders[] = "$dbRecs+ DB Records";
 			$searchPlaceHolders[] = "$dbRecs Records and counting";

@@ -265,7 +265,6 @@
 					
 					$stmt2->execute();
 					$stmt2->store_result();
-					//$count = $stmt2->num_rows; //this is a count() this will always be 1
 					$stmt2->bind_result($field,$type,$null,$key,$default,$extra);
 					
 					while ($stmt2->fetch())
