@@ -3,6 +3,7 @@
 	$siteName = "DCIM Name";
 	$pageTitle = "DCIM Title";
 	$versionNote = "note";
+	$loginCookieDurration = 8*60*60;//8 hours
 
 	//DB connect
 	$db_host = "localhost";

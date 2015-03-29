@@ -5,7 +5,7 @@ function ContactAdminToDoThisMsg(fieldName)
 }
 function InitializeEditButton()
 {
-	var editModeCookie = GetCookie('editMode');
+	var editModeCookie = GetCookie('dcim_editMode');
 	//set it to the opposite then toggle to what I want
 	editMode = !(editModeCookie=="true");
 	ToggleEditMode();
@@ -16,12 +16,12 @@ function ToggleEditMode()
 	HideAllEditForms();
 	if(editMode)
 	{
-		document.cookie ="editMode=true;";
+		document.cookie ="dcim_editMode=true;";
 		SwapStyleClass("editButtons_hidden", "editButtons_visible");
 	}
 	else
 	{
-		document.cookie = "editMode=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		document.cookie = "dcim_editMode=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 		SwapStyleClass("editButtons_visible", "editButtons_hidden");
 	}
 }

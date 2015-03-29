@@ -229,6 +229,54 @@
 		}
 		return $grandTotal;
 	}
+
+	function DescribeDBInMarkDown()
+	{//show count for all tables in DB
+		global $mysqli;
+		global $errorMessage;
+		
+		$result = "";
+		
+		$query = "SHOW TABLES";
+			
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = $errorMessage."DescribeDBInMarkDown() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($table);
+
+			while ($stmt->fetch())
+			{
+				$query2 = "Describe  $table";
+					
+				if (!($stmt2 = $mysqli->prepare($query2)))
+				{
+					$errorMessage[] = $errorMessage."DescribeDBInMarkDown() - Prepare 2 failed: ($query2) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+				}
+				else
+				{
+					$result .= "#### Describe $table\n";
+					$result .= "|Field|Type|Null|Key|Default|Extra|\n";
+					$result .= "|---|---|---|---|---|---|\n";
+					
+					$stmt2->execute();
+					$stmt2->store_result();
+					$stmt2->bind_result($field,$type,$null,$key,$default,$extra);
+					
+					while ($stmt2->fetch())
+					{
+						$result .= "|$field|$type|$null|$key|".(is_null($default)?"*NULL*":$default)."|$extra|\n";
+					}
+					$result .= "\n";
+				}
+			}
+		}
+		return $result;
+	}
 	
 	function OutputCSV($fileName,$data) 
 	{
