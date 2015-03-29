@@ -2694,11 +2694,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 	    global $userID;
 		global $mysqli;
-	
+		global $pageSubTitle;
 		
 		//TODO this could be optimized to only select from dcim_user once (with bellow) - admins only, who cares
 		if(UserHasAdminPermission())
 		{
+			$pageSubTitle = "Accounts"; 
+			
 		    echo "<div class='panel'>\n";
     		echo "<div class='panel-header'>User List</div>\n";
     		echo "<div class='panel-body'>\n\n";
@@ -2763,6 +2765,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		echo "</div>\n";
     		echo "</div>\n\n";
     		echo "<BR>\n";
+		}
+		else
+		{
+			$pageSubTitle = "Account";
 		}
 		
 /////////////////user details
@@ -5482,6 +5488,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function PowerAuditPanel($pa_siteid,$pa_room,$pa_panel)
 	{
 		global $mysqli;
+		global $pageSubTitle;
 
 		//TODO show customer or device per circuit
 		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
@@ -5506,7 +5513,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->store_result();
 		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
 		$count = $stmt->num_rows;
-		
+
+		$pageSubTitle = "Power Audit - Site#$pa_siteid Room:$pa_room Panel:$pa_panel";
 
 		echo "<script src='customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
@@ -5628,7 +5636,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanelList()
 	{
+		global $pageSubTitle;
 		global $mysqli;
+		
+		$pageSubTitle = "Power Audit - Panel List";
 		
 		$query = "SELECT s.name,s.siteid, l.colo, p.panel
 			FROM dcim_power AS p
