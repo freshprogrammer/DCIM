@@ -1,11 +1,15 @@
 <?php 
 	set_include_path('../'); 
-	
+
+	include 'dcim/_dcimConfig.php';
+	include 'dcim/_genericFunctions.php';
+	include 'dcim/_helperFunctions.php';
 	include 'dcim/_functions.php';
 
+	SQLIConnect();
 	?>
 <head><title>Test DCIM</title></head>
-
+<!--
 <body>
 
 Test page<BR>
@@ -25,12 +29,18 @@ function ValidateVlan()
 	
 	return false;
 }
-</script>
+</script> -->
 
 </body>
 
 <?php 
 
  //test php
+global $errorMessage;
+ 
+echo DescribeDBInMarkDown();
+echo "<BR>";
+echo "Errors:<BR>\n".implode("<BR>\n",$errorMessage);;
+
 
  ?>
