@@ -10,7 +10,6 @@
 	SQLIConnect();
 	
 	//globals
-	$editModeButtonJavaScript = "";
 	$javascriptVariables = "";
 	$resultMessage = array();
 	$errorMessage = array();
