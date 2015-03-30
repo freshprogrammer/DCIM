@@ -5516,7 +5516,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			echo "<a href='./?page=PowerAudit'>Back to panel list</a><BR><BR>\n";
+			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
 			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
 			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
 			echo "<table style='border-collapse: collapse'>\n";
@@ -5570,7 +5570,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
-					echo "<td><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
+					echo "<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
 					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";

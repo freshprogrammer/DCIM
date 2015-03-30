@@ -1160,6 +1160,23 @@ function SavePowerAuditPanel()
 	valid = confirm("Are you sure you want to update all these records?");
 	return valid; 
 }
+function PowerAuditPanel_ConfirmPageChange(url)
+{
+	var confirmed = false;
+	var form = document.getElementById('PowerAuditPanelForm');
+	for ( var i = 0; i < form.elements.length; i++ )
+	{//check number input fields to see if anything has been entered
+		if(form.elements[i].type=="number" && form.elements[i].value!="")
+		{//there is a value here
+			confirmed = confirm("Are you sure you want to navigate away from this page?");
+			break;
+		}
+		//didn't find any entered values
+		confirmed = true;
+	}
+	if(confirmed)
+		window.open(url,"_self");
+}
 function PowerAuditCircuit_StatusClicked(srcCheckbox, srcLoadField)
 {
 	if(!document.getElementById(srcCheckbox).checked)
