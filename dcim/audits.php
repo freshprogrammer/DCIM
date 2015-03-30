@@ -10,7 +10,6 @@
 	/*
 		::need to add::
 		Multiple Devices connencted to a single device port
-		device with invalid location
 		location without 2x power
 		verify location.status if a device is linked
 		power without location
@@ -144,7 +143,7 @@
 			$longResult.= "</table>\n";
 		    
 		    //show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Circuits",3);
 		}
 		else
 		{
@@ -206,7 +205,7 @@
 			$longResult.= "</table>\n";
 		    
 		    //show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count VLANs",3);
 		}
 		else
 		{
@@ -262,7 +261,7 @@
 			$longResult.= "</table>\n";
 		    
 		    //show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Badges",3);
 		}
 		else
 		{
@@ -328,7 +327,7 @@
 			$longResult.= "</table>\n";
 		    
 		    //show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Colos",3);
 		}
 		else
 		{
@@ -466,11 +465,11 @@
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s).";
 
-		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, l.locationid
+		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-			WHERE c.name IS NULL OR l.locationid IS NULL
+			WHERE c.name IS NULL OR l.locationid IS NULL OR l.name='Unknown'
 			ORDER BY d.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -481,14 +480,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID);
+		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID, $refLocationID,$locationName);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID"));
+			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID","RefLocationID","RefLocationName"));
 				
 			//list result data
 			$oddRow = false;
@@ -505,12 +504,14 @@
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$refLocationID'>".MakeHTMLSafe($refLocationID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$refLocationID'>".MakeHTMLSafe($locationName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 		
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
 		else
 		{
@@ -570,7 +571,7 @@
 			$longResult.= "</table>\n";
 	
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Ports",3);
 		}
 		else
 		{
@@ -626,7 +627,7 @@
 			$longResult.= "</table>\n";
 		    
 		    //show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Badges",3);
 		}
 		else
 		{
@@ -642,7 +643,7 @@
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
 	
-		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name
+		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
     		FROM dcim_device AS d 
                 LEFT JOIN dcim_customer AS c ON c.hno=d.hno
             WHERE c.status='I' AND NOT d.status='I'";
@@ -655,7 +656,7 @@
 	
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($cust, $hno, $deviceID, $deviceName);
+		$stmt->bind_result($cust, $hno, $deviceID, $deviceName, $model, $member);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -672,16 +673,18 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
+
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 	
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 	
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
 		else
 		{
@@ -737,7 +740,7 @@
 			$longResult.= "</table>\n";
 		
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage("$count Circuits",3);
 		}
 		else
 		{
@@ -856,7 +859,7 @@
 			$longResult.= "</table>\n";
 		
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Records",2);
+			$shortResult.= FormatSimpleMessage("$count Locations",2);
 		}
 		else
 		{
