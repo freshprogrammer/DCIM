@@ -4680,7 +4680,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td width=1 align='left'>
 							<input id=EditCircuit_status type='checkbox' tabindex=5 name='status' value='A' onclick='EditCircuit_StatusClicked()' class=''>
 							Load:
-							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
+							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=30 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -5576,7 +5576,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 					$checked = ($status==="A") ? " checked" : "";
 					echo "<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
 					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
 					echo "</td></tr></table>\n";
 				
