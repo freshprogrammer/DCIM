@@ -2474,30 +2474,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>Location</div>\n";
 		echo "<div class='panel-body'>\n\n";
-			
+		
+		//location page notes
+		//
+		// need/todo - draw whole cab with empty spaces and rowspans
+		// server cell css - support server image - contains device details
+		//
+		//-click to go to device
+		// devices at unit 0 are listed at top
+		// -if device at this unit then asses it (check for size > 1U) - span as necisary
+		// ---pre calc deviice  ranges
+		//
+		//
+		
 		$query = "SELECT s.siteid, s.name AS site, 
 				l.locationid, l.colo, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
     		FROM dcim_location AS l
     			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
     		WHERE l.locationid=?";
-		
-		//location page notes
-		/*
-		 * need/todo
-		 * server cell css - support server image - contains device details
-		 * -click to go to device
-		 * list power option to add edit here
-		 * 
-		 * 
-		 * 
-		 * get unber of units per this location and spin through that
-		 * -devices at unit 0 are listed at top
-		 * -units from 50*-1 DESC - number evens only
-		 * -if device at this unit then asses it (check for size > 1U) - span as necisary
-		 * ---pre calc deviice  ranges
-		 * 
-		 */
-		
 		
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -2720,13 +2714,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		$count = $stmt->num_rows;
     		
     		echo "<span class='tableTitle'>Users</span>\n";
-    		
-//    		if(!$search && UserHasWritePermission())
-//    		{
-//    			// add button to add new Device
-//    			//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-//    			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '', 'F', '', -1, '', 'A', '', '', '-1', '', '')\">Add New</button>\n";
-//    		}
+    		//Add User button here?
     		echo "<BR>\n";
     		
     		if($count>0)
@@ -3257,13 +3245,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		//edit Customer button - not visible till in edit mode
     		if(UserHasWritePermission())
     		{
+    		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
     		    $jsSafeDeviceName = MakeJSSafeParam($deviceName);
 				$jsSafeNotes = MakeJSSafeParam($notes);
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
-				//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName, '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
     		}
     		//editMode button
     		if(UserHasWritePermission())
@@ -4098,8 +4087,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new Device
-			//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -4146,13 +4135,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					//edit device - link to form
 					echo "<td class='data-table-cell-button editButtons_hidden'>";
+					$jsSafeFullName = MakeJSSafeParam($deviceFullName);
 					$jsSafeName = MakeJSSafeParam($name);
 					$jsSafeNotes = MakeJSSafeParam($notes);
 					$jsSafeSize = MakeJSSafeParam($size);
 					$jsSafeAsset = MakeJSSafeParam($asset);
 					$jsSafeSerial = MakeJSSafeParam($serial);
-					//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
+					//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
 					
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);

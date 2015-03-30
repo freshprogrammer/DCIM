@@ -405,7 +405,7 @@ function SaveDevicePort()
 	}
 	return valid; 
 }
-function EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
+function EditDevice(add, deviceID, hNo, name, fullName, type, size, locationID, unit, status, notes, model, member, asset, serial)
 {
 	HideAllEditForms();
 	//populate fields
@@ -425,7 +425,7 @@ function EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, stat
 	}
 	else
 	{
-		document.getElementById("EditDeviceEntryLegend").innerHTML = "Edit Device ("+name+")";
+		document.getElementById("EditDeviceEntryLegend").innerHTML = "Edit Device ("+fullName+")";
 		document.getElementById("EditDevice_action").value = "Device_Edit";
 
 		document.getElementById("EditDevice_name").title   = ContactAdminToDoThisMsg("device name");
