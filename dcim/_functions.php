@@ -2474,30 +2474,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>Location</div>\n";
 		echo "<div class='panel-body'>\n\n";
-			
+		
+		//location page notes
+		//
+		// need/todo - draw whole cab with empty spaces and rowspans
+		// server cell css - support server image - contains device details
+		//
+		//-click to go to device
+		// devices at unit 0 are listed at top
+		// -if device at this unit then asses it (check for size > 1U) - span as necisary
+		// ---pre calc deviice  ranges
+		//
+		//
+		
 		$query = "SELECT s.siteid, s.name AS site, 
 				l.locationid, l.colo, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
     		FROM dcim_location AS l
     			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
     		WHERE l.locationid=?";
-		
-		//location page notes
-		/*
-		 * need/todo
-		 * server cell css - support server image - contains device details
-		 * -click to go to device
-		 * list power option to add edit here
-		 * 
-		 * 
-		 * 
-		 * get unber of units per this location and spin through that
-		 * -devices at unit 0 are listed at top
-		 * -units from 50*-1 DESC - number evens only
-		 * -if device at this unit then asses it (check for size > 1U) - span as necisary
-		 * ---pre calc deviice  ranges
-		 * 
-		 */
-		
 		
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -2694,11 +2688,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 	    global $userID;
 		global $mysqli;
-	
+		global $pageSubTitle;
 		
 		//TODO this could be optimized to only select from dcim_user once (with bellow) - admins only, who cares
 		if(UserHasAdminPermission())
 		{
+			$pageSubTitle = "Accounts"; 
+			
 		    echo "<div class='panel'>\n";
     		echo "<div class='panel-header'>User List</div>\n";
     		echo "<div class='panel-body'>\n\n";
@@ -2718,13 +2714,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		$count = $stmt->num_rows;
     		
     		echo "<span class='tableTitle'>Users</span>\n";
-    		
-//    		if(!$search && UserHasWritePermission())
-//    		{
-//    			// add button to add new Device
-//    			//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-//    			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '', 'F', '', -1, '', 'A', '', '', '-1', '', '')\">Add New</button>\n";
-//    		}
+    		//Add User button here?
     		echo "<BR>\n";
     		
     		if($count>0)
@@ -2763,6 +2753,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		echo "</div>\n";
     		echo "</div>\n\n";
     		echo "<BR>\n";
+		}
+		else
+		{
+			$pageSubTitle = "Account";
 		}
 		
 /////////////////user details
@@ -3251,13 +3245,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     		//edit Customer button - not visible till in edit mode
     		if(UserHasWritePermission())
     		{
+    		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
     		    $jsSafeDeviceName = MakeJSSafeParam($deviceName);
 				$jsSafeNotes = MakeJSSafeParam($notes);
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
-				//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName, '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
     		}
     		//editMode button
     		if(UserHasWritePermission())
@@ -4092,8 +4087,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new Device
-			//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -4140,13 +4135,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					//edit device - link to form
 					echo "<td class='data-table-cell-button editButtons_hidden'>";
+					$jsSafeFullName = MakeJSSafeParam($deviceFullName);
 					$jsSafeName = MakeJSSafeParam($name);
 					$jsSafeNotes = MakeJSSafeParam($notes);
 					$jsSafeSize = MakeJSSafeParam($size);
 					$jsSafeAsset = MakeJSSafeParam($asset);
 					$jsSafeSerial = MakeJSSafeParam($serial);
-					//EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
-					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
+					//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
 					
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
@@ -4596,7 +4592,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -4684,7 +4680,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td width=1 align='left'>
 							<input id=EditCircuit_status type='checkbox' tabindex=5 name='status' value='A' onclick='EditCircuit_StatusClicked()' class=''>
 							Load:
-							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=33 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
+							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=30 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -5482,6 +5478,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function PowerAuditPanel($pa_siteid,$pa_room,$pa_panel)
 	{
 		global $mysqli;
+		global $pageSubTitle;
 
 		//TODO show customer or device per circuit
 		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
@@ -5506,7 +5503,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->store_result();
 		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
 		$count = $stmt->num_rows;
-		
+
+		$pageSubTitle = "Power Audit - Site#$pa_siteid Room:$pa_room Panel:$pa_panel";
 
 		echo "<script src='customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
@@ -5518,7 +5516,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			echo "<a href='./?page=PowerAudit'>Back to panel list</a><BR><BR>\n";
+			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
 			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
 			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
 			echo "<table style='border-collapse: collapse'>\n";
@@ -5572,13 +5570,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
-					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
+					echo "<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
 					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 					$checked = ($status==="A") ? " checked" : "";
 					echo "<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=33 step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
 					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
 					echo "</td></tr></table>\n";
 				
@@ -5604,7 +5602,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "208 Above";
 					}
 					else
-						echo "EMPTY";
+						echo "$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
 				}
 				echo "</td>\n";
 
@@ -5628,7 +5626,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanelList()
 	{
+		global $pageSubTitle;
 		global $mysqli;
+		
+		$pageSubTitle = "Power Audit - Panel List";
 		
 		$query = "SELECT s.name,s.siteid, l.colo, p.panel
 			FROM dcim_power AS p

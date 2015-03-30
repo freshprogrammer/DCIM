@@ -405,7 +405,7 @@ function SaveDevicePort()
 	}
 	return valid; 
 }
-function EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, status, notes, model, member, asset, serial)
+function EditDevice(add, deviceID, hNo, name, fullName, type, size, locationID, unit, status, notes, model, member, asset, serial)
 {
 	HideAllEditForms();
 	//populate fields
@@ -425,7 +425,7 @@ function EditDevice(add, deviceID, hNo, name, type, size, locationID, unit, stat
 	}
 	else
 	{
-		document.getElementById("EditDeviceEntryLegend").innerHTML = "Edit Device ("+name+")";
+		document.getElementById("EditDeviceEntryLegend").innerHTML = "Edit Device ("+fullName+")";
 		document.getElementById("EditDevice_action").value = "Device_Edit";
 
 		document.getElementById("EditDevice_name").title   = ContactAdminToDoThisMsg("device name");
@@ -1156,9 +1156,38 @@ function QARecord(table, key, formAction, instanceID)
 }
 function SavePowerAuditPanel()
 {
-	var valid = true;//nothing to validate here - real validation happening in input and its type
-	valid = confirm("Are you sure you want to update all these records?");
+	var valid = true;//This is totaly unnecisarry on real browsers but iOS does repect number restrictions
+	var form = document.getElementById('PowerAuditPanelForm');
+	var invalidInput;
+	for ( var i = 0; i < form.elements.length; i++ )
+	{//check number input fields to see if anything has been entered
+		if(form.elements[i].type=="number" && (parseFloat("0"+form.elements[i].value)<form.elements[i].min || parseFloat("0"+form.elements[i].value)>form.elements[i].max))
+		{//there is a value here
+			valid = false;
+			alert("Invalid value entered. Must be from "+form.elements[i].min+" to "+form.elements[i].max+".");
+			form.elements[i].focus();
+			break;
+		}
+	}
+	if(valid)
+		valid = confirm("Are you sure you want to update all these records?");
 	return valid; 
+}
+function PowerAuditPanel_ConfirmPageChange(url)
+{
+	var confirmed = true;
+	var form = document.getElementById('PowerAuditPanelForm');
+	for ( var i = 0; i < form.elements.length; i++ )
+	{//check number input fields to see if anything has been entered
+		if(form.elements[i].type=="number" && form.elements[i].value!="")
+		{//there is a value here
+			confirmed = confirm("Are you sure you want to navigate away from this page and lose you unsaved progress?");
+			break;
+		}
+		//didn't find any entered values - open url
+	}
+	if(confirmed)
+		window.open(url,"_self");
 }
 function PowerAuditCircuit_StatusClicked(srcCheckbox, srcLoadField)
 {
