@@ -4602,7 +4602,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -5580,7 +5580,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
-					echo "<td>".MakeHTMLSafe($locationName)."&nbsp;&nbsp;</b></td>\n";
+					echo "<td><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
 					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
