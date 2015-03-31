@@ -1,4 +1,4 @@
-<?php 
+<?php
 	
 	//if(ValidRecord("vlan","VLAN",$vlan,"dcim_vlan",true,"vlanid",$vlanID))
 	
@@ -50,7 +50,7 @@
 				
 				if($count>0)
 				{
-    				$stmt->fetch();
+					$stmt->fetch();
 					$userID = $uID;
 					$user = $uName; //use name from DB - match case
 					if(strcmp($password,$dbPass)==0)
@@ -79,7 +79,7 @@
 		
 		if($hasRights)
 		{
-		    UpdateLoginCookies($user,$password);
+			UpdateLoginCookies($user,$password);
 		}
 		else
 		{
@@ -151,11 +151,11 @@
 	
 	function ProcessFormActions()
 	{	
-	    global $_SESSION;
-	    global $resultMessage;
-	    global $errorMessage;
-	    global $debugMessage;
-	    global $redirectAroundFormResubmitWarning;
+		global $_SESSION;
+		global $resultMessage;
+		global $errorMessage;
+		global $debugMessage;
+		global $redirectAroundFormResubmitWarning;
 		
 		//theoreticly its possible to change cookie data and log in as someone else and process data at the same time... meh - probably just invalidate form data on fresh login
 		
@@ -171,85 +171,85 @@
 		
 		if($action==="Badge_Edit" || $action==="Badge_Add")
 		{
-		    ProcessBadgeAction($action);
-		    $tookAction = true;
+			ProcessBadgeAction($action);
+			$tookAction = true;
 		}
 		else if($action==="Customer_Edit" || $action==="Customer_Add")
 		{
-		    ProcessCustomerAction($action);
-		    $tookAction = true;
+			ProcessCustomerAction($action);
+			$tookAction = true;
 		}
 		else if($action==="Device_Edit" || $action==="Device_Add")
 		{
-		    ProcessDeviceAction($action);
-		    $tookAction = true;
+			ProcessDeviceAction($action);
+			$tookAction = true;
 		}
 		else if($action==="Connection_Edit" || $action==="Connection_Add" || $action==="Connection_Delete")
 		{
-		    ProcessConnectionAction($action);
-		    $tookAction = true;
+			ProcessConnectionAction($action);
+			$tookAction = true;
 		}
 		else if($action==="DevicePort_Edit" || $action==="DevicePort_Add" || $action==="DevicePort_Delete")
 		{
-		    ProcessDevicePortAction($action);
-		    $tookAction = true;
+			ProcessDevicePortAction($action);
+			$tookAction = true;
 		}
 		else if($action==="Subnet_Add" || $action==="Subnet_Edit" || $action==="Subnet_Delete")
 		{
-		    ProcessSubnetAction($action);
-		    $tookAction = true;
+			ProcessSubnetAction($action);
+			$tookAction = true;
 		}
 		else if($action==="UserPassword_Update")
 		{
-		    ProcessUserPasswordUpdate();
-		    $tookAction = true;
+			ProcessUserPasswordUpdate();
+			$tookAction = true;
 		}
 		else if($action==="Circuit_Add" || $action==="Circuit_Edit" || $action==="Circuit_Delete")
 		{
-		    ProcessCircuitAction($action);
-		    $tookAction = true;
+			ProcessCircuitAction($action);
+			$tookAction = true;
 		}
 		else if($action==="QA_Record")
 		{
-		    ProcessQAAction($action);
-		    $tookAction = true;
+			ProcessQAAction($action);
+			$tookAction = true;
 		}
 		else if($action==="PowerAudit_PanelUpdate")
 		{
-		    ProcessPowerAuditPanelUpdate($action);
-		    $tookAction = true;
+			ProcessPowerAuditPanelUpdate($action);
+			$tookAction = true;
 		}
 		else if(strlen($action))
 		{
 			$errorMessage[] = "Unknown Form action sent ($action).";
-		    $tookAction = true;
+			$tookAction = true;
 		}
 
 		if($tookAction && $redirectAroundFormResubmitWarning)
 		{
-		    $_SESSION['resultMessage'] = $resultMessage;
-		    $_SESSION['errorMessage'] = $errorMessage;
-		    $_SESSION['debugMessage'] = $debugMessage;
-		    
-    		header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']); 
-    		exit;
+			$_SESSION['resultMessage'] = $resultMessage;
+			$_SESSION['errorMessage'] = $errorMessage;
+			$_SESSION['debugMessage'] = $debugMessage;
+			
+			header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']); 
+			exit;
 		}
 	}
 	
 	function BackupDatabase()
-    {
-        /*
+	{
+		/*
 		global $db_host;
 		global $db_user;
 		global $db_password;
 		global $database;
-    	
-    	$backup_file = "colo_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
-        $command = "mysqldump --opt -h $dbhost -u $dbuser -p $dbpass "."test_db | gzip > $backup_file";
-        
-        select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
-        
-        system($command);
+		
+		$backup_file = "colo_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
+		$command = "mysqldump --opt -h $dbhost -u $dbuser -p $dbpass "."test_db | gzip > $backup_file";
+		
+		select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
+		
+		system($command);
 		*/
 	}
 	
@@ -355,8 +355,8 @@
 	}
 	
 	function LogDBChange($table, $ukey, $action, $filter="")
-    {
-        global $mysqli;
+	{
+		global $mysqli;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
@@ -367,24 +367,24 @@
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
-		    $keys = GetKeysFromFilter($table,$filter,$keyFieldName);
-            foreach ($keys as $ukey)
-                LogDBChange($table, $ukey, $action);
-            return;
+			$keys = GetKeysFromFilter($table,$filter,$keyFieldName);
+			foreach ($keys as $ukey)
+				LogDBChange($table, $ukey, $action);
+			return;
 		}
 		
 		//disable for D while testing U
 		if($action=="Q")
 		{
 			$errorMessage[] = "LogDBChange($table, $ukey, <B>$action</B>,$filter) Disabled while in development.";
-		    return;
+			return;
 		}
 		
 		if($table=="dcim_user")return;// no log table for the users table
 		if($keyFieldName==false ||$logTable==false)
 		{
-		    $errorMessage[] = "LogDBChange($table, $ukey, $action,<B>$filter</B>) Failed to look up keyname, or logname.";
-		    return;// failed to lookup necisarrys
+			$errorMessage[] = "LogDBChange($table, $ukey, $action,<B>$filter</B>) Failed to look up keyname, or logname.";
+			return;// failed to lookup necisarrys
 		}
 		
 		//deletions could copy from same - obviously not tested
@@ -399,8 +399,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($action=="D")
 		{
-		    //copy last log record as final deleted record - this will leave one more record to QA
-		    $logKeyField = GetKeyField($logTable);
+			//copy last log record as final deleted record - this will leave one more record to QA
+			$logKeyField = GetKeyField($logTable);
 			$query1 = "CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM $logTable WHERE $keyFieldName = $ukey ORDER BY $logKeyField DESC LIMIT 1;";
 			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', qauser=-1, qadate='';";
 			$query3 = "INSERT INTO $logTable SELECT * FROM tmptable_1;";
@@ -408,115 +408,115 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		
 			//$query1
-            if (!($stmt1 = $mysqli->prepare($query1)))
-    			$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-1 (" . $mysqli->errno . ") " . $mysqli->error;
-    		else
-    		{
-    			if (!$stmt1->execute())//execute 
-    				$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-1 (" . $stmt1->errno . "-" . $stmt1->error . ").";
-    			else 
-    			{
-    				if($stmt1->affected_rows<1)
-    					$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q1), but affected <1 row.";
-    			}	
-    		}
+			if (!($stmt1 = $mysqli->prepare($query1)))
+				$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-1 (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				if (!$stmt1->execute())//execute 
+					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-1 (" . $stmt1->errno . "-" . $stmt1->error . ").";
+				else 
+				{
+					if($stmt1->affected_rows<1)
+						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q1), but affected <1 row.";
+				}	
+			}
 			//$query2
-            if (!($stmt2 = $mysqli->prepare($query2)))
-    			$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-2 (" . $mysqli->errno . ") " . $mysqli->error;
-    		else
-    		{
-    			if (!$stmt2->execute())//execute 
-    				$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-2 (" . $stmt2->errno . "-" . $stmt2->error . ").";
-    			else 
-    			{
-    				if($stmt2->affected_rows<1)
-    					$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q2), but affected <1 row.";
-    			}	
-    		}
+			if (!($stmt2 = $mysqli->prepare($query2)))
+				$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-2 (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				if (!$stmt2->execute())//execute 
+					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-2 (" . $stmt2->errno . "-" . $stmt2->error . ").";
+				else 
+				{
+					if($stmt2->affected_rows<1)
+						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q2), but affected <1 row.";
+				}	
+			}
 			//$query3
-            if (!($stmt3 = $mysqli->prepare($query3)))
-    			$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-3 (" . $mysqli->errno . ") " . $mysqli->error;
-    		else
-    		{
-    			if (!$stmt3->execute())//execute 
-    				$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-3 (" . $stmt3->errno . "-" . $stmt3->error . ").";
-    			else 
-    			{
-    				if($stmt3->affected_rows<1)
-    					$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q3), but affected <1 row.";
-    			}	
-    		}
+			if (!($stmt3 = $mysqli->prepare($query3)))
+				$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-3 (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				if (!$stmt3->execute())//execute 
+					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-3 (" . $stmt3->errno . "-" . $stmt3->error . ").";
+				else 
+				{
+					if($stmt3->affected_rows<1)
+						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q3), but affected <1 row.";
+				}	
+			}
 			//$query4
-            if (!($stmt4 = $mysqli->prepare($query4)))
-    			$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-4 (" . $mysqli->errno . ") " . $mysqli->error;
-    		else
-    		{
-    			if (!$stmt4->execute())//execute 
-    				$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-4 (" . $stmt4->errno . "-" . $stmt4->error . ").";
-    			else 
-    			{
-    			    //do nothing here - record count will always be 0
-    			    //if($stmt4->affected_rows<1)
-    				//	$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q4), but affected <1 row.";
-    			}	
-    		}
+			if (!($stmt4 = $mysqli->prepare($query4)))
+				$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-4 (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				if (!$stmt4->execute())//execute 
+					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-4 (" . $stmt4->errno . "-" . $stmt4->error . ").";
+				else 
+				{
+					//do nothing here - record count will always be 0
+					//if($stmt4->affected_rows<1)
+					//	$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q4), but affected <1 row.";
+				}	
+			}
 		}
 		else 
 		{
-            $query = "INSERT INTO $logTable SELECT NULL,'$action',cur.* FROM $table AS cur WHERE $keyFieldName='$ukey'";	
+			$query = "INSERT INTO $logTable SELECT NULL,'$action',cur.* FROM $table AS cur WHERE $keyFieldName='$ukey'";	
 		
 		
-            if (!($stmt = $mysqli->prepare($query)))
-    			$errorMessage[] = "Prepare failed: (LogDBChange ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
-    		else
-    		{
-    			if (!$stmt->execute())//execute 
-    				//failed (errorNo-error)
-    				$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action) (" . $stmt->errno . "-" . $stmt->error . ").";
-    			else 
-    			{
-    				$affectedCount = $stmt->affected_rows;
-    				if($affectedCount==1)
-    				{
-    					//$resultMessage[] = "Successfully Logged change ($table, $ukey, $action).";
-    				}
-    				else
-    				{
-    					$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
-    				}
-    			}	
-    		}	    
+			if (!($stmt = $mysqli->prepare($query)))
+				$errorMessage[] = "Prepare failed: (LogDBChange ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				if (!$stmt->execute())//execute 
+					//failed (errorNo-error)
+					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action) (" . $stmt->errno . "-" . $stmt->error . ").";
+				else 
+				{
+					$affectedCount = $stmt->affected_rows;
+					if($affectedCount==1)
+					{
+						//$resultMessage[] = "Successfully Logged change ($table, $ukey, $action).";
+					}
+					else
+					{
+						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
+					}
+				}	
+			}		
 		}
-    }
-    
-    function QARecord($table, $ukey, $keyField="", $liveRecord=true)
-    {
-        global $mysqli;
+	}
+	
+	function QARecord($table, $ukey, $keyField="", $liveRecord=true)
+	{
+		global $mysqli;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
 		
 		$recDescrip = GetTableRecordDescription($table);
-    
+	
 		if(strlen($keyField)==0)
-    		$keyField = GetKeyField($table);
-    		
+			$keyField = GetKeyField($table);
+			
 		if(!$recDescrip || !$keyField)
 		{
-		    $errorMessage[] = "QARecord($table, $ukey, $keyField, $liveRecord) - Invalid table.";
-		    return; 
+			$errorMessage[] = "QARecord($table, $ukey, $keyField, $liveRecord) - Invalid table.";
+			return; 
 		}
 		
-        //update QA user and date
-        if($liveRecord)
-            $query = "UPDATE $table SET qauser=?, qadate=CURRENT_TIMESTAMP WHERE $keyField=$ukey LIMIT 1";
-        else	
-        {
-	        $logKeyField = GetKeyField($table);
-            $query = "UPDATE $table SET qauser=?, qadate=CURRENT_TIMESTAMP WHERE $keyField=$ukey ORDER BY $logKeyField DESC LIMIT 1";
-        }
+		//update QA user and date
+		if($liveRecord)
+			$query = "UPDATE $table SET qauser=?, qadate=CURRENT_TIMESTAMP WHERE $keyField=$ukey LIMIT 1";
+		else	
+		{
+			$logKeyField = GetKeyField($table);
+			$query = "UPDATE $table SET qauser=?, qadate=CURRENT_TIMESTAMP WHERE $keyField=$ukey ORDER BY $logKeyField DESC LIMIT 1";
+		}
 	
-        if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Prepare failed: QARecord($table, $ukey, $keyField, $liveRecord) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
 		{
@@ -531,9 +531,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($affectedCount==1)
 				{
 					if($liveRecord)
-					    $resultMessage[] = "Successfully QAed $recDescrip.";
+						$resultMessage[] = "Successfully QAed $recDescrip.";
 					if($liveRecord)
-					    QARecord(GetLogTable($table),$ukey,$keyField,false);
+						QARecord(GetLogTable($table),$ukey,$keyField,false);
 				}
 				else
 				{
@@ -541,7 +541,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}	
 		}	
-    }
+	}
 	
 	function ProcessBadgeAction($action)
 	{
@@ -614,7 +614,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-						    $resultMessage[] = "Successfully added badge (H".$hNo.",".$name.").";
+							$resultMessage[] = "Successfully added badge (H".$hNo.",".$name.").";
 							LogDBChange("dcim_badge",-1,"I","hno='$hNo' AND name='$name' AND badgeno='$badgeNo'");
 						}
 						else
@@ -689,7 +689,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$locationID = GetInput("locationid");
 		
 		if(!isset($status) || strlen($status)==0)
-		    $status = "D";
+			$status = "D";
 		
 		$totalAffectedCount = 0;
 		$valid = true;
@@ -716,56 +716,56 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//check for existing panel circuit combo
 		if($add && $valid)
 		{
-		    $valid = false;
-		    $passedDBChecks = false;
-		    //this could be optomised by filtering inner selects by panel and/or range of circuit
-		    $isDoubleCircuit = (int)$volts == 208; 
-		    $filter = "";
-		    if(!$isDoubleCircuit)
-		        $filter = "csr.panel=? AND csr.circuit=?";
-		    else 
-		        $filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
-		    
-		    $query = "SELECT * FROM (
-                                SELECT powerid,panel,circuit,volts,amps
-                                FROM dcim_power
-                            UNION 
-                                SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
-                                FROM dcim_power HAVING NOT(cir IS NULL)
-                        ) AS csr
-                	WHERE $filter";
+			$valid = false;
+			$passedDBChecks = false;
+			//this could be optomised by filtering inner selects by panel and/or range of circuit
+			$isDoubleCircuit = (int)$volts == 208; 
+			$filter = "";
+			if(!$isDoubleCircuit)
+				$filter = "csr.panel=? AND csr.circuit=?";
+			else 
+				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+			
+			$query = "SELECT * FROM (
+								SELECT powerid,panel,circuit,volts,amps
+								FROM dcim_power
+							UNION 
+								SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+								FROM dcim_power HAVING NOT(cir IS NULL)
+						) AS csr
+					WHERE $filter";
 		
-    		if (!($stmt = $mysqli->prepare($query)))
-    			$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-    		else
-    		{
-        		if(!$isDoubleCircuit)
-    			    $stmt->bind_Param('ss', $panel, $circuit);
-			    else 
-			    {
-			        $secondCircuit = 2+(int)$circuit;
-    			    $stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
-			    }	
-    			if (!$stmt->execute())//execute 
-    				//failed (errorNo-error)
-    				$errorMessage[] = "Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
-    			else
-    			{
-		            $stmt->store_result();
-            		$count = $stmt->num_rows;
-            		
-            		if($count==0)
-            		    $passedDBChecks = true;
-            		else
-            		{
-            		    $stmt->bind_result($k, $p, $c, $v, $a);
-		                $stmt->fetch();
-            		    
-		                $errorMessage[] = "Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
-            		}
-    			}
-    		}
-    		$valid=$passedDBChecks;
+			if (!($stmt = $mysqli->prepare($query)))
+				$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+			else
+			{
+				if(!$isDoubleCircuit)
+					$stmt->bind_Param('ss', $panel, $circuit);
+				else 
+				{
+					$secondCircuit = 2+(int)$circuit;
+					$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+				}	
+				if (!$stmt->execute())//execute 
+					//failed (errorNo-error)
+					$errorMessage[] = "Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
+				else
+				{
+					$stmt->store_result();
+					$count = $stmt->num_rows;
+					
+					if($count==0)
+						$passedDBChecks = true;
+					else
+					{
+						$stmt->bind_result($k, $p, $c, $v, $a);
+						$stmt->fetch();
+						
+						$errorMessage[] = "Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+					}
+				}
+			}
+			$valid=$passedDBChecks;
 		}
 		
 		//push to DB
@@ -792,66 +792,66 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-					        LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
+							LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
 							$resultMessage[] = "Successfully added power circuit (Panel:".$panel." Circuit#".$circuit.").";
 						}
 						else
 							$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
 						
 						//look up inserted id
-    					$query = "SELECT powerid FROM dcim_power WHERE panel=? AND circuit=?";
-    					
-                		if (!($stmt = $mysqli->prepare($query)))
-					        $errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-                		else 
-                		{
-                    		$stmt->bind_Param('ss', $panel, $circuit);
-                    		$stmt->execute();
-                    		$stmt->store_result();
-                    		$count = $stmt->num_rows;
-                    	
-                    		if($count==1)
-                    		{
-                    		    //update input locationid
-                    		    $stmt->bind_result($powerID);
-		                        $stmt->fetch();
-        						//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
-                    		    
-                        		//sucsessfull Insert - insert circuit-location link record
-        	                    $query = "INSERT INTO dcim_powerloc
-                					(powerid,locationid,edituser,editdate) 
-                					VALUES(?,?,?,CURRENT_TIMESTAMP)";
-                					
-                				if (!($stmt = $mysqli->prepare($query)))
-                					$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-                				else
-                				{//					   plu
-                					$stmt->bind_Param('iii', $powerID, $locationID, $userID);
-                					
-                					if (!$stmt->execute())//execute 
-                						//failed (errorNo-error)
-                						$errorMessage[] = "Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
-                					else 
-                					{
-                						$affectedCount = $stmt->affected_rows;
-                						$totalAffectedCount += $affectedCount;
-                						
-                						if($affectedCount==1)
-                						{
-					                        LogDBChange("dcim_powerloc",-1,"I","powerid=$powerID AND locationid=$locationID");
-                						    $resultMessage[] = "Successfully added power circuit location link (powerID:".$powerID.",locationID:".$locationID.").";
-                						}
-                						else
-                							$errorMessage[] = "Power circuit location link added successfully, but affected $affectedCount rows.";
-                					}
-                				}
-        						$resultMessage[] = "$totalAffectedCount total records created.";
-                    		}
-                    		else 
-                    		{
-    							$errorMessage[] = "Failed to locate inserted record. Power (if created) is not linked to Location.";
-                    		}
-                		}
+						$query = "SELECT powerid FROM dcim_power WHERE panel=? AND circuit=?";
+						
+						if (!($stmt = $mysqli->prepare($query)))
+							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+						else 
+						{
+							$stmt->bind_Param('ss', $panel, $circuit);
+							$stmt->execute();
+							$stmt->store_result();
+							$count = $stmt->num_rows;
+						
+							if($count==1)
+							{
+								//update input locationid
+								$stmt->bind_result($powerID);
+								$stmt->fetch();
+								//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
+								
+								//sucsessfull Insert - insert circuit-location link record
+								$query = "INSERT INTO dcim_powerloc
+									(powerid,locationid,edituser,editdate) 
+									VALUES(?,?,?,CURRENT_TIMESTAMP)";
+									
+								if (!($stmt = $mysqli->prepare($query)))
+									$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+								else
+								{//					   plu
+									$stmt->bind_Param('iii', $powerID, $locationID, $userID);
+									
+									if (!$stmt->execute())//execute 
+										//failed (errorNo-error)
+										$errorMessage[] = "Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
+									else 
+									{
+										$affectedCount = $stmt->affected_rows;
+										$totalAffectedCount += $affectedCount;
+										
+										if($affectedCount==1)
+										{
+											LogDBChange("dcim_powerloc",-1,"I","powerid=$powerID AND locationid=$locationID");
+											$resultMessage[] = "Successfully added power circuit location link (powerID:".$powerID.",locationID:".$locationID.").";
+										}
+										else
+											$errorMessage[] = "Power circuit location link added successfully, but affected $affectedCount rows.";
+									}
+								}
+								$resultMessage[] = "$totalAffectedCount total records created.";
+							}
+							else 
+							{
+								$errorMessage[] = "Failed to locate inserted record. Power (if created) is not linked to Location.";
+							}
+						}
 					}	
 				}
 			}
@@ -877,39 +877,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-	                        LogDBChange("dcim_power",$powerID,"D");
+							LogDBChange("dcim_power",$powerID,"D");
 							$resultMessage[] = "Successfully deleted power circuit (Panel:$panel Circuit#$circuit).";
 							
 							//delete link
-    						$query = "DELETE FROM  dcim_powerloc
-            					WHERE powerid=? 
-            					LIMIT 1";
-            		
-            				if (!($stmt = $mysqli->prepare($query)))
-            					$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error.".";
-            				else
-            				{
-            					$stmt->bind_Param('i', $powerID);	
-            					
-            					if (!$stmt->execute())//execute 
-            						//failed (errorNo-error)
-            						$errorMessage[] = "Failed to execute power circuit link delete (" . $stmt->errno . "-" . $stmt->error . ").";
-            					else
-            					{
-            						$affectedCount = $stmt->affected_rows;
-            						$totalAffectedCount += $affectedCount;
-            						if($affectedCount==1)
-            						{
-				                        LogDBChange("dcim_powerloc",$powerID,"D");
-            							$resultMessage[] = "Successfully un linked power circuit from location(Panel:$panel Circuit#$circuit).";
-            							
-            						}
-            						else
-            						{
-            							$errorMessage[] = "Successfully unlinked, but affected $affectedCount rows.";
-            						}
-            					}
-            				}
+							$query = "DELETE FROM  dcim_powerloc
+								WHERE powerid=? 
+								LIMIT 1";
+					
+							if (!($stmt = $mysqli->prepare($query)))
+								$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error.".";
+							else
+							{
+								$stmt->bind_Param('i', $powerID);	
+								
+								if (!$stmt->execute())//execute 
+									//failed (errorNo-error)
+									$errorMessage[] = "Failed to execute power circuit link delete (" . $stmt->errno . "-" . $stmt->error . ").";
+								else
+								{
+									$affectedCount = $stmt->affected_rows;
+									$totalAffectedCount += $affectedCount;
+									if($affectedCount==1)
+									{
+										LogDBChange("dcim_powerloc",$powerID,"D");
+										$resultMessage[] = "Successfully un linked power circuit from location(Panel:$panel Circuit#$circuit).";
+										
+									}
+									else
+									{
+										$errorMessage[] = "Successfully unlinked, but affected $affectedCount rows.";
+									}
+								}
+							}
 						}
 						else
 						{
@@ -942,7 +942,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						{
 							$resultMessage[] = "Successfully edited power circuit (Panel:$panel Circuit#$circuit). $totalAffectedCount records updated.";
 							UpdateRecordEditUser("dcim_power","powerid",$powerID);//do this seperate to distinquish actual record changes from identical updates (updates without changes)
-	                        LogDBChange("dcim_power",$powerID,"U");
+							LogDBChange("dcim_power",$powerID,"U");
 						}
 						else
 						{
@@ -993,8 +993,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($valid)
 		{
-		    $genNewTempVLAN = strlen(trim($vlanInput))==0;
-		    if(!$genNewTempVLAN)$valid = ValidSubnetVLAN($vlanInput,$vlan,$istemp);
+			$genNewTempVLAN = strlen(trim($vlanInput))==0;
+			if(!$genNewTempVLAN)$valid = ValidSubnetVLAN($vlanInput,$vlan,$istemp);
 		}
 		
 		//DB CHECKS
@@ -1005,36 +1005,36 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//get new VLAN  - (min-1)
 		if($valid && $genNewTempVLAN)
 		{
-		    $valid = false;
-		    $passedDBChecks = false;
-            $query = "SELECT MIN(vlan) AS min FROM dcim_vlan";
+			$valid = false;
+			$passedDBChecks = false;
+			$query = "SELECT MIN(vlan) AS min FROM dcim_vlan";
 				
-    		if (!($stmt = $mysqli->prepare($query))) 
-    			$errorMessage[] = "ValidRecord($keyField,$keyName,$key,$table,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-    		else 
-    		{
-        		if (!$stmt->execute())//execute - //failed (errorNo-error) 
-        			$errorMessage[] = "Failed to execute ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $stmt->errno . "-" . $stmt->error . ").";
-    			else 
-        		{
-        			$stmt->store_result();
-            		$count = $stmt->num_rows;
-            	
-            		if($count==1)
-            		{
-            		    //update input locationid
-            		    $stmt->bind_result($minVLAN);
-            			$stmt->fetch();
-            		    $vlan = $minVLAN-1;
-            		    $istemp = true;
-            		    $passedDBChecks = true;
-            		}
-            		else 
-        			    $errorMessage[] = "Failed to Locate new Temp VLAN";
-            		
-        		}
-    		}
-    		$valid=$passedDBChecks;
+			if (!($stmt = $mysqli->prepare($query))) 
+				$errorMessage[] = "ValidRecord($keyField,$keyName,$key,$table,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			else 
+			{
+				if (!$stmt->execute())//execute - //failed (errorNo-error) 
+					$errorMessage[] = "Failed to execute ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $stmt->errno . "-" . $stmt->error . ").";
+				else 
+				{
+					$stmt->store_result();
+					$count = $stmt->num_rows;
+				
+					if($count==1)
+					{
+						//update input locationid
+						$stmt->bind_result($minVLAN);
+						$stmt->fetch();
+						$vlan = $minVLAN-1;
+						$istemp = true;
+						$passedDBChecks = true;
+					}
+					else 
+						$errorMessage[] = "Failed to Locate new Temp VLAN";
+					
+				}
+			}
+			$valid=$passedDBChecks;
 		}
 		
 		//$errorMessage[] = "Dev info - valid=$valid";
@@ -1042,8 +1042,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//push to DB
 		if($valid)
 		{
-		    $displayVLAN = FormatVLAN($vlan);
-		    if($add)
+			$displayVLAN = FormatVLAN($vlan);
+			if($add)
 			{
 				$query = "INSERT INTO dcim_vlan
 					(vlan,subnet,mask,gateway,first,last,note,edituser,editdate) 
@@ -1062,7 +1062,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					{
 						$affectedCount = $stmt->affected_rows;
 						$totalAffectedCount += $affectedCount;
-                        LogDBChange("dcim_vlan",-1,"I","vlan='$vlan' AND subnet='$subnet'");
+						LogDBChange("dcim_vlan",-1,"I","vlan='$vlan' AND subnet='$subnet'");
 						if($affectedCount==1)
 						{
 							$resultMessage[] = "Successfully added VLAN ($displayVLAN).";
@@ -1071,45 +1071,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$errorMessage[] = "VLAN added successfully, but affected $affectedCount rows.";
 						
 						//assume it inserted correctly
-					    //create vlan-port link
-            			//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
-                		
-                		//sucsessfull Insert - insert port-vlan link record
-	                    $query = "INSERT INTO dcim_portvlan
-        					(deviceportid,vlan,edituser,editdate) 
-        					VALUES(?,?,?,CURRENT_TIMESTAMP)";
-        					
-        				if (!($stmt = $mysqli->prepare($query)))
-        					$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-        				else
-        				{//					   plu
-        					$stmt->bind_Param('iii', $devicePortID, $vlan, $userID);
-        					
-        					if (!$stmt->execute())//execute 
-        						//failed (errorNo-error)
-        						$errorMessage[] = "Failed to execute Port VLAN link add (" . $stmt->errno . "-" . $stmt->error . ").";
-        					else 
-        					{
-        						$affectedCount = $stmt->affected_rows;
-        						$totalAffectedCount += $affectedCount;
-        						
-        						if($affectedCount==1)
-        						{
-                                    LogDBChange("dcim_portvlan",-1,"I","deviceportid=$devicePortID AND vlan=$vlan");
-        						    $resultMessage[] = "Successfully added port VLAN link.";// (vlanID:".$vlanID.",devicePortID:".$devicePortID.").";
-        						}
-        						else
-        							$errorMessage[] = "Port VLAN link added successfully, but affected $affectedCount rows.";
-        					}
-        				}
+						//create vlan-port link
+						//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
+						
+						//sucsessfull Insert - insert port-vlan link record
+						$query = "INSERT INTO dcim_portvlan
+							(deviceportid,vlan,edituser,editdate) 
+							VALUES(?,?,?,CURRENT_TIMESTAMP)";
+							
+						if (!($stmt = $mysqli->prepare($query)))
+							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+						else
+						{//					   plu
+							$stmt->bind_Param('iii', $devicePortID, $vlan, $userID);
+							
+							if (!$stmt->execute())//execute 
+								//failed (errorNo-error)
+								$errorMessage[] = "Failed to execute Port VLAN link add (" . $stmt->errno . "-" . $stmt->error . ").";
+							else 
+							{
+								$affectedCount = $stmt->affected_rows;
+								$totalAffectedCount += $affectedCount;
+								
+								if($affectedCount==1)
+								{
+									LogDBChange("dcim_portvlan",-1,"I","deviceportid=$devicePortID AND vlan=$vlan");
+									$resultMessage[] = "Successfully added port VLAN link.";// (vlanID:".$vlanID.",devicePortID:".$devicePortID.").";
+								}
+								else
+									$errorMessage[] = "Port VLAN link added successfully, but affected $affectedCount rows.";
+							}
+						}
 						$resultMessage[] = "$totalAffectedCount total records created.";
 					}	
 				}
 			}
 			else if($delete)
 			{
-			    //delete this subnet... look for for another subnet on this VLAN, if not found delete link  
-			    $query = "DELETE FROM  dcim_vlan
+				//delete this subnet... look for for another subnet on this VLAN, if not found delete link  
+				$query = "DELETE FROM  dcim_vlan
 					WHERE vlanid=? 
 					LIMIT 1";
 		
@@ -1128,43 +1128,43 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-	                        LogDBChange("dcim_vlan",$vlanID,"D");
+							LogDBChange("dcim_vlan",$vlanID,"D");
 							$resultMessage[] = "Successfully deleted subnet (vlan:$vlan subnet:$subnet).";
 						
-		                    $noMoreSubnets = ValidRecord("vlan", "VLAN", $vlan, "dcim_vlan", false,"",$x,false,true);
+							$noMoreSubnets = ValidRecord("vlan", "VLAN", $vlan, "dcim_vlan", false,"",$x,false,true);
 							
-		                    if($noMoreSubnets)
-		                    {
-		                        //delete  that was the last subnet - delete port link(s)
-						        $query = "DELETE FROM  dcim_portvlan
-            						WHERE vlan=?";// dont limit
-                		
-                				if (!($stmt = $mysqli->prepare($query)))
-                					$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error.".";
-                				else
-                				{
-                					$stmt->bind_Param('i', $vlan);	
-                					
-                					if (!$stmt->execute())//execute 
-                						//failed (errorNo-error)
-                						$errorMessage[] = "Failed to execute subnet port link deletion (" . $stmt->errno . "-" . $stmt->error . ").";
-                					else
-                					{
-                						$affectedCount = $stmt->affected_rows;
-                						$totalAffectedCount += $affectedCount;
-                						if($affectedCount>=1)
-                						{
-	                                        LogDBChange("dcim_portvlan",-1,"D","vlan='$vlan'");//XXX this is an odd, non key based call 
-                							$resultMessage[] = "Successfully un linked VLAN from $affectedCount port(s)(VLAN:$vlan).";
-                							
-                						}
-                						else
-                						{
-                							$errorMessage[] = "Successfully unlinked from ports, but affected $affectedCount rows.";
-                						}
-                					}
-                				}
-	                        }
+							if($noMoreSubnets)
+							{
+								//delete  that was the last subnet - delete port link(s)
+								$query = "DELETE FROM  dcim_portvlan
+									WHERE vlan=?";// dont limit
+						
+								if (!($stmt = $mysqli->prepare($query)))
+									$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error.".";
+								else
+								{
+									$stmt->bind_Param('i', $vlan);	
+									
+									if (!$stmt->execute())//execute 
+										//failed (errorNo-error)
+										$errorMessage[] = "Failed to execute subnet port link deletion (" . $stmt->errno . "-" . $stmt->error . ").";
+									else
+									{
+										$affectedCount = $stmt->affected_rows;
+										$totalAffectedCount += $affectedCount;
+										if($affectedCount>=1)
+										{
+											LogDBChange("dcim_portvlan",-1,"D","vlan='$vlan'");//XXX this is an odd, non key based call 
+											$resultMessage[] = "Successfully un linked VLAN from $affectedCount port(s)(VLAN:$vlan).";
+											
+										}
+										else
+										{
+											$errorMessage[] = "Successfully unlinked from ports, but affected $affectedCount rows.";
+										}
+									}
+								}
+							}
 						}
 						else
 						{
@@ -1175,7 +1175,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else
 			{
-			    $query = "UPDATE dcim_vlan
+				$query = "UPDATE dcim_vlan
 					SET vlan=?, subnet=?, gateway=?, first=?, last=? , note=? 
 					WHERE vlanid=? 
 					LIMIT 1";
@@ -1183,7 +1183,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				else
-				{//                    vsgflnk
+				{//					vsgflnk
 					$stmt->bind_Param('isssssi', $vlan, $subnet, $gateway, $first, $last, $note, $vlanID);	
 					
 					if (!$stmt->execute())//execute 
@@ -1197,7 +1197,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						{
 							$resultMessage[] = "Successfully edited VLAN ($displayVLAN). $totalAffectedCount records updated.";
 							UpdateRecordEditUser("dcim_vlan","vlanid",$vlanID);//do this seperate to distinquish actual record changes from identical updates (updates without changes)
-	                        LogDBChange("dcim_vlan",$vlanID,"U");
+							LogDBChange("dcim_vlan",$vlanID,"U");
 						}
 						else
 						{
@@ -1387,134 +1387,134 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($valid)
 		{
-		    ///validate against current data for add and edit
-		    if(!$delete)
-		    {
-		        //validate parent ID
-		        $valid = false;
-	            $passedDBChecks = false;
+			///validate against current data for add and edit
+			if(!$delete)
+			{
+				//validate parent ID
+				$valid = false;
+				$passedDBChecks = false;
 				$query = "SELECT deviceid,hno,name,model,member FROM dcim_device WHERE deviceid=?";
-    			
-    			if (!($stmt = $mysqli->prepare($query)))
-    			{
-    				$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
-    			}
-    			else
-    			{
-    				$stmt->bind_Param('i', $deviceID);		
-    				$stmt->execute();
-    				$stmt->store_result();
-    				$deviceCount = $stmt->num_rows;
-    				$passedDBChecks = $deviceCount==1;
-    				
-    				if(!$passedDBChecks)
-    				{
-    					//build error msg
-    					$errorMessage[] = "Error: Existing Device not found with ID:$deviceID.";
-    				}
-    				else
-    				{
-    				    //found parent device - pull down necisary details from it
-    					$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceModel, $deviceMember);
-    					$stmt->fetch();
-				        $deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
-    				}
-    			}
-    			$valid = $passedDBChecks;
-		    }
-		        
-		    if($valid && !$delete)
-		    {
-		        //validate unique deivce(+member)+pic+port combo
-		        $valid = false;
-		        $passedDBChecks = false;
-		        $query = "SELECT deviceportid FROM dcim_deviceport WHERE deviceid=? AND pic=? AND port=? AND NOT(deviceportid=?)";
-    			
-    			if (!($stmt = $mysqli->prepare($query)))
-    			{
-    				$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-    			}
-    			else
-    			{
-    				$stmt->bind_Param('iiii', $deviceID,$pic,$portNo, $devicePortID);		
-    				$stmt->execute();
-    				$stmt->store_result();
-    				$portMatchCount = $stmt->num_rows;
-    				$passedDBChecks = $portMatchCount==0;
-    				
-    				if(!$passedDBChecks)
-    				{
-    					//build error msg
-    					$stmt->bind_result($foundDevicePortID);
-    					$stmt->fetch();
-    					
-    					$errorMessage[] = "Error: Existing Device Port found. ID:$foundDevicePortID.";
-    				}
-    			}
-			    $valid = $passedDBChecks;
-		    }
-		        
-		    if($valid && $delete)
-		    {
-		        //make sure there are no existing connections
-		        $valid = false;
-		        $passedDBChecks = false;
-		        $query = "SELECT portconnectionid FROM dcim_portconnection WHERE childportid=? OR parentportid=?";
-    			
-    			if (!($stmt = $mysqli->prepare($query)))
-    			{
-    				$errorMessage[] = "Prepare failed: ($action-2.1) (" . $mysqli->errno . ") " . $mysqli->error;
-    			}
-    			else
-    			{
-    				$stmt->bind_Param('ii', $devicePortID, $devicePortID);		
-    				$stmt->execute();
-    				$stmt->store_result();
-    				$portMatchCount = $stmt->num_rows;
-    				$passedDBChecks = $portMatchCount==0;
-    				
-    				if(!$passedDBChecks)
-    				{
-    					//build error msg
-    					$stmt->bind_result($foundPortConnectionID);
-    					$stmt->fetch();
-    					
-    					$errorMessage[] = "Error: Existing Port Connection found. Delete Aborted. Port Connection ID:$foundPortConnectionID.";
-    				}
-    			}
-			    $valid = $passedDBChecks;
-		    }
-		        
-		    if($valid && $delete)
-		    {
-		        //make sure there are no existing VLAN links
-		        $valid = false;
-		        $passedDBChecks = false;
-		        $query = "SELECT portvlanid, vlan FROM dcim_portvlan WHERE deviceportid=?";
-    			
-    			if (!($stmt = $mysqli->prepare($query)))
-    			{
-    				$errorMessage[] = "Prepare failed: ($action-2.1) (" . $mysqli->errno . ") " . $mysqli->error;
-    			}
-    			else
-    			{
-    				$stmt->bind_Param('i', $devicePortID);		
-    				$stmt->execute();
-    				$stmt->store_result();
-    				$portMatchCount = $stmt->num_rows;
-    				$passedDBChecks = $portMatchCount==0;
-    				
-    				if(!$passedDBChecks)
-    				{
-    					//build error msg
-    					$stmt->bind_result($foundPortVLANID,$vlan);
-    					$stmt->fetch();
-    					
-    					$errorMessage[] = "Error: Existing VLAN still linked to port. Delete Aborted. VLAN:$vlan. ID:$foundPortVLANID";
-    				}
-    			}
-			    $valid = $passedDBChecks;
-		    }
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+				}
+				else
+				{
+					$stmt->bind_Param('i', $deviceID);		
+					$stmt->execute();
+					$stmt->store_result();
+					$deviceCount = $stmt->num_rows;
+					$passedDBChecks = $deviceCount==1;
+					
+					if(!$passedDBChecks)
+					{
+						//build error msg
+						$errorMessage[] = "Error: Existing Device not found with ID:$deviceID.";
+					}
+					else
+					{
+						//found parent device - pull down necisary details from it
+						$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceModel, $deviceMember);
+						$stmt->fetch();
+						$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					}
+				}
+				$valid = $passedDBChecks;
+			}
+				
+			if($valid && !$delete)
+			{
+				//validate unique deivce(+member)+pic+port combo
+				$valid = false;
+				$passedDBChecks = false;
+				$query = "SELECT deviceportid FROM dcim_deviceport WHERE deviceid=? AND pic=? AND port=? AND NOT(deviceportid=?)";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+				}
+				else
+				{
+					$stmt->bind_Param('iiii', $deviceID,$pic,$portNo, $devicePortID);		
+					$stmt->execute();
+					$stmt->store_result();
+					$portMatchCount = $stmt->num_rows;
+					$passedDBChecks = $portMatchCount==0;
+					
+					if(!$passedDBChecks)
+					{
+						//build error msg
+						$stmt->bind_result($foundDevicePortID);
+						$stmt->fetch();
+						
+						$errorMessage[] = "Error: Existing Device Port found. ID:$foundDevicePortID.";
+					}
+				}
+				$valid = $passedDBChecks;
+			}
+				
+			if($valid && $delete)
+			{
+				//make sure there are no existing connections
+				$valid = false;
+				$passedDBChecks = false;
+				$query = "SELECT portconnectionid FROM dcim_portconnection WHERE childportid=? OR parentportid=?";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					$errorMessage[] = "Prepare failed: ($action-2.1) (" . $mysqli->errno . ") " . $mysqli->error;
+				}
+				else
+				{
+					$stmt->bind_Param('ii', $devicePortID, $devicePortID);		
+					$stmt->execute();
+					$stmt->store_result();
+					$portMatchCount = $stmt->num_rows;
+					$passedDBChecks = $portMatchCount==0;
+					
+					if(!$passedDBChecks)
+					{
+						//build error msg
+						$stmt->bind_result($foundPortConnectionID);
+						$stmt->fetch();
+						
+						$errorMessage[] = "Error: Existing Port Connection found. Delete Aborted. Port Connection ID:$foundPortConnectionID.";
+					}
+				}
+				$valid = $passedDBChecks;
+			}
+				
+			if($valid && $delete)
+			{
+				//make sure there are no existing VLAN links
+				$valid = false;
+				$passedDBChecks = false;
+				$query = "SELECT portvlanid, vlan FROM dcim_portvlan WHERE deviceportid=?";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					$errorMessage[] = "Prepare failed: ($action-2.1) (" . $mysqli->errno . ") " . $mysqli->error;
+				}
+				else
+				{
+					$stmt->bind_Param('i', $devicePortID);		
+					$stmt->execute();
+					$stmt->store_result();
+					$portMatchCount = $stmt->num_rows;
+					$passedDBChecks = $portMatchCount==0;
+					
+					if(!$passedDBChecks)
+					{
+						//build error msg
+						$stmt->bind_result($foundPortVLANID,$vlan);
+						$stmt->fetch();
+						
+						$errorMessage[] = "Error: Existing VLAN still linked to port. Delete Aborted. VLAN:$vlan. ID:$foundPortVLANID";
+					}
+				}
+				$valid = $passedDBChecks;
+			}
 		}
 		
 		if($valid)
@@ -1522,116 +1522,116 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//push changes to DB
 			if($add)
 			{
-			    if(UserHasPortAddEditPermission())
-			    {
-    				$query = "INSERT INTO dcim_deviceport 
-    					(hno,deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
-    					VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-        			    
-    				if (!($stmt = $mysqli->prepare($query)))
-    					$errorMessage[] = "Process Device Insert Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-    				else
-    				{//					   hdpptmsnsu
-    					$stmt->bind_Param('iiiisssssi', $hNo, $deviceID, $pic, $portNo, $type, $mac, $speed, $note, $status, $userID);
-    					
-        				if (!$stmt->execute())//execute 
-    						$errorMessage[] = "Failed to execute Device Port Insert '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
-    					else
-    					{							
-    						$affectedCount = $stmt->affected_rows;
-    						$totalAffectedCount += $affectedCount;
-    						if($affectedCount==1)
-    						{
-    						    $portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
-    							$resultMessage[] = "Successfully Created Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName";
-					            LogDBChange("dcim_deviceport",-1,"I","hno='$hNo' AND deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
-    						}
-    						else 
-    							$errorMessage[] = "Success, but affected $affectedCount rows.";
-    					}
-    				}
-			    }
-			    else
-			    {
-        		    $errorMessage[] = "Your do not have permission to add ports";
-			    }
+				if(UserHasPortAddEditPermission())
+				{
+					$query = "INSERT INTO dcim_deviceport 
+						(deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
+						VALUES(?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+						
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Device Insert Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{//					   dpptmsnsu
+						$stmt->bind_Param('iiisssssi', $deviceID, $pic, $portNo, $type, $mac, $speed, $note, $status, $userID);
+						
+						if (!$stmt->execute())//execute 
+							$errorMessage[] = "Failed to execute Device Port Insert '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
+						else
+						{							
+							$affectedCount = $stmt->affected_rows;
+							$totalAffectedCount += $affectedCount;
+							if($affectedCount==1)
+							{
+								$portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
+								$resultMessage[] = "Successfully Created Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName";
+								LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
+							}
+							else 
+								$errorMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+				else
+				{
+					$errorMessage[] = "Your do not have permission to add ports";
+				}
 			}
 			else if($delete)
 			{
-			    if(UserHasPortDeletePermission())
-			    {
-			        $query = "DELETE FROM dcim_deviceport WHERE deviceportid=? LIMIT 1";
-        			    
-    				if (!($stmt = $mysqli->prepare($query)))
-    					$errorMessage[] = "Process Device Delete Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-    				else
-    				{//					   k
-    					$stmt->bind_Param('i', $devicePortID);
-    					
-        				if (!$stmt->execute())//execute 
-    						$errorMessage[] = "Failed to execute Device Port Delete '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
-    					else
-    					{							
-    						$affectedCount = $stmt->affected_rows;
-    						$totalAffectedCount += $affectedCount;
-    						if($affectedCount==1)
-    						{
-    							$resultMessage[] = "Successfully Deleted Port.";
-					            LogDBChange("dcim_deviceport",$devicePortID,"D"); 
-    						}
-    						else 
-    							$errorMessage[] = "Success, but affected $affectedCount rows.";
-    					}
-    				}
-			    }
-			    else
-			    {
-        		    $errorMessage[] = "Your do not have permission to delete ports";
-			    }
+				if(UserHasPortDeletePermission())
+				{
+					$query = "DELETE FROM dcim_deviceport WHERE deviceportid=? LIMIT 1";
+						
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Device Delete Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{//					   k
+						$stmt->bind_Param('i', $devicePortID);
+						
+						if (!$stmt->execute())//execute 
+							$errorMessage[] = "Failed to execute Device Port Delete '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
+						else
+						{							
+							$affectedCount = $stmt->affected_rows;
+							$totalAffectedCount += $affectedCount;
+							if($affectedCount==1)
+							{
+								$resultMessage[] = "Successfully Deleted Port.";
+								LogDBChange("dcim_deviceport",$devicePortID,"D"); 
+							}
+							else 
+								$errorMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+				else
+				{
+					$errorMessage[] = "Your do not have permission to delete ports";
+				}
 			}
 			else
 			{
-			    //update port
-			    $cont = false;
-			    if(UserHasPortAddEditPermission())
-			    {
-    			    $query = "UPDATE dcim_deviceport SET
-    						pic = ?,
-    						port = ?,
-    						type = ?,
-    						status = ?,
-    						speed = ?,
-    						mac = ?, 
-    						note = ?
+				//update port
+				$cont = false;
+				if(UserHasPortAddEditPermission())
+				{
+					$query = "UPDATE dcim_deviceport SET
+							pic = ?,
+							port = ?,
+							type = ?,
+							status = ?,
+							speed = ?,
+							mac = ?, 
+							note = ?
 						WHERE deviceportid=? LIMIT 1 ";
-    			    
-    				if (!($stmt = $mysqli->prepare($query)))
-    					$errorMessage[] = "Process Device port Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-    				else
-    				{//					   pptssmnk
-    					$stmt->bind_Param('iisssssi', $pic, $portNo, $type, $status, $speed, $mac, $note, $devicePortID);
-    					$vals = "$pic, $portNo, $type, $status, $speed, $mac, $note, $devicePortID";
-    					$cont =true;
-    				}
-			    }
-			    else
-			    {
-			        //only update minnor fields
-    			    $query = "UPDATE dcim_deviceport SET
-    						speed = ?,
-    						mac = ?, 
-    						note = ?
+					
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Device port Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{//					   pptssmnk
+						$stmt->bind_Param('iisssssi', $pic, $portNo, $type, $status, $speed, $mac, $note, $devicePortID);
+						$vals = "$pic, $portNo, $type, $status, $speed, $mac, $note, $devicePortID";
+						$cont =true;
+					}
+				}
+				else
+				{
+					//only update minnor fields
+					$query = "UPDATE dcim_deviceport SET
+							speed = ?,
+							mac = ?, 
+							note = ?
 						WHERE deviceportid=? LIMIT 1 ";
-    			    
-    				if (!($stmt = $mysqli->prepare($query)))
-    					$errorMessage[] = "Process Device port Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-    				else
-    				{//					   smnk
-    					$stmt->bind_Param('sssi', $speed, $mac, $note, $devicePortID);
-    					$vals = "$speed, $mac, $note, $devicePortID";
-    					$cont =true;
-    				}
-			    }
+					
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Device port Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{//					   smnk
+						$stmt->bind_Param('sssi', $speed, $mac, $note, $devicePortID);
+						$vals = "$speed, $mac, $note, $devicePortID";
+						$cont =true;
+					}
+				}
 		
 				if($cont)
 				{
@@ -1644,10 +1644,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-						    $portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
+							$portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
 							$resultMessage[] = "Successfully edited Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName. $totalAffectedCount records updated";
 							UpdateRecordEditUser("dcim_deviceport","deviceportid",$devicePortID);//do this seperate to distinquish actual record changes from identical updates
-				            LogDBChange("dcim_deviceport",$devicePortID,"U");
+							LogDBChange("dcim_deviceport",$devicePortID,"U");
 						}
 						else 
 						{
@@ -1669,7 +1669,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$totalAffectedCount = 0;
 		$valid = true;
-	    
+		
 		$add = $action==="Device_Add";
 		
 		$deviceID = GetInput("deviceid");
@@ -1793,7 +1793,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						if($affectedCount==1)
 						{
-						    
+							
 							//worked, now look up that record to create ports for it
 							LogDBChange("dcim_device",-1,"I","hno='$hNo' AND name='$deviceName' AND member='$member'");
 							//get deviceID
@@ -1816,11 +1816,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$stmt->fetch();
 								
 								//Create device ports
-								$addedPortCount = CreateBlankPortsForDevice($hNo, $deviceID, $model);
+								$addedPortCount = CreateBlankPortsForDevice($deviceID, $model);
 								
 								if($addedPortCount<=0)
 								{
-									$errorMessage[] = "Failed to Create Ports. ($hNo, $deviceID, ".MakeHTMLSafe($model).") ";
+									$errorMessage[] = "Failed to Create Ports. ($deviceID, ".MakeHTMLSafe($model).") ";
 								}
 							}
 							else 
@@ -1851,7 +1851,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						serial = ?,
 						note = ?
 						WHERE deviceid =? LIMIT 1 ";
-		
+				
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
@@ -1883,7 +1883,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ProcessConnectionAction($action)
 	{
-	    global $mysqli;
+		global $mysqli;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
@@ -1905,29 +1905,29 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if(!$add && $valid)
 		{
-		    $valid = ValidGenericID($portConnectionID,"Port Connection ID");
-		    
-		    if($valid)
-		    {
-        		$validFlags = array('T','F');
-        		$valid = ValidFlag($updatePorts,"Update Ports Choice",$validFlags);
-        		$updatePorts = $updatePorts=="T";
-		    }
+			$valid = ValidGenericID($portConnectionID,"Port Connection ID");
+			
+			if($valid)
+			{
+				$validFlags = array('T','F');
+				$valid = ValidFlag($updatePorts,"Update Ports Choice",$validFlags);
+				$updatePorts = $updatePorts=="T";
+			}
 		}
 		
 		if(!$delete)
 		{
-    		//if($valid)$valid = ValidGenericID($childDeviceID,"Child Device ID");
-    		if($valid)$valid = ValidGenericID($childPortID,"Child Port ID");
-    		//if($valid)$valid = ValidGenericID($parentDeviceID,"Parent Device ID");
-    		if($valid)$valid = ValidGenericID($parentPortID,"Parent Port ID");
-    		if($valid)$valid = ValidNotes($patches);
+			//if($valid)$valid = ValidGenericID($childDeviceID,"Child Device ID");
+			if($valid)$valid = ValidGenericID($childPortID,"Child Port ID");
+			//if($valid)$valid = ValidGenericID($parentDeviceID,"Parent Device ID");
+			if($valid)$valid = ValidGenericID($parentPortID,"Parent Port ID");
+			if($valid)$valid = ValidNotes($patches);
 		
-    		if($valid)
-    		{
-    		    $valid = $childPortID!=$parentPortID;
-    		    if(!$valid)$errorMessage[] = "Child port cannot be the same as the parent port.";
-    		}
+			if($valid)
+			{
+				$valid = $childPortID!=$parentPortID;
+				if(!$valid)$errorMessage[] = "Child port cannot be the same as the parent port.";
+			}
 		}
 		
 		
@@ -1937,7 +1937,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$oldParentPortID = -1;
 		if(!$add && $valid)
 		{
-		    //set false untill DB checks validate - if crash, following SQL shouln't execute
+			//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$passedDBChecks = false;
 			
 			//check if Device (name) already exists before insertion
@@ -2062,13 +2062,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						if($affectedCount==1)
 						{
-					        LogDBChange("dcim_portconnection",-1,"I","childportid='$childPortID' AND parentportid='$parentPortID'");
+							LogDBChange("dcim_portconnection",-1,"I","childportid='$childPortID' AND parentportid='$parentPortID'");
 							//update child port
 							if(UpdateDevicePortStatus($childPortID,'A'))
-							    $updatedPortCount++;
+								$updatedPortCount++;
 							//update parent port
 							if(UpdateDevicePortStatus($parentPortID,'A'))
-							    $updatedPortCount++;
+								$updatedPortCount++;
 						}
 						
 						if($affectedCount==1)
@@ -2076,10 +2076,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$resultMessage[] = "Successfully added Connection record.";
 							if($updatedPortCount>0)
 							{
-							    if($updatedPortCount==2)
-								    $resultMessage[] ="Successfully updated both Ports";
-							    else
-								    $resultMessage[] ="Successfully updated $updatedPortCount Ports";
+								if($updatedPortCount==2)
+									$resultMessage[] ="Successfully updated both Ports";
+								else
+									$resultMessage[] ="Successfully updated $updatedPortCount Ports";
 							}
 						}
 						else 
@@ -2115,37 +2115,37 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$updatedPortCount = 0;
 						if($affectedCount==1)
 						{
-						    if($oldChildPortID!=$childPortID)
-						    {
-    							//update old child port
-    							if(UpdateDevicePortStatus($oldChildPortID,'D'))
-    							    $updatedPortCount++;
-							    if($updatePorts)
-							        $updatedPortCount += TransferVLANs($oldChildPortID,$childPortID);
-						    }
-						    if($oldParentPortID!=$parentPortID)
-						    {
-    							//update old parent port
-    							if(UpdateDevicePortStatus($oldParentPortID,'D'))
-    							    $updatedPortCount++;
-							    if($updatePorts)
-						            $updatedPortCount += TransferVLANs($oldParentPortID,$parentPortID);
-						    }
-							    
+							if($oldChildPortID!=$childPortID)
+							{
+								//update old child port
+								if(UpdateDevicePortStatus($oldChildPortID,'D'))
+									$updatedPortCount++;
+								if($updatePorts)
+									$updatedPortCount += TransferVLANs($oldChildPortID,$childPortID);
+							}
+							if($oldParentPortID!=$parentPortID)
+							{
+								//update old parent port
+								if(UpdateDevicePortStatus($oldParentPortID,'D'))
+									$updatedPortCount++;
+								if($updatePorts)
+									$updatedPortCount += TransferVLANs($oldParentPortID,$parentPortID);
+							}
+								
 							//update child port
 							if(UpdateDevicePortStatus($childPortID,'A'))
-							    $updatedPortCount++;
+								$updatedPortCount++;
 							//update parent port
 							if(UpdateDevicePortStatus($parentPortID,'A'))
-							    $updatedPortCount++;
-							    
+								$updatedPortCount++;
+								
 							UpdateRecordEditUser("dcim_portconnection","portconnectionid",$portConnectionID);//do this seperate to distinquish actual record changes from identical updates
-					        LogDBChange("dcim_portconnection",$portConnectionID,"U");
+							LogDBChange("dcim_portconnection",$portConnectionID,"U");
 						}
-						    
+							
 						if($affectedCount==1)
 						{
-					        $totalAffectedCount += $updatedPortCount;
+							$totalAffectedCount += $updatedPortCount;
 							$resultMessage[] = "Successfully edited connection. $totalAffectedCount records updated";
 						}
 						else 
@@ -2160,15 +2160,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function TransferVLANs($oldPortID, $newPortID)
 	{
-	    global $mysqli;
+		global $mysqli;
 		global $errorMessage;
 		global $resultMessage;
 		
-        $query = "UPDATE dcim_portvlan SET
+		$query = "UPDATE dcim_portvlan SET
 				deviceportid = ?
 				WHERE deviceportid =?";
-        $affectedCount = 0;
-        
+		$affectedCount = 0;
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Process VLAN Transfer Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -2198,7 +2198,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function DeletePortConnection($devicePortConnectionID, $chidPortID=-1, $parentPortID=-1)
 	{
-	    $affectedCount = 0;
+		$affectedCount = 0;
 		//Delete record
 		global $mysqli;
 		global $errorMessage;
@@ -2219,26 +2219,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$affectedCount = $stmt->affected_rows;
 				if($affectedCount==1)
 				{
-				    LogDBChange("dcim_portconnection",$devicePortConnectionID,"D");
-				    $resultMessage[] = "Successfully deleted $affectedCount port connection record.";
+					LogDBChange("dcim_portconnection",$devicePortConnectionID,"D");
+					$resultMessage[] = "Successfully deleted $affectedCount port connection record.";
 				}
-			    else
-				    $errorMessage[] = "Failed to locate port connection record($devicePortConnectionID) for deletion (" . $stmt->errno . "-" . $stmt->erro.".)";
+				else
+					$errorMessage[] = "Failed to locate port connection record($devicePortConnectionID) for deletion (" . $stmt->errno . "-" . $stmt->erro.".)";
 			}	
 		}
 		
 		if($affectedCount==1 && $chidPortID!=-1 && $parentPortID!=-1)
 		{
-    		//update ports stati... ect
-    		if(UpdateDevicePortStatus($chidPortID,'D'))
-    		    $affectedCount++;
-    		if(UpdateDevicePortStatus($parentPortID,'D'))
-    		    $affectedCount++;
+			//update ports stati... ect
+			if(UpdateDevicePortStatus($chidPortID,'D'))
+				$affectedCount++;
+			if(UpdateDevicePortStatus($parentPortID,'D'))
+				$affectedCount++;
 		}
-	    return $affectedCount;
+		return $affectedCount;
 	}
 	
-	function CreateBlankPortsForDevice($hNo,$deviceID,$model)
+	function CreateBlankPortsForDevice($deviceID,$model)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -2253,8 +2253,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//could utilize DB default values for PIC(0), TYPE(E) and STATUS(D)
 		$query = "INSERT INTO dcim_deviceport
-			(hno, deviceid, port, edituser, editdate, pic, type, status) 
-			VALUES(?,?,?,?,CURRENT_TIMESTAMP,0,'E','D')";
+			(deviceid, port, edituser, editdate, pic, type, status) 
+			VALUES(?,?,?,CURRENT_TIMESTAMP,0,'E','D')";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "CreateBlankPortsForDevice() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error."\n";
@@ -2262,18 +2262,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$lastPort = $startPortNo + $portCount -1;
 			$portNo = 0;
-			$stmt->bind_Param('iiii', $hNo, $deviceID, $portNo, $userID);
+			$stmt->bind_Param('iii', $deviceID, $portNo, $userID);
 			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++) 
 			{
 				if (!$stmt->execute())//execute 
 					//failed (errorNo-error)
-					$errorMessage[] = "Failed to Add blank port($hNo, $deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
+					$errorMessage[] = "Failed to Add blank port($deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
 				else
 				{
 					//Success
 					//$resultMessage[] = "Successfully added blank port ($hNo, $deviceID, $portNo, $userID)\n";
 					$insertedRecords++;
-					LogDBChange("dcim_deviceport",-1,"I","hno='$hNo' AND deviceid='$deviceID' AND pic='0' AND port='$portNo' AND type='E'");
+					LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='0' AND port='$portNo' AND type='E'");
 				}	
 			}
 		}
@@ -2290,10 +2290,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
-		    $keys = GetKeysFromFilter($table,$filter,$keyField);
-            foreach ($keys as $ukey)
-                UpdateRecordEditUser($table, $keyField, $ukey);
-            return;
+			$keys = GetKeysFromFilter($table,$filter,$keyField);
+			foreach ($keys as $ukey)
+				UpdateRecordEditUser($table, $keyField, $ukey);
+			return;
 		}
 		
 		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate=''
@@ -2326,8 +2326,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ProcessUserPasswordUpdate()
 	{
-	    global $mysqli;
-	    global $userID;
+		global $mysqli;
+		global $userID;
 		global $errorMessage;
 		global $resultMessage;
 		
@@ -2346,15 +2346,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$validateAdminPas = false;
 		if(!$editingSelf && UserHasAdminPermission())
-		    $validateAdminPas = true;
+			$validateAdminPas = true;
 		
 		//check entered password againt password in DB
 		if($valid)
 		{
-		    $valid = false;//false untill proven true, in case SQL fails
-		    $query = "SELECT userid, pass, username
-    			FROM dcim_user
-    			WHERE userid=?";
+			$valid = false;//false untill proven true, in case SQL fails
+			$query = "SELECT userid, pass, username
+				FROM dcim_user
+				WHERE userid=?";
 			if (!($stmt = $mysqli->prepare($query)))
 			{
 				$errorMessage[] = "ProcessUserPasswordUpdate Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
@@ -2369,29 +2369,29 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($count>0)
 				{
-				    $stmt->fetch();
-				    
-				    $oldPasInput = md5($oldPasInput);
-				    $pasToTest = "";
-				    if($validateAdminPas)
-				    {
-				        //validate against current admin password - admins validate thier own pass before achanging oothers
-                		if(isset($_COOKIE["dcim_password"]))
-                			$pasToTest = $_COOKIE["dcim_password"];
-				    }
-				    else 
-				    {
-				        //changing own password - validate against old pas in DB
-		                $pasToTest = $dbPass;
-				    }
+					$stmt->fetch();
+					
+					$oldPasInput = md5($oldPasInput);
+					$pasToTest = "";
+					if($validateAdminPas)
+					{
+						//validate against current admin password - admins validate thier own pass before achanging oothers
+						if(isset($_COOKIE["dcim_password"]))
+							$pasToTest = $_COOKIE["dcim_password"];
+					}
+					else 
+					{
+						//changing own password - validate against old pas in DB
+						$pasToTest = $dbPass;
+					}
 					if(strcmp($oldPasInput,$pasToTest)==0)
 						$valid = true;
 					else
 					{
-					    if($validateAdminPas)
-					        $errorMessage[] = "Incorrect administrator password";
-				        else
-					        $errorMessage[] = "Incorrect current password";
+						if($validateAdminPas)
+							$errorMessage[] = "Incorrect administrator password";
+						else
+							$errorMessage[] = "Incorrect current password";
 					}
 				}
 				else
@@ -2402,20 +2402,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPassword($newpas1);
 		if($valid)
 		{
-		    $valid = strcmp($newpas1,$newpas2)==0;
-		    if(!$valid)
-		        $errorMessage[] = "New passwords dont match";
+			$valid = strcmp($newpas1,$newpas2)==0;
+			if(!$valid)
+				$errorMessage[] = "New passwords dont match";
 		}
 		
 		
 		if($valid)//push new password to DB
 		{
-		    $newFinalPas = md5($newpas1);
+			$newFinalPas = md5($newpas1);
 			$query = "UPDATE dcim_user SET pass=?
 				WHERE userid=? LIMIT 1 ";
 				
 			if (!($stmt = $mysqli->prepare($query)))
-			    $errorMessage[] = "ProcessUserPasswordUpdate Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+				$errorMessage[] = "ProcessUserPasswordUpdate Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			else
 			{//					   pu
 				$stmt->bind_Param('si', $newFinalPas, $userIDInput);
@@ -2433,8 +2433,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						if($editingSelf)
 						{
-						    //changing own password so update password cookie... so the user doesnt have to log back in
-    						UpdateLoginCookies($dbUname, $newFinalPas);
+							//changing own password so update password cookie... so the user doesnt have to log back in
+							UpdateLoginCookies($dbUname, $newFinalPas);
 						}
 						$resultMessage[] = "Successfully updated password for user $dbUname.";
 						//LogDBChange("dcim_user",$userIDInput,"U");//This will do nothing cuz there is no user log file
@@ -2450,13 +2450,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ShowActivityPage()
 	{
-	    /*
-	    //list 15 most recent badge changes (note: 15 changes, not necisarily 15 badges)
-	    SELECT c.hno,c.name,bl.logtype,bl.name ,bl.badgeno ,bl.status ,bl.hand ,bl.returned ,bl.editdate,bl.edituser  
-            FROM dcimlog_badge AS bl 
-            LEFT JOIN dcimlog_customer AS c ON c.hno=bl.hno
-            WHERE 1 ORDER BY editdate DESC LIMIT 15
-            */ 
+		/*
+		//list 15 most recent badge changes (note: 15 changes, not necisarily 15 badges)
+		SELECT c.hno,c.name,bl.logtype,bl.name ,bl.badgeno ,bl.status ,bl.hand ,bl.returned ,bl.editdate,bl.edituser  
+			FROM dcimlog_badge AS bl 
+			LEFT JOIN dcimlog_customer AS c ON c.hno=bl.hno
+			WHERE 1 ORDER BY editdate DESC LIMIT 15
+			*/ 
 	}
 	
 	function ShowLocationPage($input)
@@ -2489,9 +2489,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$query = "SELECT s.siteid, s.name AS site, 
 				l.locationid, l.colo, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
-    		FROM dcim_location AS l
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-    		WHERE l.locationid=?";
+			FROM dcim_location AS l
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+			WHERE l.locationid=?";
 		
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -2507,25 +2507,25 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
-    		$stmt->fetch();
-            $fullLocationName = FormatLocation($site, $colo, $location);
-            $isColo = ($type=="F" || $type=="H" || $type=="C");
-            
+			$stmt->fetch();
+			$fullLocationName = FormatLocation($site, $colo, $location);
+			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			
 			if(UserHasLocationPermission() ||UserHasCircuitPermission())
 			{
 				echo "<script src='customerEditScripts.js'></script>\n";	
 			}
 			   
-            echo "<table width=100%><tr>\n";
-            echo "<td align='left'>\n";
-    		echo "<span class='customerName'>$fullLocationName</span>\n";
-            echo "</td>\n";
-            
-            echo "<td align='right'>\n";
+			echo "<table width=100%><tr>\n";
+			echo "<td align='left'>\n";
+			echo "<span class='customerName'>$fullLocationName</span>\n";
+			echo "</td>\n";
+			
+			echo "<td align='right'>\n";
 			//edit Locationbutton - not visible till in edit mode
 			if(UserHasLocationPermission())
 			{
-			    //$jsSafeCustomer = MakeJSSafeParam($customer);
+				//$jsSafeCustomer = MakeJSSafeParam($customer);
 				//$jsSafeNote = MakeJSSafeParam($note);
 				//$params = "false, '$hNo', '$cNo', '$jsSafeCustomer', '$jsSafeNote', '$status'";
 				$params = "false";
@@ -2538,49 +2538,49 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 			}
-            echo "</td>\n";
-            echo "</tr>\n";
-            echo "</table>\n";
-            
-            //details
-    		echo "<table>\n";
-    		echo "<tr>\n";
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Type:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo LocationType($type);
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Units:</b>";
-		    echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo $units;
-    		echo "</td>\n";
-    		
-    		echo "</tr>\n";
-    		echo "<tr>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Size:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo "$size";
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Visible:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
-    		echo "</td>\n";
-    		
-    		echo "</tr></table>\n";
+			echo "</td>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
+			
+			//details
+			echo "<table>\n";
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Type:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationType($type);
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Units:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo $units;
+			echo "</td>\n";
+			
+			echo "</tr>\n";
+			echo "<tr>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Size:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "$size";
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Visible:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
+			echo "</td>\n";
+			
+			echo "</tr></table>\n";
 		}
 		else 
 		{
-		    echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
+			echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
 		}
 		
 		echo "</div>\n";
@@ -2588,105 +2588,105 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
-    		echo "<BR>\n";
-    		echo "<div class='panel'>\n";
-    		echo "<div class='panel-header'>Location Details</div>\n";
-    		echo "<div class='panel-body'>\n\n";
-    	    
-    		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS loc, 
-    				c.hno, c.name AS cust,
-        			d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
-        		FROM dcim_location AS l
-        			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-                	LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
-                	LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-        		WHERE l.locationid=?
-        		ORDER BY site, colo, loc, unit!=0, unit DESC, name, member";
-    		
-    		
-    		if (!($stmt = $mysqli->prepare($query))) 
-    		{
-    			//TODO hadnle errors better
-    			echo "ShowLocationPage Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-    		}
-    		$stmt->bind_Param('i', $locationID);
-    		
-    		$stmt->execute();
-    		$stmt->store_result();
-    		$stmt->bind_result($site, $locationID, $colo, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
-    		$count = $stmt->num_rows;
-    		
-    		
-    		echo "<span class='tableTitle'>Devices</span>\n";
-    		echo "<BR>\n";
-    		
-    		if($count>0)
-    		{
-    			//TODO for searches this should have some link, either device or hno or both
+			echo "<BR>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Location Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS loc, 
+					c.hno, c.name AS cust,
+					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+				FROM dcim_location AS l
+					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
+					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+				WHERE l.locationid=?
+				ORDER BY site, colo, loc, unit!=0, unit DESC, name, member";
+			
+			
+			if (!($stmt = $mysqli->prepare($query))) 
+			{
+				//TODO hadnle errors better
+				echo "ShowLocationPage Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			}
+			$stmt->bind_Param('i', $locationID);
+			
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($site, $locationID, $colo, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$count = $stmt->num_rows;
+			
+			
+			echo "<span class='tableTitle'>Devices</span>\n";
+			echo "<BR>\n";
+			
+			if($count>0)
+			{
+				//TODO for searches this should have some link, either device or hno or both
 
-    			echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
-    			
-    			//list result data
-    			$oddRow = false;
-    			while ($stmt->fetch()) 
-    			{
-    				$oddRow = !$oddRow;
-    				if($oddRow) $rowClass = "dataRowOne";
-    				else $rowClass = "dataRowTwo";
-    				
-    				//XXX probbable bug - if truncation happend in the middle of a &lt; tag
-    				$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
-    				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
-    				
-    				echo "<tr class='$rowClass'>";
-    				echo "<td class='data-table-cell'>$unit</td>";
-    				echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-    				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-    				echo "<td class='data-table-cell'>$size</td>";
-    				echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-    				echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
-    				echo "<td class='data-table-cell'>$visibleNotes</td>";
-    				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-    				echo "</tr>";
-    			}
-    			echo "</table>";
-    		}
-    		else 
-    		{
-    	        //TODO fix this to say something better - some locations dont have units or no devices
-                echo "No Devices found at location.<BR>\n";
-    		}
-    		
-    		echo "<BR>\n";
-    		
-    		//list circuits
-    		ListPowerCircuits(true,$locationID,$siteID); 
-    		
-    		echo "</div>\n";
-    		echo "</div>\n";
-            
-    		if(UserHasLocationPermission() ||UserHasCircuitPermission())
-    		{
-    			//initialize page JS
-    			echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
-    			if($addLocation)//populate and make visible
-    			{
-    				$pageSubTitle = "Add Location";
-    				echo "<script type='text/javascript'>EditLocation(true,'','','','','A');</script>\n";
-    				$focusSearch = false;
-    			}
-    			else 
-    			{
-		            $pageSubTitle = MakeHTMLSafe($fullLocationName);
-    			}
-    		}
+				echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch()) 
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
+					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
+					$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+					
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'>$unit</td>";
+					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell'>$size</td>";
+					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+					echo "<td class='data-table-cell'>$visibleNotes</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "</tr>";
+				}
+				echo "</table>";
+			}
+			else 
+			{
+				//TODO fix this to say something better - some locations dont have units or no devices
+				echo "No Devices found at location.<BR>\n";
+			}
+			
+			echo "<BR>\n";
+			
+			//list circuits
+			ListPowerCircuits(true,$locationID,$siteID); 
+			
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+				if($addLocation)//populate and make visible
+				{
+					$pageSubTitle = "Add Location";
+					echo "<script type='text/javascript'>EditLocation(true,'','','','','A');</script>\n";
+					$focusSearch = false;
+				}
+				else 
+				{
+					$pageSubTitle = MakeHTMLSafe($fullLocationName);
+				}
+			}
 		}//location found
 		//return $count;
 	}
 	
 	function ShowUsersPage($input)
 	{
-	    global $userID;
+		global $userID;
 		global $mysqli;
 		global $pageSubTitle;
 		
@@ -2695,64 +2695,64 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$pageSubTitle = "Accounts"; 
 			
-		    echo "<div class='panel'>\n";
-    		echo "<div class='panel-header'>User List</div>\n";
-    		echo "<div class='panel-body'>\n\n";
-    		
-    		$query = "SELECT userid,username, name, initials, permission, lastactivity, edituser, editdate
-        		FROM dcim_user
-        		ORDER BY name";
-    		
-    		if (!($stmt = $mysqli->prepare($query))) 
-    		{
-    			$errorMessage[] = "ShowUserPage Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
-    		}
-    		
-    		$stmt->execute();
-    		$stmt->store_result();
-    		$stmt->bind_result($dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate);
-    		$count = $stmt->num_rows;
-    		
-    		echo "<span class='tableTitle'>Users</span>\n";
-    		//Add User button here?
-    		echo "<BR>\n";
-    		
-    		if($count>0)
-    		{
-    			echo CreateDataTableHeader(array("Name","User Name","Initials","Permission","Last Activity"),true);
-    			
-    			//list result data
-    			$oddRow = false;
-    			while ($stmt->fetch()) 
-    			{
-    				$oddRow = !$oddRow;
-    				if($oddRow) $rowClass = "dataRowOne";
-    				else $rowClass = "dataRowTwo";
-    				
-    				echo "<tr class='$rowClass'>";
-    				echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
-    				echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
-    				echo "<td class='data-table-cell'>$dbInitials</td>";
-    				echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
-    				echo "<td class='data-table-cell'>$dbLastActivity</td>";
-    				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
-    				echo "</tr>";
-    			}
-    			echo "</table>";
-    		}
-    		else 
-    		{
-                echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
-    		}
-    	
-        	/*if(UserHasWritePermission())
-        	{	
-        	    $action = "./?host=$input";
-        		EditDeviceForm($action);
-        	}*/
-    		echo "</div>\n";
-    		echo "</div>\n\n";
-    		echo "<BR>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>User List</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			$query = "SELECT userid,username, name, initials, permission, lastactivity, edituser, editdate
+				FROM dcim_user
+				ORDER BY name";
+			
+			if (!($stmt = $mysqli->prepare($query))) 
+			{
+				$errorMessage[] = "ShowUserPage Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate);
+			$count = $stmt->num_rows;
+			
+			echo "<span class='tableTitle'>Users</span>\n";
+			//Add User button here?
+			echo "<BR>\n";
+			
+			if($count>0)
+			{
+				echo CreateDataTableHeader(array("Name","User Name","Initials","Permission","Last Activity"),true);
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch()) 
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
+					echo "<td class='data-table-cell'>$dbInitials</td>";
+					echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
+					echo "<td class='data-table-cell'>$dbLastActivity</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
+					echo "</tr>";
+				}
+				echo "</table>";
+			}
+			else 
+			{
+				echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
+			}
+		
+			/*if(UserHasWritePermission())
+			{	
+				$action = "./?host=$input";
+				EditDeviceForm($action);
+			}*/
+			echo "</div>\n";
+			echo "</div>\n\n";
+			echo "<BR>\n";
 		}
 		else
 		{
@@ -2768,9 +2768,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-body'>\n\n";
 		
 		$query = "SELECT userid, username, name, email, initials, note, permission, lastactivity, edituser, editdate
-    		FROM dcim_user 
-    		WHERE userid=?
-    		LIMIT 1";
+			FROM dcim_user 
+			WHERE userid=?
+			LIMIT 1";
 		
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -2786,37 +2786,37 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count==1)
 		{
 			//show User data
-		    $stmt->fetch();
-		    
-    		$editingSelf = $dbUserID==$userID;
-    		
-    		$validateOldPas = true;
-    		if(!$editingSelf && UserHasAdminPermission())
-    		    $validateOldPas = false;
-		    
-		    echo "<span class='tableTitle'>".MakeHTMLSafe($name)." - ".MakeHTMLSafe($dbUserName)." - $initials - ID#$dbUserID</span><BR>\n";
-		    echo "Permmision: ".DescribeUserPermissionLevel($dbPermission,false,UserHasAdminPermission())."<BR>\n";
-		    echo "Last Activity: $lastActivity<BR>\n";
+			$stmt->fetch();
+			
+			$editingSelf = $dbUserID==$userID;
+			
+			$validateOldPas = true;
+			if(!$editingSelf && UserHasAdminPermission())
+				$validateOldPas = false;
+			
+			echo "<span class='tableTitle'>".MakeHTMLSafe($name)." - ".MakeHTMLSafe($dbUserName)." - $initials - ID#$dbUserID</span><BR>\n";
+			echo "Permmision: ".DescribeUserPermissionLevel($dbPermission,false,UserHasAdminPermission())."<BR>\n";
+			echo "Last Activity: $lastActivity<BR>\n";
 		
-		    /*
-	        echo "<BR>\n";
-	        echo "<BR>\n";
-	        echo "<BR>\n";
-	        echo "dbUserID='$dbUserID'<BR>\n";
-	        echo "userID='$userID'<BR>\n";
-	        echo "dbUserID==userID = '".($dbUserID==$userID)."'<BR>\n";
-	        echo "dbUserID===userID = '".($dbUserID===$userID)."'<BR>\n";
-	        echo "(int)dbUserID==(int)userID = '".((int)$dbUserID==(int)$userID)."'<BR>\n";
-		    */
-		    
-	        if(UserHasAdminPermission() ||($editingSelf && UserHasWritePermission()))
-	        {
-	            //change pass form
-	            //if not validdate old pas (admin changing someomen elses pass) then hide option and pass some crap as old pas to skip JS tests
-	            ?>
-		            <BR>
+			/*
+			echo "<BR>\n";
+			echo "<BR>\n";
+			echo "<BR>\n";
+			echo "dbUserID='$dbUserID'<BR>\n";
+			echo "userID='$userID'<BR>\n";
+			echo "dbUserID==userID = '".($dbUserID==$userID)."'<BR>\n";
+			echo "dbUserID===userID = '".($dbUserID===$userID)."'<BR>\n";
+			echo "(int)dbUserID==(int)userID = '".((int)$dbUserID==(int)$userID)."'<BR>\n";
+			*/
+			
+			if(UserHasAdminPermission() ||($editingSelf && UserHasWritePermission()))
+			{
+				//change pass form
+				//if not validdate old pas (admin changing someomen elses pass) then hide option and pass some crap as old pas to skip JS tests
+				?>
+					<BR>
 	<script src='customerEditScripts.js'></script>
-    <div id='EditUserPasswordMsg' class='hidden'></div>
+	<div id='EditUserPasswordMsg' class='hidden'></div>
 	<div id='EditUserPasswordEntry' class=''><table><tr><td>
 	<form action="./?userid=<?php echo $input;?>" method='post' id='EditUserPasswordForm' onsubmit='return SavePassword()' class=''>
 		<fieldset>
@@ -2824,10 +2824,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			<table>
 				<tr>
 					<td align='right'><?php 
-	    if(!$validateOldPas) 
-	        echo "Your Admin Password"; 
-        else 
-            echo "Current Password:"; ?></td>
+		if(!$validateOldPas) 
+			echo "Your Admin Password"; 
+		else 
+			echo "Current Password:"; ?></td>
 					<td width=1>
 						<input id=EditUserPassword_oldpas type='password' name='oldpas' maxlength=<?php echo $maxPasswordLength;?> value='' placeholder='x+Z*k^2+secure' class=''>
 					</td>
@@ -2851,21 +2851,21 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				</tr>
 			</table>
 			<?php 
-	    if(!$validateOldPas) 
-	        echo "<input id=EditUserPassword_username type='hidden' name='username' value='".MakeHTMLSafe($dbUserName)."'>";?>
+		if(!$validateOldPas) 
+			echo "<input id=EditUserPassword_username type='hidden' name='username' value='".MakeHTMLSafe($dbUserName)."'>";?>
 			<input id=EditUserPassword_userid type='hidden' name='userpasid' value=<?php echo $dbUserID; ?>>
 			<input id=EditUserPassword_action type='hidden' name='action' value='UserPassword_Update'>
 			<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>" />
 		</fieldset>
 	</form>
 	</td></tr></table><BR></div>
-	       	    <?php 
-		    }
+				<?php 
+			}
 		}
 		else 
 		{
-	        //TODO fix this to say something better - some locations dont have units or no devices
-            echo "User not Found\n";
+			//TODO fix this to say something better - some locations dont have units or no devices
+			echo "User not Found\n";
 		}
 		echo "</div>\n";
 		echo "</div>\n\n";
@@ -2894,7 +2894,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($affectedCount==1)
 				{   
 					//silent update
-				    UpdateRecordEditUser("dcim_deviceport","deviceportid",$devicePortID);
+					UpdateRecordEditUser("dcim_deviceport","deviceportid",$devicePortID);
 					LogDBChange("dcim_deviceport",$devicePortID,"U");
 					return true;
 				}
@@ -2994,17 +2994,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<tr>\n";
 				echo "<td valign=top>\n";
 				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n
-    		<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$hNo' target='_blank' class='cmdbLink'>CMDB</a>\n
-    		<a href='https://apps-hdc.safesecureweb.com/hmsbillingpro/345876438576bill234234/search/AccountAdminInfo.cfm?userid=$cNo&domain_id=$hNo' target='_blank' class='bpLink'>BP</a>\n";
+			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$hNo' target='_blank' class='cmdbLink'>CMDB</a>\n
+			<a href='https://apps-hdc.safesecureweb.com/hmsbillingpro/345876438576bill234234/search/AccountAdminInfo.cfm?userid=$cNo&domain_id=$hNo' target='_blank' class='bpLink'>BP</a>\n";
 			
 				echo "</td>\n";
 				echo "<td valign=top align=right>\n";
 				//edit Customer button - not visible till in edit mode
 				if(UserHasWritePermission())
 				{
-				    $formAction = "./?host=$hNo";
-				    echo CreateQACell("dcim_customer", $hNo, $formAction,$editUserID, $editDate, $qaUserID, $qaDate,false);
-				    
+					$formAction = "./?host=$hNo";
+					echo CreateQACell("dcim_customer", $hNo, $formAction,$editUserID, $editDate, $qaUserID, $qaDate,false);
+					
 					$jsSafeCustomer = MakeJSSafeParam($customer);
 					$jsSafeNote = MakeJSSafeParam($note);
 					$params = "false, '$hNo', '$cNo', '$jsSafeCustomer', '$jsSafeNote', '$status'";
@@ -3181,395 +3181,390 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-header'>Device</div>\n";
 		echo "<div class='panel-body'>\n\n";
 		
-        //get device info
-    	$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, d.locationid, l.colo, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
-            FROM dcim_device AS d
-            	LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-            	LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-            WHERE deviceid=? 
-            LIMIT 1";
-        
-    	$deviceCount = 0;
-        if (!($stmt = $mysqli->prepare($query)))
-        {
-        	//TODO handle errors better
-        	echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-        }
-        else 
-        {
-            $stmt->bind_Param('i', $input);		
-            $stmt->execute();
-            $stmt->store_result();
-            $stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $locationID, $colo, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
-            $deviceCount = $stmt->num_rows;
-        }
-        
-        if($deviceCount==1)
-        {
-        	//hNo is propper H# or -1 for add cust (or failed direct search)
-        	if(UserHasWritePermission())
-        	{
-        		echo "<script src='customerEditScripts.js'></script>\n";	
-        	}
-    			
-            $stmt->fetch();
-        
-    		$deviceInfo = GetDeviceFromModelName($model);
-    		
-    		$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
-    		$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member, true);
-    		$pageSubTitle = "Device: ".MakeHTMLSafe($deviceFullName);
-		    $fullLocationName = FormatLocation($siteName, $colo, $locationName);
-    	 	$isColo = ($type=="F" || $type=="H" || $type=="C");
-    	 	
-    	    //customer   model  status
-    	    //location - size   unit
-    	    //asset 
-    	    //serial
-    	    //note 
-            
-    		//this is the device page - build it...
-    		echo "<table width=100%>\n";
-    		echo "<tr>\n";
-    		echo "<td valign=top>\n";
-    		echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n
-    		<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$deviceName' target='_blank' class='cmdbLink'>CMDB</a>\n";
-    		
-    		//if switch give link to chassis - all matching device name
-    		if($type=="S")
-    		    echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='./?chassisname=$deviceName'>Chassis</a>\n";
-    	
-    		echo "</td>\n";
-    		echo "<td valign=top align=right>\n";
-    		//edit Customer button - not visible till in edit mode
-    		if(UserHasWritePermission())
-    		{
-    		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
-    		    $jsSafeDeviceName = MakeJSSafeParam($deviceName);
+		//get device info
+		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, d.locationid, l.colo, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+			FROM dcim_device AS d
+				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			WHERE deviceid=? 
+			LIMIT 1";
+		
+		$deviceCount = 0;
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			//TODO handle errors better
+			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		else 
+		{
+			$stmt->bind_Param('i', $input);		
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $locationID, $colo, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$deviceCount = $stmt->num_rows;
+		}
+		
+		if($deviceCount==1)
+		{
+			//hNo is propper H# or -1 for add cust (or failed direct search)
+			if(UserHasWritePermission())
+			{
+				echo "<script src='customerEditScripts.js'></script>\n";	
+			}
+				
+			$stmt->fetch();
+		
+			$deviceInfo = GetDeviceFromModelName($model);
+			
+			$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
+			$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member, true);
+			$pageSubTitle = "Device: ".MakeHTMLSafe($deviceFullName);
+			$fullLocationName = FormatLocation($siteName, $colo, $locationName);
+			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			
+			//customer   model  status
+			//location - size   unit
+			//asset 
+			//serial
+			//note 
+			
+			//this is the device page - build it...
+			echo "<table width=100%>\n";
+			echo "<tr>\n";
+			echo "<td valign=top>\n";
+			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n
+			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$deviceName' target='_blank' class='cmdbLink'>CMDB</a>\n";
+			
+			//if switch give link to chassis - all matching device name
+			if($type=="S")
+				echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='./?chassisname=$deviceName'>Chassis</a>\n";
+		
+			echo "</td>\n";
+			echo "<td valign=top align=right>\n";
+			//edit Customer button - not visible till in edit mode
+			if(UserHasWritePermission())
+			{
+				$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
+				$jsSafeDeviceName = MakeJSSafeParam($deviceName);
 				$jsSafeNotes = MakeJSSafeParam($notes);
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
 				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
 				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName, '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
-    		}
-    		//editMode button
-    		if(UserHasWritePermission())
-    		{
-    			echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
-    		}
-    		echo "</td>\n";
-    		echo "</tr>\n";
-    		echo "</table>\n";
-    		
-    		//details
-    		echo "<table>\n";
-    		echo "<tr>\n";
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Customer:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo "<a href='./?host=$hNo'>".MakeHTMLSafe($customerName)."</a>";
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		if($isColo)
-    		    echo "<b>Colo:</b>";
-		    else
-    		    echo "<b>Model:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		if($isColo)
-    		    echo MakeHTMLSafe(DeviceType($type));
-    		else
-    		    echo MakeHTMLSafe($model);
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Status:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails'>\n";
-    		echo FormatTechDetails($editUserID,$editDate,DeviceStatus($status), $qaUserID, $qaDate);
-    		echo "</td>\n";
-    		echo "</tr>\n";
-    		
-    		echo "<tr>\n";
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Location:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo "<a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a>";
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Size:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-    		echo MakeHTMLSafe($size);
-    		echo "</td>\n";
-    		
-    		echo "<td align=right class='customerDetails'>\n";
-    		echo "<b>Unit:</b>";
-    		echo "</td>\n";
-    		echo "<td align=left class='customerDetails'>\n";
-    		echo $unit;
-    		echo "</td>\n";
-    		echo "</tr></table>\n";
-    		
-    		//asset serial and notes
-    		echo "<table width=100%>\n";
-    		echo "<tr><td valign=top width=105 class='customerDetails'>\n";
-    		if(!$isColo)
-    		{
-    		    echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
-        		echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
-    		}
-    		echo "</td>\n";
-    		//device notes
-    		echo "<td valign=top align=left>\n";
-    		echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($notes)."</textarea>";
-    		echo "</td>\n";
-    		echo "</tr>\n";
-    		echo "</table>\n";
-    		
-    		
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
-    		$showDevice = true;
-    		if($type=="C" || $deviceInfo->name=="WS-X6K-SUP2-2GE")
-    		{
-    		    $showDevice = false;
-    		}
-    		
-    		if($showDevice)
-    		{
-                //process port data for switchview
-            	$startPort = $deviceInfo->startPort;
-            	$endPort = $startPort + $deviceInfo->portCount -1;
-            	
-            	$dbPortCount = 0;
-            	
-            	$query = "SELECT 
-        				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-        				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
-        				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
-        				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
-        			FROM dcim_device AS d
-        				LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                            LEFT JOIN (
-                                        SELECT pcA.portconnectionid,pcA.childportid AS srcportid,pcA.parentportid AS destportid,pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate FROM dcim_portconnection AS pcA
-                                        UNION ALL
-                                        SELECT pcB.portconnectionid,pcB.parentportid AS srcportid,pcB.childportid AS destportid,pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate FROM dcim_portconnection AS pcB) 
-                            	AS pc ON dp.deviceportid=pc.srcportid
-        				LEFT JOIN dcim_deviceport AS sp ON pc.destportid=sp.deviceportid
-        				LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
-        				LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
-        			WHERE d.deviceid=?
-        			GROUP BY dp.deviceportid
-            		ORDER BY 3,4,6,7";
-            	
-            	if (!($stmt = $mysqli->prepare($query)))
-            	{
-            		//TODO handle errors better
-            		echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-            	}
-            	else 
-            	{
-            		$stmt->bind_Param('i', $deviceID);
-                	$stmt->execute();
-                	$stmt->store_result();
-                	$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-            						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
-            						   $type, $speed, $note, $status, $portConnectionID, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
-                	$dbPortCount = $stmt->num_rows;
-            	}
-            	
-            	if($dbPortCount>=1)
-            	{
-                	$topPortDivs = "";
-                	$bottomPortDivs = "";
-                
-                	//these are not mutualy exclusive - both cen be on "bottom"
-                	//
-                	if(!$deviceInfo->doubleRow)
-                	{
-                	    //single "bottom" row
-                	    $oddOnTop = false;
-                	    $evenOnTop = false;
-                	}
-                	else 
-                	{
-            		    $oddOnTop  = ($startPort%2!=0);
-            		    $evenOnTop = ($startPort%2==0);
-                	}
-        		    //build switch port divs
-            		while ($stmt->fetch()) 
-            		{
-            		    if($port >= $startPort && $port <= $endPort)//valid port in range
-            		    {
-                		    $popupText = "";
-                			
-                			//$truePortIndex is the true port no from 0 --EX: port 15 in on 13-24 is 2
-                			$truePortIndex = $port-$startPort;
-                			$setStyle = "";
-                			if($truePortIndex < $deviceInfo->portsPerSet * 1) //less than 12
-                			    $setStyle = "switchPortsSet1";
-                			else if($truePortIndex < $deviceInfo->portsPerSet * 2) //less than 24
-                			    $setStyle = "switchPortsSet2";
-                			else if($truePortIndex < $deviceInfo->portsPerSet * 3) //less than 36
-                			    $setStyle = "switchPortsSet3";
-                			else if($truePortIndex < $deviceInfo->portsPerSet * 4) //less than 48
-                			    $setStyle = "switchPortsSet4";
-                			
-                			
-                			if($status=="A")
-                			    $statusStyle = "switchPortActive";
-                			else if($status=="D")
-                			    $statusStyle = "switchPortEmpty";
-                			else if($status=="R")
-                			    $statusStyle = "switchPortReserved";
-                			else
-                			    $statusStyle = "switchPortBad";
-                			$statusDescrip = DevicePortStatus($status,true);
-                			    
-            			    //if odd and not odd on top
-            			    $onBottom = (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
-            			    $bottomStyle = "";
-            			    if($onBottom)
-            			        $bottomStyle = "switchBottomPort";
-            			    
-        			        //XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
-            			    $portFullName = FormatPort($member, $model, $pic, $port, $type);
-            			    $connectionText = "N/A";
-        		            if($switchID!=null)
-        		            {
-        		                $switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-            			        $connectionText = "$switchName $switchPortFullName";
-        		            }
-        		            
-        		            $tech = $userFullName[$editUserID] . ": ".$editDate;
-        		            //$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
-        		            $popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-            			    Connection:".MakeHTMLSafe($connectionText)."<BR>
-            			    Status:$statusDescrip<BR>
-            			    MAC:".MakeHTMLSafe($mac)." <BR>
-            			    Speed:".MakeHTMLSafe($speed)." <BR>
-            			    VLAN(s):$vlan <BR>
-            			    Tech:$tech <BR>
-            			    Notes:".MakeHTMLSafe($note);
-            			    
-        		            if(UserHasDevPermission())
-        		            {
-                			    //debug
-                			    $popupText .= "<BR>
-                			    <BR>parentDeviceID=$deviceID
-                			    <BR>DeviePortID=$devicePortID
-                			    <BR>PortConnectionID=$portConnectionID
-                			    <BR>SwitchID=$switchID
-                			    <BR>SwitchPortID=$switchPortID";
-        		            }
-            			        
-        		            
-                		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
-                		    $jsSafePortFullName = MakeJSSafeParam($portFullName);
-                		    $jsSafeMac = MakeJSSafeParam($mac);
-                		    $jsSafeSpeed = MakeJSSafeParam($speed);
-                		    $jsSafeNote = MakeJSSafeParam($note);
-                            //EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-        		            $portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
-        		            
-        		            $portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
-                			
-        		            if($pic==0)
-        		            {
-                    			if($onBottom)
-                    			    $bottomPortDivs .= $portDiv;
-                			    else
-                    			    $topPortDivs .= $portDiv;
-        		            }
-        		            else 
-    		                {
-    		                    //stub for fiber ports or specialty cases (extra NIC ports, console, MGMT, whatever)
-    		                    //this should actualy filter above with the range filter
-    		                    //for now dont include them here (on the visual render)  - will still be listed below
-    		                    //will need thier own positioning CSS classes and probably image overlays - meh
-        		            }
-            		    }
-            		}//while
-            	}//found ports
-            	
-            	$portWidth = 28;
-            	$portHeight = 20;
-            	//dynamic
-            	$switchWidth = 948;
-            	$switchHeight = 97;
-            	$switchImage = "../images/ex4200_front.jpg";
-            	$topOffset = 25;
-            	$bottomOffset = 30;
-            	$set1Offset = 18;
-            	$set2Offset = 28;
-            	$set3Offset = 38;
-            	$set4Offset = 48;
-            	$marginRight = 2;
-            	
-            	//TODO quick hack for patch panels
-    		    if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom" || $deviceInfo->name=="Cage")
-            	{
-                	$switchWidth = 950;
-                	$switchHeight = 91;
-                	$switchImage = "../images/patchpanel.jpg";
-                	$topOffset = 0;
-                	$bottomOffset = 38;
-                	$set1Offset = 60;
-                	$set2Offset = 94;
-                	$set3Offset = 129;
-                	$set4Offset = 166;
-            	
-                	if($startPort==13)
-                	{
-                	    //bottom half cab - shift ports to right
-                	    $set1Offset = 489;
-                	    $set2Offset = 525;
-                	}
-            	}
-            	else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
-            	{
-            	    $switchImage = "../images/ex4200_24p_front.jpg";
-            	}
-            	else if($deviceInfo->name=="WS-X6348")
-            	{
-            	    $switchImage = "../images/ws-x6348_front.jpg";
-                	$switchWidth = 950;
-                	$switchHeight = 105;
-                	$topOffset = 25;
-                	$bottomOffset = 33;
-                	$set1Offset = 57;
-                	$set2Offset = 78;
-                	$set3Offset = 92;
-                	$set4Offset = 102;
-                	$marginRight = 6;
-            	}
-            	else if($deviceInfo->name=="Catalyst 3550")
-            	{
-            	    $switchImage = "../images/catalyst2950_front.jpg";
-                	$switchWidth = 950;
-                	$switchHeight = 89;
-                	$topOffset = 19;
-                	$bottomOffset = 25;
-                	$set1Offset = 59;
-                	$set2Offset = 77;
-                	$set3Offset = 97;
-            	}
-        	
-        	?>
+			}
+			//editMode button
+			if(UserHasWritePermission())
+			{
+				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+			}
+			echo "</td>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
+			
+			//details
+			echo "<table>\n";
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Customer:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<a href='./?host=$hNo'>".MakeHTMLSafe($customerName)."</a>";
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			if($isColo)
+				echo "<b>Colo:</b>";
+			else
+				echo "<b>Model:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			if($isColo)
+				echo MakeHTMLSafe(DeviceType($type));
+			else
+				echo MakeHTMLSafe($model);
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Status:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails'>\n";
+			echo FormatTechDetails($editUserID,$editDate,DeviceStatus($status), $qaUserID, $qaDate);
+			echo "</td>\n";
+			echo "</tr>\n";
+			
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Location:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a>";
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Unit:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo $unit;
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Size:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails'>\n";
+			echo MakeHTMLSafe($size);
+			echo "</td>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
+			
+			//asset serial and notes
+			echo "<table width=100%>\n";
+			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
+			if(!$isColo)
+			{
+				echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
+				echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
+			}
+			echo "</td>\n";
+			//device notes
+			echo "<td valign=top align=left>\n";
+			echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($notes)."</textarea>";
+			echo "</td>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
+			
+			
+			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			//show device image with port overlays
+			if($deviceInfo->showDeviceImage)
+			{
+				//process port data for switchview
+				$startPort = $deviceInfo->startPort;
+				$endPort = $startPort + $deviceInfo->portCount -1;
+				
+				$dbPortCount = 0;
+				
+				$query = "SELECT 
+						dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
+						sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+						dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
+						CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
+					FROM dcim_device AS d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+							LEFT JOIN (
+										SELECT pcA.portconnectionid,pcA.childportid AS srcportid,pcA.parentportid AS destportid,pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate FROM dcim_portconnection AS pcA
+										UNION ALL
+										SELECT pcB.portconnectionid,pcB.parentportid AS srcportid,pcB.childportid AS destportid,pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate FROM dcim_portconnection AS pcB) 
+								AS pc ON dp.deviceportid=pc.srcportid
+						LEFT JOIN dcim_deviceport AS sp ON pc.destportid=sp.deviceportid
+						LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
+						LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
+					WHERE d.deviceid=?
+					GROUP BY dp.deviceportid
+					ORDER BY 3,4,6,7";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+				{
+					//TODO handle errors better
+					echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				}
+				else 
+				{
+					$stmt->bind_Param('i', $deviceID);
+					$stmt->execute();
+					$stmt->store_result();
+					$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
+									   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+									   $type, $speed, $note, $status, $portConnectionID, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
+					$dbPortCount = $stmt->num_rows;
+				}
+				
+				if($dbPortCount>=1)
+				{
+					$topPortDivs = "";
+					$bottomPortDivs = "";
+				
+					//these are not mutualy exclusive - both cen be on "bottom"
+					//
+					if(!$deviceInfo->doubleRow)
+					{
+						//single "bottom" row
+						$oddOnTop = false;
+						$evenOnTop = false;
+					}
+					else 
+					{
+						$oddOnTop  = ($startPort%2!=0);
+						$evenOnTop = ($startPort%2==0);
+					}
+					//build switch port divs
+					while ($stmt->fetch()) 
+					{
+						if($port >= $startPort && $port <= $endPort)//valid port in range
+						{
+							$popupText = "";
+							
+							//$truePortIndex is the true port no from 0 --EX: port 15 in on 13-24 is 2
+							$truePortIndex = $port-$startPort;
+							$setStyle = "";
+							if($truePortIndex < $deviceInfo->portsPerSet * 1) //less than 12
+								$setStyle = "switchPortsSet1";
+							else if($truePortIndex < $deviceInfo->portsPerSet * 2) //less than 24
+								$setStyle = "switchPortsSet2";
+							else if($truePortIndex < $deviceInfo->portsPerSet * 3) //less than 36
+								$setStyle = "switchPortsSet3";
+							else if($truePortIndex < $deviceInfo->portsPerSet * 4) //less than 48
+								$setStyle = "switchPortsSet4";
+							
+							
+							if($status=="A")
+								$statusStyle = "switchPortActive";
+							else if($status=="D")
+								$statusStyle = "switchPortEmpty";
+							else if($status=="R")
+								$statusStyle = "switchPortReserved";
+							else
+								$statusStyle = "switchPortBad";
+							$statusDescrip = DevicePortStatus($status,true);
+								
+							//if odd and not odd on top
+							$onBottom = (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
+							$bottomStyle = "";
+							if($onBottom)
+								$bottomStyle = "switchBottomPort";
+							
+							//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
+							$portFullName = FormatPort($member, $model, $pic, $port, $type);
+							$connectionText = "N/A";
+							if($switchID!=null)
+							{
+								$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
+								$connectionText = "$switchName $switchPortFullName";
+							}
+							
+							$tech = $userFullName[$editUserID] . ": ".$editDate;
+							//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
+							$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
+							Connection:".MakeHTMLSafe($connectionText)."<BR>
+							Status:$statusDescrip<BR>
+							MAC:".MakeHTMLSafe($mac)." <BR>
+							Speed:".MakeHTMLSafe($speed)." <BR>
+							VLAN(s):$vlan <BR>
+							Tech:$tech <BR>
+							Notes:".MakeHTMLSafe($note);
+							
+							if(UserHasDevPermission())
+							{
+								//debug
+								$popupText .= "<BR>
+								<BR>parentDeviceID=$deviceID
+								<BR>DeviePortID=$devicePortID
+								<BR>PortConnectionID=$portConnectionID
+								<BR>SwitchID=$switchID
+								<BR>SwitchPortID=$switchPortID";
+							}
+								
+							
+							$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
+							$jsSafePortFullName = MakeJSSafeParam($portFullName);
+							$jsSafeMac = MakeJSSafeParam($mac);
+							$jsSafeSpeed = MakeJSSafeParam($speed);
+							$jsSafeNote = MakeJSSafeParam($note);
+							//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
+							$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+							
+							$portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
+							
+							if($pic==0)
+							{
+								if($onBottom)
+									$bottomPortDivs .= $portDiv;
+								else
+									$topPortDivs .= $portDiv;
+							}
+							else 
+							{
+								//stub for fiber ports or specialty cases (extra NIC ports, console, MGMT, whatever)
+								//this should actualy filter above with the range filter
+								//for now dont include them here (on the visual render)  - will still be listed below
+								//will need thier own positioning CSS classes and probably image overlays - meh
+							}
+						}
+					}//while
+				}//found ports
+				
+				$portWidth = 28;
+				$portHeight = 20;
+				//dynamic
+				$switchWidth = 948;
+				$switchHeight = 97;
+				$switchImage = "../images/ex4200_front.jpg";
+				$topOffset = 25;
+				$bottomOffset = 30;
+				$set1Offset = 18;
+				$set2Offset = 28;
+				$set3Offset = 38;
+				$set4Offset = 48;
+				$marginRight = 2;
+				
+				//TODO quick hack for patch panels
+				if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom")
+				{
+					$switchWidth = 950;
+					$switchHeight = 91;
+					$switchImage = "../images/patchpanel.jpg";
+					$topOffset = 0;
+					$bottomOffset = 38;
+					$set1Offset = 60;
+					$set2Offset = 94;
+					$set3Offset = 129;
+					$set4Offset = 166;
+				
+					if($startPort==13)
+					{
+						//bottom half cab - shift ports to right
+						$set1Offset = 489;
+						$set2Offset = 525;
+					}
+				}
+				else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
+				{
+					$switchImage = "../images/ex4200_24p_front.jpg";
+				}
+				else if($deviceInfo->name=="WS-X6348")
+				{
+					$switchImage = "../images/ws-x6348_front.jpg";
+					$switchWidth = 950;
+					$switchHeight = 105;
+					$topOffset = 25;
+					$bottomOffset = 33;
+					$set1Offset = 57;
+					$set2Offset = 78;
+					$set3Offset = 92;
+					$set4Offset = 102;
+					$marginRight = 6;
+				}
+				else if($deviceInfo->name=="Catalyst 3550")
+				{
+					$switchImage = "../images/catalyst2950_front.jpg";
+					$switchWidth = 950;
+					$switchHeight = 89;
+					$topOffset = 19;
+					$bottomOffset = 25;
+					$set1Offset = 59;
+					$set2Offset = 77;
+					$set3Offset = 97;
+				}
+			
+			?>
 
 <style type="text/css">
 #switch {
-    width:<?php echo $switchWidth;?>;
-    height:<?php echo $switchHeight;?>;
-    background-image:url('<?php echo $switchImage;?>'); 
-    background-repeat: no-repeat;
+	width:<?php echo $switchWidth;?>;
+	height:<?php echo $switchHeight;?>;
+	background-image:url('<?php echo $switchImage;?>'); 
+	background-repeat: no-repeat;
 }
 .switchPortsSet1{
 	left: <?php echo $set1Offset;?>px;
@@ -3587,11 +3582,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 .switchPortEmpty, .switchPortReserved{
 	background-repeat: no-repeat;
 	top: <?php echo $topOffset;?>px; /*over written by bottom ports*/
-    width:<?php echo $portWidth;?>px;
-    height:<?php echo $portHeight;?>px;
-    margin-right: <?php echo $marginRight;?>px;
+	width:<?php echo $portWidth;?>px;
+	height:<?php echo $portHeight;?>px;
+	margin-right: <?php echo $marginRight;?>px;
 	margin-bottom: 3px;
-    position: relative;
+	position: relative;
 	float: left;
 }
 .switchBottomPort{
@@ -3599,43 +3594,43 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 }
 </style>
 <?php
-                //switch div
-            	echo "<div id='switch'>\n";
-                echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
-                if($deviceInfo->doubleRow)
-                {
-                    echo $topPortDivs;
-                    echo "</td></tr><tr><td>\n";
-                }
-                echo $bottomPortDivs;
-                echo "	</td></tr></table>\n";
-                echo "</div>\n";
-    		}
-        
-        	if(UserHasWritePermission())
-        	{	
-        	    $action = "./?deviceid=$input";
-        		EditDeviceForm($action);
-        	}
-            
-        	//end top panel and panel body
-        	echo "</div>\n";
-        	echo "</div>\n";
-        	echo "<BR>\n";
-    			
-    		echo "<div class='panel'>\n";
-    		echo "<div class='panel-header'>Device Details</div>\n";
-    		echo "<div class='panel-body'>\n\n";
-            
-            
-        	//all Ports
-        	ListDevicePorts($deviceID,$deviceFullNameShort);
-    	}
-    	else 
-    	{
-    	    echo "Device Not Found";
-    	}//device found
-    	
+				//switch div
+				echo "<div id='switch'>\n";
+				echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
+				if($deviceInfo->doubleRow)
+				{
+					echo $topPortDivs;
+					echo "</td></tr><tr><td>\n";
+				}
+				echo $bottomPortDivs;
+				echo "	</td></tr></table>\n";
+				echo "</div>\n";
+			}//show device
+		
+			if(UserHasWritePermission())
+			{	
+				$action = "./?deviceid=$input";
+				EditDeviceForm($action);
+			}
+			
+			//end top panel and panel body
+			echo "</div>\n";
+			echo "</div>\n";
+			echo "<BR>\n";
+				
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Device Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			
+			//all Ports
+			ListDevicePorts($deviceID,$deviceFullNameShort);
+		}
+		else 
+		{
+			echo "Device Not Found";
+		}//device found
+		
 		//end panel and panel body
 		echo "</div>\n";
 		echo "</div>\n";
@@ -3650,18 +3645,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ShowChassisPage($chassisName)
 	{
-    	if(UserHasWritePermission())
-    	{
-    		echo "<script src='customerEditScripts.js'></script>\n";	
-    	}
-    	
-	    echo "<div class='panel'>\n";
+		if(UserHasWritePermission())
+		{
+			echo "<script src='customerEditScripts.js'></script>\n";	
+		}
+		
+		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>Chassis Details</div>\n";
 		echo "<div class='panel-body'>\n\n";
-        
-        
-    	//all Ports
-    	ListDevicePorts($chassisName,"",true);
+		
+		
+		//all Ports
+		ListDevicePorts($chassisName,"",true);
 		
 		if(UserHasWritePermission())
 		{
@@ -3771,7 +3766,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($search)
 				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"),false,false);
 			else
-				echo CreateDataTableHeader(array(           "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -3816,7 +3811,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<?php 
 						echo "</td>\n";
 						
-	                    $formAction = "./?host=$hNo";
+						$formAction = "./?host=$hNo";
 						echo CreateQACell("dcim_badge", $badgeID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 					}
 				}
@@ -3829,39 +3824,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		  echo "No Badges Found.<BR>\n";
 		}
 		
-    	if(UserHasWritePermission())
-    	{	
-    		EditBadgeForm($input);
-    	}
+		if(UserHasWritePermission())
+		{	
+			EditBadgeForm($input);
+		}
 		
 		return $count;
 	}
 	
 	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true)
 	{
-	    if($cell)
-	        $resultHTML = "<td class='data-table-cell-button editButtons_hidden' align=center>\n";
-        else 
-	        $resultHTML = "<span class='editButtons_hidden'>QA: ";
-	        
+		if($cell)
+			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align=center>\n";
+		else 
+			$resultHTML = "<span class='editButtons_hidden'>QA: ";
+			
 		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
 		if($qaStatus==1)
 		{
-		    $instanceID = end($_SESSION['page_instance_ids']);
-		    $resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
+			$instanceID = end($_SESSION['page_instance_ids']);
+			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
 		}
 		else if($qaStatus==0)
 		{
-		    $resultHTML .= "<font color='green'>Good</font>";
+			$resultHTML .= "<font color='green'>Good</font>";
 		}
 		else if($qaStatus==2)
 		{
-		    $resultHTML .= "<font color='black'>Pending</font>";
+			$resultHTML .= "<font color='black'>Pending</font>";
 		}
-	    if($cell)
-		    $resultHTML .= "</td>\n";
+		if($cell)
+			$resultHTML .= "</td>\n";
 		else
-		    $resultHTML .= " </span>\n";
+			$resultHTML .= " </span>\n";
 		return $resultHTML;
 	}
 	
@@ -4003,13 +3998,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					</tr>
 					<tr>
 						<td colspan=2><table width=100%><tr>
-    						<td align='left'>
-    							<button id=EditDevicePort_deletebtn type="button" onclick="DeleteDevicePort()" tabindex=11>Delete</button>
-    						</td>
-    						<td align='right'>
-    							<button type="button" onclick="HideAllEditForms()" tabindex=10>Cancel</button>
-    							<input type="submit" value="Save" tabindex=9>
-    						</td>
+							<td align='left'>
+								<button id=EditDevicePort_deletebtn type="button" onclick="DeleteDevicePort()" tabindex=11>Delete</button>
+							</td>
+							<td align='right'>
+								<button type="button" onclick="HideAllEditForms()" tabindex=10>Cancel</button>
+								<input type="submit" value="Save" tabindex=9>
+							</td>
 						</tr></table></td>
 					</tr>
 				</table>
@@ -4028,24 +4023,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $deviceModels;
 		
-	    $formAction = "./?host=$input";
-    	    
+		$formAction = "./?host=$input";
+			
 		if($search)
 		{
-      		$input = "%".$input."%";
+			$input = "%".$input."%";
 			
 			$query = "SELECT d.deviceid, s.name AS site, l.colo, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
-        			FROM dcim_device AS d
-        				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-                    	LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-            			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-        			WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(l.colo,' ',l.name) LIKE ?		
-        		UNION
-    				SELECT '', s.name, l.colo, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-            			FROM dcim_location AS l
-                			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-            			WHERE l.visible='T' AND
-            				CONCAT(l.colo,' ',l.name) LIKE ?
+					FROM dcim_device AS d
+						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+						LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(l.colo,' ',l.name) LIKE ?		
+				UNION
+					SELECT '', s.name, l.colo, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+						FROM dcim_location AS l
+							LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+						WHERE l.visible='T' AND
+							CONCAT(l.colo,' ',l.name) LIKE ?
 				ORDER BY site, colo, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4055,14 +4050,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			$stmt->bind_Param('ssss', $input, $input, $input, $input);
 			
-		    echo "<span class='tableTitle'>Locations and Devices</span>\n";
+			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
 			$query = "SELECT d.deviceid, s.name AS site, l.colo, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
-            	LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
 			WHERE d.hno=?
 			ORDER BY status, site, colo, loc, unit, name, member";
 			
@@ -4073,7 +4068,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			$stmt->bind_Param('s', $input);
 			
-		    echo "<span class='tableTitle'>Devices</span>\n";
+			echo "<span class='tableTitle'>Devices</span>\n";
 		}
 		
 		$stmt->execute();
@@ -4097,17 +4092,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($search)
 				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"),false,false);
 			else
-				echo CreateDataTableHeader(array(           "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array(		   "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
 			$lastLocationID = -1;
 			while ($stmt->fetch()) 
 			{
-			    // if same loction and no device here this record - skip
-			    if($locationID==$lastLocationID && strlen($name)<=0)
-		            continue;
-			    
+				// if same loction and no device here this record - skip
+				if($locationID==$lastLocationID && strlen($name)<=0)
+					continue;
+				
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
@@ -4115,22 +4110,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
-		        $fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $colo, $location);
 				
 				echo "<tr class='$rowClass'>";
-    			if($search)
-				    echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				if($search)
+					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-    			if(!$search)
-    			{
-    				echo "<td class='data-table-cell'>$unit</td>";
-    				echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-    				echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-    				echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
-    				echo "<td class='data-table-cell'>$visibleNotes</td>";
-    				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-    			}
+				if(!$search)
+				{
+					echo "<td class='data-table-cell'>$unit</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+					echo "<td class='data-table-cell'>$visibleNotes</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				}
 				if(!$search && UserHasWritePermission())
 				{
 					//edit device - link to form
@@ -4157,10 +4152,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		  echo "No Devices Found.<BR>\n";
 		}
 	
-    	if(UserHasWritePermission())
-    	{	
-    		EditDeviceForm($formAction);
-    	}
+		if(UserHasWritePermission())
+		{	
+			EditDeviceForm($formAction);
+		}
 		return $count;
 	}
 	
@@ -4186,15 +4181,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, l.siteid, l.colo, l.name, l.size, l.type, l.status 
+		$query = "SELECT s.name, l.locationid, l.siteid, l.colo, l.name, l.size, l.type, l.status
 			FROM dcim_location AS l
-			LEFT JOIN dcim_site AS s ON s.siteid=l.siteid 
+			LEFT JOIN dcim_site AS s ON s.siteid=l.siteid
 			WHERE l.visible='T'
 			ORDER BY l.colo, l.name";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-		    //TODO handle this better - this runs further down the page - so the error is never seen 
+			//TODO handle this better - this runs further down the page - so the error is never seen 
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
@@ -4206,15 +4201,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_result($siteName, $locationID, $siteID, $colo, $location, $size, $type, $status);
 			while ($stmt->fetch()) 
 			{
-			    //TODO should this be full location name? or atleast show site name?
-			    //$fullLocationName = FormatLocation($site, $colo, $location);
-                
+				//TODO should this be full location name? or atleast show site name?
+				//$fullLocationName = FormatLocation($site, $colo, $location);
+				
 				if($colo<1)
 					$locationName = $location;// misc locations not in a CA
 				else
 					$locationName = $location. " (CA$colo)";
 					
-		    	$selected = ($locationID==$locationInput ? "Selected" : "");
+				$selected = ($locationID==$locationInput ? "Selected" : "");
 				$locationOptions .= "<option value='$locationID' $selected>$locationName</option>\n";
 			}
 		}
@@ -4252,7 +4247,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Switch</option>
 							</select>
 							Size:
-							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='5x7, Full, 2U, Half' class='' >
+							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='5x7, Full, 2U, Half' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -4262,7 +4257,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								<?php echo $locationOptions; ?>
 							</select>
 							Unit:
-							<input id=EditDevice_unit type='text' tabindex=5 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class='' >
+							<input id=EditDevice_unit type='text' tabindex=5 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -4285,7 +4280,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							{
 								if($model->coloDevice==false)
 								{
-								    echo "<option value='$model->name'>$model->name</option>\n";
+									echo "<option value='$model->name'>$model->name</option>\n";
 								}
 							}
 							//also include unknown to prevent accedental defualts
@@ -4295,7 +4290,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<select id=EditDevice_member name="member" tabindex=8>
 							<?php 
 							for ($member = 0; $member <= 9; $member++) {
-							    echo "<option value='$member'>$member</option>\n";
+								echo "<option value='$member'>$member</option>\n";
 							}?>
 							</select>
 						</td>
@@ -4303,19 +4298,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr id='EditDevice_interalFields_row2'>
 						<td align='right' width=1>Asset:</td>
 						<td align='left'>
-							<input id=EditDevice_asset type='text' tabindex=9 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class='' >
+							<input id=EditDevice_asset type='text' tabindex=9 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
 						</td>
 					</tr>
 					<tr id='EditDevice_interalFields_row3'>
 						<td align='right' width=1>Serial:</td>
 						<td align='left'>
-							<input id=EditDevice_serial type='text' tabindex=10 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class='' >
+							<input id=EditDevice_serial type='text' tabindex=10 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditDevice_notes type='text' tabindex=11 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class='' >
+							<input id=EditDevice_notes type='text' tabindex=11 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -4327,7 +4322,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				</table>
 				<input id=EditDevice_deviceid type='hidden' name='deviceid' value=-1>
 				<input id=EditDevice_action type='hidden' name='action' value='null'>
-				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>" />
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
 		</form>
 		</td></tr></table></div>
@@ -4338,8 +4333,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		global $mysqli;
 		
-		$query = "SELECT hno, cno, name, note, status, edituser 
-		FROM dcim_customer 
+		$query = "SELECT hno, cno, name, note, status, edituser
+		FROM dcim_customer
 		WHERE CONCAT('H',hno) LIKE ? OR CONCAT('C',cno) LIKE ? OR name LIKE ? OR note LIKE ?
 		ORDER BY name";
 		
@@ -4392,7 +4387,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ListLocationCustomers($siteID, $ca, $row)
 	{
-	    //build table of all deives/customers in location range - search only
+		//build table of all deives/customers in location range - search only
 		global $mysqli;
 		
 		$showEmpty = true;
@@ -4418,19 +4413,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-        			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
 				WHERE l.siteid = ?
 					AND $filter
 					AND l.visible='T'
 				ORDER BY colo, l.name";
 		else
-			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member 
+			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-			WHERE l.siteid=? 
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			WHERE l.siteid=?
 				AND $filter
 				AND d.locationid=l.locationid
-				AND d.hno=c.hno 
+				AND d.hno=c.hno
 				AND d.status='A'
 			ORDER BY colo, l.name";
 
@@ -4478,7 +4473,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-		        $fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $colo, $location);
 				$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
 				
 				echo "<tr class='$rowClass'>";
@@ -4506,39 +4501,36 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListPowerCircuits($locationPage, $key, $siteID)
 	{
 		global $mysqli;
-	    
+		
 		$formAction = "./?host=$key";
 		
 		if($locationPage)
 		{
-    		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
-    		FROM dcim_location AS l
-    			INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid 
-    			LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid 
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-    		WHERE l.locationid=? AND s.siteid=?
-    		GROUP BY p.panel, p.circuit
-    		ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			FROM dcim_location AS l
+				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			WHERE l.locationid=? AND s.siteid=?
+			GROUP BY p.panel, p.circuit
+			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
-	    else
-	    {
-    		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
-    		FROM dcim_device AS d 
-    			LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-    			INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid 
-    			LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid 
-    			LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-    		WHERE d.hno=? AND s.siteid=?
-    		GROUP BY p.panel, p.circuit
-    		ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
-	    }
+		else
+		{
+			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			FROM dcim_device AS d
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			WHERE d.hno=? AND s.siteid=?
+			GROUP BY p.panel, p.circuit
+			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+		}
 		
 		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
-		
-		//TODO this is currently broken when devices dont have locations (IE not colo)
 		//TODO double check using "location" vs  "reference" properly
-		
 		//TODO This should also check the device status is active and or show/filter that here	
 		
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -4558,8 +4550,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//Add button
 		if($locationPage && UserHasCircuitPermission())
 		{
-		    ?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
-		    <?php 
+			?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
+			<?php 
 		}
 		echo "<BR>";
 			
@@ -4571,8 +4563,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-                $fullLocationName = FormatLocation($site, $colo, $location);
-            
+				$fullLocationName = FormatLocation($site, $colo, $location);
+			
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
@@ -4588,11 +4580,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				$visibleCircuit = $circuit;
 				if($volts==208)
-				    $visibleCircuit = (int)$circuit ."/".(2+(int)$circuit);
+					$visibleCircuit = (int)$circuit ."/".(2+(int)$circuit);
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -4601,7 +4593,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				if(UserHasCircuitPermission())
 				{
-		            //edit button
+					//edit button
 					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
 					
 					$jsSafePanel = MakeJSSafeParam($panel);
@@ -4619,22 +4611,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else 
 		{
-		    echo "No relevant power records found.<BR>\n";
+			echo "No relevant power records found.<BR>\n";
 		}  
 	
-    	if(UserHasCircuitPermission())
-    	{
-    	    if($locationPage)
-    	    {
-        	    $action = "./?locationid=$locationID";
-        		EditCircuitForm($action, $locationID, $locationPage);
-    	    }
-    	    else 
-    	    {
-    	        //cant add power from hree so location is irrelevant
-        		EditCircuitForm($formAction, -1, $locationPage);
-    	    }
-    	}
+		if(UserHasCircuitPermission())
+		{
+			if($locationPage)
+			{
+				$action = "./?locationid=$locationID";
+				EditCircuitForm($action, $locationID, $locationPage);
+			}
+			else 
+			{
+				//cant add power from hree so location is irrelevant
+				EditCircuitForm($formAction, -1, $locationPage);
+			}
+		}
 		return $count;
 	}
 	
@@ -4685,20 +4677,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					</tr>
 					<tr>
 						<td colspan=2><table width=100%><tr>
-    						<td align=left>
-    							<?php if($locationPage)echo "<button id='EditCircuit_deletebutton' type='button' onclick='DeleteCircuit()' tabindex=9>Delete</button>"; ?>
-    						</td>
-    						<td align='right'>
-    							<button type="button" onclick="HideAllEditForms()" tabindex=8>Cancel</button>
-    							<input type="submit" value="Save" tabindex=7>
-    						</td>
+							<td align=left>
+								<?php if($locationPage)echo "<button id='EditCircuit_deletebutton' type='button' onclick='DeleteCircuit()' tabindex=9>Delete</button>";?>
+							</td>
+							<td align='right'>
+								<button type="button" onclick="HideAllEditForms()" tabindex=8>Cancel</button>
+								<input type="submit" value="Save" tabindex=7>
+							</td>
 						</tr></table></td>
 					</tr>
 				</table>
 				<input id=EditCircuit_powerid type='hidden' name='powerid' value='-2'>
 				<input id=EditCircuit_action type='hidden' name='action' value='null'>
 				<input id=EditCircuit_locationid type='hidden' name='locationid' value='<?php echo $locationID; ?>'>
-				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>" />
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
 		</form>
 		</td></tr></table></div>
@@ -4708,9 +4700,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListCustomerSubnets($hNo)
 	{
 		global $mysqli;
+		$formAction = "./?host=$hNo";
 		
-        $formAction = "./?host=$hNo";
-        
 		//GROUP to by VLAN/SUBNET to show unique networks link to customer
 		$query = "SELECT dp.deviceportid, v.vlanid, v.vlan, v.subnet, v.mask, v.first, v.last, v.gateway, v.note, v.edituser, v.editdate, v.qauser, v.qadate
 			FROM
@@ -4731,9 +4722,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 							LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
 						WHERE d.hno=?) AS csr
-    			LEFT JOIN dcim_vlan AS v ON v.vlan=csr.vlan
-    			INNER JOIN dcim_portvlan AS pv ON pv.vlan=v.vlan
-    			INNER JOIN dcim_deviceport AS dp ON dp.deviceportid=pv.deviceportid
+				LEFT JOIN dcim_vlan AS v ON v.vlan=csr.vlan
+				INNER JOIN dcim_portvlan AS pv ON pv.vlan=v.vlan
+				INNER JOIN dcim_deviceport AS dp ON dp.deviceportid=pv.deviceportid
 			GROUP BY v.vlanid
 			ORDER BY v.vlan";
 		
@@ -4753,9 +4744,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//Add button
 		if(UserHasWritePermission())
 		{
-            //function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
-		    ?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
-		    <?php 
+			//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
+			<?php 
 		}
 		echo "<BR>";
 		if($count>0)
@@ -4779,9 +4770,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($gateway)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-    			if(UserHasWritePermission())
-    			{
-		            //edit button
+				if(UserHasWritePermission())
+				{
+					//edit button
 					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
 					
 					$jsSafeVLAN = MakeJSSafeParam($vlan);
@@ -4791,14 +4782,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$jsSafeLast = MakeJSSafeParam($last);
 					$jsSafeGateway = MakeJSSafeParam($gateway);
 					$jsSafeNote = MakeJSSafeParam($note);
-                    //function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+					//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
 					$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
 					?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
 					<?php 
 					echo "</td>\n";
 					
 					echo CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
-    			}
+				}
 				echo "</tr>";
 			}
 			echo "</table>";
@@ -4810,7 +4801,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if(UserHasWritePermission())
 		{
-		    EditSubnetForm($formAction,$hNo);
+			EditSubnetForm($formAction,$hNo);
 		}
 		
 		return $count;
@@ -4820,60 +4811,59 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		global $mysqli;
 		
-	    
+		
 		//select all Active Switch ports for/linked to this customer
 		//UNION all connected chilren
 		//UNION all connected parents
 		//then looking up those port ids to get a list of all switch ports connected to or belonging to this customer 
 		$query = "SELECT d.deviceid, d.model, d.name, d.member, dp.deviceportid, dp.pic, dp.port, dp.type 
 			FROM(
-				SELECT dp.deviceportid AS portid FROM 
-                        dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                	WHERE d.hno=? AND d.type='S' AND dp.status='A'
-                UNION
-                SELECT pc.childportid AS portid FROM 
-                		dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                        INNER JOIN dcim_portconnection AS pc ON pc.parentportid=dp.deviceportid
-                	WHERE d.hno=? AND dp.status='A'
-                UNION
-                SELECT pc.parentportid AS portid FROM 
-                        dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                        INNER JOIN dcim_portconnection AS pc ON pc.childportid=dp.deviceportid
-                	WHERE d.hno=? AND dp.status='A'
-                ) AS csr
-            INNER JOIN dcim_deviceport AS dp ON csr.portid=dp.deviceportid
-            INNER JOIN dcim_device AS d ON d.deviceid=dp.deviceid
-            WHERE d.type='S' AND dp.status='A'
-            ORDER BY d.name, d.member, dp.pic, dp.port";
+				SELECT dp.deviceportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+					WHERE d.hno=? AND d.type='S' AND dp.status='A'
+				UNION
+				SELECT pc.childportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+						INNER JOIN dcim_portconnection AS pc ON pc.parentportid=dp.deviceportid
+					WHERE d.hno=? AND dp.status='A'
+				UNION
+				SELECT pc.parentportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+						INNER JOIN dcim_portconnection AS pc ON pc.childportid=dp.deviceportid
+					WHERE d.hno=? AND dp.status='A'
+				) AS csr
+				INNER JOIN dcim_deviceport AS dp ON csr.portid=dp.deviceportid
+				INNER JOIN dcim_device AS d ON d.deviceid=dp.deviceid
+			WHERE d.type='S' AND dp.status='A'
+			ORDER BY d.name, d.member, dp.pic, dp.port";
 		
 		
 		$portOptions = "";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-		    //TODO handle this better - this runs further down the page - so the error is never seen 
+			//TODO handle this better - this runs further down the page - so the error is never seen
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
 		{
 			//$stmt->bind_Param('s', $input);// no params
 			
-		    $stmt->bind_Param('sss', $hNo, $hNo, $hNo);
+			$stmt->bind_Param('sss', $hNo, $hNo, $hNo);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($deviceID, $model, $deviceName, $member, $devicePortID, $pic, $port, $type);
 			while ($stmt->fetch()) 
 			{
-			    $deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-			    $portFullName = FormatPort($member, $model, $pic, $port, $type);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-		    	$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName.$portFullName)."</option>\n";
+				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName.$portFullName)."</option>\n";
 			}
 		}
-
 		
 		//edit/Add Subnet form
 		?>
@@ -4939,19 +4929,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					</tr>
 					<tr>
 						<td colspan=2><table width=100%><tr>
-    						<td align=left>
-    							<button id='EditSubnet_deletebutton' type='button' onclick='DeleteSubnet()' tabindex=11>Delete</button>
-    						</td>
-    						<td align='right'>
-    							<button type="button" onclick="HideAllEditForms()" tabindex=10>Cancel</button>
-    							<input type="submit" value="Save" tabindex=9>
-    						</td>
+							<td align=left>
+								<button id='EditSubnet_deletebutton' type='button' onclick='DeleteSubnet()' tabindex=11>Delete</button>
+							</td>
+							<td align='right'>
+								<button type="button" onclick="HideAllEditForms()" tabindex=10>Cancel</button>
+								<input type="submit" value="Save" tabindex=9>
+							</td>
 						</tr></table></td>
 					</tr>
 				</table>
 				<input id=EditSubnet_vlanid type='hidden' name='vlanid' value='-2'>
 				<input id=EditSubnet_action type='hidden' name='action' value='null'>
-				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>" />
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
 		</form>
 		</td></tr></table></div>
@@ -4969,54 +4959,54 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$patchesInput = "patches input";
 		
 		//build list of devices combo options
-	    $query = "SELECT d.deviceid, d.hno, d.name, d.model, d.member
-    		FROM dcim_device AS d
-    		ORDER BY /*d.type='S' DESC,*/ d.name, d.member";
-    		
-    	if (!($stmt = $mysqli->prepare($query))) 
-    	{
-    		//TODO handle errors better
-    		echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-    	}
-    	
-    	$stmt->execute();
-    	$stmt->store_result();
-    	$stmt->bind_result($deviceID, $deviceHNo, $deviceName, $deviceModel, $deviceMember);
-    	$count = $stmt->num_rows;
-    	
-    	$childDeviceOptions = "";
-    	$parentDeviceOptions = "";
-    	
-    	$customerDeviceOptions = "";
-    	$customerAndHostingOptions = "";
-    	$allDeviceOptions = "";
-    	if($count>0)
-    	{
-    	    $short = true;
-    		while ($stmt->fetch()) 
-    		{
-    			$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $short);
-			    if($hNo==$deviceHNo)
-    		    {
-        		    $customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-    			    $customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-    		    }
-		        $allDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-		        
-    		    if($deviceHNo=='189165')//hostitng
-    			    $customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-    		}
-    		
-    		$childDeviceOptions = $customerDeviceOptions;
-    		$parentDeviceOptions = $customerAndHostingOptions;
-    		
-    		if(UserHasDevPermission())
-    		{
-    		    //dont limit to just this customers devices - show all devices as child and parent
-        		$childDeviceOptions = $allDeviceOptions;
-        		$parentDeviceOptions = $allDeviceOptions;
-    		}
-    	}
+		$query = "SELECT d.deviceid, d.hno, d.name, d.model, d.member
+			FROM dcim_device AS d
+			ORDER BY /*d.type='S' DESC,*/ d.name, d.member";
+			
+		if (!($stmt = $mysqli->prepare($query))) 
+		{
+			//TODO handle errors better
+			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $deviceHNo, $deviceName, $deviceModel, $deviceMember);
+		$count = $stmt->num_rows;
+		
+		$childDeviceOptions = "";
+		$parentDeviceOptions = "";
+		
+		$customerDeviceOptions = "";
+		$customerAndHostingOptions = "";
+		$allDeviceOptions = "";
+		if($count>0)
+		{
+			$short = true;
+			while ($stmt->fetch()) 
+			{
+				$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $short);
+				if($hNo==$deviceHNo)
+				{
+					$customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				}
+				$allDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				
+				if($deviceHNo=='189165')//hostitng
+					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+			}
+			
+			$childDeviceOptions = $customerDeviceOptions;
+			$parentDeviceOptions = $customerAndHostingOptions;
+			
+			if(UserHasDevPermission())
+			{
+				//dont limit to just this customers devices - show all devices as child and parent
+				$childDeviceOptions = $allDeviceOptions;
+				$parentDeviceOptions = $allDeviceOptions;
+			}
+		}
 		
 		?>
 		<div id='EditConnectionMsg' class='hidden'></div>
@@ -5060,7 +5050,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right' width=1>Patches:</td>
 						<td align='left' colspan='2'>
-							<input id='EditConnection_patches' type='text' tabindex=5 size=50 name='patches' value='<?php echo $patchesInput;?>' placeholder='10.01/4 - G/13 - 10.24/1' class='' >
+							<input id='EditConnection_patches' type='text' tabindex=5 size=50 name='patches' value='<?php echo $patchesInput;?>' placeholder='10.01/4 - G/13 - 10.24/1' class=''>
 						</td>
 					</tr>
 					<tr id='EditConnection_updateportsrow'>
@@ -5084,7 +5074,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				</table>
 				<input id=EditConnection_portconnectionid type='hidden' name='portconnectionid' value='-2'>
 				<input id=EditConnection_action type='hidden' name='action' value='null'>
-				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>" />
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
 		</form>
 		</td></tr></table></div>
@@ -5094,34 +5084,36 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListDevicePorts($deviceKeyInput, $deviceFullName, $onChassisPage=false)
 	{
 		global $mysqli;
-        
-	    
+		
+		
 		if($onChassisPage)
-		    $filter = "d.name=?";
-	    else
-	        $filter = "d.deviceid=?";
-	    
+			$filter = "d.name=?";
+		else
+			$filter = "d.deviceid=?";
+		
 		
 		//group concat by port to combine vlans
-		$query = "SELECT 
+		$query = "SELECT
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,l.colo,l.name,
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
-				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans  
+				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
 				LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                    LEFT JOIN (
-                                SELECT pcA.portconnectionid,pcA.childportid AS srcportid,pcA.parentportid AS destportid,pcA.patches,pcA.edituser,pcA.editdate FROM dcim_portconnection AS pcA
-                                UNION ALL
-                                SELECT pcB.portconnectionid,pcB.parentportid AS srcportid,pcB.childportid AS destportid,pcB.patches,pcB.edituser,pcB.editdate FROM dcim_portconnection AS pcB) 
-                    	AS pc ON dp.deviceportid=pc.srcportid
+				LEFT JOIN (
+							SELECT pcA.portconnectionid,pcA.childportid AS srcportid,pcA.parentportid AS destportid,pcA.patches,pcA.edituser,pcA.editdate FROM dcim_portconnection AS pcA
+							UNION ALL
+							SELECT pcB.portconnectionid,pcB.parentportid AS srcportid,pcB.childportid AS destportid,pcB.patches,pcB.edituser,pcB.editdate FROM dcim_portconnection AS pcB) 
+					AS pc ON dp.deviceportid=pc.srcportid
 				LEFT JOIN dcim_deviceport AS sp ON pc.destportid=sp.deviceportid
 				LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 				LEFT JOIN dcim_customer AS sc ON sc.hno=s.hno
 				LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
+				LEFT JOIN dcim_location AS l ON s.locationid=l.locationid
+				LEFT JOIN dcim_site AS site ON l.siteid=site.siteid
 			WHERE $filter
 			GROUP BY dp.deviceportid
-    		ORDER BY 3,4,6,7";
+			ORDER BY 3,4,6,7";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5135,53 +5127,53 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchColo,$switchLocationName, 
 						   $hNo, $type, $speed, $note, $status, $switchHNo, $switchCust, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 		$portCount = $stmt->num_rows;
 		
 		
-    	echo "<table width=100%><tr><td align=left>";
-    	
+		echo "<table width=100%><tr><td align=left>";
+		
 		if($onChassisPage)
-		    echo "<span class='tableTitle'>$deviceKeyInput Ports</span>\n";
-	    else
-		    echo "<span class='tableTitle'>Device Ports</span>\n";
+			echo "<span class='tableTitle'>$deviceKeyInput Ports</span>\n";
+		else
+			echo "<span class='tableTitle'>Device Ports</span>\n";
 
-	    //show active ports button
-	    echo "<span class='showAllToggleButton'><button id='showAllPortsButton' onclick='ToggleShowAllPorts()'>Show all</button></span>\n";
-		    
+		//show active ports button
+		echo "<span class='showAllToggleButton'><button id='showAllPortsButton' onclick='ToggleShowAllPorts()'>Show all</button></span>\n";
+			
 		//add port button
-	    if(!$onChassisPage && UserHasAdminPermission())
+		if(!$onChassisPage && UserHasAdminPermission())
 		{
 			// add button to add new Port
-		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
-            //EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-            //redundant check for admin priv, but left for code completion sake
-            echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
+			$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
+			//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
+			//redundant check for admin priv, but left for code completion sake
+			echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
 		}
-    	
-    	//editMode button
-    	echo "</td><td align=right>";
+		
+		//editMode button
+		echo "</td><td align=right>";
 		if(UserHasWritePermission())
 		{
-		    if($onChassisPage)
-		    {
-    	        $formAction = "./?chassisname=$deviceKeyInput";
-    			echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
-		    }
-		    else 
-		    {
-    	        $formAction = "./?deviceid=$deviceKeyInput";
-		    }
+			if($onChassisPage)
+			{
+				$formAction = "./?chassisname=$deviceKeyInput";
+				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+			}
+			else 
+			{
+				$formAction = "./?deviceid=$deviceKeyInput";
+			}
 		}
-    	echo "</td></tr></table>";
-    	
+		echo "</td></tr></table>";
+		
 		if($portCount>0)
 		{
-		    $tableWithAllData = "";
-		    $tableWithActiveData = "";
+			$tableWithAllData = "";
+			$tableWithActiveData = "";
 
-		    $tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission());
+			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5198,44 +5190,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else $rowClass = "dataRowTwo";
 				
 				$record = "";
-			    $recordHead = "<tr class='$rowClass'>";
-			    
-			    $activeRow = $status=="A";
+				$recordHead = "<tr class='$rowClass'>";
+				
+				$activeRow = $status=="A";
 				if($activeRow)
 				{
-				    $oddActiveRow = !$oddActiveRow;
-    				if($oddActiveRow) $activeRowClass = "dataRowOne";
-    				else $activeRowClass = "dataRowTwo";
-			        $activeRecordHead = "<tr class='$activeRowClass'>";
+					$oddActiveRow = !$oddActiveRow;
+					if($oddActiveRow) $activeRowClass = "dataRowOne";
+					else $activeRowClass = "dataRowTwo";
+					$activeRecordHead = "<tr class='$activeRowClass'>";
 				}
-			    
-			    $deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-			    $switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
-			    
+				
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+				$switchLocationFullName = FormatLocation($switchSite,$switchColo,$switchLocationName);
+				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
 				if(strlen($switchFullName) > 0)
-				    $switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a>)";
-			    else
-                    $switchDisplayName = "";
-			    
+					$switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a> - <a href='./?locationid=$switchLocationID'>$switchLocationFullName</a>)";
+				else
+					$switchDisplayName = "";
+				
 				//table values
-                if($onChassisPage)
-			        $record .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-		        else 
-			        $record .= "<td class='data-table-cell'>".MakeHTMLSafe($deviceFullName)."</td>";
-			        
+				if($onChassisPage)
+					$record .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				else 
+					$record .= "<td class='data-table-cell'>".MakeHTMLSafe($deviceFullName)."</td>";
+					
 				if(UserHasDevPermission())
-				    $record .= "<td class='data-table-cell'><span title='deviceportid=$devicePortID'>$portFullName</span></td>";
-			    else
-				    $record .= "<td class='data-table-cell'>$portFullName</td>";
+					$record .= "<td class='data-table-cell'><span title='deviceportid=$devicePortID'>$portFullName</span></td>";
+				else
+					$record .= "<td class='data-table-cell'>$portFullName</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($mac)."</td>";
 				$record .= "<td class='data-table-cell'>$switchDisplayName</td>";
 				if(UserHasDevPermission())
-				    $record .= "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
-			    else
-				    $record .= "<td class='data-table-cell'>$switchPortFullName</td>";
+					$record .= "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
+				else
+					$record .= "<td class='data-table-cell'>$switchPortFullName</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($speed)."</td>";
 				$record .= "<td class='data-table-cell'>".DevicePortStatus($status)."</td>";
 				$record .= "<td class='data-table-cell'>$vlan</td>";
@@ -5247,75 +5240,75 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					//edit button
 					$record .= "<td class='data-table-cell-button editButtons_hidden'>\n";
-        		    $jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
-        		    $jsSafePortFullName = MakeJSSafeParam($portFullName);
-        		    $jsSafeMac = MakeJSSafeParam($mac);
-        		    $jsSafeSpeed = MakeJSSafeParam($speed);
-        		    $jsSafeNote = MakeJSSafeParam($note);
-                    //EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-		            $portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+					$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
+					$jsSafePortFullName = MakeJSSafeParam($portFullName);
+					$jsSafeMac = MakeJSSafeParam($mac);
+					$jsSafeSpeed = MakeJSSafeParam($speed);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
+					$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
 					
-		            $record .= "<button onclick=\"$portEditJS\">Edit</button>\n";
+					$record .= "<button onclick=\"$portEditJS\">Edit</button>\n";
 					$record .= "</td>\n";
 					
-                    $record .= CreateQACell("dcim_deviceport", $devicePortID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+					$record .= CreateQACell("dcim_deviceport", $devicePortID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
 				
-			    $record .= "</tr>";
-			    
-			    $tableWithAllData .= $recordHead.$record;
-			    if($activeRow)
-			    {
-			        $tableWithActiveData .= $activeRecordHead.$record;
-			    }
-			    
+				$record .= "</tr>";
+				
+				$tableWithAllData .= $recordHead.$record;
+				if($activeRow)
+				{
+					$tableWithActiveData .= $activeRecordHead.$record;
+				}
+				
 				$lastDevicePortID = $devicePortID;
 				$lastSwitchPortID = $switchPortID;
 			}
 			
 			$tableWithAllData .= "</table>";
 			$tableWithActiveData .= "</table>";
-		    
+			
 			echo "<div id='allPortsTable'>$tableWithAllData</div>\n";
 			echo "<div id='activePortsTable'>$tableWithActiveData</div>\n";
 			
 			//JS for show all button
-    	    echo "<script type='text/javascript'>
-    	var showAllPorts = true;//opposite of initial condition
-        function InitializeShowAllPortsButton()
-        {
-        	var showAllPortsCookie = GetCookie('dcim_showAllPorts');
-        	//set it to the opposite then toggle to what I want
-        	showAllPorts = !(showAllPortsCookie==\"true\");
-        	ToggleShowAllPorts();
-        }
-        function ToggleShowAllPorts() {
-        	showAllPorts = !showAllPorts;
-        	if(showAllPorts)
-        	{
+			echo "<script type='text/javascript'>
+		var showAllPorts = true;//opposite of initial condition
+		function InitializeShowAllPortsButton()
+		{
+			var showAllPortsCookie = GetCookie('dcim_showAllPorts');
+			//set it to the opposite then toggle to what I want
+			showAllPorts = !(showAllPortsCookie==\"true\");
+			ToggleShowAllPorts();
+		}
+		function ToggleShowAllPorts() {
+			showAllPorts = !showAllPorts;
+			if(showAllPorts)
+			{
 				document.cookie ='dcim_showAllPorts=true;';
 		
-    			document.getElementById('showAllPortsButton').innerHTML = 'Show Active';
-    			document.getElementById('allPortsTable').className = '';
-    			document.getElementById('activePortsTable').className = 'hidden';
-        	}
-        	else
-        	{
+				document.getElementById('showAllPortsButton').innerHTML = 'Show Active';
+				document.getElementById('allPortsTable').className = '';
+				document.getElementById('activePortsTable').className = 'hidden';
+			}
+			else
+			{
 				document.cookie = 'dcim_showAllPorts=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 		
-    			document.getElementById('showAllPortsButton').innerHTML = 'Show All';
-    			document.getElementById('allPortsTable').className = 'hidden';
-    			document.getElementById('activePortsTable').className = '';
-    		}
-        }
-        InitializeShowAllPortsButton();
-    </script>\n";
+				document.getElementById('showAllPortsButton').innerHTML = 'Show All';
+				document.getElementById('allPortsTable').className = 'hidden';
+				document.getElementById('activePortsTable').className = '';
+			}
+		}
+		InitializeShowAllPortsButton();
+	</script>\n";
 			
-        	if(UserHasWritePermission())
-        	{	
-        	    //TODO this could fail on chasis page if no ports are found... shouldn't be possible - deviceID will be null
-        		EditDevicePortForm($formAction);
-        	}
+			if(UserHasWritePermission())
+			{	
+				//TODO this could fail on chasis page if no ports are found... shouldn't be possible - deviceID will be null
+				EditDevicePortForm($formAction);
+			}
 		}
 		else
 			echo "No device port info found<BR>";
@@ -5325,36 +5318,30 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListActiveCustomerDeviceConnections($hNo)
 	{
 		global $mysqli;
-
-		//simpler select but doesnt get the name of both devices... :( lame
-		//SELECT d.name,p.* FROM dcim_deviceport AS p, dcim_device AS d WHERE d.name LIKE '%29%' AND (d.deviceid=p.deviceid OR d.deviceid=p.condeviceid)
+		$formAction = "./?host=$hNo";
 		
-		// off join...  AND dp.status!='D'
-		
-        $formAction = "./?host=$hNo";
-        
-    	$query = "SELECT 
+		$query = "SELECT 
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
 				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
 				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, pc.patches, pc.relationship, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
 			FROM dcim_device AS d
 				INNER JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                INNER JOIN (
-                            SELECT pcA.portconnectionid,pcA.childportid AS childportid,pcA.parentportid AS parentportid,
-                            		pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate, 'Child' AS relationship 
-                            	FROM dcim_portconnection AS pcA
-                            UNION ALL
-                            SELECT pcB.portconnectionid,pcB.parentportid AS childportid,pcB.childportid AS parentportid,
-                            		pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate, 'Parent' AS relationship 
-                            	FROM dcim_portconnection AS pcB) 
-                	AS pc ON dp.deviceportid=pc.childportid
+				INNER JOIN (
+							SELECT pcA.portconnectionid,pcA.childportid AS childportid,pcA.parentportid AS parentportid,
+									pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate, 'Child' AS relationship 
+								FROM dcim_portconnection AS pcA
+							UNION ALL
+							SELECT pcB.portconnectionid,pcB.parentportid AS childportid,pcB.childportid AS parentportid,
+									pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate, 'Parent' AS relationship 
+								FROM dcim_portconnection AS pcB)
+					AS pc ON dp.deviceportid=pc.childportid
 				INNER JOIN dcim_deviceport AS sp ON pc.parentportid=sp.deviceportid
 				INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 				LEFT JOIN dcim_portvlan AS pv ON sp.deviceportid=pv.deviceportid
 			WHERE d.hno=?
 			GROUP BY pc.portconnectionid
-    		ORDER BY 3,4,6,7";
+			ORDER BY 3,4,6,7";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5397,7 +5384,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($devicePortID==$lastDevicePortID && $switchPortID==$lastSwitchPortID)//should only need to test 1 but what the hell
 				{
-				    //TODO use fancier SQL to combine VLANS into a single string so i can remove this crapy duplicate row crap
+					//TODO use fancier SQL to combine VLANS into a single string so i can remove this crapy duplicate row crap
 					//same ports - additional VLAN
 					echo "<td colspan=4 class='data-table-cell'>Additional VLAN</td>";
 					echo "<td class='data-table-cell'>$vlan</td>";
@@ -5409,36 +5396,36 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 					$portFullName = FormatPort($member, $model, $pic, $port, $type);
 					$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-				    
-					$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-				    $switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
 					
-				    if($relationship=="Child")
-				    {
-    				    echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-    					if(UserHasDevPermission())
-    					    echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
-    				    else
-    					    echo "<td class='data-table-cell'>$portFullName</td>";
-    					echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-    					if(UserHasDevPermission())
-    					    echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
-    				    else
-    					    echo "<td class='data-table-cell'>$switchPortFullName</td>";
-				    }
-				    else 
-				    {
-    					echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-    					if(UserHasDevPermission())
-    					    echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
-    				    else
-    					    echo "<td class='data-table-cell'>$switchPortFullName</td>";
-    				    echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-    					if(UserHasDevPermission())
-    					    echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
-    				    else
-    					    echo "<td class='data-table-cell'>$portFullName</td>";
-				    }
+					$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+					$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+					
+					if($relationship=="Child")
+					{
+						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+						if(UserHasDevPermission())
+							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
+						else
+							echo "<td class='data-table-cell'>$portFullName</td>";
+						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
+						if(UserHasDevPermission())
+							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
+						else
+							echo "<td class='data-table-cell'>$switchPortFullName</td>";
+					}
+					else 
+					{
+						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
+						if(UserHasDevPermission())
+							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
+						else
+							echo "<td class='data-table-cell'>$switchPortFullName</td>";
+						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+						if(UserHasDevPermission())
+							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
+						else
+							echo "<td class='data-table-cell'>$portFullName</td>";
+					}
 					echo "<td class='data-table-cell'>$vlan</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
 					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
@@ -5446,7 +5433,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					//edit button cell
 					if(UserHasWritePermission())
 					{
-			            //edit button
+						//edit button
 						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
 						
 						$jsSafePatchs = MakeJSSafeParam($patches);
@@ -5468,10 +5455,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 			echo "No device connections found<BR>";
 	
-    	if(UserHasWritePermission())
-    	{	
-    		EditConnectionForm($formAction, $hNo);
-    	}
+		if(UserHasWritePermission())
+		{	
+			EditConnectionForm($formAction, $hNo);
+		}
 		return $count;
 	}
 	
@@ -5481,8 +5468,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 
 		//TODO show customer or device per circuit
-		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate 
-			FROM dcim_power AS p 
+		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate
+			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
@@ -5524,7 +5511,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->fetch();
 			
 			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
-			$panelTextHeader = "UPS-";
 			$numberOfCircuitsPerPanel = 42;
 			$tableCircuitNo = 0;
 			$oddColor = false;
@@ -5535,7 +5521,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//odd circutis are on the left 
 				$tableCircuitNo++;
 				$left = ($tableCircuitNo%2)!=0;
-
+				
 				if(!$left)//only flip color for right cell
 					$oddColor = !$oddColor;
 				if($oddColor) $cellClass = "powerAuditCellOne";
@@ -5543,7 +5529,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($circuit<$tableCircuitNo)
 					$stmt->fetch();
-
+				
 				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
 				$locationName = "CA $colo $location";
 				if($amps>0)
@@ -5561,12 +5547,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				
 				$hasData = ($circuit==$tableCircuitNo);
-
+				
 				if($hasData)
 				{
 					echo "<td class='$cellClass'>\n";
 					echo "<table width=100%><tr>\n";
-					echo "<td><b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b></td>\n";
+					echo "<td><b>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($circuit)."</b></td>\n";
 					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
@@ -5602,10 +5588,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "208 Above";
 					}
 					else
-						echo "$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
+						echo MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
 				}
 				echo "</td>\n";
-
+				
 				if(!$left)
 				{//end row
 					echo "</tr>\n";
@@ -5667,14 +5653,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-                $oddRow = !$oddRow;
+				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "</tr>";
 			}
 			echo "</table>";
@@ -5735,8 +5721,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$query1 = "UPDATE dcim_customer AS c
 						LEFT JOIN dcim_badge AS b ON c.hno=b.hno
 						LEFT JOIN dcim_device AS d ON  c.hno=d.hno
-						LEFT JOIN dcim_deviceport AS dp ON c.hno=dp.hno
-					SET b.hno=?, d.hno=?, dp.hno=?
+					SET b.hno=?, d.hno=?
 					WHERE c.hno=?";
 			$query2 = "UPDATE dcim_customer AS c
 					SET c.hno=?
@@ -5753,8 +5738,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-2b (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
-			{//                    nnno
-				$stmt1->bind_Param('iiii', $new,$new,$new,$old);
+			{//					nno
+				$stmt1->bind_Param('iii', $new,$new,$old);
 				if (!$stmt1->execute())//execute
 				{
 					//failed (errorNo-error)
@@ -5769,7 +5754,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$stmt1->close();
 				
 				if($continueWithChange)
-				{//                     no
+				{//						no
 					$stmt2->bind_Param('ii', $new,$old);
 					if (!$stmt2->execute())//execute
 					{
@@ -5789,7 +5774,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 			
-
+			
 			if($continueWithChange && $renameDevices)
 			{
 				//update device names to match
@@ -5797,12 +5782,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					SET d.name=REPLACE(d.name, '$old-', '$new-')
 					WHERE d.hno=?";
 				
-				if (!($stmt = $mysqli->prepare($query)))
+				if(!($stmt = $mysqli->prepare($query)))
 				{
 					$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-3 (" . $mysqli->errno . ") " . $mysqli->error;
 				}
 				else
-				{//                    n
+				{
 					$stmt->bind_Param('i', $new);
 					if (!$stmt->execute())//execute
 						//failed (errorNo-error)

@@ -23,89 +23,89 @@
 	*/
 	
 	//this function is inserted into page layout
-    function BuildAuditsPage()
-    {
-        global $pageSubTitle;
-        $pageSubTitle = "Data Audits";
+	function BuildAuditsPage()
+	{
+		global $pageSubTitle;
+		$pageSubTitle = "Data Audits";
 
-        //Audit functions
-        echo "<div class=\"panel\">\n";
-        echo "<div class=\"panel-header\">Audit Functions</div>\n";
-        echo "<div class=\"panel-body\">\n";
+		//Audit functions
+		echo "<div class=\"panel\">\n";
+		echo "<div class=\"panel-header\">Audit Functions</div>\n";
+		echo "<div class=\"panel-body\">\n";
 
-        echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>&nbsp;&nbsp;";
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
 		
-        if(UserHasDevPermission())
-        {
-        	//in development features
-        }
-        echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
-        
+		if(UserHasDevPermission())
+		{
+			//in development features
+		}
+		echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
+		
 
-        echo "<div class=\"panel\">\n";
-        echo "<div class=\"panel-header\">Data to QA</div>\n";
-        echo "<div class=\"panel-body\">\n";
-        Check_CustomerToQA();
-        Check_BadgesToQA();
-        echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
-        
-        
+		echo "<div class=\"panel\">\n";
+		echo "<div class=\"panel-header\">Data to QA</div>\n";
+		echo "<div class=\"panel-body\">\n";
+		Check_CustomerToQA();
+		Check_BadgesToQA();
+		echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
+		
+		
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		echo "<div class=\"panel-body\">\n";
 		Check_BadgesActiveUnderInactiveCustomer();
 		Check_ColoPatch0();
 		Check_DevicesActiveUnderInactiveCustomer();
-    	Check_VLANLinkedToDisabledPort();
-    	Check_CircuitInactiveWithLoad();
-    	//Check_DeviceWithInvalidLocation();
-    	//Check_SwitchIsMainDeviceOnDevicePortRecords();
-        echo "</div>\n</div>\n\n";//end panel and panel body
-    	
+		Check_VLANLinkedToDisabledPort();
+		Check_CircuitInactiveWithLoad();
+		//Check_DeviceWithInvalidLocation();
+		//Check_SwitchIsMainDeviceOnDevicePortRecords();
+		echo "</div>\n</div>\n\n";//end panel and panel body
+		
 		
 		//admin only stuff - just because its stuff they cant fix
-	    if(UserHasAdminPermission())
-	    {
+		if(UserHasAdminPermission())
+		{
 			echo "<BR>\n";
-    		echo "<div class=\"panel\">\n";
-    		echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
-    		echo "<div class=\"panel-body\">\n";
-        	
-        	$output = "";
-        	$recCount = CountDBRecords($output);
-        	CreateReport("Database Record Counts","$recCount records",$output,"");
-        	
-        	$lineCount = CountLinesInDir($output);
-        	CreateReport("Lines of Code","$lineCount lines",$output,"");
-        	
-    		Check_BadgesWithoutCustomers();
-    		Check_DevicesWithoutCustomersOrLocation();
-    		Check_DevicePortsWithoutCustomersOrDevices();
-    		Check_LocationWithoutPowerLocOrSite();
-    		Check_PowerLocWithoutLocationOrPower();
-    		Check_PowerWithoutPowerLoc();
-        	echo "</div>\n</div>\n";//end panel and panel body
-	    }
-    }
-    
-    function Check_CircuitInactiveWithLoad()
-    {
+			echo "<div class=\"panel\">\n";
+			echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			echo "<div class=\"panel-body\">\n";
+			
+			$output = "";
+			$recCount = CountDBRecords($output);
+			CreateReport("Database Record Counts","$recCount records",$output,"");
+			
+			$lineCount = CountLinesInDir($output);
+			CreateReport("Lines of Code","$lineCount lines",$output,"");
+			
+			Check_BadgesWithoutCustomers();
+			Check_DevicesWithoutCustomersOrLocation();
+			Check_DevicePortsWithoutCustomersOrDevices();
+			Check_LocationWithoutPowerLocOrSite();
+			Check_PowerLocWithoutLocationOrPower();
+			Check_PowerWithoutPowerLoc();
+			echo "</div>\n</div>\n";//end panel and panel body
+		}
+	}
+	
+	function Check_CircuitInactiveWithLoad()
+	{
 		global $mysqli;
 
 		$reportTitle = "Circuits off but still reporting load";
-        $reportNote = "";
-        
-        //could properly sort circuits, but meh
-        $query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload FROM dcim_power AS p 
-                LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
-                LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
-                LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-            WHERE p.status='D' AND p.cload !=0
-            ORDER BY 1,2,3";
+		$reportNote = "";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		//could properly sort circuits, but meh
+		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload FROM dcim_power AS p 
+				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
+				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+			WHERE p.status='D' AND p.cload !=0
+			ORDER BY 1,2,3";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -133,7 +133,7 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
+				$longResult.= "<td class='data-table-cell'>FormatPanelName($panel)</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
 				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
@@ -141,8 +141,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Circuits",3);
 		}
 		else
@@ -150,22 +150,22 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
-    }
-    
-    function Check_VLANLinkedToDisabledPort()
-    {
-        global $mysqli;
+	}
+	
+	function Check_VLANLinkedToDisabledPort()
+	{
+		global $mysqli;
 		
-        $reportTitle = "VLAN Linked to Disabled Port";
-		$reportNote = "These are VLANs linked to ports marked diabled.";
-        
-        $query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
-        		FROM dcim_portvlan AS pv
-                     LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
-                     LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
-                 WHERE dp.status='D'";
+		$reportTitle = "VLAN Linked to Disabled Port";
+		$reportNote = "These are VLANs linked to ports marked disabled.";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
+				FROM dcim_portvlan AS pv
+					 LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
+					 LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
+				 WHERE dp.status='D'";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -192,7 +192,7 @@
 				else $rowClass = "dataRowTwo";
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-			    $portFullName = FormatPort($member, $model, $pic, $port, $type);
+				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
@@ -203,8 +203,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count VLANs",3);
 		}
 		else
@@ -212,21 +212,21 @@
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
-    }
+	}
 	
 	function Check_BadgesWithoutCustomers()
 	{
 		global $mysqli;
 		
-        $reportTitle = "Badges Without Customers";
+		$reportTitle = "Badges Without Customers";
 		$reportNote = "Disconnected record(s).";
-        
-        $query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
-    		FROM dcim_badge AS b 
-                LEFT JOIN dcim_customer AS c ON c.hno=b.hno
-            WHERE c.name IS NULL";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		$query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
+			FROM dcim_badge AS b 
+				LEFT JOIN dcim_customer AS c ON c.hno=b.hno
+			WHERE c.name IS NULL";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_BadgesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -259,8 +259,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Badges",3);
 		}
 		else
@@ -274,20 +274,20 @@
 	{
 		global $mysqli;
 		
-        $reportTitle = "Colos with patch 0";
+		$reportTitle = "Colos with patch 0";
 		$reportNote= "These are impossible connections left over from old system.";
-        
-        //could properly sort circuits, but meh
-        $query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, l.colo, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		
+		//could properly sort circuits, but meh
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, l.colo, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON l.locationid=d.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
 			WHERE d.type IN ('F','C','H') AND dp.port=0
-        	ORDER BY cust,name";
-        
-        if (!($stmt = $mysqli->prepare($query)))
+			ORDER BY cust,name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -314,8 +314,8 @@
 				else $rowClass = "dataRowTwo";
 			
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-		        $fullLocationName = FormatLocation($site, $colo, $location);
-		        	
+				$fullLocationName = FormatLocation($site, $colo, $location);
+					
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
@@ -325,8 +325,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Colos",3);
 		}
 		else
@@ -340,17 +340,17 @@
 	{
 		global $mysqli;
 		
-        $reportTitle = "Badges Pending QA";
+		$reportTitle = "Badges Pending QA";
 		$reportNote = "These badges need to be verified in badge server.";
-        
-        //could properly sort circuits, but meh
-        $query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate 
-    		FROM dcim_badge AS b 
-                LEFT JOIN dcim_customer AS c ON c.hno=b.hno
-            WHERE b.qauser=-1
-            ORDER BY cust,name";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		//could properly sort circuits, but meh
+		$query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate 
+			FROM dcim_badge AS b 
+				LEFT JOIN dcim_customer AS c ON c.hno=b.hno
+			WHERE b.qauser=-1
+			ORDER BY cust,name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -386,8 +386,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Pending",2);
 		}
 		else
@@ -401,16 +401,16 @@
 	{
 		global $mysqli;
 		
-        $reportTitle = "Customers Pending QA";
+		$reportTitle = "Customers Pending QA";
 		$reportNote = "These just  need the name, status, and account numbers of the customer validated.";
-        
-        //could properly sort circuits, but meh
-        $query = "SELECT c.name, c.hno, c.cno, c.note, c.status, c.edituser, c.editdate, c.qauser, c.qadate 
-    		FROM dcim_customer AS c
-            WHERE c.qauser=-1
-            ORDER BY name";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		//could properly sort circuits, but meh
+		$query = "SELECT c.name, c.hno, c.cno, c.note, c.status, c.edituser, c.editdate, c.qauser, c.qadate 
+			FROM dcim_customer AS c
+			WHERE c.qauser=-1
+			ORDER BY name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -447,8 +447,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Pending",2);
 		}
 		else
@@ -530,8 +530,8 @@
 		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
-				LEFT JOIN dcim_customer AS c ON dp.hno=c.hno
-			WHERE c.name IS NULL OR dp.hno!=d.hno
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			WHERE c.name IS NULL OR d.name IS NULL
 			ORDER BY d.name,d.member,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
@@ -584,15 +584,15 @@
 	{
 		global $mysqli;
 		
-        $reportTitle = "Active badges where customer is not active";
+		$reportTitle = "Active badges where customer is not active";
 		$reportNote = "These badges need to be deactivated.";
-        
-        $query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
-    		FROM dcim_badge AS b 
-                LEFT JOIN dcim_customer AS c ON c.hno=b.hno
-            WHERE c.status='I' AND NOT b.status IN ('D','R')";
 		
-        if (!($stmt = $mysqli->prepare($query)))
+		$query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
+			FROM dcim_badge AS b 
+				LEFT JOIN dcim_customer AS c ON c.hno=b.hno
+			WHERE c.status='I' AND NOT b.status IN ('D','R')";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
@@ -625,8 +625,8 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		    
-		    //show results short
+			
+			//show results short
 			$shortResult.= FormatSimpleMessage("$count Badges",3);
 		}
 		else
@@ -644,9 +644,9 @@
 		$reportNote = "These need to be deactivated.";
 	
 		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
-    		FROM dcim_device AS d 
-                LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-            WHERE c.status='I' AND NOT d.status='I'";
+			FROM dcim_device AS d 
+				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+			WHERE c.status='I' AND NOT d.status='I'";
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
