@@ -4535,10 +4535,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
-		
-		//TODO this is currently broken when devices dont have locations (IE not colo)
 		//TODO double check using "location" vs  "reference" properly
-		
 		//TODO This should also check the device status is active and or show/filter that here	
 		
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -4592,7 +4589,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -5516,7 +5513,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->fetch();
 			
 			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
-			$panelTextHeader = "UPS-";
 			$numberOfCircuitsPerPanel = 42;
 			$tableCircuitNo = 0;
 			$oddColor = false;
@@ -5527,7 +5523,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//odd circutis are on the left 
 				$tableCircuitNo++;
 				$left = ($tableCircuitNo%2)!=0;
-
+				
 				if(!$left)//only flip color for right cell
 					$oddColor = !$oddColor;
 				if($oddColor) $cellClass = "powerAuditCellOne";
@@ -5535,7 +5531,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($circuit<$tableCircuitNo)
 					$stmt->fetch();
-
+				
 				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
 				$locationName = "CA $colo $location";
 				if($amps>0)
@@ -5553,12 +5549,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				
 				$hasData = ($circuit==$tableCircuitNo);
-
+				
 				if($hasData)
 				{
 					echo "<td class='$cellClass'>\n";
 					echo "<table width=100%><tr>\n";
-					echo "<td><b>$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($circuit)."</b></td>\n";
+					echo "<td><b>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($circuit)."</b></td>\n";
 					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "</tr></table><table width=100%><tr>\n";
 					//echo "$fullLocationName ($percentLoad%) ";
@@ -5594,10 +5590,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "208 Above";
 					}
 					else
-						echo "$panelTextHeader".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
+						echo MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
 				}
 				echo "</td>\n";
-
+				
 				if(!$left)
 				{//end row
 					echo "</tr>\n";
@@ -5666,7 +5662,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "</tr>";
 			}
 			echo "</table>";
