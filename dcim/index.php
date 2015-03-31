@@ -1,11 +1,11 @@
 <?php 
 	set_include_path('../'); 
-
+	
 	include 'dcim/_dcimConfig.php';
 	include 'dcim/_genericFunctions.php';
 	include 'dcim/_helperFunctions.php';
 	include 'dcim/_functions.php';
-
+	
 	SessionSetup();
 	SQLIConnect();
 	
@@ -14,22 +14,22 @@
 	$errorMessage = array();
 	$debugMessage = array();
 	$redirectAroundFormResubmitWarning = true;
-	    
+	
 	if($redirectAroundFormResubmitWarning)
 	{
-        //read session message vars and cleaf session vars
-    	if (isset($_SESSION['resultMessage'])){
-    	    $resultMessage = $_SESSION['resultMessage']; 
-    	    unset($_SESSION['resultMessage']);
-    	}
-    	if (isset($_SESSION['errorMessage'])){
-    	    $errorMessage = $_SESSION['errorMessage']; 
-    	    unset($_SESSION['errorMessage']);
-    	}
-    	if (isset($_SESSION['debugMessage'])){
-    	    $debugMessage = $_SESSION['debugMessage']; 
-    	    unset($_SESSION['debugMessage']);
-    	} 
+		//read session message vars and cleaf session vars
+		if(isset($_SESSION['resultMessage'])){
+			$resultMessage = $_SESSION['resultMessage']; 
+			unset($_SESSION['resultMessage']);
+		}
+		if(isset($_SESSION['errorMessage'])){
+			$errorMessage = $_SESSION['errorMessage']; 
+			unset($_SESSION['errorMessage']);
+		}
+		if(isset($_SESSION['debugMessage'])){
+			$debugMessage = $_SESSION['debugMessage']; 
+			unset($_SESSION['debugMessage']);
+		}
 	}
 	
 	//$resultMessage[] = "initialized";
@@ -106,14 +106,14 @@
 ?>
 	<script type="text/javascript" language="JavaScript">
 	
-	    function FocusMainSearch()
-	    {
-	    	document.forms['MainSearch'].elements['search'].focus();
-	    }
-	    var delayedResultClear;
-	    function InitializePage()
-	    {
-	    	delayedResultClear = setInterval(function(){ClearResultMessage()},10*1000);
+		function FocusMainSearch()
+		{
+			document.forms['MainSearch'].elements['search'].focus();
+		}
+		var delayedResultClear;
+		function InitializePage()
+		{
+			delayedResultClear = setInterval(function(){ClearResultMessage()},10*1000);
 			
 			//show / hide messges button if any messages are on screen 
 			if(document.getElementById("debugMessage")!=null || document.getElementById("errorMessage")!=null || document.getElementById("resultMessage")!=null)
@@ -121,12 +121,12 @@
 			else
 				document.getElementById("showMessagesButton").className = "hidden";
 				
-	    }
-	    function ClearResultMessage()
-	    {
-	    	SwapStyleClass("resultMessage","hidden");
-	    	window.clearInterval(delayedResultClear)
-	    }
+		}
+		function ClearResultMessage()
+		{
+			SwapStyleClass("resultMessage","hidden");
+			window.clearInterval(delayedResultClear)
+		}
 		function CopyBadgeToClipboard(text)
 		{
 			var date = new Date();
@@ -183,19 +183,19 @@
 	<!-- Title -->
 	<div id="header-bg">
 	<table align=center border="0" class='pageMinWidth center'><tbody><tr>
-		  <td width="1">
-		    <a href="./"><img src="../images/logo.png" border="0"></a>
-		  </td>
-		  <td valign="middle">
-		    <div id="appname"><h1><?php echo $siteName;?></h1><?php echo $versionNote;?></div>
-		  </td>
-		    <?php
+			<td width="1">
+				<a href="./"><img src="../images/logo.png" border="0"></a>
+			</td>
+			<td valign="middle">
+				<div id="appname"><h1><?php echo $siteName;?></h1><?php echo $versionNote;?></div>
+			</td>
+			<?php
 	if(!UserHasReadPermission())
 	{
 		//login button
 		?>
 		  <td width="1" valign="middle">
-		  	<a href="./"><img src="../images/login.png" border=0 /></a>
+			<a href="./"><img src="../images/login.png" border=0 /></a>
 		  </td><?php
 	}
 	else 
@@ -203,7 +203,7 @@
 		//show welcome and logout button
 		?>
 		<td width="1" valign="middle" align=right><h2>Welcome, <?php echo $user; ?>!</h2></td>
-	  	<td width="1" valign="middle">
+		<td width="1" valign="middle">
 			<a style="padding-left: 18px;" href="?loginbtn=N"><img src="../images/logout.png" border=0 /></a>
 		</td><?php
 	}
@@ -217,7 +217,7 @@
 		<tbody>
 		<tr valign="middle">
 	<?php
-    $menuItems = "";//consolidate to single echo call to prevent menu flicker on page load - no effect =/
+	$menuItems = "";//consolidate to single echo call to prevent menu flicker on page load - no effect =/
 	//MENU Items
 	$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 	$menuItems .= "	<a href='./'>Home</a>\n";
@@ -243,12 +243,12 @@
 	}
 	if(UserHasWritePermission())
 	{
-	    
+		
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 		if(UserHasAdminPermission())
-		    $menuItems .= "	<a href='./?userid=$userID'>Accounts</a>\n";
+			$menuItems .= "	<a href='./?userid=$userID'>Accounts</a>\n";
 		else
-		    $menuItems .= "	<a href='./?userid=$userID'>Account</a>\n";
+			$menuItems .= "	<a href='./?userid=$userID'>Account</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(UserHasDevPermission())
@@ -266,9 +266,9 @@
 		//random placeholders
 		if(true)
 		{
-		    $linesOfCode = CountLinesInDir();
-		    $dbRecs = CountDBRecords();
-		    $rand = rand(0,90);
+			$linesOfCode = CountLinesInDir();
+			$dbRecs = CountDBRecords();
+			$rand = rand(0,90);
 			$searchPlaceHolders = array();
 			//ROUGH LIMIT           "------------------------"
 			$searchPlaceHolders[] = "Search";
@@ -351,7 +351,7 @@
 	}
 	else 
 	{
-	    //keep format and left seperator
+		//keep format and left seperator
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item'>&nbsp;</td>\n";
 	}
 	echo $menuItems;
@@ -375,36 +375,36 @@
 	
 	if(UserHasReadPermission())
 	{
-	    ?>
+		?>
 		<!-- HEADER LINKS -->
 		<table width=100%><tr>
-    		<td>
-        		<a class='navLinks' href='?ca=01'>CA1</a>&nbsp;
-        		<a class='navLinks' href='?ca=02'>CA2</a>&nbsp;
-        		<a class='navLinks' href='?ca=03'>CA3</a>&nbsp;
-        		<a class='navLinks' href='?ca=04'>CA4</a>&nbsp;
-        		<a class='navLinks' href='?ca=05'>CA5</a>&nbsp;
-        		&nbsp;&nbsp;
-        		<div class="navLinks">ROW:</div> 
-        		<a class='navLinks' href='?row=01'>1</a>&nbsp;
-        		<a class='navLinks' href='?row=02'>2</a>&nbsp;
-        		<a class='navLinks' href='?row=03'>3</a>&nbsp;
-        		<a class='navLinks' href='?row=04'>4</a>&nbsp;
-        		<a class='navLinks' href='?row=05'>5</a>&nbsp;
-        		<a class='navLinks' href='?row=06'>6</a>&nbsp;
-        		<a class='navLinks' href='?row=07'>7</a>&nbsp;
-        		<a class='navLinks' href='?row=08'>8</a>&nbsp;
-        		<a class='navLinks' href='?row=09'>9</a>&nbsp;
-        		<a class='navLinks' href='?row=10'>10</a>&nbsp;
-        		<a class='navLinks' href='?row=11'>11</a>&nbsp;
-        		<a class='navLinks' href='?row=12'>12</a>&nbsp;
-    		</td>
-    		<td align='right'>
-    			<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
-    		</td>
+			<td>
+				<a class='navLinks' href='?ca=01'>CA1</a>&nbsp;
+				<a class='navLinks' href='?ca=02'>CA2</a>&nbsp;
+				<a class='navLinks' href='?ca=03'>CA3</a>&nbsp;
+				<a class='navLinks' href='?ca=04'>CA4</a>&nbsp;
+				<a class='navLinks' href='?ca=05'>CA5</a>&nbsp;
+				&nbsp;&nbsp;
+				<div class="navLinks">ROW:</div> 
+				<a class='navLinks' href='?row=01'>1</a>&nbsp;
+				<a class='navLinks' href='?row=02'>2</a>&nbsp;
+				<a class='navLinks' href='?row=03'>3</a>&nbsp;
+				<a class='navLinks' href='?row=04'>4</a>&nbsp;
+				<a class='navLinks' href='?row=05'>5</a>&nbsp;
+				<a class='navLinks' href='?row=06'>6</a>&nbsp;
+				<a class='navLinks' href='?row=07'>7</a>&nbsp;
+				<a class='navLinks' href='?row=08'>8</a>&nbsp;
+				<a class='navLinks' href='?row=09'>9</a>&nbsp;
+				<a class='navLinks' href='?row=10'>10</a>&nbsp;
+				<a class='navLinks' href='?row=11'>11</a>&nbsp;
+				<a class='navLinks' href='?row=12'>12</a>&nbsp;
+			</td>
+			<td align='right'>
+				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
+			</td>
 		</tr></table>
 		<BR>
-        <?php
+		<?php
 	}
 		
 	//trim mesages
@@ -454,10 +454,10 @@
 		{
 			ShowUsersPage($userIDInput);
 		}
-    	else if(isset($dbChecksPage) && $dbChecksPage)
-    	{
-    	    BuildAuditsPage();
-    	}
+		else if(isset($dbChecksPage) && $dbChecksPage)
+		{
+			BuildAuditsPage();
+		}
 		else if(strlen($page) > 0)
 		{
 			if($page==="PowerAudit")
@@ -541,7 +541,7 @@
 						
 						if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 						{
-						    echo "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
+							echo "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
 						}
 						
 						echo "</div>\n";
@@ -563,7 +563,7 @@
 <script type="text/javascript" language="JavaScript">
 	<?php 
 		//move focus as necisary
-	    echo "InitializePage();";
+		echo "InitializePage();";
 
 		if($focusSearch)
 			echo "FocusMainSearch();\n";

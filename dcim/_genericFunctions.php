@@ -16,7 +16,7 @@
 	
 	function IsValidSession()
 	{
-	    //TODO note this throws an error if page_instance_id is not found
+		//TODO note this throws an error if page_instance_id is not found
 		//returns true if this is a valid session - IE this is a fresh submit and not a refresh
 		
 		global $_SESSION;
@@ -32,22 +32,22 @@
 	
 	function HTMLTrim($input)
 	{
-	    $prevLen = 0;
-	    while($prevLen < strlen($input))
-	    {
-	        $prevLen = strlen($input);   
-	        
-	        $input = trim($input);
-	        
-	        //trim last br
-	        $input = preg_replace('/(<BR>)+$/', '', $input);
-	        $input = preg_replace('/(<br>)+$/', '', $input);
-	        $input = preg_replace('/(<//BR>)+$/', '', $input);
-	        $input = preg_replace('/(<//br>)+$/', '', $input);
-	        $input = preg_replace('/(<BR>//)+$/', '', $input);
-	        $input = preg_replace('/(<br//>)+$/', '', $input);
-	    }
-	    return $input;
+		$prevLen = 0;
+		while($prevLen < strlen($input))
+		{
+			$prevLen = strlen($input);   
+			
+			$input = trim($input);
+			
+			//trim last br
+			$input = preg_replace('/(<BR>)+$/', '', $input);
+			$input = preg_replace('/(<br>)+$/', '', $input);
+			$input = preg_replace('/(<//BR>)+$/', '', $input);
+			$input = preg_replace('/(<//br>)+$/', '', $input);
+			$input = preg_replace('/(<BR>//)+$/', '', $input);
+			$input = preg_replace('/(<br//>)+$/', '', $input);
+		}
+		return $input;
 	}
 	
 	function MakeJSSafeParam($input)
@@ -63,18 +63,18 @@
 	$uniqueIDNo = 0;
 	function MakeTextIntoUniqueJSVariableName($input)
 	{
-	    global $uniqueIDNo;
-	    $uniqueIDNo++;
+		global $uniqueIDNo;
+		$uniqueIDNo++;
 
-	    $result = str_replace("<","", $input);
-	    $result = str_replace(">","", $result);
-	    $result = str_replace("\\","", $result);
-	    $result = str_replace("/","", $result);
-	    $result = str_replace(".","", $result);
-	    $result = str_replace(";","", $result);
-	    $result = str_replace(",","", $result);
-	    $result = str_replace("'","", $result);
-	    $result = str_replace("\"","", $result);
+		$result = str_replace("<","", $input);
+		$result = str_replace(">","", $result);
+		$result = str_replace("\\","", $result);
+		$result = str_replace("/","", $result);
+		$result = str_replace(".","", $result);
+		$result = str_replace(";","", $result);
+		$result = str_replace(",","", $result);
+		$result = str_replace("'","", $result);
+		$result = str_replace("\"","", $result);
 		$result = str_replace(" ","_", $result);
 		return $result.$uniqueIDNo;
 	}
@@ -85,23 +85,23 @@
 		$result = str_replace(">","&gt;", $result);
 		return $result;
 	}
-    
-    function MakeRecoverySQLInsert($table, $id)
-    {
-        // get the record          
-        $selectSQL = "SELECT * FROM `" . $table . "` WHERE `id` = " . $id . ';';
-    
-        $result = mysql_query($selectSQL, $YourDbHandle);
-        $row = mysql_fetch_assoc($result); 
-    
-        $insertSQL = "INSERT INTO `" . $table . "` SET ";
-        foreach ($row as $field => $value) {
-            $insertSQL .= " `" . $field . "` = '" . $value . "', ";
-        }
-        $insertSQL = trim($insertSQL, ", ");
-    
-        return $insertSQL;
-    }
+	
+	function MakeRecoverySQLInsert($table, $id)
+	{
+		// get the record		  
+		$selectSQL = "SELECT * FROM `" . $table . "` WHERE `id` = " . $id . ';';
+	
+		$result = mysql_query($selectSQL, $YourDbHandle);
+		$row = mysql_fetch_assoc($result); 
+	
+		$insertSQL = "INSERT INTO `" . $table . "` SET ";
+		foreach ($row as $field => $value) {
+			$insertSQL .= " `" . $field . "` = '" . $value . "', ";
+		}
+		$insertSQL = trim($insertSQL, ", ");
+	
+		return $insertSQL;
+	}
 	
 	function GetInput($name)
 	{
@@ -151,38 +151,38 @@
 	
 	function CountLinesInFile($file)
 	{
-        $linecount = 0;
-        if (file_exists($file))
-        {
-            $handle = fopen($file, "r");
-            while(!feof($handle)){
-              $line = fgets($handle);
-              $linecount++;
-            }
-            
-            fclose($handle);
-        }
-        else
-            return "N/A-$file";
-            
-        return $linecount;
+		$linecount = 0;
+		if (file_exists($file))
+		{
+			$handle = fopen($file, "r");
+			while(!feof($handle)){
+			  $line = fgets($handle);
+			  $linecount++;
+			}
+			
+			fclose($handle);
+		}
+		else
+			return "N/A-$file";
+			
+		return $linecount;
 	}
 	
 	function CountLinesInDir(&$verboseResult = "")
 	{
-	    $verboseResult = "";
-	    $dir = scandir('.'); 
-        $totalLines = 0;
-        foreach ($dir as $file) 
-        { 
-            if (!(strpos($file,'.sql') !== false)) 
-            {
-                $count = CountLinesInFile($file);
-                $totalLines += $count;
-                $verboseResult .= "file:$file - $count lines - total=$totalLines<BR>";
-            }
-        }
-        return $totalLines;
+		$verboseResult = "";
+		$dir = scandir('.'); 
+		$totalLines = 0;
+		foreach ($dir as $file) 
+		{
+			if (!(strpos($file,'.sql') !== false)) 
+			{
+				$count = CountLinesInFile($file);
+				$totalLines += $count;
+				$verboseResult .= "file:$file - $count lines - total=$totalLines<BR>";
+			}
+		}
+		return $totalLines;
 	}
 
 	function CountDBRecords(&$verboseResult = "")

@@ -1,41 +1,41 @@
 //generic functions
 function GetCookie(cname) {
-    var name = cname + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0; i<ca.length; i++) {
-        var c = ca[i].trim();
-        if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
-    }
-    return "";
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) {
+		var c = ca[i].trim();
+		if (c.indexOf(name) == 0) return c.substring(name.length,c.length);
+	}
+	return "";
 }
 var activeAJAXCalls = 0;
 function AJAXCall(page, data, destination)
 {
-    var xmlhttp;
-    if (window.XMLHttpRequest)
-    {// code for IE7+, Firefox, Chrome, Opera, Safari
-    	xmlhttp=new XMLHttpRequest();
+	var xmlhttp;
+	if (window.XMLHttpRequest)
+	{// code for IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp=new XMLHttpRequest();
 	}
-    else
-    {// code for IE6, IE5
-    	xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    xmlhttp.onreadystatechange=function()
-    {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200)
-        {
-        	document.getElementById(destination).innerHTML=xmlhttp.responseText;
-            activeAJAXCalls--;
-        }
-    }
-    xmlhttp.open("GET",page+"?"+data,true);
-    activeAJAXCalls++;
-    xmlhttp.send();
+	else
+	{// code for IE6, IE5
+		xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xmlhttp.onreadystatechange=function()
+	{
+		if (xmlhttp.readyState==4 && xmlhttp.status==200)
+		{
+			document.getElementById(destination).innerHTML=xmlhttp.responseText;
+			activeAJAXCalls--;
+		}
+	}
+	xmlhttp.open("GET",page+"?"+data,true);
+	activeAJAXCalls++;
+	xmlhttp.send();
 }
 function Sleep(millis, callback) {
-    setTimeout(function()
-            { callback(); }
-    , millis);
+	setTimeout(function()
+			{ callback(); }
+	, millis);
 }
 function replaceAll(string, find, replace) 
 {
@@ -187,27 +187,27 @@ function PadLeft(num)
 }
 function SelectIDRange(containerid) 
 {
-    if (document.selection) 
-    {
-        var range = document.body.createTextRange();
-        range.moveToElementText(document.getElementById(containerid));
-        range.select();
-    } 
-    else if (window.getSelection) 
-    {
-        var range = document.createRange();
-        range.selectNode(document.getElementById(containerid));
-        window.getSelection().addRange(range);
-    }
+	if (document.selection) 
+	{
+		var range = document.body.createTextRange();
+		range.moveToElementText(document.getElementById(containerid));
+		range.select();
+	} 
+	else if (window.getSelection) 
+	{
+		var range = document.createRange();
+		range.selectNode(document.getElementById(containerid));
+		window.getSelection().addRange(range);
+	}
 }
 function SelectItemByValue(elmnt, value)
 {
   for(var i=0; i < elmnt.options.length; i++)
   {
-    if(elmnt.options[i].value == value) {
-      elmnt.selectedIndex = i;
-      break;
-    }
+	if(elmnt.options[i].value == value) {
+	  elmnt.selectedIndex = i;
+	  break;
+	}
   }
 }
 function SwapStyleClass(oldSwapClass, newSwapClass)
@@ -216,16 +216,16 @@ function SwapStyleClass(oldSwapClass, newSwapClass)
 	//var lastSize = elements.length;
 	while(elements.length > 0)
 	{
-    	var curClass = elements[0].className;
-    	var newClass = curClass.replace(oldSwapClass, newSwapClass);
-    	elements[0].className = newClass;
-    	//if(lastSize = elements.length)
-    		//break;//stuck in loop
+		var curClass = elements[0].className;
+		var newClass = curClass.replace(oldSwapClass, newSwapClass);
+		elements[0].className = newClass;
+		//if(lastSize = elements.length)
+			//break;//stuck in loop
 	}
 }
 function FocusAndSelectAll(id)
 {
-    var e = document.getElementById(id);
+	var e = document.getElementById(id);
 	e.focus();
 	try{
 		e.select();

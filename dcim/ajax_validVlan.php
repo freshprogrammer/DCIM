@@ -35,23 +35,23 @@
 	
 	if($dev) 
 	{
-    	echo "Dev line 2 vlanInput = $vlanInput<BR>";
-        foreach ($vlans as $v) 
-        {
-        	echo "Dev line 3- vlans[] = $v<BR>";
-        }
-    	echo "Dev line 4 vlanCount = $vlanCount<BR>";
+		echo "Dev line 2 vlanInput = $vlanInput<BR>";
+		foreach ($vlans as $v) 
+		{
+			echo "Dev line 3- vlans[] = $v<BR>";
+		}
+		echo "Dev line 4 vlanCount = $vlanCount<BR>";
 	}
 	$clause = implode(',', array_fill(0, count($vlans), '?'));
 
 	$arrayOfResults = array();
 	$array_of_params = array();
 	$array_of_params[0] = "";
-    foreach($vlans as $value){
-        $array_of_params[0] .= 'i';
-        $array_of_params[] = $value;
-        $arrayOfResults[$value] = false;
-    }
+	foreach($vlans as $value){
+		$array_of_params[0] .= 'i';
+		$array_of_params[] = $value;
+		$arrayOfResults[$value] = false;
+	}
 
 
 
@@ -68,7 +68,7 @@
 		echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
 	}
 	if($dev) echo "Dev line 5<BR>\n";
-	            
+				
 	//$stmt->bind_Param('s', $vlanSQLFilter);
 	call_user_func_array(array(&$stmt, 'bind_param'), $array_of_params);
 	$stmt->execute();
@@ -84,27 +84,27 @@
 			echo "valid";
 		else
 		{
-        	//list result data
-        	while ($stmt->fetch()) 
-        	{
-                if($dev) echo "Dev line 8 - IN DB. vlan = $vlan<BR>\n";
-        		$arrayOfResults[$vlan] = true;
-        	}
+			//list result data
+			while ($stmt->fetch()) 
+			{
+				if($dev) echo "Dev line 8 - IN DB. vlan = $vlan<BR>\n";
+				$arrayOfResults[$vlan] = true;
+			}
 		
-    		if($dev)echo "SQL Results<BR>";
-            foreach ($vlans as $v) 
-            {
-            	if($arrayOfResults[$v])
-            	{
-            		//found
-            		if($dev)echo "arrayOfResults[$v] = ".$arrayOfResults[$v]."<BR>";
-            	}
-            	else
-            	{
-            		//not found
-            		echo "VLAN $v was not found. ";
-            	}
-            }
+			if($dev)echo "SQL Results<BR>";
+			foreach ($vlans as $v) 
+			{
+				if($arrayOfResults[$v])
+				{
+					//found
+					if($dev)echo "arrayOfResults[$v] = ".$arrayOfResults[$v]."<BR>";
+				}
+				else
+				{
+					//not found
+					echo "VLAN $v was not found. ";
+				}
+			}
 		}
 	}
 	

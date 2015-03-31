@@ -26,7 +26,7 @@
 			FROM dcim_device AS d
 				LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
 			WHERE d.deviceid=? AND (dp.status='D' OR dp.deviceportid=?)
-    		ORDER BY 3,4,6,7";
+			ORDER BY 3,4,6,7";
 	
 	if (!($stmt = $mysqli->prepare($query))) 
 	{
@@ -49,7 +49,7 @@
 		//list result data
 		while ($stmt->fetch()) 
 		{
-	        if($dev) echo "Dev line 8. devicePortID = $devicePortID<BR>";
+			if($dev) echo "Dev line 8. devicePortID = $devicePortID<BR>";
 			$portFullName = FormatPort($member, $model, $pic, $port, $type);
 			echo "<option value='$devicePortID'>$portFullName</option>\n";
 		}

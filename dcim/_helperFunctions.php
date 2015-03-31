@@ -194,73 +194,73 @@
 			$userInitials["$userID"] = MakeHTMLSafe($uInitials);
 		}
 	}
- 	
- 	function CreateReport($title,$shortResult,$longResult, $note)
- 	{
- 	 	$hiddenCSSClass = "hidden";
- 	 	$visibleCSSClass = "auditDataTable";
- 		
- 		$reportID = MakeTextIntoUniqueJSVariableName($title);
- 	 	$reportResultLongID = $reportID."_resultLong";
- 	 	$reportResultShortID = $reportID."_resultShort";
- 	 	$reportHideFunctionName = $reportID."_table_toggle";
- 	 	$reportVisibilityVariable = $reportID."_visible";
- 	 	$reportToggleLink = $reportID."_toggleLink";
- 	 	
- 	 	$enableSwitcher = strlen($longResult)>0;
- 	 	
- 	 	$result = "";
+	
+	function CreateReport($title,$shortResult,$longResult, $note)
+	{
+		$hiddenCSSClass = "hidden";
+		$visibleCSSClass = "auditDataTable";
+		
+		$reportID = MakeTextIntoUniqueJSVariableName($title);
+		$reportResultLongID = $reportID."_resultLong";
+		$reportResultShortID = $reportID."_resultShort";
+		$reportHideFunctionName = $reportID."_table_toggle";
+		$reportVisibilityVariable = $reportID."_visible";
+		$reportToggleLink = $reportID."_toggleLink";
+		
+		$enableSwitcher = strlen($longResult)>0;
+		
+		$result = "";
 
- 	 	$result .= "<div class='auditReport'>\n";
+		$result .= "<div class='auditReport'>\n";
 		$result .= "<span class='tableTitle'>$title</span>\n";
 		if($enableSwitcher)
-		 	$result .= " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
+			$result .= " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
 		$result .= "<BR>\n";
 		
 		if(strlen($note)>0)
-		 	$result .= "$note<BR>\n";
+			$result .= "$note<BR>\n";
 		
 		if($enableSwitcher)
 		{
- 		 	$result .= "<div id='$reportResultLongID'>\n";
- 		 	$result .= $longResult."\n";
- 		 	$result .= "</div>\n";
+			$result .= "<div id='$reportResultLongID'>\n";
+			$result .= $longResult."\n";
+			$result .= "</div>\n";
 		}
 		
 		if($enableSwitcher)
-	 	 	$result .= "<div id='$reportResultShortID' onclick='$reportHideFunctionName();'>\n";
- 	 	else
-	 	 	$result .= "<div id='$reportResultShortID'>\n";
-	 	$result .= $shortResult."\n";
-	 	$result .= "</div>\n";
-	 	
- 			//js
+			$result .= "<div id='$reportResultShortID' onclick='$reportHideFunctionName();'>\n";
+		else
+			$result .= "<div id='$reportResultShortID'>\n";
+		$result .= $shortResult."\n";
+		$result .= "</div>\n";
+		
+			//js
 		if($enableSwitcher)
 		{
- 			$result .= "<script type='text/javascript'>\n";
- 	 	 	$result .= "	var $reportVisibilityVariable = true;//opposite of initial condition\n";
- 	 	 	$result .= " 	function $reportHideFunctionName() {\n";
- 	 	 	$result .= " 	 	$reportVisibilityVariable = !$reportVisibilityVariable;\n";
- 	 	 	$result .= " 	 	if($reportVisibilityVariable)\n";
- 	 	 	$result .= " 	 	{\n";
- 	 	 	$result .= "	 	 	//long visible\n";
- 	 	 	$result .= "			document.getElementById('$reportToggleLink').innerHTML = 'Hide';\n";
- 	 	 	$result .= "			document.getElementById('$reportResultLongID').className = '$visibleCSSClass';\n";
- 	 	 	$result .= "			document.getElementById('$reportResultShortID').className = '$hiddenCSSClass';\n";
- 	 	 	$result .= " 	 	}\n";
- 	 	 	$result .= " 	 	else\n";
- 	 	 	$result .= " 	 	{\n";
- 	 	 	$result .= "			document.getElementById('$reportToggleLink').innerHTML = 'Details';\n";
- 	 	 	$result .= "			document.getElementById('$reportResultLongID').className = '$hiddenCSSClass';\n";
- 	 	 	$result .= "			document.getElementById('$reportResultShortID').className = '$visibleCSSClass';\n";
- 	 	 	$result .= " 	 	}\n";
- 	 	 	$result .= " 	}\n";
- 	 	 	$result .= " 	$reportHideFunctionName();\n";
- 	 	 	$result .= "</script>\n";
+			$result .= "<script type='text/javascript'>\n";
+			$result .= "	var $reportVisibilityVariable = true;//opposite of initial condition\n";
+			$result .= "	function $reportHideFunctionName() {\n";
+			$result .= "		$reportVisibilityVariable = !$reportVisibilityVariable;\n";
+			$result .= "		if($reportVisibilityVariable)\n";
+			$result .= "		{\n";
+			$result .= "			//long visible\n";
+			$result .= "			document.getElementById('$reportToggleLink').innerHTML = 'Hide';\n";
+			$result .= "			document.getElementById('$reportResultLongID').className = '$visibleCSSClass';\n";
+			$result .= "			document.getElementById('$reportResultShortID').className = '$hiddenCSSClass';\n";
+			$result .= "		}\n";
+			$result .= "		else\n";
+			$result .= "		{\n";
+			$result .= "			document.getElementById('$reportToggleLink').innerHTML = 'Details';\n";
+			$result .= "			document.getElementById('$reportResultLongID').className = '$hiddenCSSClass';\n";
+			$result .= "			document.getElementById('$reportResultShortID').className = '$visibleCSSClass';\n";
+			$result .= "		}\n";
+			$result .= "	}\n";
+			$result .= "	$reportHideFunctionName();\n";
+			$result .= "</script>\n";
 		}
- 	 	$result .= "</div>\n";
+		$result .= "</div>\n";
 		echo $result;
- 	}
+	}
 	
 	function CreateDataTableHeader($headers, $showTech=false, $showEditAndQA=false)
 	{
@@ -283,20 +283,20 @@
 		$result .= "</thead>\n";
 		return $result;
 	}
- 	
- 	function FormatSimpleMessage($msg, $severity)
- 	{
- 	 	if ($severity==3)
- 	 	 	$result = "<table margin=><tr><td bgcolor=red class='simpleMessageCell'>$msg</td></tr></table>";
- 	 	else if ($severity==2)
- 	 	 	$result = "<table margin=><tr><td bgcolor=orange class='simpleMessageCell'>$msg</td></tr></table>";
- 	 	else if ($severity==1)
- 	 	 	$result = "<table margin=><tr><td bgcolor=lime class='simpleMessageCell'>$msg</td></tr></table>";
- 	 	else
- 	 	 	$result = "<table margin=><tr><td bgcolor=pink class='simpleMessageCell'>$msg</td></tr></table>";
- 	 	 	
- 	 	return $result;
- 	}
+	
+	function FormatSimpleMessage($msg, $severity)
+	{
+		if ($severity==3)
+			$result = "<table margin=><tr><td bgcolor=red class='simpleMessageCell'>$msg</td></tr></table>";
+		else if ($severity==2)
+			$result = "<table margin=><tr><td bgcolor=orange class='simpleMessageCell'>$msg</td></tr></table>";
+		else if ($severity==1)
+			$result = "<table margin=><tr><td bgcolor=lime class='simpleMessageCell'>$msg</td></tr></table>";
+		else
+			$result = "<table margin=><tr><td bgcolor=pink class='simpleMessageCell'>$msg</td></tr></table>";
+			
+		return $result;
+	}
 	
 	function GetDeviceFromModelName($deviceModelName)
 	{
@@ -307,8 +307,8 @@
 		{
 			if($model->name==$deviceModelName)
 			{
-			 	$device = $model;
-			 	break;
+				$device = $model;
+				break;
 			}
 		}
 		return $device;
@@ -319,14 +319,14 @@
 		$deviceInfo = GetDeviceFromModelName($deviceModel);
 		
 		$deviceFullName = $deviceName;
- 		if($deviceInfo!=null && $deviceInfo->partOfChasis)
- 		{
- 		 	if($short)
-	 	 	 	$deviceFullName = $deviceName." M#".$deviceMember;
- 		 	else
-	 	 	 	$deviceFullName = $deviceName." Member #".$deviceMember;
- 		}
- 		return $deviceFullName;
+		if($deviceInfo!=null && $deviceInfo->partOfChasis)
+		{
+			if($short)
+				$deviceFullName = $deviceName." M#".$deviceMember;
+			else
+				$deviceFullName = $deviceName." Member #".$deviceMember;
+		}
+		return $deviceFullName;
 	}
 	
 	function FormatPort($member, $deviceModelName, $pic, $port, $type)
@@ -341,47 +341,47 @@
 		}
 		else if($deviceInfo->coloDevice)
 		{
-		 	if($deviceModelName=="Cage" && $pic>0)
-		 	{
-		 	 	if($port==1) 	 $portLetter = "(A)";
-		 	 	else if($port==2)$portLetter = "(B)";
-		 	 	else if($port==3)$portLetter = "(C)";
-		 	 	else if($port==4)$portLetter = "(D)";
-		 	 	else if($port==5)$portLetter = "(E)";
-		 	 	else if($port==6)$portLetter = "(F)";
-		 	 	$portFullName = "Patch# $pic.$port$portLetter";
-		 	}
-		 	else 
-		 	{
-		 	 	$portFullName = "Patch# ".$port;
-		 	}
+			if($deviceModelName=="Cage" && $pic>0)
+			{
+				if($port==1)	 $portLetter = "(A)";
+				else if($port==2)$portLetter = "(B)";
+				else if($port==3)$portLetter = "(C)";
+				else if($port==4)$portLetter = "(D)";
+				else if($port==5)$portLetter = "(E)";
+				else if($port==6)$portLetter = "(F)";
+				$portFullName = "Patch# $pic.$port$portLetter";
+			}
+			else 
+			{
+				$portFullName = "Patch# ".$port;
+			}
 		}
 		else
 		{
-		 	if($pic==99)//management port
-		 	{
+			if($pic==99)//management port
+			{
 				$portFullName = "em-";
- 			 	$portFullName .= $member."/0/".$port;
-		 	}
-		 	else if($pic==98)//console port
-		 	{
+				$portFullName .= $member."/0/".$port;
+			}
+			else if($pic==98)//console port
+			{
 				$portFullName = "con-";
- 			 	$portFullName .= $member."/0/".$port;
-		 	}
+				$portFullName .= $member."/0/".$port;
+			}
 			else 
 			{
- 				if($deviceInfo->gigabit)
- 				{
- 					if($type=="E")
- 						$portFullName = "ge-";
- 					else if($type=="F")
- 						$portFullName = "sfp-";
- 					else
- 						$portFullName = "?-";
- 				}
- 				else
- 					$portFullName = "fe-";
- 			 	$portFullName .= $member."/".$pic."/".$port;
+				if($deviceInfo->gigabit)
+				{
+					if($type=="E")
+						$portFullName = "ge-";
+					else if($type=="F")
+						$portFullName = "sfp-";
+					else
+						$portFullName = "?-";
+				}
+				else
+					$portFullName = "fe-";
+				$portFullName .= $member."/".$pic."/".$port;
 			}
 		}
 		return $portFullName;
@@ -390,15 +390,15 @@
 	function FormatLocation($siteName, $colo, $locationName)
 	{
 		if($siteName==null)
-		 	$fullLocationName = "None";
-	 	else
-	 	{
-	 	 	if((int)$colo >= 1)//TODO this may not be multi site compatable - should be fixed by "room" table instead of colo field
-		 	 	$fullLocationName = "$siteName CA$colo $locationName";
-		 	else 
-		 	 	$fullLocationName = "$siteName $locationName";
-	 	}
-	 	return $fullLocationName;
+			$fullLocationName = "None";
+		else
+		{
+			if((int)$colo >= 1)//TODO this may not be multi site compatable - should be fixed by "room" table instead of colo field
+				$fullLocationName = "$siteName CA$colo $locationName";
+			else 
+				$fullLocationName = "$siteName $locationName";
+		}
+		return $fullLocationName;
 	}
 	
 	function TestForSingleCustomerMatch($input)
@@ -434,14 +434,14 @@
 	
 	function IsUserUsingDefaultPassword()
 	{
-	 	$result = false;
+		$result = false;
 		if(isset($_COOKIE["dcim_password"]))
 		{
- 			$password = $_COOKIE["dcim_password"];
- 			if($password=="f23c9a5dca7aef19a3db264c5c21a2f8")//md5 of default password "Pa55word"
- 	 	 	 	return true;
+			$password = $_COOKIE["dcim_password"];
+			if($password=="f23c9a5dca7aef19a3db264c5c21a2f8")//md5 of default password "Pa55word"
+				return true;
 		}
-	 	return $result;
+		return $result;
 	}
 	
 	function BadgeStatus($status, $formatted=true)
@@ -569,19 +569,19 @@
 	//permission levels are limited to the magic nubers here - code should refference these functions exclusively for perm testing
 	function UserHasCircuitPermission()
 	{
-	 	return UserHasWritePermission();
+		return UserHasWritePermission();
 	}
 	function UserHasLocationPermission()
 	{
-	 	return UserHasAdminPermission();
+		return UserHasAdminPermission();
 	}
 	function UserHasPortAddEditPermission()
 	{
-	 	return UserHasWritePermission();
+		return UserHasWritePermission();
 	}
 	function UserHasPortDeletePermission()
 	{
-	 	return UserHasWritePermission();
+		return UserHasWritePermission();
 	}
 	function ValidReadPermission($permissionLevel)
 	{
@@ -597,67 +597,67 @@
 	}
 	function UserHasReadPermission()
 	{
-	 	global $permissionLevel;
+		global $permissionLevel;
 		return ValidReadPermission($permissionLevel);
 	}
 	function UserHasWritePermission()
 	{
-	 	global $permissionLevel;
+		global $permissionLevel;
 		return ValidWritePermission($permissionLevel);
 	}
 	function UserHasAdminPermission()
 	{
-	 	global $permissionLevel;
+		global $permissionLevel;
 		return ValidAdminPermission($permissionLevel);
 	}
 	function DescribeUserPermissionLevel($permission, $simple=false, $showVal=false)
 	{
 		//1 char val
- 	 	$result = "";
- 	 	
+		$result = "";
+		
 		if(ValidAdminPermission($permission))
 		{
-		 	if($simple)
-			 	$result = "Admin";
-		 	else
-			 	$result = "Administrator Access";
+			if($simple)
+				$result = "Admin";
+			else
+				$result = "Administrator Access";
 		}
 		else if(ValidWritePermission($permission))
 		{
-		 	if($simple)
-			 	$result = "Write";
-		 	else
-			 	$result = "Write Access";
+			if($simple)
+				$result = "Write";
+			else
+				$result = "Write Access";
 		}
 		else if(ValidReadPermission($permission))
 		{
-		 	if($simple)
-			 	$result = "Read";
-		 	else
-			 	$result = "Read Only Access";
+			if($simple)
+				$result = "Read";
+			else
+				$result = "Read Only Access";
 		}
 		else
 		{
-		 	if($simple)
-			 	$result = "None";
-		 	else
-			 	$result = "No Permission";
+			if($simple)
+				$result = "None";
+			else
+				$result = "No Permission";
 		}
 			
 		if($showVal)
 		{
-		 	$result .= " ($permission)";
+			$result .= " ($permission)";
 		}
 		return $result;
 	}
 	
 	function FormatVLAN($vlan)
 	{
-	 	$vlan = (int)$vlan;
-	 	if($vlan<0)
-	 	 	return "Temp-".$vlan;
- 	 	else
- 	 	 	return $vlan;
+		$vlan = (int)$vlan;
+		if($vlan<0)
+			return "Temp-".$vlan;
+		else
+			return $vlan;
 	}
 	
 	function FormatTechDetails($editUserID, $editDate, $visibleText="", $qaUserID=-1, $qaDate="")
@@ -669,7 +669,7 @@
 		
 		if(is_nan($editUserID))
 		{//not a number
-		 	return "$editUserID is nan";
+			return "$editUserID is nan";
 		}
 		
 		$editUserInitials = "";
@@ -677,30 +677,30 @@
 		$qaDescription = "";
 		if(!isset($userFullName[$editUserID]))
 		{//not in array
-		 	$editUserFullName = "User#$editUserID";
-		 	$editUserInitials = "#$editUserID";
+			$editUserFullName = "User#$editUserID";
+			$editUserInitials = "#$editUserID";
 		}
 		else
 		{
-		 	$editUserFullName = $userFullName[$editUserID];
-		 	$editUserInitials = $userInitials[$editUserID];
+			$editUserFullName = $userFullName[$editUserID];
+			$editUserInitials = $userInitials[$editUserID];
 		}
 	
 		if($qaUserID ==-1)
 		{
-		 	$qaDescription = "None";
+			$qaDescription = "None";
 		}
 		else 
 		{
- 			if(!isset($userFullName[$qaUserID]))
- 			{//not in array
- 			 	$qaUserFullName = "User#$editUserID";
- 			}
- 			else
- 			{
- 			 	$qaUserFullName = $userFullName[$qaUserID];
- 			}
-		 	$qaDescription = "$qaUserFullName";//no need to show date here
+			if(!isset($userFullName[$qaUserID]))
+			{//not in array
+				$qaUserFullName = "User#$editUserID";
+			}
+			else
+			{
+				$qaUserFullName = $userFullName[$qaUserID];
+			}
+			$qaDescription = "$qaUserFullName";//no need to show date here
 		}
 		
 		$lastEditBrief = $userInitials[$editUserID];
@@ -885,11 +885,11 @@
 	
 		if($count==1)
 		{
-		 	//update input locationid
-		 	$stmt->bind_result($dbLocationID);
+			//update input locationid
+			$stmt->bind_result($dbLocationID);
 			$stmt->fetch();
-		 	$locationID = $dbLocationID;
-		 	
+			$locationID = $dbLocationID;
+			
 			if($shouldExist)
 				return true;
 			else
@@ -924,9 +924,9 @@
 			return false;
 		
 		if(strlen($pullField)>0)
-		 	$query = "SELECT $keyField, $pullField FROM $table WHERE $keyField=?";
+			$query = "SELECT $keyField, $pullField FROM $table WHERE $keyField=?";
 		else
-		 	$query = "SELECT $keyField FROM $table WHERE $keyField=?";
+			$query = "SELECT $keyField FROM $table WHERE $keyField=?";
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -947,14 +947,14 @@
 	
 		if($count==1)
 		{
-		 	//update input locationid
-		 	if(strlen($pullField)>0)
-		 	 	$stmt->bind_result($dbKeyID, $pullFieldResult);
-		 	else
-		 	 	$stmt->bind_result($dbKeyID);
+			//update input locationid
+			if(strlen($pullField)>0)
+				$stmt->bind_result($dbKeyID, $pullFieldResult);
+			else
+				$stmt->bind_result($dbKeyID);
 			$stmt->fetch();
-		 	$key = $dbKeyID;
-		 	
+			$key = $dbKeyID;
+			
 			if($shouldExist)
 				return true;
 			else
@@ -965,20 +965,20 @@
 		}
 		if($count==2)
 		{
-		 	if(strlen($pullField)>0)
-		 	 	$stmt->bind_result($dbKeyID, $pullFieldResult);
-		 	else
-		 	 	$stmt->bind_result($dbKeyID);
+			if(strlen($pullField)>0)
+				$stmt->bind_result($dbKeyID, $pullFieldResult);
+			else
+				$stmt->bind_result($dbKeyID);
 			$stmt->fetch();
-		 	$key = $dbKeyID;
-		 	
+			$key = $dbKeyID;
+			
 			if(!$multiplesOK || !$shouldExist)
-		 	{
- 				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key).";
- 				return false;
-		 	}
-		 	else 
-		 	 	return true;
+			{
+				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key).";
+				return false;
+			}
+			else 
+				return true;
 		}
 		else
 		{
@@ -1004,14 +1004,14 @@
 		
 		//this could/should also check old dates to force regular QAs
 		
-	 	if($qaUserID==-1)
-	 	{
- 		 	if($editUserID===$userID)//can't QA self
- 		 	 	return 2;
- 		 	else//un QAed edit
- 		 	 	return 1;
-	 	}
- 	 	return 0;
+		if($qaUserID==-1)
+		{
+			if($editUserID===$userID)//can't QA self
+				return 2;
+			else//un QAed edit
+				return 1;
+		}
+		return 0;
 	}
 	
 	function GetKeysFromFilter($table, $filter, $keyField)
@@ -1021,31 +1021,31 @@
 		
 		$results = array();
 		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -start- results = (".implode(",",$results).")";
-	 	$query = "SELECT $keyField FROM $table WHERE $filter";
-	 	
- 	 	if (!($stmt = $mysqli->prepare($query)))
+		$query = "SELECT $keyField FROM $table WHERE $filter";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Prepare failed: GetKeysFromFilter($table, $filter, $keyField) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
 		{
- 			if (!$stmt->execute())//execute 
- 			{
- 				//failed (errorNo-error)
- 				$errorMessage[] = "Failed to execute: GetKeysFromFilter($table, $filter, $keyField) (" . $stmt->errno . "-" . $stmt->error . ").";
- 				return false;
- 			}
- 			$stmt->store_result();
- 			$count = $stmt->num_rows;
- 		
- 			$stmt->bind_result($key);
- 			
- 			if($count>0)
- 			{
- 			 	while ($stmt->fetch()) 
- 				{
- 	 	 			//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -append- key = $key";
- 				 	$results[] = $key;
- 				}
- 			}
+			if (!$stmt->execute())//execute 
+			{
+				//failed (errorNo-error)
+				$errorMessage[] = "Failed to execute: GetKeysFromFilter($table, $filter, $keyField) (" . $stmt->errno . "-" . $stmt->error . ").";
+				return false;
+			}
+			$stmt->store_result();
+			$count = $stmt->num_rows;
+		
+			$stmt->bind_result($key);
+			
+			if($count>0)
+			{
+				while ($stmt->fetch()) 
+				{
+					//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -append- key = $key";
+					$results[] = $key;
+				}
+			}
 		}
 		
 		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -end- results = (".implode(",",$results).")";
@@ -1066,8 +1066,8 @@
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-		 	if($reportErrors)
-			 	$errorMessage[] = "ValidPowerRecord($powerID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			if($reportErrors)
+				$errorMessage[] = "ValidPowerRecord($powerID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
 		$stmt->bind_Param('i', $powerID);
@@ -1078,23 +1078,23 @@
 	
 		if($count==1)
 		{
-		 	//update input locationid
-		 	$stmt->bind_result($powerID);
- 	 	 	$stmt->fetch();
-		 	
+			//update input locationid
+			$stmt->bind_result($powerID);
+			$stmt->fetch();
+			
 			if($shouldExist)
 				return true;
 			else
 			{
 				if($reportErrors)
-			 	 	$errorMessage[] = "Power record already exists - ValidPowerRecord($powerID,$shouldExist).";
+					$errorMessage[] = "Power record already exists - ValidPowerRecord($powerID,$shouldExist).";
 				return false;
 			}
 		}
 		if($count==2)
 		{
 			if($reportErrors)
-			 	$errorMessage[] = "Multiple Power records found in ValidPowerRecord($powerID,$shouldExist). Contact Admin.";
+				$errorMessage[] = "Multiple Power records found in ValidPowerRecord($powerID,$shouldExist). Contact Admin.";
 			return false;
 		}
 		else
@@ -1102,7 +1102,7 @@
 			if($shouldExist)
 			{
 				if($reportErrors)
-			 	 	$errorMessage[] = "Power record not found - ValidPowerRecord($powerID,$shouldExist).";
+					$errorMessage[] = "Power record not found - ValidPowerRecord($powerID,$shouldExist).";
 				return false;
 			}
 			else
@@ -1113,15 +1113,15 @@
 	function ValidDate($input, $fieldName)
 	{
 		global $errorMessage;
-	 	if(strlen($input) > 0)
-	 	{
-	 	 	$regex = "/^(19|20)\d\d-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/"; 
- 			if(!preg_match($regex,$input))
- 			{
-			 	$errorMessage[] = "Invalid $fieldName ($input). Please format as '0000-00-00'.";
- 				return false;
- 			}
-	 	}
+		if(strlen($input) > 0)
+		{
+			$regex = "/^(19|20)\d\d-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$/"; 
+			if(!preg_match($regex,$input))
+			{
+				$errorMessage[] = "Invalid $fieldName ($input). Please format as '0000-00-00'.";
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -1191,36 +1191,36 @@
 	function ValidDeviceSize(&$input)
 	{
 		global $errorMessage;
-	 	$input = trim(strtoupper($input));
+		$input = trim(strtoupper($input));
 	
- 		if($input=="FULL")
- 		{
- 		 	$input = "Full";
-	 	 	return true;
- 		}
- 		else if($input=="HALF")
- 		{
- 		 	$input = "Half";
-	 	 	return true;
- 		}
- 		else if($input=="1/2" || $input=="1/4")
- 		{
-	 	 	return true;
- 		}
+		if($input=="FULL")
+		{
+			$input = "Full";
+			return true;
+		}
+		else if($input=="HALF")
+		{
+			$input = "Half";
+			return true;
+		}
+		else if($input=="1/2" || $input=="1/4")
+		{
+			return true;
+		}
 		else if(preg_match("/^([0-5][0-9]|[1-9])U$/",$input))// #U or ##U
 		{
-	 	 	return true;
+			return true;
 		}
 		else if(preg_match("/^([1-9][0-9]|[0-9])X([1-9][0-9]|[0-9])$/",$input))// ##x## or #x#
 		{
-	 	 	$input =strtolower($input);
-	 	 	return true;
+			$input =strtolower($input);
+			return true;
 		}
- 		else 
- 		{
- 			$errorMessage[] = "Invalid Device Size";
- 			return false;
- 		}
+		else 
+		{
+			$errorMessage[] = "Invalid Device Size";
+			return false;
+		}
 	}
 	
 	function ValidBadgeStatus($input)
@@ -1272,8 +1272,8 @@
 	function ValidPassword($input)
 	{
 		global $errorMessage;
-	 	$minLen=8;
-	 	$maxLen=15;
+		$minLen=8;
+		$maxLen=15;
 		if(strlen($input) < $minLen)
 		{
 			$errorMessage[] = "Password length cannot be less than ".$minLen.".";
@@ -1322,36 +1322,36 @@
 	function ValidDevicePortMac($input)
 	{
 		global $errorMessage;
- 	 	//this should matcht the JS
-	 	if(strlen($input) > 0)
-	 	{
- 		 	$regex = "/^([0-9a-f]{2}[:]){5}([0-9a-f]{2})$/"; 
- 			if(!preg_match($regex,$input))
- 			{
- 				$errorMessage[] = "Invalid MAC address. Please format as 'ff:ff:ff:ff:ff:ff'.";
- 				return false;
- 			}
-	 	}
+		//this should matcht the JS
+		if(strlen($input) > 0)
+		{
+			$regex = "/^([0-9a-f]{2}[:]){5}([0-9a-f]{2})$/"; 
+			if(!preg_match($regex,$input))
+			{
+				$errorMessage[] = "Invalid MAC address. Please format as 'ff:ff:ff:ff:ff:ff'.";
+				return false;
+			}
+		}
 		return true;
 	}
 	
- 	function ValidPowerPanel($input)
- 	{
+	function ValidPowerPanel($input)
+	{
 		global $errorMessage;
- 	 	//this should matcht the JS
-	 	$regex = "/^(\d|\d\d|\d-\d)$/"; 
+		//this should matcht the JS
+		$regex = "/^(\d|\d\d|\d-\d)$/"; 
 		if(!preg_match($regex,$input))
 		{
 			$errorMessage[] = "Invalid Panel.";
 			return false;
 		}
-	 	return true;
- 	}
- 	
- 	function ValidPowerCircuit($input)
- 	{
+		return true;
+	}
+	
+	function ValidPowerCircuit($input)
+	{
 		return ValidNumber($input,"Power Circuit",1,2,0,50);
- 	}
+	}
 	
 	function ValidPowerVolts($input)
 	{
@@ -1370,89 +1370,89 @@
 		$validFlags = array('A','D');
 		return ValidFlag($input,"Power Status",$validFlags);
 	}
- 	
- 	function ValidPowerLoad($input)
- 	{
+	
+	function ValidPowerLoad($input)
+	{
 		return ValidNumber($input,"Power Load",1,0,0,33);
- 	}
- 	
+	}
+	
 	function ValidSubnet($input)
 	{
 		global $errorMessage;
- 	 	//this should match the JS
- 	 	$regex = "/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(30|2[4-9])$/"; 
+		//this should match the JS
+		$regex = "/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(30|2[4-9])$/"; 
 		if(!preg_match($regex,$input))
 		{
 			$errorMessage[] = "Invalid Subnet. Please format as '###.###.###.###/##'.";
 			return false;
 		}
 		else 
- 	 	 	return true;
+			return true;
 	}
- 	
+	
 	function ValidIPAddress($input, $fieldName)
 	{
 		global $errorMessage;
- 	 	//this should match the JS
- 	 	$regex = "/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/"; 
+		//this should match the JS
+		$regex = "/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/"; 
 		if(!preg_match($regex,$input))
 		{
 			$errorMessage[] = "Invalid $fieldName ($input). Please format as '###.###.###.###'.";
 			return false;
 		}
 		else 
- 	 	 	return true;
+			return true;
 	}
 	
 	function ValidSubnetMask($input)
 	{
-	 	return ValidIPAddress($input, "Subnet Mask");
+		return ValidIPAddress($input, "Subnet Mask");
 	}
 	
 	function ValidSubnetGateway($input)
 	{
-	 	return ValidIPAddress($input, "Gateway");
+		return ValidIPAddress($input, "Gateway");
 	}
 	
 	function ValidSubnetFirstIP($input)
 	{
-	 	return ValidIPAddress($input, "First IP Address");
+		return ValidIPAddress($input, "First IP Address");
 	}
 	
 	function ValidSubnetLastIP($input)
 	{
-	 	return ValidIPAddress($input, "Last IP Address");
+		return ValidIPAddress($input, "Last IP Address");
 	}
 	
 	function ValidSubnetNote($input)
 	{
-	 	return true;
+		return true;
 	}
 	
 	function ValidSubnetVLAN($vlan, &$resultVLAN, &$isTemp)
 	{
-	 	$isTemp = $vlan<0 || (strpos($vlan,'T') !== false);
+		$isTemp = $vlan<0 || (strpos($vlan,'T') !== false);
 		$vlan = str_replace("T","",$vlan);
-	 	if(!ValidNumber($vlan, "VLAN",1,5,-9999,9999))
-	 	{
- 	 	 	return false;
-	 	}
-	 	
- 	 	$resultVLAN = abs($vlan);
- 	 	if($isTemp)$resultVLAN *= -1; 
- 	 	return true;
+		if(!ValidNumber($vlan, "VLAN",1,5,-9999,9999))
+		{
+			return false;
+		}
+		
+		$resultVLAN = abs($vlan);
+		if($isTemp)$resultVLAN *= -1; 
+		return true;
 	}
 	
 	function ValidQARootTable($table)
 	{
 		global $errorMessage;
- 	 	$logTable = GetLogTable($table);
- 	
+		$logTable = GetLogTable($table);
+	
 		if(!$logTable)
 		{
-		 	$errorMessage[] = "Invalid table for QA.";
-		 	return false; 
+			$errorMessage[] = "Invalid table for QA.";
+			return false; 
 		}
-	 	return true; 
+		return true; 
 	}
 ?>

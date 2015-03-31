@@ -1,14 +1,14 @@
 *::-webkit-input-placeholder { /* WebKit browsers */
-    color: #CCC;
+	color: #CCC;
 }
 *:-moz-placeholder {/* FF 4-18 */
-    color: #CCC;
+	color: #CCC;
 }
 *::-moz-placeholder {/* FF 19+ */
-    color: #CCC;
+	color: #CCC;
 }
 *:-ms-input-placeholder {/* IE 10+ */
-    color: #CCC;
+	color: #CCC;
 }
 
 #pagecontainer {
@@ -16,12 +16,12 @@
 }
 
 #header-bg {
-    background-color: #FFF;
+	background-color: #FFF;
 }
 
 #top-nav {
-    background-color: #4a5154;
-    margin-bottom: 4px;
+	background-color: #4a5154;
+	margin-bottom: 4px;
 }
 
 .pageMinWidth {
@@ -29,16 +29,16 @@
 }
 
 .dr-toolbar-ext, .rich-toolbar {
-    color:#ffffff !important;
-    background-color: #4a5154 !important;
-    background-image: none !important;
-    height:37px;
-    border: 1px solid #4a5154 !important;
+	color:#ffffff !important;
+	background-color: #4a5154 !important;
+	background-image: none !important;
+	height:37px;
+	border: 1px solid #4a5154 !important;
 }
 .dr-toolbar-int, .rich-toolbar-item {
-    color:#ffffff !important;
-    border-left: 1px solid #999999 !important;
-    text-transform: uppercase !important;
+	color:#ffffff !important;
+	border-left: 1px solid #999999 !important;
+	text-transform: uppercase !important;
 }
 
 .dr-toolbar-int {
@@ -87,9 +87,9 @@
 }
 
 .rich-toolbar-item a {
-    background-color: #4a5154 !important;
-    color:#ffffff !important;
-    text-decoration:none !important;
+	background-color: #4a5154 !important;
+	color:#ffffff !important;
+	text-decoration:none !important;
 }
 
 .errorMessage, .resultMessage, .debugMessage{
@@ -194,9 +194,9 @@ legend {
 }
 
 .menu-item a {
-    background-color: #4a5154 !important;
-    color:#ffffff !important;
-    text-decoration:uppercase !important;
+	background-color: #4a5154 !important;
+	color:#ffffff !important;
+	text-decoration:uppercase !important;
 }
 
 .data-table {
@@ -321,16 +321,16 @@ td.powerAuditCellEmpty {
 }
 
 body { 
-    background-color: #e6e6d2;
-    font-size: 75%; 
-    
+	background-color: #e6e6d2;
+	font-size: 75%; 
+	
 	line-height: 1.5; 
 	margin: 0; 
 	font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
 }
 
 h1 {
-    color: #111; //overwritten by appname
+	color: #111; //overwritten by appname
 	display: block;
 	font-size: 18px;
 	font-weight: bold;
@@ -338,7 +338,7 @@ h1 {
 }
 
 h2 {
-    color: #ACBDCA;
+	color: #ACBDCA;
 	display: block;
 	font-size: 18px;
 	font-weight: bold;
@@ -353,7 +353,7 @@ h2 {
 
 /* Switch styles  - specifics are swapped in the php*/
 /* tooltips */
-/* http://sixrevisions.com/css/css-only-tooltips/    */
+/* http://sixrevisions.com/css/css-only-tooltips/	*/
 .tooltip {
 	/*border-bottom: 1px dotted #000000; color: #000000;*/ 
 	outline: none;
@@ -392,7 +392,7 @@ h2 {
 .switchPortEmpty:after, .switchPortReserved:after{
 	content: "";
 	background-repeat: no-repeat;
-    position: absolute;
+	position: absolute;
 	opacity: 0.5;
 	top: 0;
 	left: 0;
@@ -417,11 +417,11 @@ h2 {
 }
 .switchBottomPort:after{
 	-moz-transform: scaleY(-1);
-    -o-transform: scaleY(-1);
-    -webkit-transform: scaleY(-1);
-    transform: scaleY(-1);
-    filter: FlipV;
-    -ms-filter: "FlipV";
+	-o-transform: scaleY(-1);
+	-webkit-transform: scaleY(-1);
+	transform: scaleY(-1);
+	filter: FlipV;
+	-ms-filter: "FlipV";
 }
 
 /* input tooltops - http://www.cssportal.com/css-tooltip-generator/  */

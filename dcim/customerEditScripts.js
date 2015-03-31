@@ -278,8 +278,8 @@ function EditDevicePort(event, add, permission, devicePortID, deviceID, deviceNa
 	if(!editMode)//clicked port while not in edit mode - do nothing
 		return false;
 
-    event = event || window.event;
-    var elem = event.target || event.srcElement;
+	event = event || window.event;
+	var elem = event.target || event.srcElement;
 	if(elem.tagName=="SPAN")//ignore clicks on popup span - port only
 		return true
 	
@@ -330,15 +330,15 @@ function DeleteDevicePort()
 {
 	var confirmed = false;
 	var confim = prompt("Are you sure you want to delete this Port. Have you already dealt with all outstanding port connections and VLAN links? Enter 'YES' to confirm.", "");
-    
-    if (confim != null) 
+	
+	if (confim != null) 
 	{
 		if(confim=="YES")
 			confirmed = true;
 		else
-	        alert("Failed Authentication. You must be not be sure.");
+			alert("Failed Authentication. You must be not be sure.");
 	}
-    
+	
 	if(confirmed)
 	{
 		document.getElementById("EditDevicePort_action").value = "DevicePort_Delete";
@@ -603,7 +603,7 @@ function SaveDevice()
 			if(confim=="YES")
 				valid = true;
 			else
-		        alert("Failed Authentication. You must be not be sure.");
+				alert("Failed Authentication. You must be not be sure.");
 		}
 		
 		if(valid)
@@ -1016,10 +1016,10 @@ function EditSubnet_SubnetChanged()
 	if(subnet!=null)
 	{
 		//update other fields with defauls for this subnet
-		mask    = GetMaskFromSubnet(subnet);
-		gateway = GetGatewayFromSubnet(subnet);
-		first   = GetFirstFromSubnet(subnet);
-		last    = GetLastFromSubnet(subnet);
+		mask	= GetMaskFromSubnet(subnet);
+		gateway	= GetGatewayFromSubnet(subnet);
+		first	= GetFirstFromSubnet(subnet);
+		last	= GetLastFromSubnet(subnet);
 
 		document.getElementById("EditSubnet_subnet").value = subnet;
 	}
