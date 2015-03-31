@@ -4618,8 +4618,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			if($locationPage)
 			{
-				$action = "./?locationid=$locationID";
-				EditCircuitForm($action, $locationID, $locationPage);
+				$action = "./?locationid=$key";
+				EditCircuitForm($action, $key, $locationPage);
 			}
 			else 
 			{
