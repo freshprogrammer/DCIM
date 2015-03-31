@@ -8,9 +8,9 @@
 		global $db_user;
 		global $db_password;
 		global $database;
-	
+		
 		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
-
+		
 		/* check connection */
 		if (mysqli_connect_errno()) {
 			printf("Connect failed: %s\n", mysqli_connect_error());
@@ -28,14 +28,14 @@
 	class DeviceModel 
 	{
 		public $name = "";
-	 	public $startPort = 1;
-	 	public $portCount = 24;
-	 	public $coloDevice = false;
-	 	public $gigabit = false;
-	 	public $partOfChasis = false;
-	 	public $doubleRow = false;
-	 	public $portsPerSet = 12;
-	 	
+		public $startPort = 1;
+		public $portCount = 24;
+		public $coloDevice = false;
+		public $gigabit = false;
+		public $partOfChasis = false;
+		public $doubleRow = false;
+		public $portsPerSet = 12;
+		
 		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet) 
 		{
 			$this->name = $name;
@@ -48,11 +48,11 @@
 			$this->portsPerSet = $portsPerSet; 
 		}
 
-	 	public function __toString()
-	 	{
-	 	 	return $this->name;
-	 	}
-	}	
+		public function __toString()
+		{
+			return $this->name;
+		}
+	}
 	
 	function BuildDeviceModelArrays()
 	{
@@ -61,95 +61,95 @@
 		//portStartNo,portCount, size, type, port spacing, brand
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Full Cab" 	   , 1,24, true,false,false,false, 6);//colo
-		$deviceModels[] = new DeviceModel("Half Cab-Top"   , 1,12, true,false,false,false, 6);
-		$deviceModels[] = new DeviceModel("Half Cab-Bottom",13,12, true,false,false,false, 6);
-		$deviceModels[] = new DeviceModel("Cage" 	 	   , 1, 6, true,false,false,false, 6);
+		$deviceModels[] = new DeviceModel("Full Cab"		, 1,24, true,false,false,false, 6);//colo
+		$deviceModels[] = new DeviceModel("Half Cab-Top"	, 1,12, true,false,false,false, 6);
+		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6);
+		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6);
 		
-		$deviceModels[] = new DeviceModel("EX3200 24p" 	 , 0,24,false, true, true, true,12);//juniper
-		$deviceModels[] = new DeviceModel("EX3200 48p" 	 , 0,48,false, true, true, true,12);
-		$deviceModels[] = new DeviceModel("EX4200 24p" 	 , 0,24,false, true, true, true,12);
-		$deviceModels[] = new DeviceModel("EX4200 48p" 	 , 0,48,false, true, true, true,12);
+		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true, true, true,12);//juniper
+		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true, true, true,12);
+		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12);
+		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12);
 		
-		$deviceModels[] = new DeviceModel("Catalyst 3550"  , 1,48,false,false,false, true,16);//leaf
-		$deviceModels[] = new DeviceModel("WS-X6348" 	   , 1,48,false,false, true, true,12);//DAS13
-		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE", 1, 2,false, true, true,false, 1);//DAS13 supervisor
+		$deviceModels[] = new DeviceModel("Catalyst 3550"	, 1,48,false,false,false, true,16);//leaf
+		$deviceModels[] = new DeviceModel("WS-X6348"		, 1,48,false,false, true, true,12);//DAS13
+		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1);//DAS13 supervisor
 	}
- 	
- 	function GetTableRecordDescription($table) 
- 	{
-		if($table=="dcim_badge") 	 	 	 	$descrip='Badge';
-		else if($table=="dcim_customer") 	 	$descrip='Customer';
-		else if($table=="dcim_device") 	 	  $descrip='Device';
-		else if($table=="dcim_deviceport") 	  $descrip='Device Port';
-	 	else if($table=="dcim_portconnection")  $descrip='Port Connection';
-		else if($table=="dcim_location") 	 	$descrip='Location';
-		else if($table=="dcim_portvlan") 	 	$descrip='Port VLAN';
-		else if($table=="dcim_power") 	 	   $descrip='Power Circuit';
-		else if($table=="dcim_powerloc") 	 	$descrip='Power Location';
-		else if($table=="dcim_site") 	 	 	$descrip='Site';
-		else if($table=="dcim_user") 	 	 	$descrip='User';
-	 	else if($table=="dcim_vlan") 	 	 	$descrip='Subnet';
-		else if($table=="dcimlog_badge") 	 	 $descrip='Badge Log';
-		else if($table=="dcimlog_customer") 	  $descrip='Customer Log';
-		else if($table=="dcimlog_device") 	 	$descrip='Device Log';
-		else if($table=="dcimlog_deviceport") 	$descrip='Device Port Log';
-	 	else if($table=="dcimlog_portconnection")$descrip='Port Connection Log';
-		else if($table=="dcimlog_location") 	  $descrip='Location Log';
-		else if($table=="dcimlog_portvlan") 	  $descrip='Port VLAN Log';
-		else if($table=="dcimlog_power") 	 	 $descrip='Power Circuit Log';
-		else if($table=="dcimlog_powerloc") 	  $descrip='Power Location Log';
-		else if($table=="dcimlog_site") 	 	  $descrip='Site Log';
-		else if($table=="dcimlog_vlan") 	 	  $descrip='Subnet Log';
+	
+	function GetTableRecordDescription($table) 
+	{
+		if($table=="dcim_badge")					$descrip='Badge';
+		else if($table=="dcim_customer")			$descrip='Customer';
+		else if($table=="dcim_device")				$descrip='Device';
+		else if($table=="dcim_deviceport")			$descrip='Device Port';
+		else if($table=="dcim_portconnection")		$descrip='Port Connection';
+		else if($table=="dcim_location")			$descrip='Location';
+		else if($table=="dcim_portvlan")			$descrip='Port VLAN';
+		else if($table=="dcim_power")				$descrip='Power Circuit';
+		else if($table=="dcim_powerloc")			$descrip='Power Location';
+		else if($table=="dcim_site")				$descrip='Site';
+		else if($table=="dcim_user")				$descrip='User';
+		else if($table=="dcim_vlan")				$descrip='Subnet';
+		else if($table=="dcimlog_badge")			$descrip='Badge Log';
+		else if($table=="dcimlog_customer")			$descrip='Customer Log';
+		else if($table=="dcimlog_device")			$descrip='Device Log';
+		else if($table=="dcimlog_deviceport")		$descrip='Device Port Log';
+		else if($table=="dcimlog_portconnection")	$descrip='Port Connection Log';
+		else if($table=="dcimlog_location")			$descrip='Location Log';
+		else if($table=="dcimlog_portvlan")			$descrip='Port VLAN Log';
+		else if($table=="dcimlog_power")			$descrip='Power Circuit Log';
+		else if($table=="dcimlog_powerloc")			$descrip='Power Location Log';
+		else if($table=="dcimlog_site")				$descrip='Site Log';
+		else if($table=="dcimlog_vlan")				$descrip='Subnet Log';
 		else $descrip = false;
 		return $descrip;
- 	}
- 	
- 	function GetKeyField($table) 
- 	{
-		if($table=="dcim_badge") 	 	 	  $keyFieldName='badgeid';
-		else if($table=="dcim_customer") 	  $keyFieldName='hno';
-		else if($table=="dcim_device") 	 	$keyFieldName='deviceid';
-		else if($table=="dcim_deviceport") 	$keyFieldName='deviceportid';
-	 	else if($table=="dcim_portconnection")$keyFieldName='portconnectionid';
-		else if($table=="dcim_location") 	  $keyFieldName='locationid';
-		else if($table=="dcim_portvlan") 	  $keyFieldName='portvlanid';
-		else if($table=="dcim_power") 	 	 $keyFieldName='powerid';
-		else if($table=="dcim_powerloc") 	  $keyFieldName='powerlocid';
-		else if($table=="dcim_site") 	 	  $keyFieldName='siteid';
-		else if($table=="dcim_user") 	 	  $keyFieldName='userid';
-		else if($table=="dcim_vlan") 	 	  $keyFieldName='vlanid';
-		else if($table=="dcimlog_badge") 	 	 $keyFieldName='badgelogid';
-		else if($table=="dcimlog_customer") 	  $keyFieldName='customerlogid';
-		else if($table=="dcimlog_device") 	 	$keyFieldName='devicelogid';
-		else if($table=="dcimlog_deviceport") 	$keyFieldName='deviceportlogid';
-	 	else if($table=="dcimlog_portconnection")$keyFieldName='portconnectionlogid';
-		else if($table=="dcimlog_location") 	  $keyFieldName='locationlogid';
-		else if($table=="dcimlog_portvlan") 	  $keyFieldName='portvlanlogid';
-		else if($table=="dcimlog_power") 	 	 $keyFieldName='powerlogid';
-		else if($table=="dcimlog_powerloc") 	  $keyFieldName='powerloclogid';
-		else if($table=="dcimlog_site") 	 	  $keyFieldName='sitelogid';
-		else if($table=="dcimlog_vlan") 	 	  $keyFieldName='vlanlogid';
+	}
+	
+	function GetKeyField($table) 
+	{
+		if($table=="dcim_badge")					$keyFieldName='badgeid';
+		else if($table=="dcim_customer")			$keyFieldName='hno';
+		else if($table=="dcim_device")				$keyFieldName='deviceid';
+		else if($table=="dcim_deviceport")			$keyFieldName='deviceportid';
+		else if($table=="dcim_portconnection")		$keyFieldName='portconnectionid';
+		else if($table=="dcim_location")			$keyFieldName='locationid';
+		else if($table=="dcim_portvlan")			$keyFieldName='portvlanid';
+		else if($table=="dcim_power")				$keyFieldName='powerid';
+		else if($table=="dcim_powerloc")			$keyFieldName='powerlocid';
+		else if($table=="dcim_site")				$keyFieldName='siteid';
+		else if($table=="dcim_user")				$keyFieldName='userid';
+		else if($table=="dcim_vlan")				$keyFieldName='vlanid';
+		else if($table=="dcimlog_badge")			$keyFieldName='badgelogid';
+		else if($table=="dcimlog_customer")			$keyFieldName='customerlogid';
+		else if($table=="dcimlog_device")			$keyFieldName='devicelogid';
+		else if($table=="dcimlog_deviceport")		$keyFieldName='deviceportlogid';
+		else if($table=="dcimlog_portconnection")	$keyFieldName='portconnectionlogid';
+		else if($table=="dcimlog_location")			$keyFieldName='locationlogid';
+		else if($table=="dcimlog_portvlan")			$keyFieldName='portvlanlogid';
+		else if($table=="dcimlog_power")			$keyFieldName='powerlogid';
+		else if($table=="dcimlog_powerloc")			$keyFieldName='powerloclogid';
+		else if($table=="dcimlog_site")				$keyFieldName='sitelogid';
+		else if($table=="dcimlog_vlan")				$keyFieldName='vlanlogid';
 		else $keyFieldName = false;
 		return $keyFieldName;
- 	}
- 	
- 	function GetLogTable($table) 
- 	{
-		if($table=="dcim_badge") 	 	 	  $logTable='dcimlog_badge';
-		else if($table=="dcim_customer") 	  $logTable='dcimlog_customer';
-		else if($table=="dcim_device") 	 	$logTable='dcimlog_device';
-		else if($table=="dcim_deviceport") 	$logTable='dcimlog_deviceport';
-	 	else if($table=="dcim_portconnection")$logTable='dcimlog_portconnection';
-		else if($table=="dcim_location") 	  $logTable='dcimlog_location';
-		else if($table=="dcim_portvlan") 	  $logTable='dcimlog_portvlan';
-		else if($table=="dcim_power") 	 	 $logTable='dcimlog_power';
-		else if($table=="dcim_powerloc") 	  $logTable='dcimlog_powerloc';
-		else if($table=="dcim_site") 	 	  $logTable='dcimlog_site';
-		else if($table=="dcim_vlan") 	 	  $logTable='dcimlog_vlan';
+	}
+	
+	function GetLogTable($table) 
+	{
+		if($table=="dcim_badge")				$logTable='dcimlog_badge';
+		else if($table=="dcim_customer")		$logTable='dcimlog_customer';
+		else if($table=="dcim_device")			$logTable='dcimlog_device';
+		else if($table=="dcim_deviceport")		$logTable='dcimlog_deviceport';
+		else if($table=="dcim_portconnection")	$logTable='dcimlog_portconnection';
+		else if($table=="dcim_location")		$logTable='dcimlog_location';
+		else if($table=="dcim_portvlan")		$logTable='dcimlog_portvlan';
+		else if($table=="dcim_power")			$logTable='dcimlog_power';
+		else if($table=="dcim_powerloc")		$logTable='dcimlog_powerloc';
+		else if($table=="dcim_site")			$logTable='dcimlog_site';
+		else if($table=="dcim_vlan")			$logTable='dcimlog_vlan';
 		else $logTable = false;
 		return $logTable;
- 	}
+	}
 	
 	function ClearUserLogin()
 	{

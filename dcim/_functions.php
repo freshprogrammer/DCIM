@@ -1525,14 +1525,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			    if(UserHasPortAddEditPermission())
 			    {
     				$query = "INSERT INTO dcim_deviceport 
-    					(hno,deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
-    					VALUES(?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+    					(deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
+    					VALUES(?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
         			    
     				if (!($stmt = $mysqli->prepare($query)))
     					$errorMessage[] = "Process Device Insert Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
     				else
-    				{//					   hdpptmsnsu
-    					$stmt->bind_Param('iiiisssssi', $hNo, $deviceID, $pic, $portNo, $type, $mac, $speed, $note, $status, $userID);
+    				{//					   dpptmsnsu
+    					$stmt->bind_Param('iiisssssi', $deviceID, $pic, $portNo, $type, $mac, $speed, $note, $status, $userID);
     					
         				if (!$stmt->execute())//execute 
     						$errorMessage[] = "Failed to execute Device Port Insert '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
@@ -1544,7 +1544,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
     						{
     						    $portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
     							$resultMessage[] = "Successfully Created Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName";
-					            LogDBChange("dcim_deviceport",-1,"I","hno='$hNo' AND deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
+					            LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
     						}
     						else 
     							$errorMessage[] = "Success, but affected $affectedCount rows.";
@@ -1816,11 +1816,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$stmt->fetch();
 								
 								//Create device ports
-								$addedPortCount = CreateBlankPortsForDevice($hNo, $deviceID, $model);
+								$addedPortCount = CreateBlankPortsForDevice($deviceID, $model);
 								
 								if($addedPortCount<=0)
 								{
-									$errorMessage[] = "Failed to Create Ports. ($hNo, $deviceID, ".MakeHTMLSafe($model).") ";
+									$errorMessage[] = "Failed to Create Ports. ($deviceID, ".MakeHTMLSafe($model).") ";
 								}
 							}
 							else 
@@ -2238,7 +2238,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	    return $affectedCount;
 	}
 	
-	function CreateBlankPortsForDevice($hNo,$deviceID,$model)
+	function CreateBlankPortsForDevice($deviceID,$model)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -2253,8 +2253,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//could utilize DB default values for PIC(0), TYPE(E) and STATUS(D)
 		$query = "INSERT INTO dcim_deviceport
-			(hno, deviceid, port, edituser, editdate, pic, type, status) 
-			VALUES(?,?,?,?,CURRENT_TIMESTAMP,0,'E','D')";
+			(deviceid, port, edituser, editdate, pic, type, status) 
+			VALUES(?,?,?,CURRENT_TIMESTAMP,0,'E','D')";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "CreateBlankPortsForDevice() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error."\n";
@@ -2262,18 +2262,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$lastPort = $startPortNo + $portCount -1;
 			$portNo = 0;
-			$stmt->bind_Param('iiii', $hNo, $deviceID, $portNo, $userID);
+			$stmt->bind_Param('iii', $deviceID, $portNo, $userID);
 			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++) 
 			{
 				if (!$stmt->execute())//execute 
 					//failed (errorNo-error)
-					$errorMessage[] = "Failed to Add blank port($hNo, $deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
+					$errorMessage[] = "Failed to Add blank port($deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
 				else
 				{
 					//Success
 					//$resultMessage[] = "Successfully added blank port ($hNo, $deviceID, $portNo, $userID)\n";
 					$insertedRecords++;
-					LogDBChange("dcim_deviceport",-1,"I","hno='$hNo' AND deviceid='$deviceID' AND pic='0' AND port='$portNo' AND type='E'");
+					LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='0' AND port='$portNo' AND type='E'");
 				}	
 			}
 		}
@@ -3338,7 +3338,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
             
     		$showDevice = true;
     		if($type=="C" || $deviceInfo->name=="WS-X6K-SUP2-2GE")
-    		{
+    		{//TODO This should be a field in the device class
     		    $showDevice = false;
     		}
     		
@@ -4708,9 +4708,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListCustomerSubnets($hNo)
 	{
 		global $mysqli;
+		$formAction = "./?host=$hNo";
 		
-        $formAction = "./?host=$hNo";
-        
 		//GROUP to by VLAN/SUBNET to show unique networks link to customer
 		$query = "SELECT dp.deviceportid, v.vlanid, v.vlan, v.subnet, v.mask, v.first, v.last, v.gateway, v.note, v.edituser, v.editdate, v.qauser, v.qadate
 			FROM
@@ -4731,9 +4730,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 							LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
 						WHERE d.hno=?) AS csr
-    			LEFT JOIN dcim_vlan AS v ON v.vlan=csr.vlan
-    			INNER JOIN dcim_portvlan AS pv ON pv.vlan=v.vlan
-    			INNER JOIN dcim_deviceport AS dp ON dp.deviceportid=pv.deviceportid
+				LEFT JOIN dcim_vlan AS v ON v.vlan=csr.vlan
+				INNER JOIN dcim_portvlan AS pv ON pv.vlan=v.vlan
+				INNER JOIN dcim_deviceport AS dp ON dp.deviceportid=pv.deviceportid
 			GROUP BY v.vlanid
 			ORDER BY v.vlan";
 		
@@ -4827,34 +4826,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//then looking up those port ids to get a list of all switch ports connected to or belonging to this customer 
 		$query = "SELECT d.deviceid, d.model, d.name, d.member, dp.deviceportid, dp.pic, dp.port, dp.type 
 			FROM(
-				SELECT dp.deviceportid AS portid FROM 
-                        dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                	WHERE d.hno=? AND d.type='S' AND dp.status='A'
-                UNION
-                SELECT pc.childportid AS portid FROM 
-                		dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                        INNER JOIN dcim_portconnection AS pc ON pc.parentportid=dp.deviceportid
-                	WHERE d.hno=? AND dp.status='A'
-                UNION
-                SELECT pc.parentportid AS portid FROM 
-                        dcim_device d
-                        LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
-                        INNER JOIN dcim_portconnection AS pc ON pc.childportid=dp.deviceportid
-                	WHERE d.hno=? AND dp.status='A'
-                ) AS csr
-            INNER JOIN dcim_deviceport AS dp ON csr.portid=dp.deviceportid
-            INNER JOIN dcim_device AS d ON d.deviceid=dp.deviceid
-            WHERE d.type='S' AND dp.status='A'
-            ORDER BY d.name, d.member, dp.pic, dp.port";
+				SELECT dp.deviceportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+					WHERE d.hno=? AND d.type='S' AND dp.status='A'
+				UNION
+				SELECT pc.childportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+						INNER JOIN dcim_portconnection AS pc ON pc.parentportid=dp.deviceportid
+					WHERE d.hno=? AND dp.status='A'
+				UNION
+				SELECT pc.parentportid AS portid
+					FROM dcim_device d
+						LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+						INNER JOIN dcim_portconnection AS pc ON pc.childportid=dp.deviceportid
+					WHERE d.hno=? AND dp.status='A'
+				) AS csr
+				INNER JOIN dcim_deviceport AS dp ON csr.portid=dp.deviceportid
+				INNER JOIN dcim_device AS d ON d.deviceid=dp.deviceid
+			WHERE d.type='S' AND dp.status='A'
+			ORDER BY d.name, d.member, dp.pic, dp.port";
 		
 		
 		$portOptions = "";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-		    //TODO handle this better - this runs further down the page - so the error is never seen 
+			//TODO handle this better - this runs further down the page - so the error is never seen 
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
@@ -5325,15 +5324,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListActiveCustomerDeviceConnections($hNo)
 	{
 		global $mysqli;
-
-		//simpler select but doesnt get the name of both devices... :( lame
-		//SELECT d.name,p.* FROM dcim_deviceport AS p, dcim_device AS d WHERE d.name LIKE '%29%' AND (d.deviceid=p.deviceid OR d.deviceid=p.condeviceid)
+		$formAction = "./?host=$hNo";
 		
-		// off join...  AND dp.status!='D'
-		
-        $formAction = "./?host=$hNo";
-        
-    	$query = "SELECT 
+		$query = "SELECT 
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
 				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
 				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, pc.patches, pc.relationship, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
@@ -5735,8 +5728,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$query1 = "UPDATE dcim_customer AS c
 						LEFT JOIN dcim_badge AS b ON c.hno=b.hno
 						LEFT JOIN dcim_device AS d ON  c.hno=d.hno
-						LEFT JOIN dcim_deviceport AS dp ON c.hno=dp.hno
-					SET b.hno=?, d.hno=?, dp.hno=?
+					SET b.hno=?, d.hno=?
 					WHERE c.hno=?";
 			$query2 = "UPDATE dcim_customer AS c
 					SET c.hno=?
@@ -5753,8 +5745,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-2b (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
-			{//                    nnno
-				$stmt1->bind_Param('iiii', $new,$new,$new,$old);
+			{//                    nno
+				$stmt1->bind_Param('iii', $new,$new,$old);
 				if (!$stmt1->execute())//execute
 				{
 					//failed (errorNo-error)
@@ -5789,7 +5781,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 			
-
+			
 			if($continueWithChange && $renameDevices)
 			{
 				//update device names to match
@@ -5797,12 +5789,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					SET d.name=REPLACE(d.name, '$old-', '$new-')
 					WHERE d.hno=?";
 				
-				if (!($stmt = $mysqli->prepare($query)))
+				if(!($stmt = $mysqli->prepare($query)))
 				{
 					$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-3 (" . $mysqli->errno . ") " . $mysqli->error;
 				}
 				else
-				{//                    n
+				{
 					$stmt->bind_Param('i', $new);
 					if (!$stmt->execute())//execute
 						//failed (errorNo-error)

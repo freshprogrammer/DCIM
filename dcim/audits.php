@@ -157,7 +157,7 @@
         global $mysqli;
 		
         $reportTitle = "VLAN Linked to Disabled Port";
-		$reportNote = "These are VLANs linked to ports marked diabled.";
+		$reportNote = "These are VLANs linked to ports marked disabled.";
         
         $query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
         		FROM dcim_portvlan AS pv
@@ -530,8 +530,8 @@
 		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
-				LEFT JOIN dcim_customer AS c ON dp.hno=c.hno
-			WHERE c.name IS NULL OR dp.hno!=d.hno
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			WHERE c.name IS NULL OR d.name IS NULL
 			ORDER BY d.name,d.member,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
