@@ -3303,19 +3303,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Size:</b>";
+			echo "<b>Unit:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo MakeHTMLSafe($size);
+			echo $unit;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Unit:</b>";
+			echo "<b>Size:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails'>\n";
-			echo $unit;
+			echo MakeHTMLSafe($size);
 			echo "</td>\n";
-			echo "</tr></table>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
 			
 			//asset serial and notes
 			echo "<table width=100%>\n";
@@ -3335,14 +3336,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			
-			$showDevice = true;
-			if($type=="C" || $deviceInfo->name=="WS-X6K-SUP2-2GE")
-			{//TODO This should be a field in the device class
-				$showDevice = false;
-			}
-			
-			if($showDevice)
+			//show device image with port overlays
+			if($deviceInfo->showDeviceImage)
 			{
 				//process port data for switchview
 				$startPort = $deviceInfo->startPort;
@@ -3514,7 +3509,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$marginRight = 2;
 				
 				//TODO quick hack for patch panels
-				if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom" || $deviceInfo->name=="Cage")
+				if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom")
 				{
 					$switchWidth = 950;
 					$switchHeight = 91;
@@ -3610,7 +3605,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo $bottomPortDivs;
 				echo "	</td></tr></table>\n";
 				echo "</div>\n";
-			}
+			}//show device
 		
 			if(UserHasWritePermission())
 			{	
@@ -5100,7 +5095,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//group concat by port to combine vlans
 		$query = "SELECT
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,l.colo,l.name,
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
@@ -5114,6 +5109,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 				LEFT JOIN dcim_customer AS sc ON sc.hno=s.hno
 				LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
+				LEFT JOIN dcim_location AS l ON s.locationid=l.locationid
+				LEFT JOIN dcim_site AS site ON l.siteid=site.siteid
 			WHERE $filter
 			GROUP BY dp.deviceportid
 			ORDER BY 3,4,6,7";
@@ -5130,7 +5127,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchColo,$switchLocationName, 
 						   $hNo, $type, $speed, $note, $status, $switchHNo, $switchCust, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 		$portCount = $stmt->num_rows;
 		
@@ -5206,12 +5203,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+				$switchLocationFullName = FormatLocation($switchSite,$switchColo,$switchLocationName);
 				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
 				if(strlen($switchFullName) > 0)
-					$switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a>)";
+					$switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a> - <a href='./?locationid=$switchLocationID'>$switchLocationFullName</a>)";
 				else
 					$switchDisplayName = "";
 				

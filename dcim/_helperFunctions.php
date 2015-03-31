@@ -35,8 +35,9 @@
 		public $partOfChasis = false;
 		public $doubleRow = false;
 		public $portsPerSet = 12;
+		public $showDeviceImage = false;
 		
-		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet) 
+		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage) 
 		{
 			$this->name = $name;
 			$this->startPort = $startPort; 
@@ -46,6 +47,7 @@
 			$this->partOfChasis = $partOfChasis; 
 			$this->doubleRow = $doubleRow; 
 			$this->portsPerSet = $portsPerSet; 
+			$this->showDeviceImage = $showDeviceImage; 
 		}
 
 		public function __toString()
@@ -61,19 +63,19 @@
 		//portStartNo,portCount, size, type, port spacing, brand
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Full Cab"		, 1,24, true,false,false,false, 6);//colo
-		$deviceModels[] = new DeviceModel("Half Cab-Top"	, 1,12, true,false,false,false, 6);
-		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6);
-		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6);
+		$deviceModels[] = new DeviceModel("Full Cab"		, 1,24, true,false,false,false, 6, true);//colo cabs and cages
+		$deviceModels[] = new DeviceModel("Half Cab-Top"	, 1,12, true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6,false);
 		
-		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true, true, true,12);//juniper
-		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true, true, true,12);
-		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12);
-		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12);
+		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true, true, true,12, true);//juniper
+		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true, true, true,12, true);
+		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12, true);
+		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12, true);
 		
-		$deviceModels[] = new DeviceModel("Catalyst 3550"	, 1,48,false,false,false, true,16);//leaf
-		$deviceModels[] = new DeviceModel("WS-X6348"		, 1,48,false,false, true, true,12);//DAS13
-		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1);//DAS13 supervisor
+		$deviceModels[] = new DeviceModel("Catalyst 3550"	, 1,48,false,false,false, true,16, true);//cisco
+		$deviceModels[] = new DeviceModel("WS-X6348"		, 1,48,false,false, true, true,12, true);
+		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1,false);
 	}
 	
 	function GetTableRecordDescription($table) 
