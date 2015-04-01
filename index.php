@@ -153,7 +153,6 @@
 
 			if(messagesVisible)
 			{
-				
 				document.getElementById("showMessagesButton").innerHTML = "Hide Messages";
 
 				if(document.getElementById("debugMessage")!=null)
@@ -228,12 +227,6 @@
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 		$menuItems .= "	<a href='./?host=-1'>Add Customer</a>\n";
 		$menuItems .= "</td>\n";
-	}
-	if(UserHasDevPermission())
-	{
-//		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-//		$menuItems .= "	<a href='./?vlanID='>Add VLAN</a>\n";
-//		$menuItems .= "</td>\n";
 	}
 	if(UserHasWritePermission())
 	{
