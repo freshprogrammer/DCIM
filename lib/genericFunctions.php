@@ -75,6 +75,9 @@
 		$result = str_replace(",","", $result);
 		$result = str_replace("'","", $result);
 		$result = str_replace("\"","", $result);
+		$result = str_replace("%","", $result);
+		$result = str_replace("(","", $result);
+		$result = str_replace(")","", $result);
 		$result = str_replace(" ","_", $result);
 		return $result.$uniqueIDNo;
 	}

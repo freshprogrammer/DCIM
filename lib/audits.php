@@ -52,6 +52,7 @@
 		Check_ColoPatch0();
 		Check_DevicesActiveUnderInactiveCustomer();
 		Check_VLANLinkedToDisabledPort();
+		Check_CircuitOverLoaded();
 		Check_CircuitInactiveWithLoad();
 		//Check_DeviceWithInvalidLocation();
 		//Check_SwitchIsMainDeviceOnDevicePortRecords();
@@ -126,7 +127,7 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>FormatPanelName($panel)</td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
 				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
@@ -137,6 +138,75 @@
 			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Circuits",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_CircuitOverLoaded($threshold=80)
+	{
+		global $mysqli;
+
+		$reportTitle = "Circuits past threshhold ($threshold%) utilization";
+		$reportNote = "";
+		
+		//could properly sort circuits, but meh
+		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, (p.cload/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
+			FROM dcim_power AS p 
+				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
+				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			WHERE (p.cload/p.amps*100) > $threshold
+			ORDER BY 1,2,3";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			echo "Prepare failed: Check_CircuitOverLoaded() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
+			return -1;
+		}
+				
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($site, $locationID, $colo, $locaiton, $panel, $circuit, $volts, $amps, $status, $cload, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$count = $stmt->num_rows;
+	
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load","Utilization","Customer"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+
+				$fullLocationName = FormatLocation($site, $colo, $location);
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
+				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
+				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
+				$longResult.= "<td class='data-table-cell'>$cload</td>\n";
+				$longResult.= "<td class='data-table-cell'>".substr($utilization,0,5)."%</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Circuits",2);
 		}
 		else
 		{
