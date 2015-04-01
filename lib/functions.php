@@ -127,7 +127,7 @@
 		<BR>
 		<?php
 
-		//echo "<a href='resetPassword.php'>Reset Password</a>";
+		//reset password link?
 		
 		echo "</div>\n";
 		echo "</div>\n";
@@ -2513,7 +2513,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if(UserHasLocationPermission() ||UserHasCircuitPermission())
 			{
-				echo "<script src='customerEditScripts.js'></script>\n";	
+				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
 			   
 			echo "<table width=100%><tr>\n";
@@ -2815,7 +2815,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//if not validdate old pas (admin changing someomen elses pass) then hide option and pass some crap as old pas to skip JS tests
 				?>
 					<BR>
-	<script src='customerEditScripts.js'></script>
+	<script src='lib/js/customerEditScripts.js'></script>
 	<div id='EditUserPasswordMsg' class='hidden'></div>
 	<div id='EditUserPasswordEntry' class=''><table><tr><td>
 	<form action="./?userid=<?php echo $input;?>" method='post' id='EditUserPasswordForm' onsubmit='return SavePassword()' class=''>
@@ -2982,7 +2982,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//hNo is propper H# or -1 for add cust (or failed direct search)
 			if(UserHasWritePermission())
 			{
-				echo "<script src='customerEditScripts.js'></script>\n";	
+				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
 			
 			if(!$addCust)
@@ -3210,7 +3210,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//hNo is propper H# or -1 for add cust (or failed direct search)
 			if(UserHasWritePermission())
 			{
-				echo "<script src='customerEditScripts.js'></script>\n";	
+				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
 				
 			$stmt->fetch();
@@ -3499,7 +3499,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//dynamic
 				$switchWidth = 948;
 				$switchHeight = 97;
-				$switchImage = "../images/ex4200_front.jpg";
+				$switchImage = "images/devices/ex4200_front.jpg";
 				$topOffset = 25;
 				$bottomOffset = 30;
 				$set1Offset = 18;
@@ -3513,7 +3513,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					$switchWidth = 950;
 					$switchHeight = 91;
-					$switchImage = "../images/patchpanel.jpg";
+					$switchImage = "images/devices/patchpanel.jpg";
 					$topOffset = 0;
 					$bottomOffset = 38;
 					$set1Offset = 60;
@@ -3530,11 +3530,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
 				{
-					$switchImage = "../images/ex4200_24p_front.jpg";
+					$switchImage = "images/devices/ex4200_24p_front.jpg";
 				}
 				else if($deviceInfo->name=="WS-X6348")
 				{
-					$switchImage = "../images/ws-x6348_front.jpg";
+					$switchImage = "images/devices/ws-x6348_front.jpg";
 					$switchWidth = 950;
 					$switchHeight = 105;
 					$topOffset = 25;
@@ -3547,7 +3547,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else if($deviceInfo->name=="Catalyst 3550")
 				{
-					$switchImage = "../images/catalyst2950_front.jpg";
+					$switchImage = "images/devices/catalyst2950_front.jpg";
 					$switchWidth = 950;
 					$switchHeight = 89;
 					$topOffset = 19;
@@ -3647,7 +3647,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		if(UserHasWritePermission())
 		{
-			echo "<script src='customerEditScripts.js'></script>\n";	
+			echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 		}
 		
 		echo "<div class='panel'>\n";
@@ -5493,7 +5493,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 		$pageSubTitle = "Power Audit - Site#$pa_siteid Room:$pa_room Panel:$pa_panel";
 
-		echo "<script src='customerEditScripts.js'></script>\n";
+		echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
 		echo "Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";

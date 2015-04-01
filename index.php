@@ -1,10 +1,10 @@
 <?php 
-	set_include_path('../'); 
+	set_include_path('lib/'); 
 	
-	include 'dcim/_dcimConfig.php';
-	include 'dcim/_genericFunctions.php';
-	include 'dcim/_helperFunctions.php';
-	include 'dcim/_functions.php';
+	include 'config.php';
+	include 'genericFunctions.php';
+	include 'helperFunctions.php';
+	include 'functions.php';
 	
 	SessionSetup();
 	SQLIConnect();
@@ -94,10 +94,10 @@
 ?>
 <head>
 
-<script src="genericScripts.js"></script>
+<script src="lib/js/genericScripts.js"></script>
 <title><?php echo $pageTitle;?></title>
-<link rel="icon" type="image/x-icon" href="../images/favicon.ico">
-<link rel="stylesheet" href="dcimStyles.css">
+<link rel="icon" type="image/x-icon" href="images/favicon.ico">
+<link rel="stylesheet" href="lib/css/default.css">
 
 <?php 
 	
@@ -153,7 +153,6 @@
 
 			if(messagesVisible)
 			{
-				
 				document.getElementById("showMessagesButton").innerHTML = "Hide Messages";
 
 				if(document.getElementById("debugMessage")!=null)
@@ -184,7 +183,7 @@
 	<div id="header-bg">
 	<table align=center border="0" class='pageMinWidth center'><tbody><tr>
 			<td width="1">
-				<a href="./"><img src="../images/logo.png" border="0"></a>
+				<a href="./"><img src="images/logo.png" border="0"></a>
 			</td>
 			<td valign="middle">
 				<div id="appname"><h1><?php echo $siteName;?></h1><?php echo $versionNote;?></div>
@@ -195,7 +194,7 @@
 		//login button
 		?>
 		  <td width="1" valign="middle">
-			<a href="./"><img src="../images/login.png" border=0 /></a>
+			<a href="./"><img src="images/login.png" border=0 /></a>
 		  </td><?php
 	}
 	else 
@@ -204,7 +203,7 @@
 		?>
 		<td width="1" valign="middle" align=right><h2>Welcome, <?php echo $user; ?>!</h2></td>
 		<td width="1" valign="middle">
-			<a style="padding-left: 18px;" href="?loginbtn=N"><img src="../images/logout.png" border=0 /></a>
+			<a style="padding-left: 18px;" href="?loginbtn=N"><img src="images/logout.png" border=0 /></a>
 		</td><?php
 	}
 		?>
@@ -220,7 +219,7 @@
 	$menuItems = "";//consolidate to single echo call to prevent menu flicker on page load - no effect =/
 	//MENU Items
 	$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-	$menuItems .= "	<a href='./'>Home</a>\n";
+	$menuItems .= "	<a href='.'>Home</a>\n";
 	$menuItems .= "</td>\n";
 				
 	if(UserHasWritePermission())
@@ -229,16 +228,10 @@
 		$menuItems .= "	<a href='./?host=-1'>Add Customer</a>\n";
 		$menuItems .= "</td>\n";
 	}
-	if(UserHasDevPermission())
-	{
-//		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-//		$menuItems .= "	<a href='./?vlanID='>Add VLAN</a>\n";
-//		$menuItems .= "</td>\n";
-	}
 	if(UserHasWritePermission())
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-		$menuItems .= "	<a href='./audits.php'>Audits</a>\n";
+		$menuItems .= "	<a href='./?page=Audits'>Audits</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(UserHasWritePermission())
@@ -454,10 +447,6 @@
 		{
 			ShowUsersPage($userIDInput);
 		}
-		else if(isset($dbChecksPage) && $dbChecksPage)
-		{
-			BuildAuditsPage();
-		}
 		else if(strlen($page) > 0)
 		{
 			if($page==="PowerAudit")
@@ -470,6 +459,11 @@
 				{
 					PowerAuditPanelList();
 				}
+			}
+			else if($page==="Audits")
+			{
+				include 'audits.php';
+				BuildAuditsPage();
 			}
 		}
 		else

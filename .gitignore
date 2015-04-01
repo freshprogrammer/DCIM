@@ -2,5 +2,5 @@
 *.sql
 *.xcf
 *Thumbs.db
-dcim/_dcimConfig.php
+lib/config.php
 notes/*

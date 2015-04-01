@@ -1,11 +1,9 @@
 <?php 
-	set_include_path('../'); 
-
-	include 'dcim/_dcimConfig.php';
-	include 'dcim/_genericFunctions.php';
-	include 'dcim/_helperFunctions.php';
-	include 'dcim/_functions.php';
-
+	include 'config.php';
+	include 'genericFunctions.php';
+	include 'helperFunctions.php';
+	include 'functions.php';
+	
 	SQLIConnect();
 	?>
 <head><title>Test DCIM</title></head>
@@ -21,7 +19,7 @@ VLAN:<input id=input1 type=text onchange="ValidateVlan"><BR>
 <script type="text/javascript" language="JavaScript">
 function ValidateVlan()
 {
-	var page = "ajax_devicePortSelect.php";
+	var page = "js/ajax_devicePortSelect.php";
 	var data = 'deviceid='+document.getElementById(deviceSelect).value +
 	'&selectedportid='+selectedPortID;
 	var dest = portSelect;
@@ -37,7 +35,8 @@ function ValidateVlan()
 
  //test php
 global $errorMessage;
- 
+
+echo "START<BR>";
 echo DescribeDBInMarkDown();
 echo "<BR>";
 echo "Errors:<BR>\n".implode("<BR>\n",$errorMessage);;

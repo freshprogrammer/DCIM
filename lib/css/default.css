@@ -404,13 +404,13 @@ h2 {
 	background-color:rgba(0, 0, 255, 0.5);
 }
 .switchPortActive:after {
-	background: url('../images/port_active_overlay.png'); 
+	background: url('../../images/port_active_overlay.png'); 
 }
 .switchPortBad:after {
-	background: url('../images/port_bad_overlay.png');
+	background: url('../../images/port_bad_overlay.png');
 }
 .switchPortReserved:after {
-	background: url('../images/port_reserved_overlay.png');
+	background: url('../../images/port_reserved_overlay.png');
 }
 .switchPortEmpty:after {
 	/*background-color:yellow; */
