@@ -1,12 +1,5 @@
 <?php 
 	//This is just a set of functions used for gathering and displaying audits. 
-	
-	set_include_path('../'); 
-
-	$dbChecksPage = true;
-	
-	include 'dcim/index.php';
-
 	/*
 		::need to add::
 		Multiple Devices connencted to a single device port
@@ -33,9 +26,9 @@
 		echo "<div class=\"panel-header\">Audit Functions</div>\n";
 		echo "<div class=\"panel-body\">\n";
 
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>&nbsp;&nbsp;";
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
 		
 		if(UserHasDevPermission())
 		{
