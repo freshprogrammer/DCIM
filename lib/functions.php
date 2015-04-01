@@ -3499,7 +3499,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//dynamic
 				$switchWidth = 948;
 				$switchHeight = 97;
-				$switchImage = "images/ex4200_front.jpg";
+				$switchImage = "images/devices/ex4200_front.jpg";
 				$topOffset = 25;
 				$bottomOffset = 30;
 				$set1Offset = 18;
@@ -3513,7 +3513,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					$switchWidth = 950;
 					$switchHeight = 91;
-					$switchImage = "images/patchpanel.jpg";
+					$switchImage = "images/devices/patchpanel.jpg";
 					$topOffset = 0;
 					$bottomOffset = 38;
 					$set1Offset = 60;
@@ -3530,11 +3530,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
 				{
-					$switchImage = "images/ex4200_24p_front.jpg";
+					$switchImage = "images/devices/ex4200_24p_front.jpg";
 				}
 				else if($deviceInfo->name=="WS-X6348")
 				{
-					$switchImage = "images/ws-x6348_front.jpg";
+					$switchImage = "images/devices/ws-x6348_front.jpg";
 					$switchWidth = 950;
 					$switchHeight = 105;
 					$topOffset = 25;
@@ -3547,7 +3547,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else if($deviceInfo->name=="Catalyst 3550")
 				{
-					$switchImage = "images/catalyst2950_front.jpg";
+					$switchImage = "images/devices/catalyst2950_front.jpg";
 					$switchWidth = 950;
 					$switchHeight = 89;
 					$topOffset = 19;
