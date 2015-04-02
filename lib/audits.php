@@ -129,9 +129,9 @@
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
-				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
-				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
-				$longResult.= "<td class='data-table-cell'>$cload</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($cload)."A</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -194,13 +194,13 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
-				$longResult.= "<td class='data-table-cell'>$volts</td>\n";
-				$longResult.= "<td class='data-table-cell'>$amps</td>\n";
-				$longResult.= "<td class='data-table-cell'>$cload</td>\n";
-				$longResult.= "<td class='data-table-cell'>".substr($utilization,0,5)."%</td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($cload)."A</td>\n";
+				$longResult.= "<td class='data-table-cell'><font color=red>".substr($utilization,0,5)."%</font></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
