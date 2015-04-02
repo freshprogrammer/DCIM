@@ -172,7 +172,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $locaiton, $panel, $circuit, $volts, $amps, $status, $cload, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$stmt->bind_result($site, $locationID, $colo, $location, $panel, $circuit, $volts, $amps, $status, $cload, $utilization, $deviceID, $deviceName, $hNo, $customer);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
