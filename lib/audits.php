@@ -70,7 +70,8 @@
 			$output = "";
 			$recCount = CountDBRecords($output);
 			CreateReport("Database Record Counts","$recCount records",$output,"");
-			
+
+			$output = "";
 			$lineCount = CountLinesInDir($output);
 			CreateReport("Lines of Code","$lineCount lines",$output,"");
 			

@@ -158,31 +158,63 @@
 		if (file_exists($file))
 		{
 			$handle = fopen($file, "r");
-			while(!feof($handle)){
-			  $line = fgets($handle);
-			  $linecount++;
+			if($handle!==false)
+			{
+				while(!feof($handle))
+				{
+					$line = fgets($handle);
+					$linecount++;
+				}
 			}
 			
 			fclose($handle);
 		}
 		else
-			return "N/A-$file";
+			return "N/A-'$file'";
 			
 		return $linecount;
 	}
 	
-	function CountLinesInDir(&$verboseResult = "")
+	function CountLinesInDir(&$verboseResult = "", $srcDir="./")
 	{
-		$verboseResult = "";
-		$dir = scandir('.'); 
+		$debug = false;
+		$dir = scandir($srcDir); 
 		$totalLines = 0;
 		foreach ($dir as $file) 
 		{
-			if (!(strpos($file,'.sql') !== false)) 
+			$file = $srcDir.$file;
+			//echo "CountLinesInDir('$srcDir') - stepping - '$file'<BR>";
+			if (substr($file, -4)==".git")
 			{
-				$count = CountLinesInFile($file);
-				$totalLines += $count;
-				$verboseResult .= "file:$file - $count lines - total=$totalLines<BR>";
+				if($debug)echo "CountLinesInDir('$srcDir') - skippedE1 - '$file'<BR>";
+				continue;
+			}
+			if (substr($file, -1)==".")//end in '.'
+			{
+				if($debug)echo "CountLinesInDir('$srcDir') - skippedE2 - '$file'<BR>";
+				continue;
+			}
+			if (is_dir($file))//recursive
+			{
+				if($debug)echo "CountLinesInDir('$srcDir') - counting folder - '$file'<BR>";
+				$totalLines += CountLinesInDir($verboseResult,$file."/");
+			}
+			else
+			{
+				$count = false;
+				if (substr($file, -4)==".php") $count = true;
+				else if (substr($file, -4)==".css") $count = true;
+				else if (substr($file, -4)==".txt") $count = true;
+				else if (substr($file, -3)==".md") $count = true;
+				else if (substr($file, -3)==".js") $count = true;
+				else if (substr($file, -7)==".sample") $count = true;
+				
+				if($count)
+				{
+					$count = CountLinesInFile($file);
+					$totalLines += $count;
+					$verboseResult .= "file:$file - $count lines - total=$totalLines<BR>";
+				}
 			}
 		}
 		return $totalLines;
