@@ -203,6 +203,7 @@
 		$visibleCSSClass = "auditDataTable";
 		
 		$reportID = MakeTextIntoUniqueJSVariableName($title);
+		$reportDivID = $reportID;
 		$reportResultLongID = $reportID."_resultLong";
 		$reportResultShortID = $reportID."_resultShort";
 		$reportHideFunctionName = $reportID."_table_toggle";
@@ -213,10 +214,10 @@
 		
 		$result = "";
 
-		$result .= "<div class='auditReport'>\n";
+		$result .= "<div class='auditReport' id='$reportDivID'>\n";
 		$result .= "<span class='tableTitle'>$title</span>\n";
 		if($enableSwitcher)
-			$result .= " <a id='$reportToggleLink' href='#' onclick='$reportHideFunctionName();'>Toggle</a>\n";
+			$result .= " <a id='$reportToggleLink' href='#$reportDivID' onclick='$reportHideFunctionName();'>Toggle</a>\n";
 		$result .= "<BR>\n";
 		
 		if(strlen($note)>0)
