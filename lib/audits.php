@@ -181,7 +181,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load","Utilization","Customer"));
+			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization"));
 			
 			//list result data
 			$oddRow = false;
