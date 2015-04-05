@@ -35,6 +35,8 @@ function ValidateVlan()
 
  //test php
 global $errorMessage;
+$errorMessage = array();
+
 
 echo "START<BR>";
 echo DescribeDBInMarkDown();
