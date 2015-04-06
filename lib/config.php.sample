@@ -1,9 +1,15 @@
 <?php 
-	//configuration data
+	//--configuration data
+	//Name of this web site - show at top of page near logo
 	$siteName = "DCIM Name";
+	//Prefix appended to the title of each page
 	$pageTitle = "DCIM Title";
+	//note shown under the site name
 	$versionNote = "note";
+	//durration of user and password cookies - extended on each page refresh
 	$loginCookieDurration = 8*60*60;//8 hours
+	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbSetup.php
+	$demoSiteEnabled = false;
 
 	//DB connect
 	$db_host = "localhost";
