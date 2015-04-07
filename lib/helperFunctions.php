@@ -409,6 +409,11 @@
 		return "UPS-$panel";//this is mainly just to keep this out of the main code if this is ever not "UPS-"
 	}
 	
+	function Format208CircuitNumber($circuit)
+	{
+		return $circuit."/".((int)$circuit+2);
+	}
+	
 	function TestForSingleCustomerMatch($input)
 	{
 		global $mysqli;
