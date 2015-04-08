@@ -295,7 +295,7 @@
 				$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
-				$stmt->bind_Param('isi', $writeLoad, $writeStatus, $writePowerID);
+				$stmt->bind_Param('dsi', $writeLoad, $writeStatus, $writePowerID);
 
 				$goodCount = 0;
 				$badCount = 0;
