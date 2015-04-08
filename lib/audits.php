@@ -628,7 +628,7 @@
 	
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>$deviceportid</td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID." - Ref:".$deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe("#$deviceID - Ref:$deviceFullName")."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($portFullName)."</td>\n";
 				$longResult.= "</tr>\n";
