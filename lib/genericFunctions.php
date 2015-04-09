@@ -180,6 +180,7 @@
 		$debug = false;
 		$dir = scandir($srcDir); 
 		$totalLines = 0;
+		if($debug)echo "CountLinesInDir('$srcDir') - START<BR>";
 		foreach ($dir as $file) 
 		{
 			$file = $srcDir.$file;
@@ -192,6 +193,11 @@
 			if (substr($file, -1)==".")//end in '.'
 			{
 				if($debug)echo "CountLinesInDir('$srcDir') - skippedE2 - '$file'<BR>";
+				continue;
+			}
+			if (substr($file, -10)=="phpmyadmin")//end in 'phpmyadmin'
+			{
+				if($debug)echo "CountLinesInDir('$srcDir') - skippedE3 - '$file'<BR>";
 				continue;
 			}
 			if (is_dir($file))//recursive
@@ -217,6 +223,7 @@
 				}
 			}
 		}
+		$verboseResult .= "Grand total in '$srcDir':$totalLines<BR>";
 		return $totalLines;
 	}
 

@@ -1,5 +1,6 @@
 <?php 
 //these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
+//some of this is also a type of documentation of DB values like LocationType() or DeviceType(), ect
 
 	function SQLIConnect()
 	{
@@ -60,7 +61,15 @@
 	{
 		global $deviceModels;
 		
-		//portStartNo,portCount, size, type, port spacing, brand
+		/*
+		 * This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
+		 * I supose this could be a modelid in dcim_device and and dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
+		 * If this ever gets so lots of new models are being added that might be a consideration, but until then this works just fine.
+		 *  - That would probabyl require a UI way to add/edit device models including their images, offsets, colors, port counts, ect.-UGH
+		 * 
+		 * future field ideas
+		 * size(U), type, port spacing, brand 
+		 */
 		$deviceModels = array();
 		
 		$deviceModels[] = new DeviceModel("Full Cab"		, 1,24, true,false,false,false, 6, true);//colo cabs and cages
