@@ -295,7 +295,7 @@
 				$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
-				$stmt->bind_Param('isi', $writeLoad, $writeStatus, $writePowerID);
+				$stmt->bind_Param('dsi', $writeLoad, $writeStatus, $writePowerID);
 
 				$goodCount = 0;
 				$badCount = 0;
@@ -4580,7 +4580,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				$visibleCircuit = $circuit;
 				if($volts==208)
-					$visibleCircuit = (int)$circuit ."/".(2+(int)$circuit);
+					$visibleCircuit = Format208CircuitNumber($circuit);
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -5522,8 +5522,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$tableCircuitNo++;
 				$left = ($tableCircuitNo%2)!=0;
 				
-				if(!$left)//only flip color for right cell
-					$oddColor = !$oddColor;
+				//this will make 0&1 odd color and 2&3 not for every set of 4
+				$oddColor = $tableCircuitNo%4<=1;
+				
 				if($oddColor) $cellClass = "powerAuditCellOne";
 				else $cellClass = "powerAuditCellTwo";
 				
@@ -5550,47 +5551,47 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($hasData)
 				{
-					echo "<td class='$cellClass'>\n";
-					echo "<table width=100%><tr>\n";
-					echo "<td><b>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($circuit)."</b></td>\n";
-					echo "<td align=right>".MakeHTMLSafe($cust)."</td>\n";
-					echo "</tr></table><table width=100%><tr>\n";
-					//echo "$fullLocationName ($percentLoad%) ";
-					echo "<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
-					echo "<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
-					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
-					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
-					$checked = ($status==="A") ? " checked" : "";
-					echo "<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
-					echo "<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
-					echo "</td></tr></table>\n";
-				
+					$rowSpan="";
+					$displayCircuit = $circuit;
 					if($volts==208)//208 volt circuits take up double
 					{
 						if($left)
 							$prevWas208Left = true;
 						else
 							$prevWas208Right = true;
+						$cellClass .= " powerAuditCellDouble";
+						$rowSpan = " rowspan=2";
+						$displayCircuit = Format208CircuitNumber($circuit);
 					}
+					
+					echo "<td $rowSpan class='$cellClass'>\n";
+					echo "	<table width=100%><tr>\n";
+					echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
+					echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
+					echo "	</tr></table><table width=100%><tr>\n";
+					//echo "	$fullLocationName ($percentLoad%) ";
+					echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
+					echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
+					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
+					$checked = ($status==="A") ? " checked" : "";
+					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
+					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
+					echo "	</td></tr>\n";
+					echo "	</table>\n";
+					
+					echo "</td>\n";
 				}
 				else 
 				{
-					echo "<td class='$cellClass powerAuditCellEmpty'>\n";
 					if($left && $prevWas208Left)
-					{
 						$prevWas208Left = false;
-						echo "208 Above";
-					}
 					else if(!$left && $prevWas208Right)
-					{
 						$prevWas208Right = false;
-						echo "208 Above";
-					}
 					else
-						echo MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY";
+						echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
 				}
-				echo "</td>\n";
 				
 				if(!$left)
 				{//end row
