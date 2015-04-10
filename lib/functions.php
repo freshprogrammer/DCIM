@@ -4573,10 +4573,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$percentLoad = round(100*$cLoad/$amps,2);
 					
 					if($percentLoad>80)
-						$percentLoad = "<font color=red>$percentLoad%</font>";
+						$percentLoad = " (<font color=red>$percentLoad%</font>)";
+					else if($cLoad==0)
+						$percentLoad = "";
+					else
+						$percentLoad = " ($percentLoad%)";
 				}
 				else
-					$percentLoad = "?";
+					$percentLoad = "";
 					
 				$visibleCircuit = $circuit;
 				if($volts==208)
@@ -4589,7 +4593,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A ($percentLoad)</td>";
+				echo "<td class='data-table-cell'>".$cLoad."A$percentLoad</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				if(UserHasCircuitPermission())
 				{
