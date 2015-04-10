@@ -17,19 +17,22 @@
 	SQLIConnect();
 	
 	//globals
-	$SCRIPTID_BUILD_DATABASE = 0;
-	$SCRIPTID_CREATE_DEMO_DATA = 1;
-	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 2;
+	$SCRIPTID_BUILD_DATABASE = 1;
+	$SCRIPTID_CREATE_DEMO_DATA = 2;
+	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
 	$SCRIPTID_DB_UPDATE_1 = 11;
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
+	$date = new DateTime();
+	$timeStamp = $date->format('Y-m-d H:i:s');
 	
-	$resultMessage[] = "<b>Results</b>";
+	$resultMessage[] = "<b>Results - $timeStamp</b>";
 	$errorMessage[] = "<b>Errors</b>";
-	$debugMessage[] = "<b>Debug</b>";
+	$debugMessage[] = "<b>Debug Messages - $timeStamp</b>";
 	
-	$dbScriptID = $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
+	//$dbScriptID = $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
+	$dbScriptID = (int)GetInput("scriptid",true,false);
 	
 	// End Definitions - Start Processing ---------------------------------------------------------------------------------------------
 	
@@ -68,14 +71,19 @@
 		else if(!$commited)
 			$errorMessage[]="User not commited. Aborted.";
 	}
+	
+	//simple validation form
 
+	echo "<form action='' method='post'>
+	ScriptID to run:<input type='number' name='scriptid'></form>";
+	
+	
 	$debugMessageString  = implode("<BR>\n",$debugMessage);
 	$errorMessageString  = implode("<BR>\n",$errorMessage);
 	$resultMessageString = implode("<BR>\n",$resultMessage);
 	if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
 	if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
 	if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
-	
 	
 	
 	//END PAGE - Begin local Functions - All actual processing functions are in the refferenced file
@@ -114,6 +122,8 @@
 		$debugMessage[]= "TestUserCommitment($dbScriptID)-Start";
 
 		//TODO create the core of this function
+		//$validationCode = (int)GetInput("code");
+		// == date('j');//day of the month
 		return true;
 	}
 	
@@ -133,17 +143,24 @@
 		switch($dbScriptID)
 		{
 			case $SCRIPTID_BUILD_DATABASE:
+				echo "Processing..";
 				BuildDB();
 				break;
 			case $SCRIPTID_CREATE_DEMO_DATA:
+				echo "Processing..";
 				RestoreDBWithDemoData();
 				break;
 			case $SCRIPTID_BUILD_DB_WITH_DEMO_DATA:
+				echo "Processing..";
 				BuildDB();
 				RestoreDBWithDemoData();
 				break;
 			case $SCRIPTID_DB_UPDATE_1:
+				echo "Processing..";
 				RunDBUpdate1();
+				break;
+			default:
+				$errorMessage[]= "RunScript($dbScriptID)-Invalid script ID";
 				break;
 		}
 	}

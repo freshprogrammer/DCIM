@@ -106,13 +106,13 @@
 		return $insertSQL;
 	}
 	
-	function GetInput($name)
+	function GetInput($name, $checkPost=true, $checkGet=true)
 	{
-		if(isset($_POST[$name]))
+		if($checkPost && isset($_POST[$name]))
 		{
 			$input = $_POST[$name];
 		}
-		else if(isset($_GET[$name]))
+		else if($checkGet && isset($_GET[$name]))
 		{
 			$input = $_GET[$name];
 		}
@@ -336,5 +336,37 @@
 		}
 		fclose($output);
 	}
-
+	
+	function SQLFileToCmdArray($fileName)
+	{
+		//kept very simple for a purpose
+		//scan file deleting all blank lines or lines that start with "--" or "/*"
+		$result = array();
+		
+		if (file_exists($fileName))
+		{
+			$handle = fopen($fileName, "r");
+			if($handle!==false)
+			{
+				$cmd = "";
+				while(!feof($handle))
+				{
+					$line = fgets($handle);
+					if(substr($line,0,2)=="--")
+						continue;
+					if(substr($line,0,2)=="/*")
+						continue;
+					$cmd = trim($cmd." ".$line);
+					if(substr($cmd,-1)==";")
+					{
+						$cmd = substr($cmd, 0, -1);//trim semicolon
+						$result[]=$cmd;
+						$cmd = "";
+					}
+				}
+			}	
+			fclose($handle);
+		}
+		return $result;
+	}
 ?>

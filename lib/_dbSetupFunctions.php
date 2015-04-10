@@ -1,4 +1,32 @@
 <?php
+/*
+ * There are 23 tables (11*2 + users)
+ * dcim_badge
+ * dcim_customer
+ * dcim_device
+ * dcim_deviceport
+ * dcim_location
+ * dcim_portconnection
+ * dcim_portvlan
+ * dcim_power
+ * dcim_powerloc
+ * dcim_site
+ * dcim_vlan
+ * 
+ * dcim_user
+ * 
+ * dcimlog_badge
+ * dcimlog_customer
+ * dcimlog_device
+ * dcimlog_deviceport
+ * dcimlog_location
+ * dcimlog_portconnection
+ * dcimlog_portvlan
+ * dcimlog_power
+ * dcimlog_powerloc
+ * dcimlog_site
+ * dcimlog_vlan
+ */
 	function BuildDB()
 	{
 		/* This will create the DB to current DB specs found in the documentation folder
@@ -6,10 +34,11 @@
 		global $resultMessage;
 		global $errorMessage;
 		global $debugMessage;
-
+		
 		$debugMessage[]= "BuildDB()-Start";
 		
-
+		ExecuteThisFile("B","../restoredata/structure.sql");
+		
 		$resultMessage[]= "BuildDB()-Sucsessfully created database structure";
 	}
 	
@@ -20,9 +49,25 @@
 		global $resultMessage;
 		global $errorMessage;
 		global $debugMessage;
-
+		
 		$debugMessage[]= "RestoreDBWithDemoData()-Start";
 
+		ExecuteThis("D1","TRUNCATE TABLE dcim_badge");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_customer");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_device");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_deviceport");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_location");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_portconnection");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_portvlan");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_power");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_powerloc");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_vlan");
+		ExecuteThis("D1","TRUNCATE TABLE dcim_user");
+		
+		ExecuteThisFile("D2","../restoredata/demoData.sql");
+		
+		WipeAndReCreateAllLogs();
+		
 		$resultMessage[]= "BuildDB()-Sucsessfully populated database with demo data";
 	}
 	
@@ -37,14 +82,55 @@
 		global $resultMessage;
 		global $errorMessage;
 		global $debugMessage;
-
+		
 		$debugMessage[]= "RunDBUpdate1()-Start";
 		
 		//SELECT siteid, CONCAT("CA",CAST(colo AS UNSIGNED)) AS roomname, colo, COUNT(*) AS count FROM dcimlog_location GROUP BY colo
 		
 		//ALTER TABLE `dcim_deviceport` DROP `hno`;
-
+		
 		$resultMessage[]= "BuildDB()-Sucsessfully updated database.";
+	}
+	
+	function WipeAndReCreateAllLogs()
+	{
+		global $resultMessage;
+		global $errorMessage;
+		global $debugMessage;
+		
+		$debugMessage[]= "WipeAndReCreateAllLogs()-Start";
+		//wipe all log records
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_badge");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_customer");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_device");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_deviceport");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_location");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_portconnection");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_portvlan");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_power");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_powerloc");
+		ExecuteThis("L1","TRUNCATE TABLE dcimlog_vlan");
+		//create insert log records for all data
+		ExecuteThis("L2","INSERT INTO dcimlog_badge			SELECT NULL,'I' AS logtype,a.* FROM dcim_badge			AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_customer		SELECT NULL,'I' AS logtype,a.* FROM dcim_customer		AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_device			SELECT NULL,'I' AS logtype,a.* FROM dcim_device			AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_deviceport		SELECT NULL,'I' AS logtype,a.* FROM dcim_deviceport		AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_location		SELECT NULL,'I' AS logtype,a.* FROM dcim_location		AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_portconnection	SELECT NULL,'I' AS logtype,a.* FROM dcim_portconnection	AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_portvlan		SELECT NULL,'I' AS logtype,a.* FROM dcim_portvlan		AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_power			SELECT NULL,'I' AS logtype,a.* FROM dcim_power			AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_powerloc		SELECT NULL,'I' AS logtype,a.* FROM dcim_powerloc		AS a WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_vlan			SELECT NULL,'I' AS logtype,a.* FROM dcim_vlan			AS a WHERE 1=1");
+		$resultMessage[]= "WipeAndReCreateAllLogs()-Sucsessfully re-created all log records.";
+	}
+	
+	function ExecuteThisFile($debugTag,$fileName, $reportSucsess=false)
+	{
+		$cmds = SQLFileToCmdArray($fileName);
+		foreach ($cmds as $cmd)
+		{
+			ExecuteThis($debugTag,$cmd,$reportSucsess);
+		}
 	}
 	
 	function ExecuteThis($debugTag,$query, $reportSucsess=false)
@@ -53,7 +139,7 @@
 		global $resultMessage;
 		global $errorMessage;
 		global $debugMessage;
-	
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = "ExecuteThis()-Prepare failed:($debugTag,$query) (" . $mysqli->errno . ") " . $mysqli->error;
@@ -122,7 +208,7 @@
 		$companyNameNouns[]="Bubbles       ";
 		$companyNameNouns[]="Portals       ";
 		$companyNameNouns[]="Friends       ";
-	
+		
 		$adjetives = array();
 		$adjetives[]="Mega           ";
 		$adjetives[]="Red            ";
@@ -247,7 +333,7 @@
 		$firstNames[]="Helen      ";
 		$firstNames[]="Leo        ";
 		$firstNames[]="Lenard     ";
-	
+		
 		$lastNames = array();
 		$lastNames[]="Smith      ";
 		$lastNames[]="Jones      ";
@@ -301,7 +387,7 @@
 		$lastNames[]="Warren     ";
 		$lastNames[]="Kenedy     ";
 		$lastNames[]="Hitler     ";
-	
+		
 		return trim($firstNames[array_rand($firstNames)]) . " " . trim($lastNames[array_rand($lastNames)]);
 	}
 ?>
