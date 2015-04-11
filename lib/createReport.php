@@ -82,7 +82,7 @@
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE l.siteid=$siteID
 			GROUP BY s.siteid,l.colo,l.name,p.panel,p.circuit
-			ORDER BY l.colo,l.name,p.panel,CAST(p.circuit AS UNSIGNED)";
+			ORDER BY l.colo,l.name,p.panel,p.circuit";
 
 		if (!($stmt = $mysqli->prepare($query)))
 		{
