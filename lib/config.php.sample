@@ -8,6 +8,7 @@
 	$versionNote = "note";
 	//durration of user and password cookies - extended on each page refresh
 	$loginCookieDurration = 8*60*60;//8 hours
+	$loginCookieDurrationOniPad = 2*60*60;//2 hours
 	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbSetup.php
 	$demoSiteEnabled = false;
 
