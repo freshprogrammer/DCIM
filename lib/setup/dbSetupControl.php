@@ -1,20 +1,16 @@
-<head>
-<title>DCIM DB Update</title>
-<link rel="icon" type="image/x-icon" href="../images/favicon.ico">
-<link rel="stylesheet" href="css/default.css">
-</head>
 <?php 
 	//See RunScript() to see actual patch notes and other details
 	
-	//set_include_path('.'); 
+	set_include_path('../'); 
 	
 	include 'config.php';
 	include 'genericFunctions.php';
 	include 'helperFunctions.php';
 	include 'functions.php';
-	include '_dbSetupFunctions.php';
+	include 'setup/dbSetupFunctions.php';
 	
 	SQLIConnect();
+	SessionSetup();
 	
 	//globals
 	$SCRIPTID_BUILD_DATABASE = 1;
@@ -27,9 +23,34 @@
 	$date = new DateTime();
 	$timeStamp = $date->format('Y-m-d H:i:s');
 	
-	$resultMessage[] = "<b>Results - $timeStamp</b>";
-	$errorMessage[] = "<b>Errors</b>";
-	$debugMessage[] = "<b>Debug Messages - $timeStamp</b>";
+?>
+<head>
+<title>DCIM DB update control</title>
+<link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
+<link rel="stylesheet" href="../css/default.css">
+</head>
+<font size=5><b>DCIM Database update control</b></font><BR>
+<?php
+	
+	//simple action selection form
+	echo "<form action='' method='post'>
+	Script to run:
+	<select name='scriptid'>
+		<option value='0'									>No Action</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
+		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
+		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_DB_UPDATE_1'				>Update database with latest update</option>
+	</select>
+	<input type='submit' value='Run'>
+	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
+</form>";
+	
+	$resultMessage[] = "Results - $timeStamp";
+	$errorMessage[] = "Errors";
+	$debugMessage[] = "Debug Messages - $timeStamp";
 	
 	//$dbScriptID = $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 	$dbScriptID = (int)GetInput("scriptid",true,false);
@@ -39,31 +60,42 @@
 	$validAction = false;// with be set true bellow when checks pass
 	$dbStatus = 0;
 	$commited = false;
+	$validSession = false;
+	
 	$debugMessage[]= "-Start - testing permisions and db status";
-	if(!isset($demoSiteEnabled) || !$demoSiteEnabled)
-	{//this is not a demo server - anthing other that an update will screw with the core data or structure and is not allowed
-		$errorMessage[]="ZZ-Fail1";
-		if($dbScriptID==$SCRIPTID_DB_UPDATE_1)
-		{
-			$errorMessage[]="ZZ-Fail2";
-			$validAction = true;
+	if(!$dbScriptID==0)
+	{
+		if(!isset($demoSiteEnabled) || !$demoSiteEnabled)
+		{//this is not a demo server - anthing other that an update will screw with the core data or structure and is not allowed
+			$errorMessage[]="ZZ-Fail1";
+			if($dbScriptID==$SCRIPTID_DB_UPDATE_1)
+			{
+				$errorMessage[]="ZZ-Fail2";
+				$validAction = true;
+			}
 		}
+		else
+			$validAction = true;//demo server - go wild
 	}
-	else
-		$validAction = true;//demo server - go wild
 	
 	if($validAction)
+		$validSession = IsValidSession();
+	if($validSession)
 		$dbStatus = TestDBReadiness($dbScriptID);
-	if($validAction && $dbStatus==1)
+	if($dbStatus==1)
 		$commited = TestUserCommitment($dbScriptID);
 	if($commited)
-	{
+	{//must have passed all checks
 		RunScript($dbScriptID);
 	}
 	else
 	{
-		if(!$validAction)
+		if($dbScriptID==0)
+			$errorMessage[]= "No action selected";
+		else if(!$validAction)
 			$errorMessage[]= "Cannot wipe data or structure on live production servers. Aborted. DemoServer='$demoSiteEnabled' scriptID=$dbScriptID";
+		else if(!$validSession)
+			$errorMessage[]= "Invalid session. Preveted run on refresh. Re-submit form to run again";
 		else if($dbStatus==0)
 			$errorMessage[]="Database failed readiness check. Aborted";
 		else if($dbStatus==-1)
@@ -71,12 +103,6 @@
 		else if(!$commited)
 			$errorMessage[]="User not commited. Aborted.";
 	}
-	
-	//simple validation form
-
-	echo "<form action='' method='post'>
-	ScriptID to run:<input type='number' name='scriptid'></form>";
-	
 	
 	$debugMessageString  = implode("<BR>\n",$debugMessage);
 	$errorMessageString  = implode("<BR>\n",$errorMessage);
@@ -107,8 +133,8 @@
 		return 1;
 	}
 
-	//must have 
 	//returns true if user has proven commitment
+	//this could test against a fixed admin password or something - cant refference DB since that will be wiped here
 	function TestUserCommitment($dbScriptID)
 	{
 		global $SCRIPTID_BUILD_DATABASE;
@@ -143,21 +169,25 @@
 		switch($dbScriptID)
 		{
 			case $SCRIPTID_BUILD_DATABASE:
-				echo "Processing..";
+				echo "Processing...";
 				BuildDB();
+				echo "<BR>Done";
 				break;
 			case $SCRIPTID_CREATE_DEMO_DATA:
-				echo "Processing..";
+				echo "Processing...";
 				RestoreDBWithDemoData();
+				echo "<BR>Done";
 				break;
 			case $SCRIPTID_BUILD_DB_WITH_DEMO_DATA:
-				echo "Processing..";
+				echo "Processing...";
 				BuildDB();
 				RestoreDBWithDemoData();
+				echo "<BR>Done";
 				break;
 			case $SCRIPTID_DB_UPDATE_1:
-				echo "Processing..";
+				echo "Processing...";
 				RunDBUpdate1();
+				echo "<BR>Done";
 				break;
 			default:
 				$errorMessage[]= "RunScript($dbScriptID)-Invalid script ID";
