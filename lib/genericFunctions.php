@@ -369,4 +369,35 @@
 		}
 		return $result;
 	}
+	
+	function DoesTableExist($tableName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SHOW TABLES LIKE  '$tableName'";
+		
+		$result = false;
+		if (!($stmt = $mysqli->prepare($query)))
+			$errorMessage[] = "DoesTableExist($tableName)-Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			if(!$stmt->execute())
+				$errorMessage[] = "DoesTableExist()-Error executing($query).";
+			else 
+			{
+				$count = $stmt->num_rows;
+				if($count==1)
+					$result = true;
+				/* //dont report errors
+				else if($count>1)
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Multiple tables found.";
+				else
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Table not found.";
+				*/
+			}
+			$stmt->close();
+		}
+		return $result;
+	}
 ?>
