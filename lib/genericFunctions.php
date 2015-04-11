@@ -383,9 +383,10 @@
 		else
 		{
 			if(!$stmt->execute())
-				$errorMessage[] = "DoesTableExist()-Error executing($query).";
+				$errorMessage[] = "DoesTableExist($tableName)-Error executing($query).";
 			else 
 			{
+				$stmt->store_result();
 				$count = $stmt->num_rows;
 				if($count==1)
 					$result = true;
