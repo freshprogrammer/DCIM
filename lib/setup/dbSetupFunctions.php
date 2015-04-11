@@ -32,10 +32,6 @@
 		/* This will create the DB to current DB specs found in the documentation folder
 		 */
 		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
-		
-		$debugMessage[]= "BuildDB()-Start";
 		
 		ExecuteThisFile("B","../restoredata/structure.sql");
 		
@@ -47,10 +43,6 @@
 		/* This will wipe/truncate all current data in the database and repopulate it all with demo data
 		 */
 		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
-		
-		$debugMessage[]= "RestoreDBWithDemoData()-Start";
 
 		ExecuteThis("D1","TRUNCATE TABLE dcim_badge");
 		ExecuteThis("D1","TRUNCATE TABLE dcim_customer");
@@ -68,37 +60,68 @@
 		
 		WipeAndReCreateAllLogs();
 		
-		$resultMessage[]= "BuildDB()-Sucsessfully populated database with demo data";
+		$resultMessage[]= "RestoreDBWithDemoData()-Sucsessfully populated database with demo data";
 	}
 	
-	function RunDBUpdate1()
+	//returns 1 if DB is ready to update
+	//returns 0 if DB is not ready
+	//returns -1 if DB is already updated
+	function IsDatabaseUpToDate_Update1()
+	{
+		global $debugMessage;
+		
+		//assumes all changes happen at once - so if 1 is valid they all must be
+		if(DoesTableExist("dcim_room"))
+			return -1;
+		else
+			return 1;
+	}
+	
+	function RunDBUpdate_Update1()
 	{
 		/* This will Update the Database by doing the following in the main and log tables:
 		 * 	Drop field dcim_deviceport.hno
+		 * 	Change dcim_power panel,circuit, volts, amps, cload to NOT NULL
 		 * 	Change dcim_power.circuit from varchar(5) to tinyint(2)
 		 * 	Rename dcim_power.cload to load
-		 * 	Change dcim_power panel,circuit, volts, amps, cload to NOT NULL
 		 */
 		global $resultMessage;
-		global $errorMessage;
 		global $debugMessage;
 		
-		$debugMessage[]= "RunDBUpdate1()-Start";
+		$debugMessage[]= "RunDBUpdate_Update1()-Start";
 		
 		//SELECT siteid, CONCAT("CA",CAST(colo AS UNSIGNED)) AS roomname, colo, COUNT(*) AS count FROM dcimlog_location GROUP BY colo
 		
-		//ALTER TABLE `dcim_deviceport` DROP `hno`;
+		//drop dcim_deviceport.hno
+		$cmd1 = "ALTER TABLE `dcim_deviceport` DROP `hno`";
+		$cmd2 = "ALTER TABLE `dcimlog_deviceport` DROP `hno`";
 		
-		$resultMessage[]= "BuildDB()-Sucsessfully updated database.";
+		//change dcim_power panel,circuit, volts, amps, cload to NOT NULL
+		//add volts default 120
+		//add amp default 20
+		//add load default 0
+		$cmd1 = "ALTER TABLE  `dcim_power` CHANGE  `panel`  `panel` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		CHANGE  `circuit`  `circuit` VARCHAR( 5 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		CHANGE  `volts`  `volts` SMALLINT( 3 ) NOT NULL DEFAULT  '120',
+		CHANGE  `amps`  `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20',
+		CHANGE  `cload`  `cload` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0'";
+		$cmd2 = "ALTER TABLE  `dcimlog_power` CHANGE  `panel`  `panel` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		CHANGE  `circuit`  `circuit` VARCHAR( 5 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		CHANGE  `volts`  `volts` SMALLINT( 3 ) NOT NULL DEFAULT  '120',
+		CHANGE  `amps`  `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20',
+		CHANGE  `cload`  `cload` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0'";
+		
+		//change vircuit from varchar(5) to tinyint(2) - reality dictates that this will be from 1-50
+		$cmd1 = "ALTER TABLE  `dcim_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
+		$cmd2 = "ALTER TABLE  `dcimlog_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
+		
+		$resultMessage[]= "RunDBUpdate_Update1()-Sucsessfully updated database.";
 	}
 	
 	function WipeAndReCreateAllLogs()
 	{
 		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
 		
-		$debugMessage[]= "WipeAndReCreateAllLogs()-Start";
 		//wipe all log records
 		ExecuteThis("L1","TRUNCATE TABLE dcimlog_badge");
 		ExecuteThis("L1","TRUNCATE TABLE dcimlog_customer");

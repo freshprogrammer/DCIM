@@ -123,13 +123,11 @@
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1;
-		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
 		
-		$debugMessage[]= "TestDBReadiness($dbScriptID)-Start";
-		
-		//TODO create the core of this function
+		if($dbScriptID==$SCRIPTID_DB_UPDATE_1)
+		{
+			return IsDatabaseUpToDate_Update1();
+		}
 		return 1;
 	}
 
@@ -141,11 +139,6 @@
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1;
-		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
-		
-		$debugMessage[]= "TestUserCommitment($dbScriptID)-Start";
 
 		//TODO create the core of this function
 		//$validationCode = (int)GetInput("code");
@@ -160,33 +153,30 @@
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1;
-		global $resultMessage;
 		global $errorMessage;
-		global $debugMessage;
-		
-		$debugMessage[]= "RunScript($dbScriptID)-Start";
 		
 		switch($dbScriptID)
 		{
 			case $SCRIPTID_BUILD_DATABASE:
-				echo "Processing...";
+				echo "Processing Rebuild...";
 				BuildDB();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_CREATE_DEMO_DATA:
-				echo "Processing...";
+				echo "Populating Database...";
 				RestoreDBWithDemoData();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_BUILD_DB_WITH_DEMO_DATA:
-				echo "Processing...";
+				echo "Processing Rebuild...";
 				BuildDB();
+				echo "<BR>Populating Database...";
 				RestoreDBWithDemoData();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_DB_UPDATE_1:
-				echo "Processing...";
-				RunDBUpdate1();
+				echo "Processing Update...";
+				RunDBUpdate_Update1();
 				echo "<BR>Done";
 				break;
 			default:
