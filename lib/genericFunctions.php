@@ -1,31 +1,31 @@
-<?php 
-
+<?php
 	function SessionSetup()
 	{
 		//http://spotlesswebdesign.com/blog.php?id=11
 		global $_SESSION;
 		// start session 
-		session_start(); 
-
+		session_start();
+		
 		// set page instance id 
-		if (!isset($_SESSION['page_instance_ids'])) { 
-			$_SESSION['page_instance_ids'] = array(); 
-		} 
-		$_SESSION['page_instance_ids'][] = uniqid('', true); 
+		if (!isset($_SESSION['page_instance_ids']))
+		{
+			$_SESSION['page_instance_ids'] = array();
+		}
+		$_SESSION['page_instance_ids'][] = uniqid('', true);
 	}
 	
 	function IsValidSession()
-	{
-		//TODO note this throws an error if page_instance_id is not found
-		//returns true if this is a valid session - IE this is a fresh submit and not a refresh
-		
+	{//returns true if this is a valid session - IE this is a fresh submit and not a refresh because a valid page_instance_id was submitted with the last form and it has not been used and removed
 		global $_SESSION;
-		
-		$page_id_index = array_search($_POST['page_instance_id'], $_SESSION['page_instance_ids']); 
-		if ($page_id_index !== false) { 
-			unset($_SESSION['page_instance_ids'][$page_id_index]); 
-			// do form processing 
-			return true;
+
+		if (isset($_POST['page_instance_id']) && isset($_SESSION['page_instance_ids']))
+		{
+			$page_id_index = array_search($_POST['page_instance_id'], $_SESSION['page_instance_ids']); 
+			if ($page_id_index !== false) { 
+				unset($_SESSION['page_instance_ids'][$page_id_index]); 
+				// do form processing 
+				return true;
+			}
 		}
 		return false;
 	}
@@ -35,7 +35,7 @@
 		$prevLen = 0;
 		while($prevLen < strlen($input))
 		{
-			$prevLen = strlen($input);   
+			$prevLen = strlen($input);
 			
 			$input = trim($input);
 			
