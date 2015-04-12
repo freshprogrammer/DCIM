@@ -73,7 +73,7 @@
 		$result = array();
 		$siteID = 0;
 		
-		$query = "SELECT s.name AS site,l.colo,l.name AS location,p.panel,p.circuit,c.name AS cust, c.hno, p.cload, (p.cload/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
+		$query = "SELECT s.name AS site,l.colo,l.name AS location,p.panel,p.circuit,c.name AS cust, c.hno, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
 			FROM dcim_location AS l
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				INNER JOIN dcim_power AS p ON pl.powerid=p.powerid
@@ -92,7 +92,7 @@
 			
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$colo,$locationName,$panel,$circuit,$cust,$hNo,$cLoad,$percent,$amps,$volts,$status,$editDate);
+		$stmt->bind_result($site,$colo,$locationName,$panel,$circuit,$cust,$hNo,$load,$percent,$amps,$volts,$status,$editDate);
 		$count = $stmt->num_rows;
 		
 		if($count>0)
@@ -127,7 +127,7 @@
 					}
 					$lastLoc = $fullLocationName;
 				}
-				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$cLoad."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
+				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$load."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
 			}
 		}
 		return $result;

@@ -286,9 +286,9 @@
 		$valid = $inputCount>0;
 		if($valid)
 		{
-			$query = "UPDATE dcim_power
-					SET cload=?, status=?
-					WHERE powerid=?
+			$query = "UPDATE dcim_power AS p
+					SET p.load=?, p.status=?
+					WHERE p.powerid=?
 					LIMIT 1";
 			
 			if (!($stmt = $mysqli->prepare($query)))
@@ -774,7 +774,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				$query = "INSERT INTO dcim_power
-					(panel,circuit,volts,amps,status,cload,edituser,editdate) 
+					(panel,circuit,volts,amps,status,`load`,edituser,editdate) 
 					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 					
 				if (!($stmt = $mysqli->prepare($query)))
@@ -920,9 +920,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else
 			{
-				$query = "UPDATE dcim_power
-					SET amps=?, status=?, cload=? 
-					WHERE powerid=? 
+				$query = "UPDATE dcim_power AS p
+					SET p.amps=?, p.status=?, p.load=? 
+					WHERE p.powerid=? 
 					LIMIT 1";
 		
 				if (!($stmt = $mysqli->prepare($query)))
@@ -4506,7 +4506,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationPage)
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_location AS l
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
@@ -4517,7 +4517,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
@@ -4543,7 +4543,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$locationID, $colo, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($site,$locationID, $colo, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		echo "<span class='tableTitle'>Power Circuits</span>\n";
@@ -4570,7 +4570,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else $rowClass = "dataRowTwo";
 				if($amps>0)
 				{
-					$percentLoad = round(100*$cLoad/$amps,2);
+					$percentLoad = round(100*$load/$amps,2);
 					
 					if($percentLoad>80)
 						$percentLoad = "<font color=red>$percentLoad%</font>";
@@ -4589,7 +4589,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A ($percentLoad)</td>";
+				echo "<td class='data-table-cell'>".$load."A ($percentLoad)</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				if(UserHasCircuitPermission())
 				{
@@ -4598,7 +4598,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					$jsSafePanel = MakeJSSafeParam($panel);
 					$jsSafeCircuit = MakeJSSafeParam($circuit);
-					$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $cLoad";
+					$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
 					?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
 					<?php 
 					echo "</td>\n";
@@ -5468,7 +5468,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 
 		//TODO show customer or device per circuit
-		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate
+		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
@@ -5488,7 +5488,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_Param('iss', $pa_siteid,$pa_room,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
+		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 
 		$pageSubTitle = "Power Audit - Site#$pa_siteid Room:$pa_room Panel:$pa_panel";
@@ -5535,7 +5535,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$locationName = "CA $colo $location";
 				if($amps>0)
 				{
-					$percentLoad = round(100*$cLoad/$amps,2);
+					$percentLoad = round(100*$load/$amps,2);
 					if($percentLoad>80)
 						$percentLoad = "<font color=red>$percentLoad</font>";
 				}
@@ -5576,7 +5576,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 					$checked = ($status==="A") ? " checked" : "";
 					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
 					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
 					echo "	</td></tr>\n";
 					echo "	</table>\n";

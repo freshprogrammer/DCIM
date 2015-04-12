@@ -85,10 +85,10 @@
 		/* // "x" denotes code is ready
 		 * This will Update the Database by doing the following in the main and log tables:
 		 *x	Drop field dcim_deviceport.hno
-		 *x	Change dcim_power panel,circuit, volts, amps, cload to NOT NULL
+		 *x	Change dcim_power panel,circuit, volts, amps to NOT NULL
 		 *x	Change dcim_power.circuit from varchar(5) to tinyint(2)
-		 * 	increase location.name size from 10 to 50
 		 * 	Rename dcim_power.cload to load - drop cload here - created and mirrored load prior
+		 * 	increase location.name size from 10 to 50
 		 * 	
 		 * 	create dcim_room tables
 		 * 	-create location.roomid
@@ -106,14 +106,73 @@
 		
 		$execute = false;
 		
+		//this stuff will be done manualy before hand - the update is cleaning this stuff up
+		/*
+		 CREATE TABLE  `dcim_room` (
+		 `roomid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		 `siteid` INT( 8 ) NOT NULL ,
+		 `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		 `fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		 `custaccess` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'T',
+		 `edituser` INT( 8 ) NOT NULL ,
+		 `editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		 `qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+		 `qadate` DATETIME NOT NULL ,
+		 INDEX (  `siteid` )
+		 ) ENGINE = MYISAM;
+		
+		 CREATE TABLE  `dcimlog_room` (
+		 `roomlogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		 `logtype` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'I'  ,
+		 `roomid` INT( 8 ) NOT NULL  ,
+		 `siteid` INT( 8 ) NOT NULL ,
+		 `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		 `fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+		 `custaccess` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'T',
+		 `edituser` INT( 8 ) NOT NULL ,
+		 `editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		 `qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+		 `qadate` DATETIME NOT NULL ,
+		 INDEX (  `roomid` ) ,
+		 INDEX (  `siteid` )
+		 ) ENGINE = MYISAM;
+		
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (1,0,'MDF','Main Distribution Frame','F',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (2,0,'CA#1','Customer Area #1','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (3,0,'CA#2','Customer Area #2','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (4,0,'CA#3','Customer Area #3','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (5,0,'CA#4','Customer Area #4','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (6,0,'CA#5','Customer Area #5','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (7,0,'Unknown','Unknown/Missing','F',0,CURRENT_TIMESTAMP , 0, NOW( ));
+		 	
+		 INSERT INTO dcimlog_room SELECT NULL,'I' AS logtype,a.* FROM dcim_room AS a WHERE 1=1;
+		
+		
+		 ALTER TABLE  `dcim_location`    ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
+		 ALTER TABLE  `dcim_location`    ADD INDEX (  `roomid` ) ;
+		 ALTER TABLE  `dcimlog_location` ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
+		 ALTER TABLE  `dcimlog_location` ADD INDEX (  `roomid` ) ;
+		 UPDATE dcim_location    SET roomid= 1+CAST(colo AS UNSIGNED)
+		 UPDATE dcimlog_location SET roomid= 1+CAST(colo AS UNSIGNED)
+		 UPDATE dcim_location    SET roomid=7 where roomid=1
+		 UPDATE dcimlog_location SET roomid=7 where roomid=1
+		
+		 ALTER TABLE  `dcim_power`    ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
+		 ALTER TABLE  `dcimlog_power` ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
+		 UPDATE dcim_power    AS p SET p.load=p.cload
+		 UPDATE dcimlog_power AS p SET p.load=p.cload
+		
+		 */
+		
+		
 		//drop dcim_deviceport.hno
 		////code changes implemented and tested
-		$cmdm = "ALTER TABLE `dcim_deviceport` DROP `hno`";
+		$cmdm = "ALTER TABLE `dcim_deviceport`    DROP `hno`";
 		$cmdl = "ALTER TABLE `dcimlog_deviceport` DROP `hno`";
 		if($execute)ExecuteThis("U1M",$cmdm);
 		if($execute)ExecuteThis("U1L",$cmdl);
 		
-		//change dcim_power panel,circuit, volts, amps, cload to NOT NULL
+		//change dcim_power panel,circuit, volts, amps to NOT NULL
 		//add volts default 120
 		//add amp default 20
 		//add load default 0
@@ -121,93 +180,37 @@
 		$cmdm = "ALTER TABLE  `dcim_power` 		CHANGE  `panel` `panel` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 												CHANGE  `circuit` `circuit` VARCHAR( 5 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 												CHANGE  `volts` `volts` SMALLINT( 3 ) NOT NULL DEFAULT  '120',
-												CHANGE  `amps` `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20',
-												CHANGE  `cload` `cload` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0'";
+												CHANGE  `amps` `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20'";
 		$cmdl = "ALTER TABLE  `dcimlog_power` 	CHANGE  `panel` `panel` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 												CHANGE  `circuit` `circuit` VARCHAR( 5 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 												CHANGE  `volts` `volts` SMALLINT( 3 ) NOT NULL DEFAULT  '120',
-												CHANGE  `amps` `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20',
-												CHANGE  `cload` `cload` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0'";
+												CHANGE  `amps` `amps` TINYINT( 2 ) NOT NULL DEFAULT  '20'";
 		if($execute)ExecuteThis("U2M",$cmdm);
 		if($execute)ExecuteThis("U2L",$cmdl);
 		
 		//change vircuit from varchar(5) to tinyint(2) - reality dictates that this will be from 1-42
 		////no code changes necisary - unless you wanna check some casting 
-		$cmdm = "ALTER TABLE  `dcim_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
+		$cmdm = "ALTER TABLE  `dcim_power`    CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
 		$cmdl = "ALTER TABLE  `dcimlog_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
 		if($execute)ExecuteThis("U3M",$cmdm);
 		if($execute)ExecuteThis("U3L",$cmdl);
 		
+		//drop dcim_power.cload - to be replaced by load
+		////code changes implemented and tested
+		$cmdm = "ALTER TABLE `dcim_power`    DROP `cload`";
+		$cmdl = "ALTER TABLE `dcimlog_power` DROP `cload`";
+		if($execute)ExecuteThis("U1M",$cmdm);
+		if($execute)ExecuteThis("U1L",$cmdl);
+		
 		//increase location.name size from 10 to 50
 		////no code changes necisary
-		$cmdm = "ALTER TABLE  `dcim_location` CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+		$cmdm = "ALTER TABLE  `dcim_location`    CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 		$cmdl = "ALTER TABLE  `dcimlog_location` CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 		if($execute)ExecuteThis("U4M",$cmdm);
 		if($execute)ExecuteThis("U4L",$cmdl);
 		
 		
 		//done
-		
-		
-		//this stuff will be done manualy before hand - the update is cleaning this stuff up 
-		/*
-		CREATE TABLE  `dcim_room` (
-		`roomid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`siteid` INT( 8 ) NOT NULL ,
-		`name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
-		`fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
-		`custaccess` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'T',
-		`edituser` INT( 8 ) NOT NULL ,
-		`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
-		`qadate` DATETIME NOT NULL ,
-		INDEX (  `siteid` )
-		) ENGINE = MYISAM;
-		
-		CREATE TABLE  `dcimlog_room` (
-		`roomlogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`logtype` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'I'  ,
-		`roomid` INT( 8 ) NOT NULL  ,
-		`siteid` INT( 8 ) NOT NULL ,
-		`name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
-		`fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
-		`custaccess` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'T',
-		`edituser` INT( 8 ) NOT NULL ,
-		`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
-		`qadate` DATETIME NOT NULL ,
-		INDEX (  `roomid` ) ,
-		INDEX (  `siteid` )
-		) ENGINE = MYISAM;
-		
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (1,0,'MDF','Main Distribution Frame','F',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (2,0,'CA#1','Customer Area #1','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (3,0,'CA#2','Customer Area #2','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (4,0,'CA#3','Customer Area #3','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (5,0,'CA#4','Customer Area #4','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (6,0,'CA#5','Customer Area #5','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (7,0,'Unknown','Unknown/Missing','F',0,CURRENT_TIMESTAMP , 0, NOW( ));
-		 
-		INSERT INTO dcimlog_room SELECT NULL,'I' AS logtype,a.* FROM dcim_room AS a WHERE 1=1;
-		
-		
-		ALTER TABLE  `dcim_location`    ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
-		ALTER TABLE  `dcim_location`    ADD INDEX (  `roomid` ) ;
-		ALTER TABLE  `dcimlog_location` ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
-		ALTER TABLE  `dcimlog_location` ADD INDEX (  `roomid` ) ;
-		UPDATE dcim_location    SET roomid= 1+CAST(colo AS UNSIGNED)
-		UPDATE dcimlog_location SET roomid= 1+CAST(colo AS UNSIGNED)
-		UPDATE dcim_location    SET roomid=7 where roomid=1
-		UPDATE dcimlog_location SET roomid=7 where roomid=1
-		
-		ALTER TABLE  `dcim_power`    ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
-		ALTER TABLE  `dcimlog_power` ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
-		UPDATE dcim_power    AS p SET p.load=p.cload
-		UPDATE dcimlog_power AS p SET p.load=p.cload
-		
-		*/
-		
-		
 		
 		$resultMessage[]= "RunDBUpdate_Update1()-Sucsessfully updated database.";
 	}

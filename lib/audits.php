@@ -93,11 +93,11 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload FROM dcim_power AS p 
+		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-			WHERE p.status='D' AND p.cload !=0
+			WHERE p.status='D' AND p.load !=0
 			ORDER BY 1,2,3";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -108,7 +108,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $locaiton, $panel, $circuit, $volts, $amps, $status, $cload);
+		$stmt->bind_result($site, $locationID, $colo, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -132,7 +132,7 @@
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($cload)."A</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($load)."A</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -155,14 +155,14 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, (p.cload/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
+		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
 				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE (p.cload/p.amps*100) > $threshold
+			WHERE (p.load/p.amps*100) > $threshold
 			ORDER BY 1,2,3";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -173,7 +173,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $panel, $circuit, $volts, $amps, $status, $cload, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$stmt->bind_result($site, $locationID, $colo, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -200,7 +200,7 @@
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($cload)."A</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($load)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'><font color=red>".substr($utilization,0,5)."%</font></td>\n";
 				$longResult.= "</tr>\n";
 			}
