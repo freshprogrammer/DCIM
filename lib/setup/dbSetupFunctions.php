@@ -93,8 +93,8 @@ $restoreDataSQLFile = "../../restoredata/demoData.sql";
 		 *x	Drop field dcim_deviceport.hno
 		 *x	Change dcim_power panel,circuit, volts, amps to NOT NULL
 		 *x	Change dcim_power.circuit from varchar(5) to tinyint(2)
-		 * 	Rename dcim_power.cload to load - drop cload here - created and mirrored load prior
-		 * 	increase location.name size from 10 to 50
+		 *x	Rename dcim_power.cload to load - drop cload here - created and mirrored load prior
+		 *x	increase location.name size from 10 to 50
 		 * 	
 		 * 	create dcim_room tables
 		 * 	-create location.roomid
@@ -198,23 +198,27 @@ $restoreDataSQLFile = "../../restoredata/demoData.sql";
 		////no code changes necisary - unless you wanna check some casting 
 		$cmdm = "ALTER TABLE  `dcim_power`    CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
 		$cmdl = "ALTER TABLE  `dcimlog_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
-		if($execute)ExecuteThis("U3M",$cmdm);
-		if($execute)ExecuteThis("U3L",$cmdl);
+		if($execute)ExecuteThis("U4M",$cmdm);
+		if($execute)ExecuteThis("U4L",$cmdl);
 		
 		//drop dcim_power.cload - to be replaced by load
 		////code changes implemented and tested
 		$cmdm = "ALTER TABLE `dcim_power`    DROP `cload`";
 		$cmdl = "ALTER TABLE `dcimlog_power` DROP `cload`";
-		if($execute)ExecuteThis("U1M",$cmdm);
-		if($execute)ExecuteThis("U1L",$cmdl);
+		if($execute)ExecuteThis("U6M",$cmdm);
+		if($execute)ExecuteThis("U6L",$cmdl);
 		
 		//increase location.name size from 10 to 50
 		////no code changes necisary
 		$cmdm = "ALTER TABLE  `dcim_location`    CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 		$cmdl = "ALTER TABLE  `dcimlog_location` CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
-		if($execute)ExecuteThis("U4M",$cmdm);
-		if($execute)ExecuteThis("U4L",$cmdl);
-		
+		if($execute)ExecuteThis("U8M",$cmdm);
+		if($execute)ExecuteThis("U8L",$cmdl);
+
+		$cmdm = "ALTER TABLE `dcim_location`    DROP `siteid`, DROP `colo`";
+		$cmdl = "ALTER TABLE `dcimlog_location` DROP `siteid`, DROP `colo`";
+		if($execute)ExecuteThis("U9M",$cmdm);
+		if($execute)ExecuteThis("U9L",$cmdl);
 		
 		//done
 		
