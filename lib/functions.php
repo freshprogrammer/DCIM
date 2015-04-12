@@ -900,7 +900,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									$totalAffectedCount += $affectedCount;
 									if($affectedCount==1)
 									{
-										LogDBChange("dcim_powerloc",$powerID,"D");
+										LogDBChange("dcim_powerloc",-1,"D","powerid='$powerID'");
 										$resultMessage[] = "Successfully un linked power circuit from location(Panel:$panel Circuit#$circuit).";
 										
 									}
