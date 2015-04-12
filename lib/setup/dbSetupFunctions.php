@@ -27,13 +27,18 @@
  * dcimlog_site
  * dcimlog_vlan
  */
+
+$restoreStructureSQLFile = "../../restoredata/structure.sql";
+$restoreDataSQLFile = "../../restoredata/demoData.sql";
+
 	function BuildDB()
 	{
 		/* This will create the DB to current DB specs found in the documentation folder
 		 */
 		global $resultMessage;
+		global $restoreStructureSQLFile;
 		
-		ExecuteThisFile("B","../restoredata/structure.sql");
+		ExecuteThisFile("B",$restoreStructureSQLFile);
 		
 		$resultMessage[]= "BuildDB()-Sucsessfully created database structure";
 	}
@@ -43,6 +48,7 @@
 		/* This will wipe/truncate all current data in the database and repopulate it all with demo data
 		 */
 		global $resultMessage;
+		global $restoreDataSQLFile;
 
 		ExecuteThis("D1","TRUNCATE TABLE dcim_badge");
 		ExecuteThis("D1","TRUNCATE TABLE dcim_customer");
@@ -58,7 +64,7 @@
 		ExecuteThis("D1","TRUNCATE TABLE dcim_vlan");
 		
 		//NOTE: this is just restoreing the core tables and not the logs
-		ExecuteThisFile("D2","../restoredata/demoData.sql");
+		ExecuteThisFile("D2",$restoreDataSQLFile);
 		
 		WipeAndReCreateAllLogs();
 		
@@ -152,15 +158,15 @@
 		 ALTER TABLE  `dcim_location`    ADD INDEX (  `roomid` ) ;
 		 ALTER TABLE  `dcimlog_location` ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
 		 ALTER TABLE  `dcimlog_location` ADD INDEX (  `roomid` ) ;
-		 UPDATE dcim_location    SET roomid= 1+CAST(colo AS UNSIGNED)
-		 UPDATE dcimlog_location SET roomid= 1+CAST(colo AS UNSIGNED)
-		 UPDATE dcim_location    SET roomid=7 where roomid=1
-		 UPDATE dcimlog_location SET roomid=7 where roomid=1
+		 UPDATE dcim_location    SET roomid= 1+CAST(colo AS UNSIGNED);
+		 UPDATE dcimlog_location SET roomid= 1+CAST(colo AS UNSIGNED);
+		 UPDATE dcim_location    SET roomid=7 where roomid=1;
+		 UPDATE dcimlog_location SET roomid=7 where roomid=1;
 		
 		 ALTER TABLE  `dcim_power`    ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
 		 ALTER TABLE  `dcimlog_power` ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
-		 UPDATE dcim_power    AS p SET p.load=p.cload
-		 UPDATE dcimlog_power AS p SET p.load=p.cload
+		 UPDATE dcim_power    AS p SET p.load=p.cload;
+		 UPDATE dcimlog_power AS p SET p.load=p.cload;
 		
 		 */
 		
@@ -248,6 +254,10 @@
 	
 	function ExecuteThisFile($debugTag,$fileName, $reportSucsess=false)
 	{
+		global $debugMessage;
+		
+		$debugMessage[]= "ExecuteThisFile($debugTag,$fileName,$reportSucsess)-Start";
+		
 		$cmds = SQLFileToCmdArray($fileName);
 		foreach ($cmds as $cmd)
 		{
