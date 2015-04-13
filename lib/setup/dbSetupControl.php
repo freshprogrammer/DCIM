@@ -139,7 +139,7 @@
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1;
-
+		
 		//TODO create the core of this function
 		//$validationCode = (int)GetInput("code");
 		// == date('j');//day of the month

@@ -125,7 +125,7 @@ $restoreDataSQLFile = "../../restoredata/demoData.sql";
 		 `qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
 		 `qadate` DATETIME NOT NULL ,
 		 INDEX (  `siteid` )
-		 ) ENGINE = MYISAM;
+		 ) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci;
 		
 		 CREATE TABLE  `dcimlog_room` (
 		 `roomlogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
@@ -141,7 +141,7 @@ $restoreDataSQLFile = "../../restoredata/demoData.sql";
 		 `qadate` DATETIME NOT NULL ,
 		 INDEX (  `roomid` ) ,
 		 INDEX (  `siteid` )
-		 ) ENGINE = MYISAM;
+		 ) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci;
 		
 		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (1,0,'MDF','Main Distribution Frame','F',0,CURRENT_TIMESTAMP , 0, NOW( ));
 		 INSERT INTO  dcim_room (roomid,siteid,name,fullname,custaccess,edituser,editdate,qauser,qadate) VALUES (2,0,'CA#1','Customer Area #1','T',0,CURRENT_TIMESTAMP , 0, NOW( ));
