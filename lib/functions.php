@@ -356,11 +356,13 @@
 	
 	function LogDBChange($table, $ukey, $action, $filter="")
 	{
+		//TODO this should be tested and probably adjusted to accomodate multiple updates where using filter instead of ukey and multiple records can be found (mostly for deleing linking recrods like powerloc deletion)
+		// ^ also worth noting that thst there is no front end way to link double cross link power records so not super important
 		global $mysqli;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-				
+		
 		$keyFieldName = GetKeyField($table);
 		$logTable = GetLogTable($table);
 		
@@ -402,6 +404,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//copy last log record as final deleted record - this will leave one more record to QA
 			$logKeyField = GetKeyField($logTable);
 			$query1 = "CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM $logTable WHERE $keyFieldName = $ukey ORDER BY $logKeyField DESC LIMIT 1;";
+			//^LIMIT 1 to only copy most recent log record
 			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', qauser=-1, qadate='';";
 			$query3 = "INSERT INTO $logTable SELECT * FROM tmptable_1;";
 			$query4 = "DROP TEMPORARY TABLE IF EXISTS tmptable_1;";
@@ -880,10 +883,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							LogDBChange("dcim_power",$powerID,"D");
 							$resultMessage[] = "Successfully deleted power circuit (Panel:$panel Circuit#$circuit).";
 							
-							//delete link
+							//delete link - dont limit to 1 because this 1 power record could be linked to multiple locations
 							$query = "DELETE FROM  dcim_powerloc
-								WHERE powerid=? 
-								LIMIT 1";
+								WHERE powerid=?";
 					
 							if (!($stmt = $mysqli->prepare($query)))
 								$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error.".";
@@ -900,6 +902,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									$totalAffectedCount += $affectedCount;
 									if($affectedCount==1)
 									{
+										//TODO this should be tested to make sure multiple are updated in the case where 1 power circuit is connected to multiple locations
 										LogDBChange("dcim_powerloc",-1,"D","powerid='$powerID'");
 										$resultMessage[] = "Successfully un linked power circuit from location(Panel:$panel Circuit#$circuit).";
 										
