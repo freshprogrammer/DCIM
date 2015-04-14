@@ -83,7 +83,7 @@
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			GROUP BY l.locationid,p.powerid
-			ORDER BY s.name, r.name,l.name,p.panel,CAST(p.circuit AS UNSIGNED)";
+			ORDER BY s.name, r.name,l.name,p.panel,p.circuit";
 
 		if (!($stmt = $mysqli->prepare($query)))
 		{

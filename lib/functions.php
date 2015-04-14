@@ -5484,7 +5484,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid=? AND l.colo=? AND p.panel=?
 			GROUP BY s.siteid, p.panel, p.circuit
-			ORDER BY CAST(p.circuit AS UNSIGNED)";
+			ORDER BY p.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
