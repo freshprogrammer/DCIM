@@ -4577,7 +4577,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					if($percentLoad>80)
 						$percentLoad = " (<font color=red>$percentLoad%</font>)";
-					else if($cLoad==0)
+					else if($load==0)
 						$percentLoad = "";
 					else
 						$percentLoad = " ($percentLoad%)";
@@ -4596,7 +4596,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A$percentLoad</td>";
+				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				if(UserHasCircuitPermission())
 				{
