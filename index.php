@@ -6,6 +6,7 @@
 	include 'helperFunctions.php';
 	include 'functions.php';
 	
+	UpdateSettingsForiPad();
 	SessionSetup();
 	SQLIConnect();
 	

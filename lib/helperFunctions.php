@@ -211,6 +211,19 @@
 		}
 	}
 	
+	function UpdateSettingsForiPad()
+	{
+		global $loginCookieDurration;
+		global $loginCookieDurrationOniPad;
+		
+		$isiPad = (bool) strpos($_SERVER['HTTP_USER_AGENT'],'iPad');
+		
+		if($isiPad)
+		{
+			$loginCookieDurration = $loginCookieDurrationOniPad;
+		}
+	}
+	
 	function CreateReport($title,$shortResult,$longResult, $note)
 	{
 		$hiddenCSSClass = "hidden";
