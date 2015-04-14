@@ -417,17 +417,14 @@
 		return $portFullName;
 	}
 	
-	function FormatLocation($siteName, $colo, $locationName)
+	function FormatLocation($siteName, $roomName, $locationName)
 	{
-		if($siteName==null)
-			$fullLocationName = "None";
+		if($roomName==null)
+			$fullLocationName = "(Unknown Site & Room) $locationName";
+		else if($siteName==null)
+			$fullLocationName = "(Unknown Site) $roomName $locationName";
 		else
-		{
-			if((int)$colo >= 1)//TODO this may not be multi site compatable - should be fixed by "room" table instead of colo field
-				$fullLocationName = "$siteName CA$colo $locationName";
-			else 
-				$fullLocationName = "$siteName $locationName";
-		}
+			$fullLocationName = "$siteName $roomName $locationName";
 		return $fullLocationName;
 	}
 	
