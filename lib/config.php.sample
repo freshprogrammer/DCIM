@@ -4,6 +4,7 @@
 	$pageTitle = "DCIM Title";
 	$versionNote = "note";
 	$loginCookieDurration = 8*60*60;//8 hours
+	$loginCookieDurrationOniPad = 2*60*60;//2 hours
 
 	//DB connect
 	$db_host = "localhost";
