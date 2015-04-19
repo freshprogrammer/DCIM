@@ -3761,18 +3761,37 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
-			echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = \"document.getElementById('helpPopup').style.display='block';document.getElementById('outOfFocusOverlay').style.display='block';\"></a></span>\n";
-			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay'  onclick = \"document.getElementById('helpPopup').style.display='none';document.getElementById('outOfFocusOverlay').style.display='none';\"></div>";
+			$clearPopupJS = "";
+			
+			echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = 'CreateHelpPopup();'></a></span>\n";
+			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = 'ClearHelpPopup();'></div>";
 			echo "<div id='helpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
 			
-			/*$popupTimingJS = "<script type='text/javascript'>
-var helpPopup = document.getElementById('helpPopup');
-
-helpPopup.addEventListener('webkitAnimationEnd', function(){
-	this.style.webkitAnimationName = '';
-}, false);
+			echo "<script type='text/javascript'>
+function CreateHelpPopup()
+{
+	document.getElementById('helpPopup').style.display='block';
+	document.getElementById('outOfFocusOverlay').style.display='block';
+	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeIn';
+	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeIn';
+	document.getElementById('helpPopup').style.webkitAnimationName = 'showHelpPopup';
+	document.getElementById('helpPopup').style.animationName = 'showHelpPopup';
+}
+function ClearHelpPopup()
+{
+	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeOut';
+	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeOut';
+	document.getElementById('helpPopup').style.webkitAnimationName = 'fadeOut';
+	document.getElementById('helpPopup').style.animationName = 'fadeOut';
+				
+	window.setTimeout(ClearHelpPopup_RestoreFocus,400);
+}
+function ClearHelpPopup_RestoreFocus()
+{
+	document.getElementById('helpPopup').style.display='none';
+	document.getElementById('outOfFocusOverlay').style.display='none';
+}
 					</script>";
-			echo $popupTimingJS;*/
 		}
 		echo "<BR>\n";
 		
