@@ -3761,7 +3761,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
-			echo "<span class='editButtons_hidden'><a class='helpLink' href='#'></a></span>\n";
+			echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = \"document.getElementById('helpPopup').style.display='block';document.getElementById('outOfFocusOverlay').style.display='block';\"></a></span>\n";
+			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay'  onclick = \"document.getElementById('helpPopup').style.display='none';document.getElementById('outOfFocusOverlay').style.display='none';\"></div>";
+			echo "<div id='helpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
+			
+			/*$popupTimingJS = "<script type='text/javascript'>
+var helpPopup = document.getElementById('helpPopup');
+
+helpPopup.addEventListener('webkitAnimationEnd', function(){
+	this.style.webkitAnimationName = '';
+}, false);
+					</script>";
+			echo $popupTimingJS;*/
 		}
 		echo "<BR>\n";
 		

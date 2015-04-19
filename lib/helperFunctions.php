@@ -206,6 +206,21 @@
 		}
 	}
 	
+	function BadgeHelpPopup()
+	{
+		$result = "";
+		$result .= "Badges Should last forever.<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "Don't touch my badges.<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "Seriously Bro<BR>\n";
+		$result .= "<b>Don't touch my badges.</b><BR>\n";
+		return $result;
+	}
+	
 	function UpdateSettingsForiPad()
 	{
 		global $loginCookieDurration;
