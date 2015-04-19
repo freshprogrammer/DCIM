@@ -269,6 +269,14 @@ a.cmdbLink, a.bpLink {
 	line-height: 140%;
 }
 
+.helpLink {
+	padding-left: 20px;
+}
+
+.helpLink:before {
+	content: "Help";
+}
+
 button {
 	margin: 0;
 	//height: 16;

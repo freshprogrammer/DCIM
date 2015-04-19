@@ -3761,6 +3761,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
+			echo "<span class='editButtons_hidden'><a class='helpLink' href='#'></a></span>\n";
 		}
 		echo "<BR>\n";
 		
