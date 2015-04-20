@@ -3774,15 +3774,15 @@ function CreateHelpPopup()
 	document.getElementById('outOfFocusOverlay').style.display='block';
 	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeIn';
 	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeIn';
-	document.getElementById('helpPopup').style.webkitAnimationName = 'showHelpPopup';
-	document.getElementById('helpPopup').style.animationName = 'showHelpPopup';
+	document.getElementById('helpPopup').style.webkitAnimationName = 'zoomIn';
+	document.getElementById('helpPopup').style.animationName = 'zoomIn';
 }
 function ClearHelpPopup()
 {
 	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeOut';
 	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeOut';
-	document.getElementById('helpPopup').style.webkitAnimationName = 'fadeOut';
-	document.getElementById('helpPopup').style.animationName = 'fadeOut';
+	document.getElementById('helpPopup').style.webkitAnimationName = 'zoomOut';
+	document.getElementById('helpPopup').style.animationName = 'zoomOut';
 				
 	window.setTimeout(ClearHelpPopup_RestoreFocus,400);
 }

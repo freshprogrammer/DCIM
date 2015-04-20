@@ -297,8 +297,12 @@ a.cmdbLink, a.bpLink {
 	width: 50%;
 	overflow:auto;
 	padding: 16px;
-	border: 8px solid black;
+	border: 8px solid #060;
+	border-radius: 40px;
 	background-color: white;
+	-webkit-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
+	-moz-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
+	box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
 	z-index:1002;
 }
 
@@ -335,14 +339,24 @@ a.cmdbLink, a.bpLink {
 	to {opacity: 0.0;}
 }
 
-@-webkit-keyframes showHelpPopup{
-	from {background-color: red;}
-	to {background-color: white;}
+@-webkit-keyframes zoomIn{
+	from {transform: scale(0,0);}
+	to {}
 }
 
-@keyframes showHelpPopup {
-	from {background-color: red;}
-	to {background-color: white;}
+@keyframes zoomIn {
+	from {transform: scale(0,0);}
+	to {}
+}
+
+@-webkit-keyframes zoomOut{
+	from {}
+	to {transform: scale(0,0);}
+}
+
+@keyframes zoomOut {
+	from {}
+	to {transform: scale(0,0);}
 }
 
 button {
@@ -424,6 +438,28 @@ h2 {
 	font-size: 18px;
 	font-weight: bold;
 	white-space: nowrap;
+}
+
+.helpText{
+	font-size: 16px;
+	line-height: 1.2;	
+}
+
+.helpHeading{
+	font-weight: bold;
+	font-size: 18px;
+	text-decoration: underline;
+}
+
+.helpDefinition{
+	font-weight: bold;
+	font-style: italic;
+	padding-left: 10px;
+	padding-right: 5px;
+}
+
+.helpDefinition:after{
+	content: ":";
 }
 
 #appname {
