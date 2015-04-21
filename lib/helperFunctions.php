@@ -280,7 +280,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		$result .= $shortResult."\n";
 		$result .= "</div>\n";
 		
-			//js
+		//js for this this report created synamicly as needed
 		if($enableSwitcher)
 		{
 			$result .= "<script type='text/javascript'>\n";
