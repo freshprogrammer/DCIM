@@ -207,7 +207,7 @@ legend {
 	border-collapse: collapse;
 }
 
-.data-table-cell, .data-table-cell-button  {
+.data-table-cell, .data-table-cell-button {
 	border-right: solid 1px #C4C0C9;
 	border-bottom: solid 1px #C4C0C9;
 	color: #000;
@@ -269,6 +269,118 @@ a.cmdbLink, a.bpLink {
 	line-height: 140%;
 }
 
+.helpLink {
+	padding-left: 20px;
+}
+
+.helpLink:before {
+	content: "Help";
+}
+
+.outOfFocusOverlay{
+	display: none;
+	position: fixed;
+	top: 0%;
+	left: 0%;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index:1001;
+	filter: alpha(opacity=50);
+}
+
+.helpPopup {
+	display: none;
+	position: fixed;
+	top: 25%;
+	left: 25%;
+	width: 50%;
+	overflow:auto;
+	padding: 16px;
+	border: 8px solid #060;
+	border-radius: 40px;
+	background-color: white;
+	-webkit-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
+	-moz-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
+	box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
+	z-index:1002;
+}
+
+.outOfFocusOverlay, .helpPopup {
+	-webkit-animation-name: fadeIn;
+	-webkit-animation-duration: 0.4s;
+	-webkit-animation-iteration-count: 1;
+	-webkit-animation-direction: alternate;
+	-webkit-animation-fill-mode: forwards;
+	-webkit-animation-timing-function: ease-in-out;
+	animation-name: fadeIn;
+	animation-duration: 0.4s;
+	animation-iteration-count: 1;
+	animation-direction: alternate;
+	animation-fill-mode: forwards;
+	animation-timing-function: ease-in-out;
+}
+
+@-webkit-keyframes fadeIn{
+	000% {opacity: 0.0;}
+	100% {opacity: 1.0;}
+}
+
+@keyframes fadeIn {
+	000% {opacity: 0.0;}
+	100% {opacity: 1.0;}
+}
+
+@-webkit-keyframes fadeOut{
+	000% {opacity: 1.0;}
+	100% {opacity: 0.0;}
+}
+
+@keyframes fadeOut {
+	000% {opacity: 1.0;}
+	100% {opacity: 0.0;}
+}
+
+@-webkit-keyframes zoomIn{
+	000% {transform: scale(0,0);}
+	100% {}
+}
+
+@keyframes zoomIn {
+	000% {transform: scale(0,0);}
+	100% {}
+}
+
+@-webkit-keyframes zoomOut{
+	000% {}
+	100% {transform: scale(0,0);}
+}
+
+@keyframes zoomOut {
+	000% {}
+	100% {transform: scale(0,0);}
+}
+
+@-webkit-keyframes newspaperIn{
+	000% {transform: scale(0,0) rotate(360deg);}
+	100% {}
+}
+
+@keyframes newspaperIn {
+	000% {transform: scale(0,0) rotate(360deg);}
+	100% {}
+}
+
+@-webkit-keyframes newspaperOut{
+	000% {}
+	100% {transform: scale(0,0) rotate(360deg);}
+}
+
+@keyframes newspaperOut {
+	000% {}
+	100% {transform: scale(0,0) rotate(360deg);}
+}
+
 button {
 	margin: 0;
 	//height: 16;
@@ -320,7 +432,7 @@ td.powerAuditCellDouble {
 
 td.powerAuditCellEmpty {
 	//background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif");
-  	//background-repeat: round;
+	//background-repeat: round;
 	//background-size: 100%;
 	background-color: #CCC;
 }
@@ -348,6 +460,28 @@ h2 {
 	font-size: 18px;
 	font-weight: bold;
 	white-space: nowrap;
+}
+
+.helpText{
+	font-size: 16px;
+	line-height: 1.2;	
+}
+
+.helpHeading{
+	font-weight: bold;
+	font-size: 18px;
+	text-decoration: underline;
+}
+
+.helpDefinition{
+	font-weight: bold;
+	font-style: italic;
+	padding-left: 10px;
+	padding-right: 5px;
+}
+
+.helpDefinition:after{
+	content: ":";
 }
 
 #appname {
@@ -429,46 +563,46 @@ h2 {
 	-ms-filter: "FlipV";
 }
 
-/* input tooltops - http://www.cssportal.com/css-tooltip-generator/  */
+/* input tooltops - http://www.cssportal.com/css-tooltip-generator/ */
 .inputToolTipContainer{
-  position: relative;
-  display: inline;
+	position: relative;
+	display: inline;
 }
 .inputTooltip {
-  position: absolute;
-  color: #FFFFFF;
-  background: #1008FF;
-  height: 27px;
-  line-height: 27px;
-  text-align: center;
-  visibility: hidden;
-  border-radius: 8px;
-  white-space: nowrap;
-  padding-left: 10px;
-  padding-right: 10px;
-  font-size: 12;
+	position: absolute;
+	color: #FFFFFF;
+	background: #1008FF;
+	height: 27px;
+	line-height: 27px;
+	text-align: center;
+	visibility: hidden;
+	border-radius: 8px;
+	white-space: nowrap;
+	padding-left: 10px;
+	padding-right: 10px;
+	font-size: 12;
 }
 .inputTooltip:after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 100%;
-  margin-top: -8px;
-  height: 0;
-  border-right: 8px solid #1008FF;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
+	content: '';
+	position: absolute;
+	top: 50%;
+	right: 100%;
+	margin-top: -8px;
+	height: 0;
+	border-right: 8px solid #1008FF;
+	border-top: 8px solid transparent;
+	border-bottom: 8px solid transparent;
 }
 
 .inputToolTipContainer input:hover + .inputTooltip, 
 .inputToolTipContainer input:focus + .inputTooltip {
-  visibility: visible;
-  opacity: 0.8;
-  left: 100%;
-  top: 50%;
-  margin-top: -13.5px;
-  margin-left: 15px;
-  z-index: 999;
+	visibility: visible;
+	opacity: 0.8;
+	left: 100%;
+	top: 50%;
+	margin-top: -13.5px;
+	margin-left: 15px;
+	z-index: 999;
 }
 
 @media only screen and (device-width: 768px) {
