@@ -107,6 +107,8 @@
 	
 	function LoginPrompt()
 	{
+		//would set $focusSearch=false here if search was visible while at this prompt
+		
 		$dest= "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 		
 		echo "<div class='panel'>\n";
@@ -2467,11 +2469,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $deviceModels;
 		global $pageSubTitle;
+		global $focusSearch;
 		
 		$addLocation = (int)$input==-1;
 		
 		//UNITS desc from 42 to 1 in most cabs
-		
 		
 		//top panel - location info / form / search fail 
 		echo "<div class='panel'>\n";
@@ -3654,7 +3656,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		
 		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>Chassis Details</div>\n";
+		echo "<div class='panel-header'>Chassis Details for $chassisName</div>\n";
 		echo "<div class='panel-body'>\n\n";
 		
 		
@@ -3697,7 +3699,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('ss', $input, $input);
 		}
 		else
-		{			
+		{
 			//hack to limit badges to site 0
 			$searchSiteID = 0;
 			
@@ -3754,13 +3756,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->store_result();
 		$stmt->bind_result($customer, $badgeID, $hNo, $name, $badgeNo, $status, $issue, $hand, $returned, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-	
+		
 		//data title
 		echo "<span class='tableTitle'>Badges</span>\n";
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
+			
+			echo "<div id='badgeHelpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
+			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\"></a></span>\n";
 		}
 		echo "<BR>\n";
 		
@@ -5279,37 +5284,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div id='allPortsTable'>$tableWithAllData</div>\n";
 			echo "<div id='activePortsTable'>$tableWithActiveData</div>\n";
 			
-			//JS for show all button
-			echo "<script type='text/javascript'>
-		var showAllPorts = true;//opposite of initial condition
-		function InitializeShowAllPortsButton()
-		{
-			var showAllPortsCookie = GetCookie('dcim_showAllPorts');
-			//set it to the opposite then toggle to what I want
-			showAllPorts = !(showAllPortsCookie==\"true\");
-			ToggleShowAllPorts();
-		}
-		function ToggleShowAllPorts() {
-			showAllPorts = !showAllPorts;
-			if(showAllPorts)
-			{
-				document.cookie ='dcim_showAllPorts=true;';
-		
-				document.getElementById('showAllPortsButton').innerHTML = 'Show Active';
-				document.getElementById('allPortsTable').className = '';
-				document.getElementById('activePortsTable').className = 'hidden';
-			}
-			else
-			{
-				document.cookie = 'dcim_showAllPorts=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-		
-				document.getElementById('showAllPortsButton').innerHTML = 'Show All';
-				document.getElementById('allPortsTable').className = 'hidden';
-				document.getElementById('activePortsTable').className = '';
-			}
-		}
-		InitializeShowAllPortsButton();
-	</script>\n";
+			//Initialize show all ports
+			echo "<script type='text/javascript'>InitializeShowAllPortsButton();</script>\n";
 			
 			if(UserHasWritePermission())
 			{	

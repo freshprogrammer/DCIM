@@ -47,7 +47,7 @@
 	$pageSubTitle = "";
 	$user = "";
 	$userID = -1;
-	$focusSearch = true;
+	$focusSearch = true;// can be diabled by functions when switching to a form page (like adding a new cust)
 	
 	$search = GetInput("search");
 	$page = GetInput("page");
@@ -92,94 +92,17 @@
 	 
 	if(UserHasWritePermission())
 		ProcessFormActions();
+	
+	//START PAGE CODE **************************************************************************************************
 ?>
 <head>
-
 <script src="lib/js/genericScripts.js"></script>
+<script src="lib/js/scripts.js"></script>
 <title><?php echo $pageTitle;?></title>
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="lib/css/default.css">
-
-<?php 
-	
-	//START PAGE CODE **************************************************************************************************
-	//TODO Move this js to its own file
-?>
-	<script type="text/javascript" language="JavaScript">
-	
-		function FocusMainSearch()
-		{
-			document.forms['MainSearch'].elements['search'].focus();
-		}
-		var delayedResultClear;
-		function InitializePage()
-		{
-			delayedResultClear = setInterval(function(){ClearResultMessage()},10*1000);
-			
-			//show / hide messges button if any messages are on screen 
-			if(document.getElementById("debugMessage")!=null || document.getElementById("errorMessage")!=null || document.getElementById("resultMessage")!=null)
-				document.getElementById("showMessagesButton").className = "";
-			else
-				document.getElementById("showMessagesButton").className = "hidden";
-				
-		}
-		function ClearResultMessage()
-		{
-			SwapStyleClass("resultMessage","hidden");
-			window.clearInterval(delayedResultClear)
-		}
-		function CopyBadgeToClipboard(text)
-		{
-			var date = new Date();
-	
-			var am = "AM";
-			var hour = date.getHours();
-			if(hour==0) hour = 12;
-			else if(hour>12) 
-			{
-				hour-=12;
-				am = "PM";
-			}
-			
-			var header = PadLeft(hour)+":"+PadLeft(date.getMinutes())+am;
-			
-			PromptToCopyToClipboard(header+text);
-		}
-		var messagesVisible=false;
-		function ToggleMessgeVisibility()
-		{
-			ClearResultMessage();
-
-			messagesVisible = !messagesVisible;
-
-			if(messagesVisible)
-			{
-				document.getElementById("showMessagesButton").innerHTML = "Hide Messages";
-
-				if(document.getElementById("debugMessage")!=null)
-					document.getElementById("debugMessage").className = "debugMessage";
-				if(document.getElementById("errorMessage")!=null)
-					document.getElementById("errorMessage").className = "errorMessage";
-				if(document.getElementById("resultMessage")!=null)
-					document.getElementById("resultMessage").className = "resultMessage";
-			}
-			else
-			{
-				document.getElementById("showMessagesButton").innerHTML = "Show Messages";
-
-				if(document.getElementById("debugMessage")!=null)
-					document.getElementById("debugMessage").className = "hidden";
-				if(document.getElementById("errorMessage")!=null)
-					document.getElementById("errorMessage").className = "hidden";
-				if(document.getElementById("resultMessage")!=null)
-					document.getElementById("resultMessage").className = "hidden";
-			}
-		}
-	</script>
-
-
-	</head>
-	<body>
+</head>
+<body>
 	<!-- Title -->
 	<div id="header-bg">
 	<table align=center border="0" class='pageMinWidth center'><tbody><tr>
@@ -552,6 +475,7 @@
 	SQLIDisconnect();
 ?>
 	</td></tr></tbody></table>
+	<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = 'ClearActivePopup();'></div>
 </body>
 
 <footer>
