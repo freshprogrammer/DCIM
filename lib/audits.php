@@ -78,7 +78,7 @@
 			Check_BadgesWithoutCustomers();
 			Check_DevicesWithoutCustomersOrLocation();
 			Check_DevicePortsWithoutCustomersOrDevices();
-			Check_LocationWithoutPowerLocOrSite();
+			Check_LocationWithoutPowerLocOrRoom();
 			Check_PowerLocWithoutLocationOrPower();
 			Check_PowerWithoutPowerLoc();
 			echo "</div>\n</div>\n";//end panel and panel body
@@ -93,10 +93,11 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load FROM dcim_power AS p 
+		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE p.status='D' AND p.load !=0
 			ORDER BY 1,2,3";
 		
@@ -108,7 +109,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
+		$stmt->bind_result($site, $room, $locationID, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -155,11 +156,12 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE (p.load/p.amps*100) > $threshold
@@ -173,7 +175,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -191,7 +193,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
@@ -342,12 +344,13 @@
 		$reportNote= "These are impossible connections left over from old system.";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, l.colo, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON l.locationid=d.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.type IN ('F','C','H') AND dp.port=0
 			ORDER BY cust,name";
 		
@@ -359,7 +362,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($customer, $hNo, $site, $locationID, $colo, $location, $deviceID, $deviceName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -378,7 +381,7 @@
 				else $rowClass = "dataRowTwo";
 			
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 					
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
@@ -544,14 +547,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID, $refLocationID,$locationName);
+		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID, $linkedLocationID,$locationName);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID","RefLocationID","RefLocationName"));
+			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID","LinkedLocationID","LinkedLocationName"));
 				
 			//list result data
 			$oddRow = false;
@@ -568,8 +571,8 @@
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$refLocationID'>".MakeHTMLSafe($refLocationID)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$refLocationID'>".MakeHTMLSafe($locationName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$linkedLocationID'>".MakeHTMLSafe($linkedLocationID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$linkedLocationID'>".MakeHTMLSafe($locationName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -836,14 +839,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerLocID, $powerID, $locationID,$refPowerID, $refLocationID);
+		$stmt->bind_result($powerLocID, $powerID, $locationID,$linkedPowerID, $linkedLocationID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerID","LocationID","RefPowerID","RefLocationID"));
+			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerID","LocationID","LinkedPowerID","LinkedLocationID"));
 				
 			//list result data
 			$oddRow = false;
@@ -857,8 +860,8 @@
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refPowerID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refLocationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedLocationID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -873,19 +876,20 @@
 		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_LocationWithoutPowerLocOrSite()
+	function Check_LocationWithoutPowerLocOrRoom()
 	{
 		global $mysqli;
 		
 		$reportTitle = "Location records linked to missing records";
 		$reportNote = "Disconnected from site or power.";
 
-		$query = "SELECT l.locationid, l.colo, l.name, l.siteid, s.siteid, COUNT(pl.locationid) AS powerCount
+		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid, COUNT(pl.locationid) AS powerCount
 			FROM dcim_location AS l
 				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			GROUP BY l.locationid
-			HAVING powerCount<1 OR s.siteid IS NULL";
+			HAVING powerCount<1 OR r.roomid IS NULL";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -895,14 +899,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($locationID, $colo, $locationName,$siteID, $refSiteID, $powerCount);
+		$stmt->bind_result($locationID, $room, $locationName,$roomID, $linkedRoomID, $powerCount);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("LocationID","Colo","Location Name","SiteID","RefSiteID","PowerCount"));
+			$longResult.= CreateDataTableHeader(array("LocationID","Room","Location Name","RoomID","LinkedRoomID","PowerCount"));
 				
 			//list result data
 			$oddRow = false;
@@ -914,10 +918,10 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($room)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationName)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($siteID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($refSiteID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($roomID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedRoomID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCount)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
