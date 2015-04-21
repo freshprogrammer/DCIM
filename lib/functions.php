@@ -3761,34 +3761,35 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
-			$clearPopupJS = "";
 			
-			echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = 'CreateHelpPopup();'></a></span>\n";
-			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = 'ClearHelpPopup();'></div>";
+			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreateHelpPopup('helpPopup');\"></a></span>\n";
 			echo "<div id='helpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
+			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = \"ClearHelpPopup('helpPopup');\"></div>";
 			
 			echo "<script type='text/javascript'>
-function CreateHelpPopup()
+function CreateHelpPopup(popupID)
 {
-	document.getElementById('helpPopup').style.display='block';
+	document.getElementById(popupID).style.display='block';
 	document.getElementById('outOfFocusOverlay').style.display='block';
+	
 	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeIn';
 	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeIn';
-	document.getElementById('helpPopup').style.webkitAnimationName = 'zoomIn';
-	document.getElementById('helpPopup').style.animationName = 'zoomIn';
+	document.getElementById(popupID).style.webkitAnimationName = 'zoomIn';
+	document.getElementById(popupID).style.animationName = 'zoomIn';
 }
-function ClearHelpPopup()
+function ClearHelpPopup(popupID)
 {
 	document.getElementById('outOfFocusOverlay').style.webkitAnimationName = 'fadeOut';
 	document.getElementById('outOfFocusOverlay').style.animationName = 'fadeOut';
-	document.getElementById('helpPopup').style.webkitAnimationName = 'zoomOut';
-	document.getElementById('helpPopup').style.animationName = 'zoomOut';
-				
-	window.setTimeout(ClearHelpPopup_RestoreFocus,400);
+	document.getElementById(popupID).style.webkitAnimationName = 'zoomOut';
+	document.getElementById(popupID).style.animationName = 'zoomOut';
+	
+	//wait till animation finishes then change display to 'none' restoring user control - this should match the animation durration in CSS
+	window.setTimeout(function() {ClearHelpPopup_RestoreFocus(popupID);},400);
 }
-function ClearHelpPopup_RestoreFocus()
+function ClearHelpPopup_RestoreFocus(popupID)
 {
-	document.getElementById('helpPopup').style.display='none';
+	document.getElementById(popupID).style.display='none';
 	document.getElementById('outOfFocusOverlay').style.display='none';
 }
 					</script>";

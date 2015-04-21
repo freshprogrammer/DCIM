@@ -361,6 +361,26 @@ a.cmdbLink, a.bpLink {
 	100% {transform: scale(0,0);}
 }
 
+@-webkit-keyframes newspaperIn{
+	000% {transform: scale(0,0) rotate(360deg);}
+	100% {}
+}
+
+@keyframes newspaperIn {
+	000% {transform: scale(0,0) rotate(360deg);}
+	100% {}
+}
+
+@-webkit-keyframes newspaperOut{
+	000% {}
+	100% {transform: scale(0,0) rotate(360deg);}
+}
+
+@keyframes newspaperOut {
+	000% {}
+	100% {transform: scale(0,0) rotate(360deg);}
+}
+
 button {
 	margin: 0;
 	//height: 16;
