@@ -3764,9 +3764,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
 			
-			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreateHelpPopup('helpPopup');\"></a></span>\n";
-			echo "<div id='helpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
-			echo "<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = \"ClearHelpPopup('helpPopup');\"></div>";
+			echo "<div id='badgeHelpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
+			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\"></a></span>\n";
 		}
 		echo "<BR>\n";
 		

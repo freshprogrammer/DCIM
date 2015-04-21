@@ -475,6 +475,7 @@
 	SQLIDisconnect();
 ?>
 	</td></tr></tbody></table>
+	<div id='outOfFocusOverlay' class='outOfFocusOverlay' onclick = 'ClearActivePopup();'></div>
 </body>
 
 <footer>
