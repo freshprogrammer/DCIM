@@ -246,7 +246,7 @@
 		global $db_password;
 		global $database;
 		
-		$backup_file = "colo_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
+		$backup_file = "db_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
 		$command = "mysqldump --opt -h $dbhost -u $dbuser -p $dbpass "."test_db | gzip > $backup_file";
 		
 		select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
@@ -2492,10 +2492,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, 
-				l.locationid, l.colo, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.locationid=?";
 		
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -2507,14 +2507,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $locationID, $colo, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
 		{
 			$stmt->fetch();
-			$fullLocationName = FormatLocation($site, $colo, $location);
-			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			$fullLocationName = FormatLocation($site, $room, $location);
 			
 			if(UserHasLocationPermission() ||UserHasCircuitPermission())
 			{
@@ -2598,15 +2597,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS loc, 
+			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 				FROM dcim_location AS l
-					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
-				ORDER BY site, colo, loc, unit!=0, unit DESC, name, member";
+				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -2618,7 +2618,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $locationID, $colo, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			
@@ -3187,11 +3187,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-body'>\n\n";
 		
 		//get device info
-		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, d.locationid, l.colo, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
 			FROM dcim_device AS d
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE deviceid=? 
 			LIMIT 1";
 		
@@ -3206,7 +3207,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('i', $input);		
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $locationID, $colo, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
 			$deviceCount = $stmt->num_rows;
 		}
 		
@@ -3217,16 +3218,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-				
+			
 			$stmt->fetch();
-		
+			
 			$deviceInfo = GetDeviceFromModelName($model);
 			
 			$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
 			$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member, true);
 			$pageSubTitle = "Device: ".MakeHTMLSafe($deviceFullName);
-			$fullLocationName = FormatLocation($siteName, $colo, $locationName);
-			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			$fullLocationName = FormatLocation($siteName, $room, $locationName);
 			
 			//customer   model  status
 			//location - size   unit
@@ -3279,13 +3279,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			if($isColo)
+			if($deviceInfo->coloDevice)
 				echo "<b>Colo:</b>";
 			else
 				echo "<b>Model:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			if($isColo)
+			if($deviceInfo->coloDevice)
 				echo MakeHTMLSafe(DeviceType($type));
 			else
 				echo MakeHTMLSafe($model);
@@ -3326,7 +3326,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//asset serial and notes
 			echo "<table width=100%>\n";
 			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
-			if(!$isColo)
+			if(!$deviceInfo->coloDevice)
 			{
 				echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
 				echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
