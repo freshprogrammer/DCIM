@@ -3677,14 +3677,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ListBadges($search, $input)
 	{
+		//NOTE badges are not filtered by site as they are assumed to be cross site compatable
 		global $mysqli;
-
-		//TODO badges are not filtered by site... not sure if badges are cross site compatable or not - probably requires adding siteid field to badge records to fix
 		
 		if($search)
 		{
 			$input = "%".$input."%";
-
+			
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editDate, b.qauser, b.qadate
 			FROM dcim_badge AS b
 				LEFT JOIN dcim_customer AS c ON c.hno=b.hno 
@@ -3700,38 +3699,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			//hack to limit badges to site 0
-			$searchSiteID = 0;
-			
-			//location search for locations to append to badge visit info - this is outdated and not used any more anyways - delete this
-			$locQuery = "SELECT l.siteid, CAST(l.colo AS UNSIGNED) AS colo, l.name 
+			//location search for locations to append to badge visit info - this is outdated and not used any more anyways
+			//TODO delete this since its not needed anymore though this information might still be usefull in the future
+			$locQuery = "SELECT s.name AS site, r.name AS room, l.name 
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-			WHERE l.siteid=? AND d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
-		
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
+			
 			if (!($stmt = $mysqli->prepare($locQuery)))
 			{
 				//TODO handle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 				return -1;
 			}
-			$stmt->bind_Param('is', $searchSiteID, $input);
+			$stmt->bind_Param('s', $input);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteID, $colo, $locationName);
+			$stmt->bind_result($site, $room, $locationName);
 			$locCount = $stmt->num_rows;
 			
 			$customerLocations = "";
 			if($locCount>0)
 			{
-				$first = true;
-				while ($stmt->fetch()) 
-				{
-					if(!$first) $customerLocations .= " & ";
-					$first = false;
-					
-					$customerLocations .= $colo." ".$locationName;
-				}
+				$locationArray = array();
+				while ($stmt->fetch())
+					$locationArray[] = FormatLocation($site, $room, $locationName);
+				$customerLocations  = implode(" & ",$locationArray);
 			}
 			
 			
@@ -4037,37 +4032,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, l.colo, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-						LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(l.colo,' ',l.name) LIKE ?		
+						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
 				UNION
-					SELECT '', s.name, l.colo, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
-							LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-						WHERE l.visible='T' AND
-							CONCAT(l.colo,' ',l.name) LIKE ?
-				ORDER BY site, colo, loc, length(name) DESC, unit DESC,name, member";
+							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+						WHERE l.visible='T' AND (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('ssss', $input, $input, $input, $input);
+			$stmt->bind_Param('ssssss', $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
-			$query = "SELECT d.deviceid, s.name AS site, l.colo, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.hno=?
-			ORDER BY status, site, colo, loc, unit, name, member";
+			ORDER BY status, site, room, loc, unit, name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
@@ -4081,7 +4078,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $colo, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		
@@ -4118,7 +4115,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				echo "<tr class='$rowClass'>";
 				if($search)
