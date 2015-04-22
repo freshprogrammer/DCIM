@@ -4506,26 +4506,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationPage)
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_location AS l
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.locationid=? AND s.siteid=?
 			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
 		else
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.hno=? AND s.siteid=?
 			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
 		
 		
@@ -4543,7 +4545,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$locationID, $colo, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($site,$room,$locationID, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		echo "<span class='tableTitle'>Power Circuits</span>\n";
@@ -4563,7 +4565,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 			
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
