@@ -154,17 +154,17 @@ $restoreDataSQLFile = "../../restoredata/demoData.sql";
 		 INSERT INTO dcimlog_room SELECT NULL,'I' AS logtype,a.* FROM dcim_room AS a WHERE 1=1;
 		
 		
-		 ALTER TABLE  `dcim_location`    ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
-		 ALTER TABLE  `dcim_location`    ADD INDEX (  `roomid` ) ;
-		 ALTER TABLE  `dcimlog_location` ADD  `roomid` INT( 8 ) NOT NULL AFTER  `locationid` ;
-		 ALTER TABLE  `dcimlog_location` ADD INDEX (  `roomid` ) ;
+		 ALTER TABLE `dcim_location`    ADD `roomid` INT( 8 ) NOT NULL AFTER  `locationid`;
+		 ALTER TABLE `dcim_location`    ADD INDEX ( `roomid` );
+		 ALTER TABLE `dcimlog_location` ADD `roomid` INT( 8 ) NOT NULL AFTER  `locationid`;
+		 ALTER TABLE `dcimlog_location` ADD INDEX ( `roomid` );
 		 UPDATE dcim_location    SET roomid= 1+CAST(colo AS UNSIGNED);
 		 UPDATE dcimlog_location SET roomid= 1+CAST(colo AS UNSIGNED);
-		 UPDATE dcim_location    SET roomid=7 where roomid=1;
-		 UPDATE dcimlog_location SET roomid=7 where roomid=1;
+		 UPDATE dcim_location    SET roomid=7 WHERE colo='00';
+		 UPDATE dcimlog_location SET roomid=7 WHERE colo='00';
 		
-		 ALTER TABLE  `dcim_power`    ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
-		 ALTER TABLE  `dcimlog_power` ADD  `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ;
+		 ALTER TABLE `dcim_power`    ADD `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER `status`;
+		 ALTER TABLE `dcimlog_power` ADD `load` DECIMAL( 4, 2 ) NOT NULL DEFAULT  '0' AFTER `status`;
 		 UPDATE dcim_power    AS p SET p.load=p.cload;
 		 UPDATE dcimlog_power AS p SET p.load=p.cload;
 		

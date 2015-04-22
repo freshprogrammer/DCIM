@@ -3611,7 +3611,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device
-		
+			
 			if(UserHasWritePermission())
 			{	
 				$action = "./?deviceid=$input";
@@ -3622,7 +3622,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			echo "<BR>\n";
-				
+			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -3659,7 +3659,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-header'>Chassis Details for $chassisName</div>\n";
 		echo "<div class='panel-body'>\n\n";
 		
-		
 		//all Ports
 		ListDevicePorts($chassisName,"",true);
 		
@@ -3668,8 +3667,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//initialize page JS
 			echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
 			//$pageSubTitle = $customer;
-		}   
-	
+		}
+		
 		//end panel and panel body
 		echo "</div>\n";
 		echo "</div>\n";
@@ -4186,11 +4185,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, l.siteid, l.colo, l.name, l.size, l.type, l.status
+		$query = "SELECT s.name, l.locationid, l.siteid, r.name, l.name, l.size, l.type, l.status
 			FROM dcim_location AS l
-			LEFT JOIN dcim_site AS s ON s.siteid=l.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.visible='T'
-			ORDER BY l.colo, l.name";
+			ORDER BY s.name r.name, l.name";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
@@ -4199,23 +4199,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			//$stmt->bind_Param('s', $input);// no params
-			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteName, $locationID, $siteID, $colo, $location, $size, $type, $status);
+			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $size, $type, $status);
 			while ($stmt->fetch()) 
 			{
-				//TODO should this be full location name? or atleast show site name?
-				//$fullLocationName = FormatLocation($site, $colo, $location);
-				
-				if($colo<1)
-					$locationName = $location;// misc locations not in a CA
-				else
-					$locationName = $location. " (CA$colo)";
-					
+				$fullLocationName = FormatLocation($site, $room, $location);
 				$selected = ($locationID==$locationInput ? "Selected" : "");
-				$locationOptions .= "<option value='$locationID' $selected>$locationName</option>\n";
+				$locationOptions .= "<option value='$locationID' $selected>$fullLocationName</option>\n";
 			}
 		}
 		
@@ -4390,13 +4381,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($siteID, $ca, $row)
+	function ListLocationCustomers($siteID, $roomID, $row)
 	{
-		//build table of all deives/customers in location range - search only
+		//build table of all devices/customers in location range - search only from room/row nav links 	
+		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
+		//TODO this should also have a select at the top to get the details about this location - IE site name, room name not use IDs - issue #66
 		global $mysqli;
 		
 		$showEmpty = true;
-		
+			
 		$panelDescription = "";
 		if(strlen($row) > 0)
 		{
@@ -4408,31 +4401,33 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$filter = "l.colo=?";
-			$needle = $ca;
-			$panelDescription = "Locations in CA $ca";
+			$filter = "l.roomid=?";
+			$needle = $roomID;
+			$panelDescription = "Locations in RoomID#$roomID";
 		}
 		
 		if($showEmpty)
-			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, s.note AS sitenote, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				WHERE l.siteid = ?
 					AND $filter
 					AND l.visible='T'
-				ORDER BY colo, l.name";
+				ORDER BY r.name, l.name";
 		else
-			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, s.note AS sitenote, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.siteid=?
 				AND $filter
 				AND d.locationid=l.locationid
 				AND d.hno=c.hno
 				AND d.status='A'
-			ORDER BY colo, l.name";
+			ORDER BY r.name, l.name";
 
 			
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -4445,7 +4440,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $siteNote, $locationID, $colo, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+		$stmt->bind_result($site, $siteNote, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
 		$count = $stmt->num_rows;
 		
 		$panelDescription = $panelDescription . " ($count)";
@@ -4460,9 +4455,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$searchTitle = "SITEID#$siteID:";
 			
 			if(strlen($row) > 0)
-				$searchTitle = $searchTitle." Row ".substr($row,0,2). " ";
+				$searchTitle = $searchTitle." Row ".substr($row,0,2);
 			else
-				$searchTitle = $searchTitle." CA#$ca ";
+				$searchTitle = $searchTitle." RoomID#$roomID";
 			$searchTitle = $searchTitle." Location(s)";				
 			
 			echo "<span class='tableTitle'>$searchTitle</span>\n";
@@ -4478,7 +4473,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
 				
 				echo "<tr class='$rowClass'>";
