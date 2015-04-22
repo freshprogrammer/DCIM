@@ -5100,7 +5100,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//group concat by port to combine vlans
 		$query = "SELECT
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,l.colo,l.name,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,r.name,l.name,
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
@@ -5115,7 +5115,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_customer AS sc ON sc.hno=s.hno
 				LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
 				LEFT JOIN dcim_location AS l ON s.locationid=l.locationid
-				LEFT JOIN dcim_site AS site ON l.siteid=site.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS site ON r.siteid=site.siteid
 			WHERE $filter
 			GROUP BY dp.deviceportid
 			ORDER BY 3,4,6,7";
@@ -5132,7 +5133,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchColo,$switchLocationName, 
+						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchRoom,$switchLocationName, 
 						   $hNo, $type, $speed, $note, $status, $switchHNo, $switchCust, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 		$portCount = $stmt->num_rows;
 		
@@ -5208,7 +5209,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
-				$switchLocationFullName = FormatLocation($switchSite,$switchColo,$switchLocationName);
+				$switchLocationFullName = FormatLocation($switchSite,$switchRoom,$switchLocationName);
 				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
@@ -5452,7 +5453,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE r.roomid=? AND p.panel=?
-			GROUP BY s.siteid, p.panel, p.circuit
+			GROUP BY r.roomid, p.panel, p.circuit
 			ORDER BY p.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -5490,7 +5491,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
 			$numberOfCircuitsPerPanel = 42;
 			$tableCircuitNo = 0;
-			$oddColor = false;
 			$prevWas208Left = false;
 			$prevWas208Right = false;
 			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
@@ -5500,9 +5500,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$left = ($tableCircuitNo%2)!=0;
 				
 				//this will make 0&1 odd color and 2&3 not for every set of 4
-				$oddColor = $tableCircuitNo%4<=1;
-				
-				if($oddColor) $cellClass = "powerAuditCellOne";
+				if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
 				else $cellClass = "powerAuditCellTwo";
 				
 				if($circuit<$tableCircuitNo)
@@ -5601,7 +5599,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			GROUP BY l.siteid, r.roomid, p.panel
+			GROUP BY r.roomid, p.panel
 			ORDER BY s.name, r.name, p.panel";
 		
 		if (!($stmt = $mysqli->prepare($query)))

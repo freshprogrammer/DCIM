@@ -224,7 +224,6 @@
 			$searchPlaceHolders[] = "Give a man a match...";
 			$searchPlaceHolders[] = "Not from The Simpsons&reg;";
 			$searchPlaceHolders[] = "One man's dream of data";
-			$searchPlaceHolders[] = "Pronounced 'kid'";
 			$searchPlaceHolders[] = "Please like and subscribe";
 			$searchPlaceHolders[] = "Doesn't search Facebook";
 			$searchPlaceHolders[] = "No Facebook login";
