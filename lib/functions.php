@@ -3332,7 +3332,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
 				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName, '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
 			}
 			//editMode button
 			if(UserHasWritePermission())
