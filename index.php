@@ -51,8 +51,7 @@
 	
 	$search = GetInput("search");
 	$page = GetInput("page");
-	$pa_siteid = GetInput("pa_siteid");
-	$pa_room = GetInput("pa_room");
+	$pa_roomID = GetInput("pa_roomid");
 	$pa_panel = GetInput("pa_panel");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
@@ -376,9 +375,9 @@
 		{
 			if($page==="PowerAudit")
 			{
-				if(strlen($pa_siteid) > 0 && strlen($pa_room) > 0 && strlen($pa_panel) > 0)
+				if(strlen($pa_roomID) > 0 && strlen($pa_panel) > 0)
 				{
-					PowerAuditPanel($pa_siteid,$pa_room,$pa_panel);
+					PowerAuditPanel($pa_roomID,$pa_panel);
 				}
 				else
 				{

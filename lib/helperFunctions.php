@@ -438,14 +438,24 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $portFullName;
 	}
 	
-	function FormatLocation($siteName, $roomName, $locationName)
+	function FormatLocation($siteName, $roomName, $locationName, $showSite=true)
 	{
-		if($roomName==null)
-			$fullLocationName = "(Unknown Site & Room) $locationName";
-		else if($siteName==null)
-			$fullLocationName = "(Unknown Site) $roomName $locationName";
+		if($showSite)
+		{
+			if($roomName==null)
+				$fullLocationName = "(Unknown Site & Room) $locationName";
+			else if($siteName==null)
+				$fullLocationName = "(Unknown Site) $roomName $locationName";
+			else
+				$fullLocationName = "$siteName $roomName $locationName";
+		}
 		else
-			$fullLocationName = "$siteName $roomName $locationName";
+		{
+			if($roomName==null)
+				$fullLocationName = "(Unknown Room) $locationName";
+			else
+				$fullLocationName = "$roomName $locationName";
+		}
 		return $fullLocationName;
 	}
 	
