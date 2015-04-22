@@ -69,20 +69,34 @@
 	//returns 1 if DB is ready to update
 	//returns 0 if DB is not ready
 	//returns -1 if DB is already updated
-	function IsDatabaseUpToDate_Update1()
+	function IsDatabaseUpToDate_Update1($executePart1, $executePart2)
 	{
 		global $debugMessage;
 		
 		//assumes all changes happen at once - so if 1 is valid they all must be
-		if(DoesTableExist("dcim_room"))
-			return -1;
-		else
-			return 1;
+		if($executePart1)
+		{
+			if(DoesTableExist("dcim_room"))
+				return -1;//already up to day
+			else
+				return 1;// good to update
+		}
+		else if($executePart2)
+		{
+			//if(DoesTableExist("dcim_room"))
+			//	return -1;//already up to day
+			//else
+				return 1;// good to update
+		}
 	}
 	
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
-	function RunDBUpdate_Update1()
+	function RunDBUpdate_Update1($executePart1, $executePart2)
 	{
+		//paramaters should be mutialy exclusive, so only 1 is true at any time
+		//$executePart1 = true;//safe db additions
+		//$executePart2 = false; //unsafe db removals that will only work after code has been updated
+		
 		/* // "x" denotes code is ready
 		 * This will Update the Database by doing the following in the main and log tables:
 		 *x	Drop field dcim_deviceport.hno
@@ -105,9 +119,6 @@
 		global $debugMessage;
 		
 		$debugMessage[]= "RunDBUpdate_Update1()-Start";
-
-		$executePart1 = true;//safe db additions
-		$executePart2 = false; //unsafe db removals that will only work after code has been updated
 
 		// Part 1 unsafe changes ///////////////////////////////////
 		if($executePart1)

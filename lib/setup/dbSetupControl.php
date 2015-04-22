@@ -16,7 +16,8 @@
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
-	$SCRIPTID_DB_UPDATE_1 = 11;
+	$SCRIPTID_DB_UPDATE_1_1 = 11;
+	$SCRIPTID_DB_UPDATE_1_2 = 12;
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
@@ -42,7 +43,8 @@
 		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
 		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
 		<option value='0'									>-</option>
-		<option value='$SCRIPTID_DB_UPDATE_1'				>Update database with latest update</option>
+		<option value='$SCRIPTID_DB_UPDATE_1_1'				>Update database with latest update (part 1)</option>
+		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
 	</select>
 	<input type='submit' value='Run'>
 	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
@@ -122,11 +124,12 @@
 		global $SCRIPTID_BUILD_DATABASE;
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
-		global $SCRIPTID_DB_UPDATE_1;
+		global $SCRIPTID_DB_UPDATE_1_1;
+		global $SCRIPTID_DB_UPDATE_1_2;
 		
-		if($dbScriptID==$SCRIPTID_DB_UPDATE_1)
+		if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
 		{
-			return IsDatabaseUpToDate_Update1();
+			return IsDatabaseUpToDate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
 		}
 		return 1;
 	}
@@ -138,8 +141,8 @@
 		global $SCRIPTID_BUILD_DATABASE;
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
-		global $SCRIPTID_DB_UPDATE_1;
-		
+		global $SCRIPTID_DB_UPDATE_1_1;
+		global $SCRIPTID_DB_UPDATE_1_2;
 		//TODO create the core of this function
 		//$validationCode = (int)GetInput("code");
 		// == date('j');//day of the month
@@ -152,7 +155,8 @@
 		global $SCRIPTID_BUILD_DATABASE;
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
-		global $SCRIPTID_DB_UPDATE_1;
+		global $SCRIPTID_DB_UPDATE_1_1;
+		global $SCRIPTID_DB_UPDATE_1_2;
 		global $errorMessage;
 		
 		switch($dbScriptID)
@@ -174,9 +178,10 @@
 				RestoreDBWithDemoData();
 				echo "<BR>Done";
 				break;
-			case $SCRIPTID_DB_UPDATE_1:
+			case $SCRIPTID_DB_UPDATE_1_1:
+			case $SCRIPTID_DB_UPDATE_1_2:
 				echo "Processing Update...";
-				RunDBUpdate_Update1();
+				RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
 				echo "<BR>Done";
 				break;
 			default:
