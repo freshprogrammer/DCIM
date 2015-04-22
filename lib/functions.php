@@ -4185,7 +4185,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, l.siteid, r.name, l.name, l.size, l.type, l.status
+		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.size, l.type, l.status
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -4413,7 +4413,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				WHERE l.siteid = ?
+				WHERE s.siteid = ?
 					AND $filter
 					AND l.visible='T'
 				ORDER BY r.name, l.name";
@@ -4422,7 +4422,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE l.siteid=?
+			WHERE s.siteid=?
 				AND $filter
 				AND d.locationid=l.locationid
 				AND d.hno=c.hno
