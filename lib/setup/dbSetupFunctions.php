@@ -393,6 +393,7 @@
 		$companyNameNouns[]="Bubbles       ";
 		$companyNameNouns[]="Portals       ";
 		$companyNameNouns[]="Friends       ";
+		$companyNameNouns[]="Resorts       ";
 		
 		$adjetives = array();
 		$adjetives[]="Mega           ";
