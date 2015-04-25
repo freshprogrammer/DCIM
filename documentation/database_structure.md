@@ -55,7 +55,6 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |deviceportid|int(8)|NO|PRI|*NULL*|auto_increment|
-|hno|int(8)|NO||*NULL*||
 |deviceid|int(8)|NO|MUL|*NULL*||
 |pic|int(2)|NO||0||
 |port|int(2)|NO||*NULL*||
@@ -73,9 +72,8 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |locationid|int(8)|NO|PRI|*NULL*|auto_increment|
-|siteid|int(8)|NO|MUL|*NULL*||
-|colo|varchar(3)|NO||*NULL*||
-|name|varchar(10)|NO||||
+|roomid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO|MUL|*NULL*||
 |size|varchar(10)|NO||||
 |type|char(1)|NO||||
 |units|int(3)|NO||1||
@@ -113,12 +111,12 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |powerid|smallint(8) unsigned|NO|PRI|*NULL*|auto_increment|
-|panel|varchar(3)|YES||*NULL*||
-|circuit|varchar(5)|YES||*NULL*||
-|volts|smallint(3)|YES||*NULL*||
-|amps|tinyint(2)|YES||*NULL*||
+|panel|varchar(3)|NO||*NULL*||
+|circuit|tinyint(2)|NO||*NULL*||
+|volts|smallint(3)|NO||120||
+|amps|tinyint(2)|NO||20||
 |status|varchar(1)|NO||*NULL*||
-|cload|decimal(4,2)|YES||*NULL*||
+|load|decimal(4,2)|NO||0.00||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
@@ -133,6 +131,19 @@
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcim_room
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|roomid|int(8)|NO|PRI|*NULL*|auto_increment|
+|siteid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO||*NULL*||
+|fullname|varchar(128)|NO||*NULL*||
+|custaccess|varchar(1)|NO||T||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO||-1||
 |qadate|datetime|NO||*NULL*||
 
 #### Describe dcim_site
@@ -240,7 +251,6 @@
 |deviceportlogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
 |deviceportid|int(8)|NO|MUL|*NULL*||
-|hno|int(8)|NO||*NULL*||
 |deviceid|int(8)|NO|MUL|*NULL*||
 |pic|int(2)|NO||0||
 |port|int(2)|NO||*NULL*||
@@ -260,9 +270,8 @@
 |locationlogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
 |locationid|int(8)|NO|MUL|*NULL*||
-|siteid|int(8)|NO|MUL|*NULL*||
-|colo|varchar(3)|NO||*NULL*||
-|name|varchar(10)|NO||||
+|roomid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO|MUL|*NULL*||
 |size|varchar(10)|NO||||
 |type|char(1)|NO||||
 |units|int(3)|NO||1||
@@ -306,12 +315,12 @@
 |powerlogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
 |powerid|int(8)|NO|MUL|*NULL*||
-|panel|varchar(3)|YES||*NULL*||
-|circuit|varchar(5)|YES||*NULL*||
-|volts|smallint(3)|YES||*NULL*||
-|amps|tinyint(2)|YES||*NULL*||
+|panel|varchar(3)|NO||*NULL*||
+|circuit|tinyint(2)|NO||*NULL*||
+|volts|smallint(3)|NO||120||
+|amps|tinyint(2)|NO||20||
 |status|varchar(1)|NO||*NULL*||
-|cload|decimal(4,2)|YES||*NULL*||
+|load|decimal(4,2)|NO||0.00||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
@@ -328,6 +337,21 @@
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcimlog_room
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|roomlogid|int(8)|NO|PRI|*NULL*|auto_increment|
+|logtype|varchar(1)|NO||I||
+|roomid|int(8)|NO|MUL|*NULL*||
+|siteid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO||*NULL*||
+|fullname|varchar(128)|NO||*NULL*||
+|custaccess|varchar(1)|NO||T||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO||-1||
 |qadate|datetime|NO||*NULL*||
 
 #### Describe dcimlog_site

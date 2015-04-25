@@ -1,7 +1,7 @@
 ## DCIM - Data Center Infrastructure Management
 
 ### Database Details
-[DB Documentation](documentation/database structure.md)
+[DB Documentation](documentation/database_structure.md)
 ![DCIM DC Visual Diagram](/documentation/dcim_db_visual.jpg)
 
 ### Cookies
