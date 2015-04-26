@@ -65,7 +65,7 @@
 	{
 		global $uniqueIDNo;
 		$uniqueIDNo++;
-
+		
 		$result = str_replace("<","", $input);
 		$result = str_replace(">","", $result);
 		$result = str_replace("\\","", $result);
@@ -90,19 +90,17 @@
 	}
 	
 	function MakeRecoverySQLInsert($table, $id)
-	{
-		// get the record		  
+	{// get the record
 		$selectSQL = "SELECT * FROM `" . $table . "` WHERE `id` = " . $id . ';';
-	
+		
 		$result = mysql_query($selectSQL, $YourDbHandle);
-		$row = mysql_fetch_assoc($result); 
-	
+		$row = mysql_fetch_assoc($result);
+		
 		$insertSQL = "INSERT INTO `" . $table . "` SET ";
-		foreach ($row as $field => $value) {
+		foreach ($row as $field => $value)
 			$insertSQL .= " `" . $field . "` = '" . $value . "', ";
-		}
 		$insertSQL = trim($insertSQL, ", ");
-	
+		
 		return $insertSQL;
 	}
 	
@@ -127,18 +125,12 @@
 	{
 		//truncates a string to a certain char length, stopping on a word if not specified otherwise.
 		if (strlen($string) > $length) 
-		{
-			//limit hit!
+		{//limit hit!
 			$string = substr($string,0,($length -3));
-			if ($stopanywhere) 
-			{
-				//stop anywhere
+			if ($stopanywhere)//stop anywhere
 				$string .= '...';
-			} else
-			{
-				//stop on a word.
+			else //stop on a word
 				$string = substr($string,0,strrpos($string,' ')).'...';
-			}
 		}
 		return $string;
 	}
@@ -166,7 +158,6 @@
 					$linecount++;
 				}
 			}
-			
 			fclose($handle);
 		}
 		else
@@ -236,7 +227,7 @@
 		$grandTotal = 0;
 		
 		$query = "SHOW TABLES";
-					
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = $errorMessage."ShowDBCounts() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
@@ -263,7 +254,7 @@
 					$stmt2->bind_result($count);
 					$stmt2->fetch();
 					$grandTotal += $count;
-			
+					
 					$verboseResult .= "--$table - $count records.<BR>";
 				}
 			}
@@ -271,7 +262,7 @@
 		}
 		return $grandTotal;
 	}
-
+	
 	function DescribeDBInMarkDown()
 	{//show count for all tables in DB
 		global $mysqli;
@@ -280,7 +271,7 @@
 		$result = "";
 		
 		$query = "SHOW TABLES";
-			
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = $errorMessage."DescribeDBInMarkDown() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
@@ -290,7 +281,7 @@
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($table);
-
+			
 			while ($stmt->fetch())
 			{
 				$query2 = "Describe  $table";
@@ -330,7 +321,7 @@
 		header("Expires: 0"); // Proxies
 		
 		$output = fopen("php://output", "w");
-		foreach ($data as $row) 
+		foreach ($data as $row)
 		{
 			fputcsv($output, $row); // here you can change delimiter/enclosure
 		}
@@ -375,7 +366,7 @@
 		global $mysqli;
 		global $errorMessage;
 		
-		$query = "SHOW TABLES LIKE  '$tableName'";
+		$query = "SHOW TABLES LIKE '$tableName'";
 		
 		$result = false;
 		if (!($stmt = $mysqli->prepare($query)))
@@ -384,7 +375,7 @@
 		{
 			if(!$stmt->execute())
 				$errorMessage[] = "DoesTableExist($tableName)-Error executing($query).";
-			else 
+			else
 			{
 				$stmt->store_result();
 				$count = $stmt->num_rows;
@@ -395,6 +386,38 @@
 					$errorMessage[] = "DoesTableExist($tableName)-Error:Multiple tables found.";
 				else
 					$errorMessage[] = "DoesTableExist($tableName)-Error:Table not found.";
+				*/
+			}
+			$stmt->close();
+		}
+		return $result;
+	}
+	
+	function DoesFieldExist($tableName, $fieldName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SHOW COLUMNS FROM `$tableName` LIKE '$fieldName'";
+		
+		$result = false;
+		if (!($stmt = $mysqli->prepare($query)))
+			$errorMessage[] = "DoesFieldExist($tableName,$fieldName)-Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			if(!$stmt->execute())
+				$errorMessage[] = "DoesFieldExist($tableName,$fieldName)-Error executing($query).";
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				if($count==1)
+					$result = true;
+				/* //dont report errors
+				else if($count>1)
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Multiple fields found.";
+				else
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Field not found.";
 				*/
 			}
 			$stmt->close();

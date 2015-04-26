@@ -77,17 +77,25 @@
 		if($executePart1)
 		{
 			if(DoesTableExist("dcim_room"))
-				return -1;//already up to day
+				return -1;//already up to date
 			else
 				return 1;// good to update
 		}
 		else if($executePart2)
 		{
-			//if(DoesTableExist("dcim_room"))
-			//	return -1;//already up to day
-			//else
-				return 1;// good to update
+			//it part 1 up to date
+			if(IsDatabaseUpToDate_Update1(true,false)==-1)
+			{
+				// do legacy fields still exist
+				if(DoesFieldExist("dcim_location","colo"))
+					return 1;// good to update
+				else
+					return -1;//already up to date
+			}
+			else
+				return 0;//not executed part 1 yet
 		}
+		return 0;//shouldn't be able to get here - should be caught above
 	}
 	
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
@@ -394,6 +402,7 @@
 		$companyNameNouns[]="Portals       ";
 		$companyNameNouns[]="Friends       ";
 		$companyNameNouns[]="Resorts       ";
+		$companyNameNouns[]="Boating       ";
 		
 		$adjetives = array();
 		$adjetives[]="Mega           ";
