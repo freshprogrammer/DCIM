@@ -29,14 +29,37 @@
 <title>DCIM DB update control</title>
 <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
 <link rel="stylesheet" href="../css/default.css">
+<script type='text/javascript'>
+function ConfirmIntent()
+{
+	var selectValue = document.getElementById('scriptidselect').value;
+	//only prompt on values that do things. - Could algo give custom messges here
+	if(<?php echo "selectValue==$SCRIPTID_BUILD_DATABASE || selectValue==$SCRIPTID_CREATE_DEMO_DATA || selectValue==$SCRIPTID_BUILD_DB_WITH_DEMO_DATA || selectValue==$SCRIPTID_DB_UPDATE_1_1 || selectValue==$SCRIPTID_DB_UPDATE_1_2"; ?>)
+	{
+		var confirmed = false;
+		var confirm = prompt("Are you sure you want to run this script that will masively change the DB? Enter 'YES' to confirm.", "");
+		
+		if (confirm != null) 
+		{
+			if(confirm=="YES")
+				confirmed = true;
+			else
+				alert("Failed Authentication. You must be not be sure.");
+		}
+		return confirmed;
+	}
+	else
+		return true;
+}
+</script>
 </head>
 <font size=5><b>DCIM Database update control</b></font><BR>
 <?php
 	
 	//simple action selection form
-	echo "<form action='' method='post'>
+	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>
 	Script to run:
-	<select name='scriptid'>
+	<select id='scriptidselect' name='scriptid'>
 		<option value='0'									>No Action</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
@@ -143,9 +166,7 @@
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
-		//TODO create the core of this function
-		//$validationCode = (int)GetInput("code");
-		// == date('j');//day of the month
+		//This will be validated in JS
 		return true;
 	}
 	
