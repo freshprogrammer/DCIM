@@ -4265,11 +4265,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.visible='T'
-			ORDER BY s.name r.name, l.name";
+			ORDER BY s.name, r.name, l.name";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so the error is never seen 
+			//TODO handle this better - this runs further down the page - so this error is never seen - fixed with #74
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
