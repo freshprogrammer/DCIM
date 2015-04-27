@@ -1,30 +1,6 @@
 <?php 
 //these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
 //some of this is also a type of documentation of DB values like LocationType() or DeviceType(), ect
-
-	function SQLIConnect()
-	{
-		global $mysqli;
-		global $db_host;
-		global $db_user;
-		global $db_password;
-		global $database;
-		
-		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
-		
-		/* check connection */
-		if (mysqli_connect_errno()) {
-			printf("Connect failed: %s\n", mysqli_connect_error());
-			exit();
-		}
-	}
-	
-	function SQLIDisconnect()
-	{
-		global $mysqli;
-		
-		$mysqli->close();
-	}
 	
 	class DeviceModel 
 	{
@@ -98,6 +74,7 @@
 		else if($table=="dcim_portvlan")			$descrip='Port VLAN';
 		else if($table=="dcim_power")				$descrip='Power Circuit';
 		else if($table=="dcim_powerloc")			$descrip='Power Location';
+		else if($table=="dcim_room")				$descrip='Room';
 		else if($table=="dcim_site")				$descrip='Site';
 		else if($table=="dcim_user")				$descrip='User';
 		else if($table=="dcim_vlan")				$descrip='Subnet';
@@ -110,6 +87,7 @@
 		else if($table=="dcimlog_portvlan")			$descrip='Port VLAN Log';
 		else if($table=="dcimlog_power")			$descrip='Power Circuit Log';
 		else if($table=="dcimlog_powerloc")			$descrip='Power Location Log';
+		else if($table=="dcimlog_room")				$descrip='Room Log';
 		else if($table=="dcimlog_site")				$descrip='Site Log';
 		else if($table=="dcimlog_vlan")				$descrip='Subnet Log';
 		else $descrip = false;
@@ -127,6 +105,7 @@
 		else if($table=="dcim_portvlan")			$keyFieldName='portvlanid';
 		else if($table=="dcim_power")				$keyFieldName='powerid';
 		else if($table=="dcim_powerloc")			$keyFieldName='powerlocid';
+		else if($table=="dcim_room")				$keyFieldName='roomid';
 		else if($table=="dcim_site")				$keyFieldName='siteid';
 		else if($table=="dcim_user")				$keyFieldName='userid';
 		else if($table=="dcim_vlan")				$keyFieldName='vlanid';
@@ -139,6 +118,7 @@
 		else if($table=="dcimlog_portvlan")			$keyFieldName='portvlanlogid';
 		else if($table=="dcimlog_power")			$keyFieldName='powerlogid';
 		else if($table=="dcimlog_powerloc")			$keyFieldName='powerloclogid';
+		else if($table=="dcimlog_room")				$keyFieldName='roomlogid';
 		else if($table=="dcimlog_site")				$keyFieldName='sitelogid';
 		else if($table=="dcimlog_vlan")				$keyFieldName='vlanlogid';
 		else $keyFieldName = false;
@@ -156,6 +136,7 @@
 		else if($table=="dcim_portvlan")		$logTable='dcimlog_portvlan';
 		else if($table=="dcim_power")			$logTable='dcimlog_power';
 		else if($table=="dcim_powerloc")		$logTable='dcimlog_powerloc';
+		else if($table=="dcim_room")			$logTable='dcimlog_room';
 		else if($table=="dcim_site")			$logTable='dcimlog_site';
 		else if($table=="dcim_vlan")			$logTable='dcimlog_vlan';
 		else $logTable = false;
@@ -433,16 +414,23 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $portFullName;
 	}
 	
-	function FormatLocation($siteName, $colo, $locationName)
+	function FormatLocation($siteName, $roomName, $locationName, $showSite=true)
 	{
-		if($siteName==null)
-			$fullLocationName = "None";
+		if($showSite)
+		{
+			if($roomName==null)
+				$fullLocationName = "(Unknown Site & Room) $locationName";
+			else if($siteName==null)
+				$fullLocationName = "(Unknown Site) $roomName $locationName";
+			else
+				$fullLocationName = "$siteName $roomName $locationName";
+		}
 		else
 		{
-			if((int)$colo >= 1)//TODO this may not be multi site compatable - should be fixed by "room" table instead of colo field
-				$fullLocationName = "$siteName CA$colo $locationName";
-			else 
-				$fullLocationName = "$siteName $locationName";
+			if($roomName==null)
+				$fullLocationName = "(Unknown Room) $locationName";
+			else
+				$fullLocationName = "$roomName $locationName";
 		}
 		return $fullLocationName;
 	}
@@ -560,6 +548,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($type === "F") return "Full Cab";
 		else if($type === "H") return "Half Cab";
 		else if($type === "S") return "Switch";
+		else return "Unknown";
+	}
+	
+	function RoomCustAccess($access)
+	{
+		if($access === "T") return "Customer Has Access";
+		else if($access === "F") return "No Customer Access";
 		else return "Unknown";
 	}
 	

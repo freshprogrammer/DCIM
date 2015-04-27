@@ -51,8 +51,7 @@
 	
 	$search = GetInput("search");
 	$page = GetInput("page");
-	$pa_siteid = GetInput("pa_siteid");
-	$pa_room = GetInput("pa_room");
+	$pa_roomID = GetInput("pa_roomid");
 	$pa_panel = GetInput("pa_panel");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
@@ -61,7 +60,7 @@
 	$userIDInput = GetInput("userid");
 	$loc = GetInput("loc");
 	$row = GetInput("row");
-	$ca = GetInput("ca");
+	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
 
@@ -225,7 +224,6 @@
 			$searchPlaceHolders[] = "Give a man a match...";
 			$searchPlaceHolders[] = "Not from The Simpsons&reg;";
 			$searchPlaceHolders[] = "One man's dream of data";
-			$searchPlaceHolders[] = "Pronounced 'kid'";
 			$searchPlaceHolders[] = "Please like and subscribe";
 			$searchPlaceHolders[] = "Doesn't search Facebook";
 			$searchPlaceHolders[] = "No Facebook login";
@@ -292,15 +290,16 @@
 	
 	if(UserHasReadPermission())
 	{
+		//TODO this should be an actual room lookup not hardcoded roomids
 		?>
 		<!-- HEADER LINKS -->
 		<table width=100%><tr>
 			<td>
-				<a class='navLinks' href='?ca=01'>CA1</a>&nbsp;
-				<a class='navLinks' href='?ca=02'>CA2</a>&nbsp;
-				<a class='navLinks' href='?ca=03'>CA3</a>&nbsp;
-				<a class='navLinks' href='?ca=04'>CA4</a>&nbsp;
-				<a class='navLinks' href='?ca=05'>CA5</a>&nbsp;
+				<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;
+				<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;
+				<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;
+				<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;
+				<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;
 				&nbsp;&nbsp;
 				<div class="navLinks">ROW:</div> 
 				<a class='navLinks' href='?row=01'>1</a>&nbsp;
@@ -349,11 +348,11 @@
 			ShowCustomerPage($host, $siteID);
 			
 		}
-		else if(strlen($ca) > 0 || strlen($row) > 0)
+		else if(strlen($roomID) > 0 || strlen($row) > 0)
 		{
 			//show all customer at given locations - IE all customers in a location range, like row X or CA X
 			//--these vars are from the header links - should be formatted propperly
-			ListLocationCustomers($siteID, $ca, $row);
+			ListLocationCustomers($siteID, $roomID, $row);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{
@@ -375,9 +374,9 @@
 		{
 			if($page==="PowerAudit")
 			{
-				if(strlen($pa_siteid) > 0 && strlen($pa_room) > 0 && strlen($pa_panel) > 0)
+				if(strlen($pa_roomID) > 0 && strlen($pa_panel) > 0)
 				{
-					PowerAuditPanel($pa_siteid,$pa_room,$pa_panel);
+					PowerAuditPanel($pa_roomID,$pa_panel);
 				}
 				else
 				{

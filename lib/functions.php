@@ -246,7 +246,7 @@
 		global $db_password;
 		global $database;
 		
-		$backup_file = "colo_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
+		$backup_file = "db_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
 		$command = "mysqldump --opt -h $dbhost -u $dbuser -p $dbpass "."test_db | gzip > $backup_file";
 		
 		select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
@@ -288,9 +288,9 @@
 		$valid = $inputCount>0;
 		if($valid)
 		{
-			$query = "UPDATE dcim_power
-					SET cload=?, status=?
-					WHERE powerid=?
+			$query = "UPDATE dcim_power AS p
+					SET p.load=?, p.status=?
+					WHERE p.powerid=?
 					LIMIT 1";
 			
 			if (!($stmt = $mysqli->prepare($query)))
@@ -854,7 +854,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				$query = "INSERT INTO dcim_power
-					(panel,circuit,volts,amps,status,cload,edituser,editdate) 
+					(panel,circuit,volts,amps,status,`load`,edituser,editdate) 
 					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 					
 				if (!($stmt = $mysqli->prepare($query)))
@@ -1000,9 +1000,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else
 			{
-				$query = "UPDATE dcim_power
-					SET amps=?, status=?, cload=? 
-					WHERE powerid=? 
+				$query = "UPDATE dcim_power AS p
+					SET p.amps=?, p.status=?, p.load=? 
+					WHERE p.powerid=? 
 					LIMIT 1";
 		
 				if (!($stmt = $mysqli->prepare($query)))
@@ -2567,10 +2567,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, 
-				l.locationid, l.colo, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.locationid=?";
 		
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -2582,14 +2582,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $locationID, $colo, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
 		{
 			$stmt->fetch();
-			$fullLocationName = FormatLocation($site, $colo, $location);
-			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			$fullLocationName = FormatLocation($site, $room, $location);
 			
 			if(UserHasLocationPermission() ||UserHasCircuitPermission())
 			{
@@ -2673,15 +2672,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS loc, 
+			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 				FROM dcim_location AS l
-					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
-				ORDER BY site, colo, loc, unit!=0, unit DESC, name, member";
+				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -2693,7 +2693,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $locationID, $colo, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			
@@ -2740,7 +2740,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>\n";
 			
 			//list circuits
-			ListPowerCircuits(true,$locationID,$siteID); 
+			ListPowerCircuits(true,$locationID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -3164,7 +3164,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>\n";
 			
 			//Power Circuits of devices
-			$powerCircuitsCount = ListPowerCircuits(false,$hNo,$siteID);
+			$powerCircuitsCount = ListPowerCircuits(false,$hNo);
 			
 			//end search (or customer details) panel and panel body
 		}
@@ -3262,11 +3262,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-body'>\n\n";
 		
 		//get device info
-		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, d.locationid, l.colo, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
 			FROM dcim_device AS d
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE deviceid=? 
 			LIMIT 1";
 		
@@ -3281,7 +3282,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('i', $input);		
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $locationID, $colo, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
 			$deviceCount = $stmt->num_rows;
 		}
 		
@@ -3292,16 +3293,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-				
+			
 			$stmt->fetch();
-		
+			
 			$deviceInfo = GetDeviceFromModelName($model);
 			
 			$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
 			$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member, true);
 			$pageSubTitle = "Device: ".MakeHTMLSafe($deviceFullName);
-			$fullLocationName = FormatLocation($siteName, $colo, $locationName);
-			$isColo = ($type=="F" || $type=="H" || $type=="C");
+			$fullLocationName = FormatLocation($siteName, $room, $locationName);
 			
 			//customer   model  status
 			//location - size   unit
@@ -3354,13 +3354,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			if($isColo)
+			if($deviceInfo->coloDevice)
 				echo "<b>Colo:</b>";
 			else
 				echo "<b>Model:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			if($isColo)
+			if($deviceInfo->coloDevice)
 				echo MakeHTMLSafe(DeviceType($type));
 			else
 				echo MakeHTMLSafe($model);
@@ -3401,7 +3401,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//asset serial and notes
 			echo "<table width=100%>\n";
 			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
-			if(!$isColo)
+			if(!$deviceInfo->coloDevice)
 			{
 				echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
 				echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
@@ -3686,7 +3686,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device
-		
+			
 			if(UserHasWritePermission())
 			{	
 				$action = "./?deviceid=$input";
@@ -3697,7 +3697,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			echo "<BR>\n";
-				
+			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -3734,7 +3734,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-header'>Chassis Details for $chassisName</div>\n";
 		echo "<div class='panel-body'>\n\n";
 		
-		
 		//all Ports
 		ListDevicePorts($chassisName,"",true);
 		
@@ -3743,8 +3742,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//initialize page JS
 			echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
 			//$pageSubTitle = $customer;
-		}   
-	
+		}
+		
 		//end panel and panel body
 		echo "</div>\n";
 		echo "</div>\n";
@@ -3752,14 +3751,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ListBadges($search, $input)
 	{
+		//NOTE badges are not filtered by site as they are assumed to be cross site compatable
 		global $mysqli;
-
-		//TODO badges are not filtered by site... not sure if badges are cross site compatable or not - probably requires adding siteid field to badge records to fix
 		
 		if($search)
 		{
 			$input = "%".$input."%";
-
+			
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editDate, b.qauser, b.qadate
 			FROM dcim_badge AS b
 				LEFT JOIN dcim_customer AS c ON c.hno=b.hno 
@@ -3775,38 +3773,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			//hack to limit badges to site 0
-			$searchSiteID = 0;
-			
-			//location search for locations to append to badge visit info - this is outdated and not used any more anyways - delete this
-			$locQuery = "SELECT l.siteid, CAST(l.colo AS UNSIGNED) AS colo, l.name 
+			//location search for locations to append to badge visit info - this is outdated and not used any more anyways
+			//TODO delete this since its not needed anymore though this information might still be usefull in the future
+			$locQuery = "SELECT s.name AS site, r.name AS room, l.name 
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-			WHERE l.siteid=? AND d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
-		
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
+			
 			if (!($stmt = $mysqli->prepare($locQuery)))
 			{
 				//TODO handle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 				return -1;
 			}
-			$stmt->bind_Param('is', $searchSiteID, $input);
+			$stmt->bind_Param('s', $input);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteID, $colo, $locationName);
+			$stmt->bind_result($site, $room, $locationName);
 			$locCount = $stmt->num_rows;
 			
 			$customerLocations = "";
 			if($locCount>0)
 			{
-				$first = true;
-				while ($stmt->fetch()) 
-				{
-					if(!$first) $customerLocations .= " & ";
-					$first = false;
-					
-					$customerLocations .= $colo." ".$locationName;
-				}
+				$locationArray = array();
+				while ($stmt->fetch())
+					$locationArray[] = FormatLocation($site, $room, $locationName);
+				$customerLocations  = implode(" & ",$locationArray);
 			}
 			
 			
@@ -4112,37 +4106,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, l.colo, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-						LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(l.colo,' ',l.name) LIKE ?		
+						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
 				UNION
-					SELECT '', s.name, l.colo, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
-							LEFT JOIN dcim_site AS s ON l.siteid=s.siteid 
-						WHERE l.visible='T' AND
-							CONCAT(l.colo,' ',l.name) LIKE ?
-				ORDER BY site, colo, loc, length(name) DESC, unit DESC,name, member";
+							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+						WHERE l.visible='T' AND (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('ssss', $input, $input, $input, $input);
+			$stmt->bind_Param('ssssss', $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
-			$query = "SELECT d.deviceid, s.name AS site, l.colo, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.hno=?
-			ORDER BY status, site, colo, loc, unit, name, member";
+			ORDER BY status, site, room, loc, unit, name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
@@ -4156,7 +4152,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $colo, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		
@@ -4193,7 +4189,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				echo "<tr class='$rowClass'>";
 				if($search)
@@ -4264,36 +4260,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, l.siteid, l.colo, l.name, l.size, l.type, l.status
+		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.size, l.type, l.status
 			FROM dcim_location AS l
-			LEFT JOIN dcim_site AS s ON s.siteid=l.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.visible='T'
-			ORDER BY l.colo, l.name";
+			ORDER BY s.name, r.name, l.name";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so the error is never seen 
+			//TODO handle this better - this runs further down the page - so this error is never seen - fixed with #74
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
 		{
-			//$stmt->bind_Param('s', $input);// no params
-			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteName, $locationID, $siteID, $colo, $location, $size, $type, $status);
+			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $size, $type, $status);
 			while ($stmt->fetch()) 
 			{
-				//TODO should this be full location name? or atleast show site name?
-				//$fullLocationName = FormatLocation($site, $colo, $location);
-				
-				if($colo<1)
-					$locationName = $location;// misc locations not in a CA
-				else
-					$locationName = $location. " (CA$colo)";
-					
+				$fullLocationName = FormatLocation($site, $room, $location);
 				$selected = ($locationID==$locationInput ? "Selected" : "");
-				$locationOptions .= "<option value='$locationID' $selected>$locationName</option>\n";
+				$locationOptions .= "<option value='$locationID' $selected>$fullLocationName</option>\n";
 			}
 		}
 		
@@ -4468,13 +4456,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($siteID, $ca, $row)
+	function ListLocationCustomers($siteID, $roomID, $row)
 	{
-		//build table of all deives/customers in location range - search only
+		//build table of all devices/customers in location range - search only from room/row nav links 	
+		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
+		//TODO this should also have a select at the top to get the details about this location - IE site name, room name not use IDs - issue #66
 		global $mysqli;
 		
 		$showEmpty = true;
-		
+			
 		$panelDescription = "";
 		if(strlen($row) > 0)
 		{
@@ -4486,31 +4476,33 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$filter = "l.colo=?";
-			$needle = $ca;
-			$panelDescription = "Locations in CA $ca";
+			$filter = "l.roomid=?";
+			$needle = $roomID;
+			$panelDescription = "Locations in RoomID#$roomID";
 		}
 		
 		if($showEmpty)
-			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-					LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-				WHERE l.siteid = ?
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.siteid = ?
 					AND $filter
 					AND l.visible='T'
-				ORDER BY colo, l.name";
+				ORDER BY r.name, l.name";
 		else
-			$query = "SELECT s.name AS site, s.note AS sitenote, l.locationid, l.colo, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-			WHERE l.siteid=?
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE s.siteid=?
 				AND $filter
 				AND d.locationid=l.locationid
 				AND d.hno=c.hno
 				AND d.status='A'
-			ORDER BY colo, l.name";
+			ORDER BY r.name, l.name";
 
 			
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -4523,7 +4515,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $siteNote, $locationID, $colo, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+		$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
 		$count = $stmt->num_rows;
 		
 		$panelDescription = $panelDescription . " ($count)";
@@ -4538,9 +4530,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$searchTitle = "SITEID#$siteID:";
 			
 			if(strlen($row) > 0)
-				$searchTitle = $searchTitle." Row ".substr($row,0,2). " ";
+				$searchTitle = $searchTitle." Row ".substr($row,0,2);
 			else
-				$searchTitle = $searchTitle." CA#$ca ";
+				$searchTitle = $searchTitle." RoomID#$roomID";
 			$searchTitle = $searchTitle." Location(s)";				
 			
 			echo "<span class='tableTitle'>$searchTitle</span>\n";
@@ -4556,7 +4548,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
 				
 				echo "<tr class='$rowClass'>";
@@ -4581,7 +4573,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListPowerCircuits($locationPage, $key, $siteID)
+	function ListPowerCircuits($locationPage, $key)
 	{
 		global $mysqli;
 		
@@ -4589,31 +4581,32 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationPage)
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_location AS l
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-			WHERE l.locationid=? AND s.siteid=?
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE l.locationid=?
 			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
 		else
 		{
-			$query = "SELECT s.name AS site, l.locationid, l.colo, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-			WHERE d.hno=? AND s.siteid=?
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE d.hno=?
 			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, l.colo, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
 		
 		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
-		//TODO double check using "location" vs  "reference" properly
 		//TODO This should also check the device status is active and or show/filter that here	
 		
 		if (!($stmt = $mysqli->prepare($query))) 
@@ -4622,11 +4615,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('si', $key, $siteID);
+		$stmt->bind_Param('s', $key);
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$locationID, $colo, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		echo "<span class='tableTitle'>Power Circuits</span>\n";
@@ -4646,18 +4639,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$fullLocationName = FormatLocation($site, $colo, $location);
+				$fullLocationName = FormatLocation($site, $room, $location);
 			
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				if($amps>0)
 				{
-					$percentLoad = round(100*$cLoad/$amps,2);
+					$percentLoad = round(100*$load/$amps,2);
 					
 					if($percentLoad>80)
 						$percentLoad = " (<font color=red>$percentLoad%</font>)";
-					else if($cLoad==0)
+					else if($load==0)
 						$percentLoad = "";
 					else
 						$percentLoad = " ($percentLoad%)";
@@ -4671,12 +4664,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$cLoad."A$percentLoad</td>";
+				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				if(UserHasCircuitPermission())
 				{
@@ -4685,7 +4678,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					$jsSafePanel = MakeJSSafeParam($panel);
 					$jsSafeCircuit = MakeJSSafeParam($circuit);
-					$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $cLoad";
+					$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
 					?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
 					<?php 
 					echo "</td>\n";
@@ -5182,7 +5175,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//group concat by port to combine vlans
 		$query = "SELECT
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,l.colo,l.name,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,r.name,l.name,
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
@@ -5197,7 +5190,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_customer AS sc ON sc.hno=s.hno
 				LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
 				LEFT JOIN dcim_location AS l ON s.locationid=l.locationid
-				LEFT JOIN dcim_site AS site ON l.siteid=site.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS site ON r.siteid=site.siteid
 			WHERE $filter
 			GROUP BY dp.deviceportid
 			ORDER BY 3,4,6,7";
@@ -5214,7 +5208,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchColo,$switchLocationName, 
+						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchRoom,$switchLocationName, 
 						   $hNo, $type, $speed, $note, $status, $switchHNo, $switchCust, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 		$portCount = $stmt->num_rows;
 		
@@ -5290,7 +5284,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
-				$switchLocationFullName = FormatLocation($switchSite,$switchColo,$switchLocationName);
+				$switchLocationFullName = FormatLocation($switchSite,$switchRoom,$switchLocationName);
 				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
@@ -5520,22 +5514,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function PowerAuditPanel($pa_siteid,$pa_room,$pa_panel)
+	function PowerAuditPanel($pa_roomID,$pa_panel)
 	{
 		global $mysqli;
 		global $pageSubTitle;
 
-		//TODO show customer or device per circuit
-		$query = "SELECT s.name AS site, l.locationid,l.colo, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.cload, p.edituser, p.editdate
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=l.siteid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE s.siteid=? AND l.colo=? AND p.panel=?
-			GROUP BY s.siteid, p.panel, p.circuit
-			ORDER BY CAST(p.circuit AS UNSIGNED)";
+			WHERE r.roomid=? AND p.panel=?
+			GROUP BY r.roomid, p.panel, p.circuit
+			ORDER BY p.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5543,18 +5537,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 
-		$stmt->bind_Param('iss', $pa_siteid,$pa_room,$pa_panel);
+		$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $colo, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $cLoad, $editUserID, $editDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 
-		$pageSubTitle = "Power Audit - Site#$pa_siteid Room:$pa_room Panel:$pa_panel";
+		//this data should be looked up in seperate easy select - issue #66
+		$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel";
 
 		echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>\n";
-		echo "Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel\n";
+		echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
 		echo "</div>\n";
 		
 		echo "<div class='panel-body'>\n\n";
@@ -5562,7 +5557,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			//show results
 			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
-			echo "<span class='tableTitle'>Circuits for Site#$pa_siteid Room:$pa_room Panel:$pa_panel</span><BR>\n";
+			echo "<span class='tableTitle'>Circuits for RoomID:$pa_roomID Panel:$pa_panel</span><BR>\n";
 			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
 			echo "<table style='border-collapse: collapse'>\n";
 			
@@ -5571,7 +5566,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
 			$numberOfCircuitsPerPanel = 42;
 			$tableCircuitNo = 0;
-			$oddColor = false;
 			$prevWas208Left = false;
 			$prevWas208Right = false;
 			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
@@ -5581,19 +5575,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$left = ($tableCircuitNo%2)!=0;
 				
 				//this will make 0&1 odd color and 2&3 not for every set of 4
-				$oddColor = $tableCircuitNo%4<=1;
-				
-				if($oddColor) $cellClass = "powerAuditCellOne";
+				if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
 				else $cellClass = "powerAuditCellTwo";
 				
 				if($circuit<$tableCircuitNo)
 					$stmt->fetch();
 				
 				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
-				$locationName = "CA $colo $location";
+				$fullLocationName = FormatLocation($site, $room, $location, false);
 				if($amps>0)
 				{
-					$percentLoad = round(100*$cLoad/$amps,2);
+					$percentLoad = round(100*$load/$amps,2);
 					if($percentLoad>80)
 						$percentLoad = "<font color=red>$percentLoad</font>";
 				}
@@ -5628,13 +5620,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 					echo "	</tr></table><table width=100%><tr>\n";
 					//echo "	$fullLocationName ($percentLoad%) ";
-					echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($locationName)."</a></b>&nbsp;&nbsp;</td>\n";
+					echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
 					echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 					$checked = ($status==="A") ? " checked" : "";
 					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$cLoad' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
 					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
 					echo "	</td></tr>\n";
 					echo "	</table>\n";
@@ -5662,7 +5654,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</table></form>\n";
 		}
 		else
-			echo "No power circuits found for Site#$pa_siteid Room:$pa_room Panel:$pa_panel<BR>\n";
+			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
 						
 		echo "</div>\n";
 		echo "</div>\n";
@@ -5676,13 +5668,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$pageSubTitle = "Power Audit - Panel List";
 		
-		$query = "SELECT s.name,s.siteid, l.colo, p.panel
+		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
-				LEFT JOIN dcim_site AS s ON l.siteid=s.siteid
-			GROUP BY l.siteid, l.colo, p.panel
-			ORDER BY s.name, l.colo, p.panel";
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			GROUP BY r.roomid, p.panel
+			ORDER BY s.name, r.name, p.panel";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -5692,7 +5685,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$siteID, $colo, $panel);
+		$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
 		$count = $stmt->num_rows;
 		
 		
@@ -5706,7 +5699,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			//show results
 			echo "<span class='tableTitle'>All Panels</span><BR>\n";
-			echo CreateDataTableHeader(array("Site","CA#","Panel"));
+			echo CreateDataTableHeader(array("Site","Room","Panel"));
 			
 			//list result data
 			$oddRow = false;
@@ -5718,8 +5711,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($colo)."</td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_siteid=$siteID&pa_room=$colo&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
 				echo "</tr>";
 			}
 			echo "</table>";

@@ -12,7 +12,7 @@
 	if($report==="ActiveBadgeList")
 		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
 	else if($report==="PowerAudit")
-		OutputCSV("PowerAudit-".date("Y-m-d").".csv",CreatePowerAuditExportArray());
+		OutputCSV("PowerAudit-".date("Y-m-d").".csv",CreatePowerAuditExportArray(0));//NOTE: this is only running for site 0
 	else 
 	{
 		echo "No Report Specified";
@@ -28,12 +28,13 @@
 		//select empty as customer to keep return results to match search query
 		$query = "SELECT cur.hno, cur.cno, cur.customer, cur.name, cur.badgeno, cur.issue, cur.hand, GROUP_CONCAT(cur.fullloc SEPARATOR ', ') AS alllocs
 			FROM (SELECT b.badgeid, c.hno, c.cno, c.name AS customer, b.name, b.badgeno, b.issue, b.hand,
-				CONCAT(s.name,' CA',CAST(l.colo AS UNSIGNED),' ',l.name) AS fullloc
+				CONCAT(s.name,' ',r.name,' ',l.name) AS fullloc
 				FROM dcim_badge AS b
 					LEFT JOIN dcim_customer AS c ON c.hno = b.hno
 					LEFT JOIN dcim_device AS d ON d.hno=c.hno
 					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-					LEFT JOIN dcim_site AS s ON s.siteid=l.siteid 
+					LEFT JOIN dcim_room AS r ON r.roomid=l.roomid 
+					LEFT JOIN dcim_site AS s ON s.siteid=r.siteid 
 				WHERE b.status =  'A' AND d.type IN ('C','F','H') AND d.status='A') 
 					AS cur
 			GROUP BY cur.badgeid
@@ -66,23 +67,23 @@
 		return $result;
 	}
 	
-	function CreatePowerAuditExportArray()
+	function CreatePowerAuditExportArray($siteID)
 	{
 		global $mysqli;
 		
 		$result = array();
-		$siteID = 0;
 		
-		$query = "SELECT s.name AS site,l.colo,l.name AS location,p.panel,p.circuit,c.name AS cust, c.hno, p.cload, (p.cload/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
+		//this is grouped by circuit
+		$query = "SELECT s.name AS site,r.name AS room,l.name AS location,p.panel,p.circuit,c.name AS cust, c.hno, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
 			FROM dcim_location AS l
 				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				INNER JOIN dcim_power AS p ON pl.powerid=p.powerid
-				INNER JOIN dcim_site AS s ON l.siteid=s.siteid
+				INNER JOIN dcim_room AS r ON r.roomid=l.roomid 
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid AND s.siteid=$siteID
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE l.siteid=$siteID
-			GROUP BY s.siteid,l.colo,l.name,p.panel,p.circuit
-			ORDER BY l.colo,l.name,p.panel,CAST(p.circuit AS UNSIGNED)";
+			GROUP BY l.locationid,p.powerid
+			ORDER BY s.name, r.name,l.name,p.panel,p.circuit";
 
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -92,7 +93,7 @@
 			
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site,$colo,$locationName,$panel,$circuit,$cust,$hNo,$cLoad,$percent,$amps,$volts,$status,$editDate);
+		$stmt->bind_result($site,$room,$locationName,$panel,$circuit,$cust,$hNo,$load,$percent,$amps,$volts,$status,$editDate);
 		$count = $stmt->num_rows;
 		
 		if($count>0)
@@ -108,7 +109,7 @@
 			//list result data
 			while ($stmt->fetch())
 			{
-				$fullLocationName = FormatLocation($site, $colo, $locationName);
+				$fullLocationName = FormatLocation($site, $room, $locationName);
 				if($showNAForEmptyLocations)
 					$cust = (strlen($cust)>0)?$cust:"N/A";
 				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
@@ -127,7 +128,7 @@
 					}
 					$lastLoc = $fullLocationName;
 				}
-				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$cLoad."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
+				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$load."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
 			}
 		}
 		return $result;

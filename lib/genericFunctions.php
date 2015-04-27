@@ -1,31 +1,72 @@
-<?php 
-
+<?php
+	function SQLIConnect()
+	{
+		global $mysqli;
+		global $db_host;
+		global $database;
+		global $db_user;
+		global $db_password;
+		
+		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
+		
+		/* check connection */
+		if (mysqli_connect_errno()) {
+			printf("Connect failed: %s\n", mysqli_connect_error());
+			exit();
+		}
+	}
+	
+	function SQLIConnect_Admin()
+	{
+		global $mysqli;
+		global $db_host;
+		global $database;
+		global $db_admin_user;
+		global $db_admin_password;
+		
+		$mysqli = new mysqli($db_host, $db_admin_user, $db_admin_password, $database);
+		
+		/* check connection */
+		if (mysqli_connect_errno()) {
+			printf("Connect failed: %s\n", mysqli_connect_error());
+			exit();
+		}
+	}
+	
+	function SQLIDisconnect()
+	{
+		global $mysqli;
+		
+		$mysqli->close();
+	}
+	
 	function SessionSetup()
 	{
 		//http://spotlesswebdesign.com/blog.php?id=11
 		global $_SESSION;
 		// start session 
-		session_start(); 
-
+		session_start();
+		
 		// set page instance id 
-		if (!isset($_SESSION['page_instance_ids'])) { 
-			$_SESSION['page_instance_ids'] = array(); 
-		} 
-		$_SESSION['page_instance_ids'][] = uniqid('', true); 
+		if (!isset($_SESSION['page_instance_ids']))
+		{
+			$_SESSION['page_instance_ids'] = array();
+		}
+		$_SESSION['page_instance_ids'][] = uniqid('', true);
 	}
 	
 	function IsValidSession()
-	{
-		//TODO note this throws an error if page_instance_id is not found
-		//returns true if this is a valid session - IE this is a fresh submit and not a refresh
-		
+	{//returns true if this is a valid session - IE this is a fresh submit and not a refresh because a valid page_instance_id was submitted with the last form and it has not been used and removed
 		global $_SESSION;
-		
-		$page_id_index = array_search($_POST['page_instance_id'], $_SESSION['page_instance_ids']); 
-		if ($page_id_index !== false) { 
-			unset($_SESSION['page_instance_ids'][$page_id_index]); 
-			// do form processing 
-			return true;
+
+		if (isset($_POST['page_instance_id']) && isset($_SESSION['page_instance_ids']))
+		{
+			$page_id_index = array_search($_POST['page_instance_id'], $_SESSION['page_instance_ids']); 
+			if ($page_id_index !== false) { 
+				unset($_SESSION['page_instance_ids'][$page_id_index]); 
+				// do form processing 
+				return true;
+			}
 		}
 		return false;
 	}
@@ -35,7 +76,7 @@
 		$prevLen = 0;
 		while($prevLen < strlen($input))
 		{
-			$prevLen = strlen($input);   
+			$prevLen = strlen($input);
 			
 			$input = trim($input);
 			
@@ -65,7 +106,7 @@
 	{
 		global $uniqueIDNo;
 		$uniqueIDNo++;
-
+		
 		$result = str_replace("<","", $input);
 		$result = str_replace(">","", $result);
 		$result = str_replace("\\","", $result);
@@ -90,29 +131,27 @@
 	}
 	
 	function MakeRecoverySQLInsert($table, $id)
-	{
-		// get the record		  
+	{// get the record
 		$selectSQL = "SELECT * FROM `" . $table . "` WHERE `id` = " . $id . ';';
-	
+		
 		$result = mysql_query($selectSQL, $YourDbHandle);
-		$row = mysql_fetch_assoc($result); 
-	
+		$row = mysql_fetch_assoc($result);
+		
 		$insertSQL = "INSERT INTO `" . $table . "` SET ";
-		foreach ($row as $field => $value) {
+		foreach ($row as $field => $value)
 			$insertSQL .= " `" . $field . "` = '" . $value . "', ";
-		}
 		$insertSQL = trim($insertSQL, ", ");
-	
+		
 		return $insertSQL;
 	}
 	
-	function GetInput($name)
+	function GetInput($name, $checkPost=true, $checkGet=true)
 	{
-		if(isset($_POST[$name]))
+		if($checkPost && isset($_POST[$name]))
 		{
 			$input = $_POST[$name];
 		}
-		else if(isset($_GET[$name]))
+		else if($checkGet && isset($_GET[$name]))
 		{
 			$input = $_GET[$name];
 		}
@@ -127,18 +166,12 @@
 	{
 		//truncates a string to a certain char length, stopping on a word if not specified otherwise.
 		if (strlen($string) > $length) 
-		{
-			//limit hit!
+		{//limit hit!
 			$string = substr($string,0,($length -3));
-			if ($stopanywhere) 
-			{
-				//stop anywhere
+			if ($stopanywhere)//stop anywhere
 				$string .= '...';
-			} else
-			{
-				//stop on a word.
+			else //stop on a word
 				$string = substr($string,0,strrpos($string,' ')).'...';
-			}
 		}
 		return $string;
 	}
@@ -166,7 +199,6 @@
 					$linecount++;
 				}
 			}
-			
 			fclose($handle);
 		}
 		else
@@ -236,7 +268,7 @@
 		$grandTotal = 0;
 		
 		$query = "SHOW TABLES";
-					
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = $errorMessage."ShowDBCounts() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
@@ -263,7 +295,7 @@
 					$stmt2->bind_result($count);
 					$stmt2->fetch();
 					$grandTotal += $count;
-			
+					
 					$verboseResult .= "--$table - $count records.<BR>";
 				}
 			}
@@ -271,7 +303,7 @@
 		}
 		return $grandTotal;
 	}
-
+	
 	function DescribeDBInMarkDown()
 	{//show count for all tables in DB
 		global $mysqli;
@@ -280,7 +312,7 @@
 		$result = "";
 		
 		$query = "SHOW TABLES";
-			
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = $errorMessage."DescribeDBInMarkDown() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
@@ -290,7 +322,7 @@
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($table);
-
+			
 			while ($stmt->fetch())
 			{
 				$query2 = "Describe  $table";
@@ -330,11 +362,107 @@
 		header("Expires: 0"); // Proxies
 		
 		$output = fopen("php://output", "w");
-		foreach ($data as $row) 
+		foreach ($data as $row)
 		{
 			fputcsv($output, $row); // here you can change delimiter/enclosure
 		}
 		fclose($output);
 	}
-
+	
+	function SQLFileToCmdArray($fileName)
+	{
+		//kept very simple for a purpose
+		//scan file deleting all blank lines or lines that start with "--" or "/*"
+		$result = array();
+		
+		if (file_exists($fileName))
+		{
+			$handle = fopen($fileName, "r");
+			if($handle!==false)
+			{
+				$cmd = "";
+				while(!feof($handle))
+				{
+					$line = fgets($handle);
+					if(substr($line,0,2)=="--")
+						continue;
+					if(substr($line,0,2)=="/*")
+						continue;
+					$cmd = trim($cmd." ".$line);
+					if(substr($cmd,-1)==";")
+					{
+						$cmd = substr($cmd, 0, -1);//trim semicolon
+						$result[]=$cmd;
+						$cmd = "";
+					}
+				}
+			}	
+			fclose($handle);
+		}
+		return $result;
+	}
+	
+	function DoesTableExist($tableName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SHOW TABLES LIKE '$tableName'";
+		
+		$result = false;
+		if (!($stmt = $mysqli->prepare($query)))
+			$errorMessage[] = "DoesTableExist($tableName)-Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			if(!$stmt->execute())
+				$errorMessage[] = "DoesTableExist($tableName)-Error executing($query).";
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				if($count==1)
+					$result = true;
+				/* //dont report errors
+				else if($count>1)
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Multiple tables found.";
+				else
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Table not found.";
+				*/
+			}
+			$stmt->close();
+		}
+		return $result;
+	}
+	
+	function DoesFieldExist($tableName, $fieldName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SHOW COLUMNS FROM `$tableName` LIKE '$fieldName'";
+		
+		$result = false;
+		if (!($stmt = $mysqli->prepare($query)))
+			$errorMessage[] = "DoesFieldExist($tableName,$fieldName)-Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			if(!$stmt->execute())
+				$errorMessage[] = "DoesFieldExist($tableName,$fieldName)-Error executing($query).";
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				if($count==1)
+					$result = true;
+				/* //dont report errors
+				else if($count>1)
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Multiple fields found.";
+				else
+					$errorMessage[] = "DoesTableExist($tableName)-Error:Field not found.";
+				*/
+			}
+			$stmt->close();
+		}
+		return $result;
+	}
 ?>

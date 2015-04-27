@@ -1,16 +1,28 @@
 <?php 
-	//configuration data
+	//--configuration data
+	//Name of this web site - show at top of page near logo
 	$siteName = "DCIM Name";
+	//Prefix appended to the title of each page
 	$pageTitle = "DCIM Title";
+	//note shown under the site name
 	$versionNote = "note";
+	//durration of user and password cookies - extended on each page refresh
 	$loginCookieDurration = 8*60*60;//8 hours
 	$loginCookieDurrationOniPad = 2*60*60;//2 hours
+	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbSetup.php
+	$demoSiteEnabled = false;
 
 	//DB connect
 	$db_host = "localhost";
-	$db_user = "root";
-	$db_password = "superScurePswd1";
 	$database = "dcimdb";
+	//Write Access: - For full access use UseHigherDBAdminUser()
+	//	GRANT FILE, CREATE TEMPORARY TABLES ON *.*
+	//	GRANT SELECT, INSERT, UPDATE, DELETE ON `$database`.*
+	$db_user = "user";
+	$db_password = "password123";
+	//Full access for truncating, dropping and updating DB
+	$db_admin_user = "root";
+	$db_admin_password = "superScurePswd1";
 	
 	function UserHasDevPermission()
 	{

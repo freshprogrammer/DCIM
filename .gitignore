@@ -1,6 +1,6 @@
 # User-specific files
-*.sql
 *.xcf
 *Thumbs.db
 lib/config.php
 notes/*
+backups/*
