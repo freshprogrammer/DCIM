@@ -222,8 +222,8 @@
 			
 			//change vircuit from varchar(5) to tinyint(2) - reality dictates that this will be from 1-42
 			////no code changes necisary - unless you wanna check some casting 
-			$cmdm = "ALTER TABLE  `dcim_power`    CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
-			$cmdl = "ALTER TABLE  `dcimlog_power` CHANGE  `circuit`  `circuit` TINYINT( 2 ) NOT NULL";
+			$cmdm = "ALTER TABLE  `dcim_power`    CHANGE `circuit` `circuit` TINYINT( 2 ) NOT NULL";
+			$cmdl = "ALTER TABLE  `dcimlog_power` CHANGE `circuit` `circuit` TINYINT( 2 ) NOT NULL";
 			ExecuteThis("U4M",$cmdm);
 			ExecuteThis("U4L",$cmdl);
 			
@@ -236,15 +236,24 @@
 			
 			//increase location.name size from 10 to 50
 			////no code changes necisary
-			$cmdm = "ALTER TABLE  `dcim_location`    CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
-			$cmdl = "ALTER TABLE  `dcimlog_location` CHANGE  `name`  `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+			$cmdm = "ALTER TABLE  `dcim_location`    CHANGE `name` `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+			$cmdl = "ALTER TABLE  `dcimlog_location` CHANGE `name` `name` VARCHAR( 50 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 			ExecuteThis("U8M",$cmdm);
 			ExecuteThis("U8L",$cmdl);
-	
+
+			//drop location.colo and siteid - cleanup
+			////no code changes necisary
 			$cmdm = "ALTER TABLE `dcim_location`    DROP `siteid`, DROP `colo`";
 			$cmdl = "ALTER TABLE `dcimlog_location` DROP `siteid`, DROP `colo`";
 			ExecuteThis("U9M",$cmdm);
 			ExecuteThis("U9L",$cmdl);
+
+			////Cahnge site.note to 'fullname' VARCHAR(128)
+			////no code changes necisary
+			$cmdm = "ALTER TABLE  `dcim_site`    CHANGE `note` `fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+			$cmdl = "ALTER TABLE  `dcimlog_site` CHANGE `note` `fullname` VARCHAR( 128 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+			ExecuteThis("U10M",$cmdm);
+			ExecuteThis("U10L",$cmdl);
 
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 2 complete";
 		}
