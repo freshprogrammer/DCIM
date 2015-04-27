@@ -1,4 +1,45 @@
 <?php
+	function SQLIConnect()
+	{
+		global $mysqli;
+		global $db_host;
+		global $database;
+		global $db_user;
+		global $db_password;
+		
+		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
+		
+		/* check connection */
+		if (mysqli_connect_errno()) {
+			printf("Connect failed: %s\n", mysqli_connect_error());
+			exit();
+		}
+	}
+	
+	function SQLIConnect_Admin()
+	{
+		global $mysqli;
+		global $db_host;
+		global $database;
+		global $db_admin_user;
+		global $db_admin_password;
+		
+		$mysqli = new mysqli($db_host, $db_admin_user, $db_admin_password, $database);
+		
+		/* check connection */
+		if (mysqli_connect_errno()) {
+			printf("Connect failed: %s\n", mysqli_connect_error());
+			exit();
+		}
+	}
+	
+	function SQLIDisconnect()
+	{
+		global $mysqli;
+		
+		$mysqli->close();
+	}
+	
 	function SessionSetup()
 	{
 		//http://spotlesswebdesign.com/blog.php?id=11

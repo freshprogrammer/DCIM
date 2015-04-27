@@ -9,7 +9,7 @@
 	include 'functions.php';
 	include 'setup/dbSetupFunctions.php';
 	
-	SQLIConnect();
+	SQLIConnect_Admin();
 	SessionSetup();
 	
 	//globals
@@ -85,7 +85,7 @@ function ConfirmIntent()
 	
 	// End Definitions - Start Processing ---------------------------------------------------------------------------------------------
 	
-	$validAction = false;// with be set true bellow when checks pass
+	$validAction = false;
 	$dbStatus = 0;
 	$commited = false;
 	$validSession = false;
@@ -95,10 +95,8 @@ function ConfirmIntent()
 	{
 		if(!isset($demoSiteEnabled) || !$demoSiteEnabled)
 		{//this is not a demo server - anthing other that an update will screw with the core data or structure and is not allowed
-			$errorMessage[]="ZZ-Fail1";
-			if($dbScriptID==$SCRIPTID_DB_UPDATE_1)
+			if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
 			{
-				$errorMessage[]="ZZ-Fail2";
 				$validAction = true;
 			}
 		}

@@ -1,30 +1,6 @@
 <?php 
 //these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
 //some of this is also a type of documentation of DB values like LocationType() or DeviceType(), ect
-
-	function SQLIConnect()
-	{
-		global $mysqli;
-		global $db_host;
-		global $db_user;
-		global $db_password;
-		global $database;
-		
-		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
-		
-		/* check connection */
-		if (mysqli_connect_errno()) {
-			printf("Connect failed: %s\n", mysqli_connect_error());
-			exit();
-		}
-	}
-	
-	function SQLIDisconnect()
-	{
-		global $mysqli;
-		
-		$mysqli->close();
-	}
 	
 	class DeviceModel 
 	{

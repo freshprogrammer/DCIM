@@ -14,9 +14,15 @@
 
 	//DB connect
 	$db_host = "localhost";
-	$db_user = "root";
-	$db_password = "superScurePswd1";
 	$database = "dcimdb";
+	//Write Access: - For full access use UseHigherDBAdminUser()
+	//	GRANT FILE, CREATE TEMPORARY TABLES ON *.*
+	//	GRANT SELECT, INSERT, UPDATE, DELETE ON `$database`.*
+	$db_user = "user";
+	$db_password = "password123";
+	//Full access for truncating, dropping and updating DB
+	$db_admin_user = "root";
+	$db_admin_password = "superScurePswd1";
 	
 	function UserHasDevPermission()
 	{
