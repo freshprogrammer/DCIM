@@ -18,6 +18,7 @@
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
 	$SCRIPTID_DB_UPDATE_1_1 = 11;
 	$SCRIPTID_DB_UPDATE_1_2 = 12;
+	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
@@ -34,7 +35,7 @@ function ConfirmIntent()
 {
 	var selectValue = document.getElementById('scriptidselect').value;
 	//only prompt on values that do things. - Could algo give custom messges here
-	if(<?php echo "selectValue==$SCRIPTID_BUILD_DATABASE || selectValue==$SCRIPTID_CREATE_DEMO_DATA || selectValue==$SCRIPTID_BUILD_DB_WITH_DEMO_DATA || selectValue==$SCRIPTID_DB_UPDATE_1_1 || selectValue==$SCRIPTID_DB_UPDATE_1_2"; ?>)
+	if(<?php echo "selectValue==$SCRIPTID_BUILD_DATABASE || selectValue==$SCRIPTID_CREATE_DEMO_DATA || selectValue==$SCRIPTID_BUILD_DB_WITH_DEMO_DATA || selectValue==$SCRIPTID_DB_UPDATE_1_1 || selectValue==$SCRIPTID_DB_UPDATE_1_2 || selectValue==$SCRIPTID_CREATE_POPULATE_UPDATE"; ?>)
 	{
 		var confirmed = false;
 		var confirm = prompt("Are you sure you want to run this script that will masively change the DB? Enter 'YES' to confirm.", "");
@@ -68,6 +69,8 @@ function ConfirmIntent()
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_1'				>Update database with latest update (part 1)</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 	</select>
 	<input type='submit' value='Run'>
 	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
@@ -144,9 +147,6 @@ function ConfirmIntent()
 	//returns -1 if DB is already updated
 	function TestDBReadiness($dbScriptID)
 	{
-		global $SCRIPTID_BUILD_DATABASE;
-		global $SCRIPTID_CREATE_DEMO_DATA;
-		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
 		
@@ -161,11 +161,6 @@ function ConfirmIntent()
 	//this could test against a fixed admin password or something - cant refference DB since that will be wiped here
 	function TestUserCommitment($dbScriptID)
 	{
-		global $SCRIPTID_BUILD_DATABASE;
-		global $SCRIPTID_CREATE_DEMO_DATA;
-		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
-		global $SCRIPTID_DB_UPDATE_1_1;
-		global $SCRIPTID_DB_UPDATE_1_2;
 		//This will be validated in JS
 		return true;
 	}
@@ -178,6 +173,7 @@ function ConfirmIntent()
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
+		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $errorMessage;
 		
 		switch($dbScriptID)
@@ -203,6 +199,17 @@ function ConfirmIntent()
 			case $SCRIPTID_DB_UPDATE_1_2:
 				echo "Processing Update...";
 				RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_CREATE_POPULATE_UPDATE:
+				echo "Processing Rebuild...";
+				BuildDB();
+				echo "<BR>Populating Database...";
+				RestoreDBWithDemoData();
+				echo "<BR>Processing Update Part 1...";
+				RunDBUpdate_Update1(true,false);
+				echo "<BR>Processing Update Part 2...";
+				RunDBUpdate_Update1(false,true);
 				echo "<BR>Done";
 				break;
 			default:
