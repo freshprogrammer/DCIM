@@ -151,7 +151,7 @@
 |---|---|---|---|---|---|
 |siteid|int(8)|NO|PRI|*NULL*|auto_increment|
 |name|varchar(64)|NO||*NULL*||
-|note|text|NO||*NULL*||
+|fullname|varchar(128)|NO||*NULL*||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
@@ -361,7 +361,7 @@
 |logtype|char(1)|NO||I||
 |siteid|int(8)|NO|MUL|*NULL*||
 |name|varchar(64)|NO||*NULL*||
-|note|text|NO||*NULL*||
+|fullname|varchar(128)|NO||*NULL*||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
