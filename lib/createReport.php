@@ -10,7 +10,7 @@
 	$report = GetInput("report");
 	
 	if($report==="ActiveBadgeList")
-		OutputCSV("badgelist.csv",CreateBadgeExportArray());
+		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
 	else if($report==="PowerAudit")
 		OutputCSV("PowerAudit-".date("Y-m-d").".csv",CreatePowerAuditExportArray());
 	else 
