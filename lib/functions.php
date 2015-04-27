@@ -4482,7 +4482,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		
 		if($showEmpty)
-			$query = "SELECT s.name AS site AS sitenote, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
@@ -4493,7 +4493,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					AND l.visible='T'
 				ORDER BY r.name, l.name";
 		else
-			$query = "SELECT s.name AS site AS sitenote, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
