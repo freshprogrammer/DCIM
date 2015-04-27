@@ -2,16 +2,11 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- Host: 10.6.173.44
--- Generation Time: Apr 10, 2015 at 05:49 AM
+-- Generation Time: Apr 27, 2015 at 06:48 AM
 -- Server version: 5.5.33
 -- PHP Version: 5.3.4
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-
---
--- Database: `freshdcim`
---
 
 -- --------------------------------------------------------
 
@@ -110,7 +105,6 @@ CREATE TABLE IF NOT EXISTS `dcimlog_deviceport` (
   `deviceportlogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
   `deviceportid` int(8) NOT NULL,
-  `hno` int(8) NOT NULL,
   `deviceid` int(8) NOT NULL,
   `pic` int(2) NOT NULL DEFAULT '0',
   `port` int(2) NOT NULL,
@@ -140,9 +134,8 @@ CREATE TABLE IF NOT EXISTS `dcimlog_location` (
   `locationlogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
   `locationid` int(8) NOT NULL,
-  `siteid` int(8) NOT NULL,
-  `colo` varchar(3) NOT NULL,
-  `name` varchar(10) NOT NULL DEFAULT '',
+  `roomid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `size` varchar(10) NOT NULL DEFAULT '',
   `type` char(1) NOT NULL DEFAULT '',
   `units` int(3) NOT NULL DEFAULT '1',
@@ -153,9 +146,10 @@ CREATE TABLE IF NOT EXISTS `dcimlog_location` (
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`locationlogid`),
-  KEY `site_colo_name` (`siteid`,`colo`,`name`),
+  KEY `site_colo_name` (`name`),
   KEY `qauser` (`qauser`),
-  KEY `locationid` (`locationid`)
+  KEY `locationid` (`locationid`),
+  KEY `roomid` (`roomid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -218,12 +212,12 @@ CREATE TABLE IF NOT EXISTS `dcimlog_power` (
   `powerlogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
   `powerid` int(8) NOT NULL,
-  `panel` varchar(3) DEFAULT NULL,
-  `circuit` varchar(5) DEFAULT NULL,
-  `volts` smallint(3) DEFAULT NULL,
-  `amps` tinyint(2) DEFAULT NULL,
+  `panel` varchar(3) NOT NULL,
+  `circuit` tinyint(2) NOT NULL,
+  `volts` smallint(3) NOT NULL DEFAULT '120',
+  `amps` tinyint(2) NOT NULL DEFAULT '20',
   `status` varchar(1) NOT NULL,
-  `cload` decimal(4,2) DEFAULT NULL,
+  `load` decimal(4,2) NOT NULL DEFAULT '0.00',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -260,6 +254,30 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powerloc` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dcimlog_room`
+--
+
+DROP TABLE IF EXISTS `dcimlog_room`;
+CREATE TABLE IF NOT EXISTS `dcimlog_room` (
+  `roomlogid` int(8) NOT NULL AUTO_INCREMENT,
+  `logtype` varchar(1) NOT NULL DEFAULT 'I',
+  `roomid` int(8) NOT NULL,
+  `siteid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `fullname` varchar(128) NOT NULL,
+  `custaccess` varchar(1) NOT NULL DEFAULT 'T',
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`roomlogid`),
+  KEY `roomid` (`roomid`),
+  KEY `siteid` (`siteid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dcimlog_site`
 --
 
@@ -269,7 +287,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_site` (
   `logtype` char(1) NOT NULL DEFAULT 'I',
   `siteid` int(8) NOT NULL,
   `name` varchar(64) NOT NULL,
-  `note` text NOT NULL,
+  `fullname` varchar(128) NOT NULL,
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -393,7 +411,6 @@ CREATE TABLE IF NOT EXISTS `dcim_device` (
 DROP TABLE IF EXISTS `dcim_deviceport`;
 CREATE TABLE IF NOT EXISTS `dcim_deviceport` (
   `deviceportid` int(8) NOT NULL AUTO_INCREMENT,
-  `hno` int(8) NOT NULL,
   `deviceid` int(8) NOT NULL,
   `pic` int(2) NOT NULL DEFAULT '0',
   `port` int(2) NOT NULL,
@@ -420,9 +437,8 @@ CREATE TABLE IF NOT EXISTS `dcim_deviceport` (
 DROP TABLE IF EXISTS `dcim_location`;
 CREATE TABLE IF NOT EXISTS `dcim_location` (
   `locationid` int(8) NOT NULL AUTO_INCREMENT,
-  `siteid` int(8) NOT NULL,
-  `colo` varchar(3) NOT NULL,
-  `name` varchar(10) NOT NULL DEFAULT '',
+  `roomid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
   `size` varchar(10) NOT NULL DEFAULT '',
   `type` char(1) NOT NULL DEFAULT '',
   `units` int(3) NOT NULL DEFAULT '1',
@@ -433,8 +449,9 @@ CREATE TABLE IF NOT EXISTS `dcim_location` (
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`locationid`),
-  KEY `site_colo_name` (`siteid`,`colo`,`name`),
-  KEY `qauser` (`qauser`)
+  KEY `site_colo_name` (`name`),
+  KEY `qauser` (`qauser`),
+  KEY `roomid` (`roomid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -489,12 +506,12 @@ CREATE TABLE IF NOT EXISTS `dcim_portvlan` (
 DROP TABLE IF EXISTS `dcim_power`;
 CREATE TABLE IF NOT EXISTS `dcim_power` (
   `powerid` smallint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `panel` varchar(3) DEFAULT NULL,
-  `circuit` varchar(5) DEFAULT NULL,
-  `volts` smallint(3) DEFAULT NULL,
-  `amps` tinyint(2) DEFAULT NULL,
+  `panel` varchar(3) NOT NULL,
+  `circuit` tinyint(2) NOT NULL,
+  `volts` smallint(3) NOT NULL DEFAULT '120',
+  `amps` tinyint(2) NOT NULL DEFAULT '20',
   `status` varchar(1) NOT NULL,
-  `cload` decimal(4,2) DEFAULT NULL,
+  `load` decimal(4,2) NOT NULL DEFAULT '0.00',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -527,6 +544,27 @@ CREATE TABLE IF NOT EXISTS `dcim_powerloc` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dcim_room`
+--
+
+DROP TABLE IF EXISTS `dcim_room`;
+CREATE TABLE IF NOT EXISTS `dcim_room` (
+  `roomid` int(8) NOT NULL AUTO_INCREMENT,
+  `siteid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `fullname` varchar(128) NOT NULL,
+  `custaccess` varchar(1) NOT NULL DEFAULT 'T',
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`roomid`),
+  KEY `siteid` (`siteid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dcim_site`
 --
 
@@ -534,7 +572,7 @@ DROP TABLE IF EXISTS `dcim_site`;
 CREATE TABLE IF NOT EXISTS `dcim_site` (
   `siteid` int(8) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
-  `note` text NOT NULL,
+  `fullname` varchar(128) NOT NULL,
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
