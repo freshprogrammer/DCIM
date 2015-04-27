@@ -22,8 +22,7 @@
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
-	$date = new DateTime();
-	$timeStamp = $date->format('Y-m-d H:i:s');
+	$timeStamp = date("Y-m-d H:i:s");
 	
 ?>
 <head>
