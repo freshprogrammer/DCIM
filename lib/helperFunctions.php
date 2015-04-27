@@ -650,6 +650,10 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	{
 		return UserHasAdminPermission();
 	}
+	function UserHasBadgeDeletePermission()
+	{
+		return UserHasWritePermission();
+	}
 	function UserHasPortAddEditPermission()
 	{
 		return UserHasWritePermission();
@@ -1240,7 +1244,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidBadgeNo($input)
 	{
-		return ValidNumber($input,"BadgeNo",1);
+		return ValidNumber($input,"BadgeNo",1,8);
 	}
 	
 	function ValidBadgeIssue($input)

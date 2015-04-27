@@ -171,7 +171,7 @@
 		
 		$tookAction = false;
 		
-		if($action==="Badge_Edit" || $action==="Badge_Add")
+		if($action==="Badge_Edit" || $action==="Badge_Add" || $action==="Badge_Delete")
 		{
 			ProcessBadgeAction($action);
 			$tookAction = true;
@@ -557,8 +557,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$totalAffectedCount = 0;
 		$valid = true;
-		
+
 		$add = $action==="Badge_Add";
+		$delete = $action==="Badge_Delete";
 		
 		$badgeID = GetInput("badgeid");
 		$badgeNo = GetInput("badgeno");
@@ -573,17 +574,58 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//if edit then validate badgeID, otherwise a new one will be generated on insert
 			if($valid)$valid = ValidBadgeID($badgeID);
 		}
-		if($valid)$valid = ValidBadgeNo($badgeNo);
-		if($valid)$valid = ValidHNo($hNo);
-		if($valid)$valid = ValidBadgeName($name);
-		if($valid)$valid = ValidBadgeIssue($issue);
-		if($valid)$valid = ValidBadgeStatus($status);
+		
+		if(!$delete)
+		{
+			if($valid)$valid = ValidBadgeNo($badgeNo);
+			if($valid)$valid = ValidHNo($hNo);
+			if($valid)$valid = ValidBadgeName($name);
+			if($valid)$valid = ValidBadgeIssue($issue);
+			if($valid)$valid = ValidBadgeStatus($status);
+
+			//make sure customer exists
+			if($valid)$valid = ValidRecord("hno","Hosting #",$hNo,"dcim_customer",true);
+		}
 		
 		//maybe check for existing badges with this badgeNo and warn
 		
-		//make sure customer exists
-		if($valid)$valid = ValidRecord("hno","Hosting #",$hNo,"dcim_customer",true);
+		if($valid && $delete)
+		{
+			//validate badge exists and status is R or D
+			$valid = false;
+			$passedDBChecks = false;
+			$query = "SELECT badgeid, status FROM dcim_badge WHERE badgeid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+			{
+				$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{
+				$stmt->bind_Param('i', $badgeID);		
+				$stmt->execute();
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				
+				if($count==1)
+				{
+					$stmt->bind_result($foundBadgeID,$foundStatus);
+					$stmt->fetch();
+					
+					$passedDBChecks = ($foundStatus=="R" || $foundStatus=="D");
+					
+					if(!$passedDBChecks)
+						$errorMessage[] = "Error: Badge is in invalid status to be deleted.";
+				}
+				else if($count>1)
+					$errorMessage[] = "Error: Multiple badges with ID#$badgeID found.";
+				else if($count>1)
+					$errorMessage[] = "Error: Badge with ID#$badgeID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
 		
+		//do actions
 		if($valid)
 		{
 			$updateAdditionalFields = "";
@@ -593,7 +635,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$enroll = true;
 				$status="A";
 			}
-				
+			
 			if($add)
 			{
 				$handDate = "'0000-00-00'";
@@ -627,6 +669,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$errorMessage[] = "Success, but affected $affectedCount rows.";
 						}
 					}	
+				}
+			}
+			else if($delete)
+			{
+				if(UserHasBadgeDeletePermission())
+				{
+					$query = "DELETE FROM dcim_badge WHERE badgeid=? LIMIT 1";
+				
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Badge Delete Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{
+						$stmt->bind_Param('i', $badgeID);
+				
+						if (!$stmt->execute())//execute
+							$errorMessage[] = "Failed to execute Badge Delete '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
+						else
+						{
+							$affectedCount = $stmt->affected_rows;
+							$totalAffectedCount += $affectedCount;
+							if($affectedCount==1)
+							{
+								$resultMessage[] = "Successfully Deleted Badge.";
+								LogDBChange("dcim_badge",$badgeID,"D");
+							}
+							else
+								$errorMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+				else
+				{
+					$errorMessage[] = "Your do not have permission to delete badges";
 				}
 			}
 			else
@@ -1427,7 +1502,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				$valid = $passedDBChecks;
 			}
-				
+			
 			if($valid && !$delete)
 			{
 				//validate unique deivce(+member)+pic+port combo
@@ -1534,7 +1609,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						VALUES(?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 						
 					if (!($stmt = $mysqli->prepare($query)))
-						$errorMessage[] = "Process Device Insert Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+						$errorMessage[] = "Process Device Port Insert Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 					else
 					{//					   dpptmsnsu
 						$stmt->bind_Param('iiisssssi', $deviceID, $pic, $portNo, $type, $mac, $speed, $note, $status, $userID);
@@ -1568,7 +1643,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$query = "DELETE FROM dcim_deviceport WHERE deviceportid=? LIMIT 1";
 						
 					if (!($stmt = $mysqli->prepare($query)))
-						$errorMessage[] = "Process Device Delete Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+						$errorMessage[] = "Process Device Port Delete Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 					else
 					{//					   k
 						$stmt->bind_Param('i', $devicePortID);
@@ -3257,7 +3332,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
 				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName, '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
 			}
 			//editMode button
 			if(UserHasWritePermission())
@@ -3919,7 +3994,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					</tr>
 					<tr>
 						<td colspan='1' align='Left'>
-							<!-- <button type="button" onclick="DeleteBadge()" tabindex=7>Delete</button> -->
+							<button id=EditBadge_deletebtn type="button" onclick="DeleteBadge()" tabindex=7>Delete</button>
 						</td>
 						<td colspan='1' align='right'>
 							<button type="button" onclick="HideAllEditForms()" tabindex=6>Cancel</button>
