@@ -531,7 +531,7 @@
 		global $mysqli;
 		
 		$reportTitle = "Devices Without Customer or Location";
-		$reportNote = "Disconnected record(s).";
+		$reportNote = "Disconnected record(s) or in Unknown.";
 
 		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
@@ -600,7 +600,7 @@
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE c.name IS NULL OR d.name IS NULL
-			ORDER BY d.name,d.member,dp.pic,dp.port";
+			ORDER BY d.name,d.member, dp.deviceid,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -882,7 +882,7 @@
 		global $mysqli;
 		
 		$reportTitle = "Location records linked to missing records";
-		$reportNote = "Disconnected from site or power.";
+		$reportNote = "Disconnected from room or power (0 power count).";
 
 		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid, COUNT(pl.locationid) AS powerCount
 			FROM dcim_location AS l
