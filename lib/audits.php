@@ -890,7 +890,8 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			GROUP BY l.locationid
-			HAVING powerCount<1 OR r.roomid IS NULL";
+			HAVING powerCount<1 OR r.roomid IS NULL
+			ORDER BY s.name, r.name, l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
