@@ -5062,7 +5062,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDeviceOptions = "";
 		
 		$customerDeviceOptions = "";
-		$customerAndHostingOptions = "";
+		$customerAndInternalOptions = "";
 		$allDeviceOptions = "";
 		if($count>0)
 		{
@@ -5073,16 +5073,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($hNo==$deviceHNo)
 				{
 					$customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 				}
 				$allDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 				
-				if($deviceHNo=='189165')//hostitng
-					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				//TODO: Hadle this selection better - put 'local' devices at top and maybe a divider between them - maybe add a internal flag to customer record #77
+				if($deviceHNo=='189165')//Internal
+					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 			}
 			
 			$childDeviceOptions = $customerDeviceOptions;
-			$parentDeviceOptions = $customerAndHostingOptions;
+			$parentDeviceOptions = $customerAndInternalOptions;
 			
 			if(UserHasDevPermission())
 			{
