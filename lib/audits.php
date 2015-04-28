@@ -156,7 +156,7 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
@@ -175,7 +175,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -183,7 +183,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization"));
+			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization","Reading"));
 			
 			//list result data
 			$oddRow = false;
@@ -204,6 +204,7 @@
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($load)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'><font color=red>".substr($utilization,0,5)."%</font></td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,date("F jS, Y",strtotime($editDate)), $qaUserID, $qaDate)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
