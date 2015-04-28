@@ -3831,7 +3831,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new badge
-			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','".date("Y-m-d")."')\">Add New</button>\n";
 			
 			echo "<div id='badgeHelpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
 			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\"></a></span>\n";
