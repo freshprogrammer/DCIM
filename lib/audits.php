@@ -344,7 +344,7 @@
 		$reportNote= "These are impossible connections left over from old system.";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -352,7 +352,7 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.type IN ('F','C','H') AND dp.port=0
-			ORDER BY cust,name";
+			ORDER BY c.name,d.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
