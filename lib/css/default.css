@@ -252,7 +252,7 @@ a:hover, a:active {
 	display: inline;
 }
 
-a.cmdbLink, a.bpLink {
+a.internalLink {
 	padding-left: 20px;
 	display: inline;
 }

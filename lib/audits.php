@@ -717,25 +717,25 @@
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 			WHERE c.status='I' AND NOT d.status='I'
 			ORDER BY c.name, d.name, d.member";
-	
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
-	
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($cust, $hno, $deviceID, $deviceName, $model, $member);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Customer","Device"));
-				
+			
 			//list result data
 			$oddRow = false;
 			while ($stmt->fetch())
@@ -743,16 +743,16 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-
+				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-	
+				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-	
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}

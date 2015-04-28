@@ -3078,9 +3078,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<table width=100%>\n";
 				echo "<tr>\n";
 				echo "<td valign=top>\n";
-				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n
-			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$hNo' target='_blank' class='cmdbLink'>CMDB</a>\n
-			<a href='https://apps-hdc.safesecureweb.com/hmsbillingpro/345876438576bill234234/search/AccountAdminInfo.cfm?userid=$cNo&domain_id=$hNo' target='_blank' class='bpLink'>BP</a>\n";
+				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n";
+				echo CreateInternalLink($hNo, $cNo, true);
 			
 				echo "</td>\n";
 				echo "<td valign=top align=right>\n";
@@ -3318,8 +3317,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<table width=100%>\n";
 			echo "<tr>\n";
 			echo "<td valign=top>\n";
-			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n
-			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$deviceName' target='_blank' class='cmdbLink'>CMDB</a>\n";
+			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n";
+			echo CreateInternalLink($deviceName, "", false);
 			
 			//if switch give link to chassis - all matching device name
 			if($type=="S")
