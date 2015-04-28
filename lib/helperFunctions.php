@@ -575,40 +575,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else return "Unknown";
 	}
 	
-	function ErrorLogType($type)
-	{
-		if($type === "I") return "Invalid Input";
-		else if($type === "M") return "Mising Record";
-		else if($type === "X") return "Existing Conflict";
-		else if($type === "G") return "General Error";
-		else if($type === "C") return "Connect Failure";
-		else if($type === "P") return "Prepare Failure";
-		else if($type === "E") return "Execute Failure";
-		else if($type === "A") return "Access Restricted";
-		else if($type === "Z") return "Zero Changes";
-		else if($type === "T") return "Too Many Changes";
-		else if($type === "0") return "Code Crash";
-		else if($type === "D") return "Development";
-		else return "Unknown";
-	}
-	
-	function IsErrorTypeUserError($type)
-	{
-		if($type === "I") return true;
-		else if($type === "M") return true;
-		else if($type === "X") return true;
-		else if($type === "G") return true;
-		else if($type === "C") return false;
-		else if($type === "P") return false;
-		else if($type === "E") return false;
-		else if($type === "A") return true;
-		else if($type === "Z") return true;
-		else if($type === "T") return false;
-		else if($type === "0") return false;
-		else if($type === "D") return true;
-		else return true;
-	}
-	
 	function ChangeLogType($type)
 	{
 		if($type === "I") return "Insert";
