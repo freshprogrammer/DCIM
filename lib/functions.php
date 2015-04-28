@@ -161,6 +161,7 @@
 		
 		//theoreticly its possible to change cookie data and log in as someone else and process data at the same time... meh - probably just invalidate form data on fresh login
 		
+		$redirectPage = "";
 		$action = GetInput("action");
 		
 		if(strlen($action)!=0 && !IsValidSession())
@@ -173,52 +174,52 @@
 		
 		if($action==="Badge_Edit" || $action==="Badge_Add" || $action==="Badge_Delete")
 		{
-			ProcessBadgeAction($action);
+			$redirectPage = ProcessBadgeAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Customer_Edit" || $action==="Customer_Add")
 		{
-			ProcessCustomerAction($action);
+			$redirectPage = ProcessCustomerAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Device_Edit" || $action==="Device_Add")
 		{
-			ProcessDeviceAction($action);
+			$redirectPage = ProcessDeviceAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Connection_Edit" || $action==="Connection_Add" || $action==="Connection_Delete")
 		{
-			ProcessConnectionAction($action);
+			$redirectPage = ProcessConnectionAction($action);
 			$tookAction = true;
 		}
 		else if($action==="DevicePort_Edit" || $action==="DevicePort_Add" || $action==="DevicePort_Delete")
 		{
-			ProcessDevicePortAction($action);
+			$redirectPage = ProcessDevicePortAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Subnet_Add" || $action==="Subnet_Edit" || $action==="Subnet_Delete")
 		{
-			ProcessSubnetAction($action);
+			$redirectPage = ProcessSubnetAction($action);
 			$tookAction = true;
 		}
 		else if($action==="UserPassword_Update")
 		{
-			ProcessUserPasswordUpdate();
+			$redirectPage = ProcessUserPasswordUpdate();
 			$tookAction = true;
 		}
 		else if($action==="Circuit_Add" || $action==="Circuit_Edit" || $action==="Circuit_Delete")
 		{
-			ProcessCircuitAction($action);
+			$redirectPage = ProcessCircuitAction($action);
 			$tookAction = true;
 		}
 		else if($action==="QA_Record")
 		{
-			ProcessQAAction($action);
+			$redirectPage = ProcessQAAction($action);
 			$tookAction = true;
 		}
 		else if($action==="PowerAudit_PanelUpdate")
 		{
-			ProcessPowerAuditPanelUpdate($action);
+			$redirectPage = ProcessPowerAuditPanelUpdate($action);
 			$tookAction = true;
 		}
 		else if(strlen($action))
@@ -233,7 +234,10 @@
 			$_SESSION['errorMessage'] = $errorMessage;
 			$_SESSION['debugMessage'] = $debugMessage;
 			
-			header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']); 
+			if(strlen($redirectPage)>2)
+				header('location:'.$redirectPage);
+			else
+				header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']);
 			exit;
 		}
 	}
@@ -1295,8 +1299,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-		global $host;// updated durring customer creation
 		
+		$redirectPage = "";
 		$totalAffectedCount = 0;
 		$valid = true;
 		
@@ -1386,7 +1390,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						if($affectedCount==1)
 						{
 							$resultMessage[] = "Successfully added Customer (H".$hNo.",".$name.").";
-							$host=$hNo;
+							$redirectPage = "./?host=$hNo";
 							LogDBChange("dcim_customer",$hNo,"I");
 						}
 						else
@@ -1430,6 +1434,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}//end valid SQL do - if not valid error should be set above
+		return $redirectPage;
 	}
 	
 	function ProcessDevicePortAction($action)
