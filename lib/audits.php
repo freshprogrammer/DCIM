@@ -715,7 +715,8 @@
 		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-			WHERE c.status='I' AND NOT d.status='I'";
+			WHERE c.status='I' AND NOT d.status='I'
+			ORDER BY c.name, d.name, d.member";
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
