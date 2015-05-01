@@ -271,10 +271,7 @@ a.internalLink {
 
 .helpLink {
 	padding-left: 20px;
-}
-
-.helpLink:before {
-	content: "Help";
+	padding-right: 20px;
 }
 
 .outOfFocusOverlay{
@@ -297,6 +294,7 @@ a.internalLink {
 	width: 50%;
 	overflow:auto;
 	padding: 16px;
+	text-align: left;
 	border: 8px solid #060;
 	border-radius: 40px;
 	background-color: white;

@@ -187,6 +187,21 @@
 		}
 	}
 	
+	function CustomerDecomHelpPopup()
+	{
+		$result = "<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>
+1.) Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>
+2.) Delete connections to match cabling in DC.<BR>
+3.) Disable & delete badges to match badge server.<BR>
+4.) Update circuits turning off power if location is empty as you should at the panel.<BR>
+5.) Mark device(s) inactive (will remain linked to this location for history).<BR>
+6.) Mark customer as inactive.<BR>
+7.) Ask co-worker to QA your work.<BR>
+<BR>
+Basically update everything as necessary to match the real counterparts (IPs, cables, badges, circuits)</span>";
+		return $result;
+	}
+	
 	function BadgeHelpPopup()
 	{
 		$result = "<span class='helpText'><span class='helpHeading'>Badges</span><BR>
