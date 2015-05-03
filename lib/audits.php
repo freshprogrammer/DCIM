@@ -156,7 +156,7 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, p.edituser, p.editdate, p.qauser, p.qadate
 			FROM dcim_power AS p 
 				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
@@ -175,7 +175,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer);
+		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -183,7 +183,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization"));
+			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization","Reading"));
 			
 			//list result data
 			$oddRow = false;
@@ -204,6 +204,7 @@
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($load)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'><font color=red>".substr($utilization,0,5)."%</font></td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,date("F jS, Y",strtotime($editDate)), $qaUserID, $qaDate)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -344,7 +345,7 @@
 		$reportNote= "These are impossible connections left over from old system.";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -352,7 +353,7 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.type IN ('F','C','H') AND dp.port=0
-			ORDER BY cust,name";
+			ORDER BY c.name,d.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -530,7 +531,7 @@
 		global $mysqli;
 		
 		$reportTitle = "Devices Without Customer or Location";
-		$reportNote = "Disconnected record(s).";
+		$reportNote = "Disconnected record(s) or in Unknown.";
 
 		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
@@ -599,7 +600,7 @@
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE c.name IS NULL OR d.name IS NULL
-			ORDER BY d.name,d.member,dp.pic,dp.port";
+			ORDER BY d.name,d.member, dp.deviceid,dp.pic,dp.port";
 	
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -714,26 +715,27 @@
 		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-			WHERE c.status='I' AND NOT d.status='I'";
-	
+			WHERE c.status='I' AND NOT d.status='I'
+			ORDER BY c.name, d.name, d.member";
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
-	
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($cust, $hno, $deviceID, $deviceName, $model, $member);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Customer","Device"));
-				
+			
 			//list result data
 			$oddRow = false;
 			while ($stmt->fetch())
@@ -741,16 +743,16 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-
+				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-	
+				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-	
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
@@ -881,7 +883,7 @@
 		global $mysqli;
 		
 		$reportTitle = "Location records linked to missing records";
-		$reportNote = "Disconnected from site or power.";
+		$reportNote = "Disconnected from room or power (0 power count).";
 
 		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid, COUNT(pl.locationid) AS powerCount
 			FROM dcim_location AS l
@@ -889,7 +891,8 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			GROUP BY l.locationid
-			HAVING powerCount<1 OR r.roomid IS NULL";
+			HAVING powerCount<1 OR r.roomid IS NULL
+			ORDER BY s.name, r.name, l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{

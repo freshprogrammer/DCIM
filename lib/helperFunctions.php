@@ -187,6 +187,21 @@
 		}
 	}
 	
+	function CustomerDecomHelpPopup()
+	{
+		$result = "<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>
+1.) Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>
+2.) Delete connections to match cabling in DC.<BR>
+3.) Disable & delete badges to match badge server.<BR>
+4.) Update circuits turning off power if location is empty as you should at the panel.<BR>
+5.) Mark device(s) inactive (will remain linked to this location for history).<BR>
+6.) Mark customer as inactive.<BR>
+7.) Ask co-worker to QA your work.<BR>
+<BR>
+Basically update everything as necessary to match the real counterparts (IPs, cables, badges, circuits)</span>";
+		return $result;
+	}
+	
 	function BadgeHelpPopup()
 	{
 		$result = "<span class='helpText'><span class='helpHeading'>Badges</span><BR>
@@ -573,40 +588,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if($visible === "T") return "Visible";
 		else if($visible === "F") return "Invisible";
 		else return "Unknown";
-	}
-	
-	function ErrorLogType($type)
-	{
-		if($type === "I") return "Invalid Input";
-		else if($type === "M") return "Mising Record";
-		else if($type === "X") return "Existing Conflict";
-		else if($type === "G") return "General Error";
-		else if($type === "C") return "Connect Failure";
-		else if($type === "P") return "Prepare Failure";
-		else if($type === "E") return "Execute Failure";
-		else if($type === "A") return "Access Restricted";
-		else if($type === "Z") return "Zero Changes";
-		else if($type === "T") return "Too Many Changes";
-		else if($type === "0") return "Code Crash";
-		else if($type === "D") return "Development";
-		else return "Unknown";
-	}
-	
-	function IsErrorTypeUserError($type)
-	{
-		if($type === "I") return true;
-		else if($type === "M") return true;
-		else if($type === "X") return true;
-		else if($type === "G") return true;
-		else if($type === "C") return false;
-		else if($type === "P") return false;
-		else if($type === "E") return false;
-		else if($type === "A") return true;
-		else if($type === "Z") return true;
-		else if($type === "T") return false;
-		else if($type === "0") return false;
-		else if($type === "D") return true;
-		else return true;
 	}
 	
 	function ChangeLogType($type)

@@ -161,6 +161,7 @@
 		
 		//theoreticly its possible to change cookie data and log in as someone else and process data at the same time... meh - probably just invalidate form data on fresh login
 		
+		$redirectPage = "";
 		$action = GetInput("action");
 		
 		if(strlen($action)!=0 && !IsValidSession())
@@ -173,52 +174,52 @@
 		
 		if($action==="Badge_Edit" || $action==="Badge_Add" || $action==="Badge_Delete")
 		{
-			ProcessBadgeAction($action);
+			$redirectPage = ProcessBadgeAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Customer_Edit" || $action==="Customer_Add")
 		{
-			ProcessCustomerAction($action);
+			$redirectPage = ProcessCustomerAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Device_Edit" || $action==="Device_Add")
 		{
-			ProcessDeviceAction($action);
+			$redirectPage = ProcessDeviceAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Connection_Edit" || $action==="Connection_Add" || $action==="Connection_Delete")
 		{
-			ProcessConnectionAction($action);
+			$redirectPage = ProcessConnectionAction($action);
 			$tookAction = true;
 		}
 		else if($action==="DevicePort_Edit" || $action==="DevicePort_Add" || $action==="DevicePort_Delete")
 		{
-			ProcessDevicePortAction($action);
+			$redirectPage = ProcessDevicePortAction($action);
 			$tookAction = true;
 		}
 		else if($action==="Subnet_Add" || $action==="Subnet_Edit" || $action==="Subnet_Delete")
 		{
-			ProcessSubnetAction($action);
+			$redirectPage = ProcessSubnetAction($action);
 			$tookAction = true;
 		}
 		else if($action==="UserPassword_Update")
 		{
-			ProcessUserPasswordUpdate();
+			$redirectPage = ProcessUserPasswordUpdate();
 			$tookAction = true;
 		}
 		else if($action==="Circuit_Add" || $action==="Circuit_Edit" || $action==="Circuit_Delete")
 		{
-			ProcessCircuitAction($action);
+			$redirectPage = ProcessCircuitAction($action);
 			$tookAction = true;
 		}
 		else if($action==="QA_Record")
 		{
-			ProcessQAAction($action);
+			$redirectPage = ProcessQAAction($action);
 			$tookAction = true;
 		}
 		else if($action==="PowerAudit_PanelUpdate")
 		{
-			ProcessPowerAuditPanelUpdate($action);
+			$redirectPage = ProcessPowerAuditPanelUpdate($action);
 			$tookAction = true;
 		}
 		else if(strlen($action))
@@ -233,7 +234,10 @@
 			$_SESSION['errorMessage'] = $errorMessage;
 			$_SESSION['debugMessage'] = $debugMessage;
 			
-			header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']); 
+			if(strlen($redirectPage)>2)
+				header('location:'.$redirectPage);
+			else
+				header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']);
 			exit;
 		}
 	}
@@ -1295,8 +1299,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-		global $host;// updated durring customer creation
 		
+		$redirectPage = "";
 		$totalAffectedCount = 0;
 		$valid = true;
 		
@@ -1386,7 +1390,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						if($affectedCount==1)
 						{
 							$resultMessage[] = "Successfully added Customer (H".$hNo.",".$name.").";
-							$host=$hNo;
+							$redirectPage = "./?host=$hNo";
 							LogDBChange("dcim_customer",$hNo,"I");
 						}
 						else
@@ -1430,6 +1434,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}//end valid SQL do - if not valid error should be set above
+		return $redirectPage;
 	}
 	
 	function ProcessDevicePortAction($action)
@@ -3073,15 +3078,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<table width=100%>\n";
 				echo "<tr>\n";
 				echo "<td valign=top>\n";
-				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n
-			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$hNo' target='_blank' class='cmdbLink'>CMDB</a>\n
-			<a href='https://apps-hdc.safesecureweb.com/hmsbillingpro/345876438576bill234234/search/AccountAdminInfo.cfm?userid=$cNo&domain_id=$hNo' target='_blank' class='bpLink'>BP</a>\n";
+				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n";
+				echo CreateInternalLink($hNo, $cNo, true);
 			
 				echo "</td>\n";
 				echo "<td valign=top align=right>\n";
 				//edit Customer button - not visible till in edit mode
 				if(UserHasWritePermission())
 				{
+					echo "<div id='customerDecomHelpPopup' class='helpPopup'>".CustomerDecomHelpPopup()."</div>";
+					echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('customerDecomHelpPopup');\">Decom Help</a></span>\n";
+					
 					$formAction = "./?host=$hNo";
 					echo CreateQACell("dcim_customer", $hNo, $formAction,$editUserID, $editDate, $qaUserID, $qaDate,false);
 					
@@ -3313,8 +3320,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<table width=100%>\n";
 			echo "<tr>\n";
 			echo "<td valign=top>\n";
-			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n
-			<a href='https://hosting.service-now.com/cmdb/main_content.do?sysparm_search=$deviceName' target='_blank' class='cmdbLink'>CMDB</a>\n";
+			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n";
+			echo CreateInternalLink($deviceName, "", false);
 			
 			//if switch give link to chassis - all matching device name
 			if($type=="S")
@@ -3831,10 +3838,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new badge
-			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','".date("Y-m-d")."')\">Add New</button>\n";
 			
 			echo "<div id='badgeHelpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
-			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\"></a></span>\n";
+			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\">Help</a></span>\n";
 		}
 		echo "<BR>\n";
 		
@@ -5058,7 +5065,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDeviceOptions = "";
 		
 		$customerDeviceOptions = "";
-		$customerAndHostingOptions = "";
+		$customerAndInternalOptions = "";
 		$allDeviceOptions = "";
 		if($count>0)
 		{
@@ -5069,16 +5076,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($hNo==$deviceHNo)
 				{
 					$customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 				}
 				$allDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 				
-				if($deviceHNo=='189165')//hostitng
-					$customerAndHostingOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				//TODO: Hadle this selection better - put 'local' devices at top and maybe a divider between them - maybe add a internal flag to customer record #77
+				if($deviceHNo=='189165')//Internal
+					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 			}
 			
 			$childDeviceOptions = $customerDeviceOptions;
-			$parentDeviceOptions = $customerAndHostingOptions;
+			$parentDeviceOptions = $customerAndInternalOptions;
 			
 			if(UserHasDevPermission())
 			{

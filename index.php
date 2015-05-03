@@ -63,9 +63,6 @@
 	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
-
-
-	//see DescribeUserPermissionLevel($p) for permission details
 	
 	//setup code
 	BuildUsersHashTable();
@@ -82,10 +79,11 @@
 		//clicked log in.... um do nothing special... already on the login page
 	}
 	
+	//see DescribeUserPermissionLevel($p) for permission details
 	//this edits cookies which should be done in the header
 	$permissionLevel = UpdatePermissionLevel();
-
-
+	
+	
 	if(UserHasReadPermission())
 		BuildDeviceModelArrays();
 	 
