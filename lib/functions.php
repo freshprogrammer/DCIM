@@ -5088,7 +5088,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$childDeviceOptions = $customerDeviceOptions;
 			$parentDeviceOptions = $customerAndInternalOptions;
 			
-			if(UserHasDevPermission())
+			//if(UserHasDevPermission())
 			{
 				//dont limit to just this customers devices - show all devices as child and parent
 				$childDeviceOptions = $allDeviceOptions;
