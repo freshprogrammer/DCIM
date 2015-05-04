@@ -4467,8 +4467,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		//build table of all devices/customers in location range - search only from room/row nav links 	
 		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
-		//TODO this should also have a select at the top to get the details about this location - IE site name, room name not use IDs - issue #66
+		//TODO this should also have a select at the top to get the details about this location - IE site/room name not use IDs - issue #66
 		global $mysqli;
+		global $pageSubTitle;
 		
 		$showEmpty = true;
 			
@@ -4480,12 +4481,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$needle = $row. ".%";
 			
 			$panelDescription = "Locations on Row $row";
+			$pageSubTitle = "Row #$row";
 		}
 		else
 		{
 			$filter = "l.roomid=?";
 			$needle = $roomID;
 			$panelDescription = "Locations in RoomID#$roomID";
+			$pageSubTitle = "Room ID#$roomID";
 		}
 		
 		if($showEmpty)
