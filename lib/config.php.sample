@@ -24,17 +24,16 @@
 	$db_admin_user = "root";
 	$db_admin_password = "superScurePswd1";
 	
-	function UserHasDevPermission()
+	
+	//custom functions with sample code override
+	class CustomFunctions extends DCIMCustomFunctions
 	{
-		//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
-		global $userID;
-		return (int)$userID==0;//admin only
-	}
-	function CreateInternalLink($hNo, $cNo, $includeOldLink)
-	{//these are internal links for cust and device pages to other applications
-		$result = "<a href='https://internalApp.com?search=$hNo' target='_blank' class='internalLink'>(main system)</a>\n";
-		if($includeOldLink)
-			$result .= "<a href='https://internalApp.com?cno=$cNo&search=$hNo' target='_blank' class='internalLink'>(Old system)</a>\n";
-		return $result;
+		public static function CreateInternalLink($hNo, $cNo, $includeOldLink)
+		{//these are internal links for cust and device pages to other applications
+			$result = "<a href='https://internalApp.com?search=$hNo' target='_blank' class='internalLink'>(main system)</a>\n";
+			if($includeOldLink)
+				$result .= "<a href='https://internalApp.com?cno=$cNo&search=$hNo' target='_blank' class='internalLink'>(Old system)</a>\n";
+			return $result;
+		}
 	}
 ?>

@@ -1,6 +1,7 @@
-<?php 
+<?php
 	set_include_path('lib/'); 
 	
+	include 'customFunctions.php';
 	include 'config.php';
 	include 'genericFunctions.php';
 	include 'helperFunctions.php';
@@ -165,7 +166,7 @@
 			$menuItems .= "	<a href='./?userid=$userID'>Account</a>\n";
 		$menuItems .= "</td>\n";
 	}
-	if(UserHasDevPermission())
+	if(CustomFunctions::UserHasDevPermission())
 	{
 		//this is only setup for local phpmyadmin access 
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";

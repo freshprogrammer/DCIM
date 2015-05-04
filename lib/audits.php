@@ -30,7 +30,7 @@
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>&nbsp;&nbsp;";
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
 		
-		if(UserHasDevPermission())
+		if(CustomFunctions::UserHasDevPermission())
 		{
 			//in development features
 		}

@@ -1,8 +1,9 @@
-<?php 
+<?php
 	//See RunScript() to see actual patch notes and other details
 	
 	set_include_path('../'); 
 	
+	include 'customFunctions.php';
 	include 'config.php';
 	include 'genericFunctions.php';
 	include 'helperFunctions.php';

@@ -1,8 +1,4 @@
 <?php
-	
-	//if(ValidRecord("vlan","VLAN",$vlan,"dcim_vlan",true,"vlanid",$vlanID))
-	
-	
 	/* These functions process data or create HTML for the page */
 	
 	function UpdatePermissionLevel()
@@ -3079,7 +3075,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<tr>\n";
 				echo "<td valign=top>\n";
 				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n";
-				echo CreateInternalLink($hNo, $cNo, true);
+				echo CustomFunctions::CreateInternalLink($hNo, $cNo, true);
 			
 				echo "</td>\n";
 				echo "<td valign=top align=right>\n";
@@ -3321,7 +3317,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<tr>\n";
 			echo "<td valign=top>\n";
 			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n";
-			echo CreateInternalLink($deviceName, "", false);
+			echo CustomFunctions::CreateInternalLink($deviceName, "", false);
 			
 			//if switch give link to chassis - all matching device name
 			if($type=="S")
@@ -3541,7 +3537,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							Tech:$tech <BR>
 							Notes:".MakeHTMLSafe($note);
 							
-							if(UserHasDevPermission())
+							if(CustomFunctions::UserHasDevPermission())
 							{
 								//debug
 								$popupText .= "<BR>
@@ -4467,8 +4463,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		//build table of all devices/customers in location range - search only from room/row nav links 	
 		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
-		//TODO this should also have a select at the top to get the details about this location - IE site name, room name not use IDs - issue #66
+		//TODO this should also have a select at the top to get the details about this location - IE site/room name not use IDs - issue #66
 		global $mysqli;
+		global $pageSubTitle;
 		
 		$showEmpty = true;
 			
@@ -4480,12 +4477,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$needle = $row. ".%";
 			
 			$panelDescription = "Locations on Row $row";
+			$pageSubTitle = "Row #$row";
 		}
 		else
 		{
 			$filter = "l.roomid=?";
 			$needle = $roomID;
 			$panelDescription = "Locations in RoomID#$roomID";
+			$pageSubTitle = "Room ID#$roomID";
 		}
 		
 		if($showEmpty)
@@ -5088,7 +5087,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$childDeviceOptions = $customerDeviceOptions;
 			$parentDeviceOptions = $customerAndInternalOptions;
 			
-			if(UserHasDevPermission())
+			//if(CustomFunctions::UserHasDevPermission())
 			{
 				//dont limit to just this customers devices - show all devices as child and parent
 				$childDeviceOptions = $allDeviceOptions;
@@ -5308,13 +5307,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else 
 					$record .= "<td class='data-table-cell'>".MakeHTMLSafe($deviceFullName)."</td>";
 					
-				if(UserHasDevPermission())
+				if(CustomFunctions::UserHasDevPermission())
 					$record .= "<td class='data-table-cell'><span title='deviceportid=$devicePortID'>$portFullName</span></td>";
 				else
 					$record .= "<td class='data-table-cell'>$portFullName</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($mac)."</td>";
 				$record .= "<td class='data-table-cell'>$switchDisplayName</td>";
-				if(UserHasDevPermission())
+				if(CustomFunctions::UserHasDevPermission())
 					$record .= "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
 				else
 					$record .= "<td class='data-table-cell'>$switchPortFullName</td>";
@@ -5463,12 +5462,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($relationship=="Child")
 					{
 						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-						if(UserHasDevPermission())
+						if(CustomFunctions::UserHasDevPermission())
 							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
 						else
 							echo "<td class='data-table-cell'>$portFullName</td>";
 						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-						if(UserHasDevPermission())
+						if(CustomFunctions::UserHasDevPermission())
 							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
 						else
 							echo "<td class='data-table-cell'>$switchPortFullName</td>";
@@ -5476,12 +5475,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else 
 					{
 						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-						if(UserHasDevPermission())
+						if(CustomFunctions::UserHasDevPermission())
 							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
 						else
 							echo "<td class='data-table-cell'>$switchPortFullName</td>";
 						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-						if(UserHasDevPermission())
+						if(CustomFunctions::UserHasDevPermission())
 							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
 						else
 							echo "<td class='data-table-cell'>$portFullName</td>";
