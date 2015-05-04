@@ -5113,9 +5113,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 						<td>
 							<select name='childportid' id='EditConnection_childportid' tabindex=2>
-								<option value=1>Port 1</option>
-								<option value=2>Port 2</option>
-								<option value=3>Port 3</option>
+								<option value=1>Loading...</option>
 							</select>
 						</td>
 					</tr>
@@ -5128,9 +5126,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 						<td>
 							<select name='parentportid' id='EditConnection_parentportid' tabindex=4>
-								<option value=1>Port 1</option>
-								<option value=2>Port 2</option>
-								<option value=3>Port 3</option>
+								<option value=1>Loading...</option>
 							</select>
 						</td>
 					</tr>
