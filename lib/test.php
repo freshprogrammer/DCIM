@@ -1,4 +1,5 @@
-<?php 
+<?php
+	include 'customFunctions.php';
 	include 'config.php';
 	include 'genericFunctions.php';
 	include 'helperFunctions.php';

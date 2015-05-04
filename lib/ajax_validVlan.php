@@ -1,9 +1,10 @@
-<?php 
+<?php
+	include 'customFunctions.php';
 	include 'config.php';
 	include 'genericFunctions.php';
 	include 'helperFunctions.php';
 	include 'functions.php';
-
+	
 	function vlanFilter($v)
 	{
 		//return true for vlans to keep
