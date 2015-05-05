@@ -263,7 +263,7 @@
 		$menuItems .= "	</form>\n";
 		$menuItems .= "</td>\n";
 	}
-	else 
+	else
 	{
 		//keep format and left seperator
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item'>&nbsp;</td>\n";
@@ -336,7 +336,7 @@
 		echo "<BR>\n";
 		LoginPrompt();
 	}
-	else 
+	else
 	{
 		//officaliy logged in with min read access-------------------------------------------------------------------------------------------------
 		echo "<!--  PAGE BODY-->\n";
@@ -397,7 +397,7 @@
 				//single customer
 				ShowCustomerPage($singleCustomerMatch, $siteID);
 			}
-			else 
+			else
 			{
 				//search all	
 				$resultCount = 0;
@@ -425,7 +425,7 @@
 					echo "</div>\n";
 					echo "</div>\n";
 				}
-				else 
+				else
 				{
 					if($searchbtn==="T")
 					{
@@ -443,9 +443,9 @@
 						echo "</div>\n";
 						echo "</div>\n";
 					}
-					else 
+					else
 					{
-						//just logged in
+						//just logged in - at home page
 						echo "<div class=\"panel\">\n";
 						echo "<div class=\"panel-header\">\n";
 						echo "Welcome\n";
@@ -454,6 +454,8 @@
 						echo "<div class=\"panel-body\">\n\n";
 						
 						echo "Welcome to $siteName.";
+						
+						echo CustomFunctions::CreateSiteLayout(0);//this should be a lookup of all sites...
 						
 						if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 						{
