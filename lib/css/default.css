@@ -614,16 +614,7 @@ h2 {
 	width:100%;
 	height:100%;
 }
-.room {
-	z-index: 0;
-	background-color: blue;
-}
-.roomBackground{
-	z-index: 1;
-	background-color: gray;
-}
 .roomBorders {
-	z-index: 2;
 	position: absolute;
 	background-color: transparent;
 	border-style: solid;
@@ -635,6 +626,12 @@ h2 {
 	box-sizing:border-box;
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
+}
+.room {
+	background-color: blue;
+}
+.roomBackground{
+	background-color: gray;
 }
 
 @media only screen and (device-width: 768px) {
