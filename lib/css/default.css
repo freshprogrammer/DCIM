@@ -631,6 +631,8 @@ h2 {
 	background-color: blue;
 }
 .roomBackground{
+	width: 100%;
+	height: 100%;
 	background-color: gray;
 }
 

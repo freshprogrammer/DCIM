@@ -5857,40 +5857,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 
-	function CreateRoomLayout($roomID, $parentWidth, $parentDepth)
+	function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
 	{
-		//from DB in feet
-		$xPos = 50;
-		$yPos = 100;
-		$width = 85.63;
-		$depth = 36.94;
-		$orientation = "N"; // North East South West
-		
 		//calculated
-		$depthToWidthRatio = 100*$depth/$width;
 		$relativeX = 100*$xPos/$parentWidth;
 		$relativeY= 100*$yPos/$parentDepth;
-		$relativeWidth = 100*$width/$parentWidth;
-		$relativeDepth= 100*$depth/$parentDepth;
-
+		
+		$rotationTransform = "";
+		if($orientation=="W")
+			$rotationTransform = "	transform: rotate(-90deg);\n";
+		else if($orientation=="E")
+			$rotationTransform = "	transform: rotate(90deg);\n";
+		else if($orientation=="S")
+			$rotationTransform = "	transform: rotate(180deg);\n";
+		
+		//adjust dimentions if rotated
+		if($orientation=="E" || $orientation=="W")
+		{
+			$relativeWidth= 100*$depth/$parentWidth;
+			$relativeDepth = 100*$width/$parentDepth;
+		}
+		else
+		{
+			$relativeWidth = 100*$width/$parentWidth;
+			$relativeDepth= 100*$depth/$parentDepth;
+		}
+		
 		echo "<style>\n";
 		echo "#room$roomID {\n";
 		echo "	left: $relativeX%;\n";
 		echo "	top: $relativeY%;\n";
 		echo "	width: $relativeWidth%;\n";
 		echo "	height: $relativeDepth%;\n";
-		if($orientation=="W")
-			echo "	transform: rotate(-90deg);\n";
-		else if($orientation=="E")
-				echo "	transform: rotate(90deg);\n";
-		else if($orientation=="S")
-				echo "	transform: rotate(180deg);\n";
+		echo $rotationTransform;
 		echo "	transform-origin: 0% 0%;\n";
 		echo "}\n";
 		echo "</style>\n";
 		
 		echo "<div id='room$roomID' class='roomBorders room'>\n";
-		echo "Room ID $roomID<BR>\n";
+		echo "<div id='' class='roomBackground'>$name</div>\n";
 		echo "</div>\n";
 	}
 ?>
