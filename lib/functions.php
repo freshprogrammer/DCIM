@@ -3728,6 +3728,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ShowChassisPage($chassisName)
 	{
+		global $pageSubTitle;
+		$pageSubTitle = MakeHTMLSafe($chassisName);
+		
 		if(UserHasWritePermission())
 		{
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
