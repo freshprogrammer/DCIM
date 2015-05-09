@@ -5857,45 +5857,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 
-	function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
-	{
-		//calculated
-		$relativeX = 100*$xPos/$parentWidth;
-		$relativeY= 100*$yPos/$parentDepth;
-		
-		$rotationTransform = "";
-		if($orientation=="W")
-			$rotationTransform = "	transform: rotate(-90deg);\n";
-		else if($orientation=="E")
-			$rotationTransform = "	transform: rotate(90deg);\n";
-		else if($orientation=="S")
-			$rotationTransform = "	transform: rotate(180deg);\n";
-		
-		//adjust dimentions if rotated
-		if($orientation=="E" || $orientation=="W")
-		{
-			$relativeWidth= 100*$depth/$parentWidth;
-			$relativeDepth = 100*$width/$parentDepth;
-		}
-		else
-		{
-			$relativeWidth = 100*$width/$parentWidth;
-			$relativeDepth= 100*$depth/$parentDepth;
-		}
-		
+	function CreateGenericRoomLayout($roomID, $name , $fullName, $custAccess, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer)
+	{	
 		echo "<style>\n";
 		echo "#room$roomID {\n";
 		echo "	left: $relativeX%;\n";
 		echo "	top: $relativeY%;\n";
 		echo "	width: $relativeWidth%;\n";
 		echo "	height: $relativeDepth%;\n";
+		echo "	z-index: $layer;\n";
 		echo $rotationTransform;
 		echo "	transform-origin: 0% 0%;\n";
 		echo "}\n";
 		echo "</style>\n";
-		
+
+		echo "<a href='./?roomid=$roomID'>\n";
 		echo "<div id='room$roomID' class='roomBorders room'>\n";
 		echo "<div id='' class='roomBackground'>$name</div>\n";
 		echo "</div>\n";
+		echo "</a>\n";
 	}
 ?>

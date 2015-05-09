@@ -64,34 +64,38 @@
 		
 		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
 		{
+			$baseLayer = 100;
+			
+			//calculated
+			$parentDepthToWidthRatio = $parentDepth/$parentWidth;
+			$relativeX = 100*$xPos/$parentWidth;
+			$relativeY= 100*$yPos/$parentDepth;
+			$layer += $baseLayer;
+			
+			$rotationTransform = "";
+			if($orientation=="W")
+				$rotationTransform = "	transform: rotate(-90deg);\n";
+			else if($orientation=="E")
+				$rotationTransform = "	transform: rotate(90deg);\n";
+			else if($orientation=="S")
+				$rotationTransform = "	transform: rotate(180deg);\n";
+			
+			//adjust dimentions if rotated
+			if($orientation=="E" || $orientation=="W")
+			{
+				$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+				$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+			}
+			else
+			{
+				$relativeWidth = 100*$width/$parentWidth;
+				$relativeDepth= 100*$depth/$parentDepth;
+			}
+			
 			if(!in_array($roomID,array(2,5)))
-				CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer); //not a custom room so use the default
+				CreateGenericRoomLayout($roomID, $name , $fullName, $custAccess, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer); //not a custom room so use the default
 			else
 			{//custom layouts
-				//calculated values
-				$relativeX = 100*$xPos/$parentWidth;
-				$relativeY= 100*$yPos/$parentDepth;
-				
-				$rotationTransform = "";
-				if($orientation=="W")
-					$rotationTransform = "	transform: rotate(-90deg);\n";
-				else if($orientation=="E")
-					$rotationTransform = "	transform: rotate(90deg);\n";
-				else if($orientation=="S")
-					$rotationTransform = "	transform: rotate(180deg);\n";
-				
-				//adjust dimentions if rotated
-				if($orientation=="E" || $orientation=="W")
-				{
-					$relativeWidth= 100*$depth/$parentWidth;
-					$relativeDepth = 100*$width/$parentDepth;
-				}
-				else
-				{
-					$relativeWidth = 100*$width/$parentWidth;
-					$relativeDepth= 100*$depth/$parentDepth;
-				}
-					
 				if($roomID==2)
 				{//ca 1
 					//percent inset corners
@@ -104,6 +108,7 @@
 					echo "	top: $relativeY%;\n";
 					echo "	width: $relativeWidth%;\n";
 					echo "	height: $relativeDepth%;\n";
+					echo "	z-index: $layer;\n";
 					echo $rotationTransform;
 					echo "}\n";
 					
@@ -144,9 +149,9 @@
 					echo "	top: $cornerDepthInset%;\n";
 					echo "	height: ".(100-$cornerDepthInset)."%;\n";
 					echo "}\n";
-					
 					echo "</style>\n";
 					
+					echo "<a href='./?roomid=$roomID'>\n";
 					echo "<div id='ca1' class='room'>\n";
 					echo "<div id='ca1_centerBackground' class='roomBackground'></div>\n";
 					echo "<div id='ca1_rightBackground' class='roomBackground'></div>\n";
@@ -156,6 +161,7 @@
 					echo "<div id='ca1_bottomWall' class='roomBorders'></div>\n";
 					echo "<div id='ca1_rightWall' class='roomBorders'></div>\n";
 					echo "</div>\n";
+					echo "</a>\n";
 				}
 				else if($roomID==5)
 				{//ca 4
@@ -165,6 +171,7 @@
 					echo "	top: $relativeY%;\n";
 					echo "	width: $relativeWidth%;\n";
 					echo "	height: $relativeDepth%;\n";
+					echo "	z-index: $layer;\n";
 					echo $rotationTransform;
 					echo "	transform-origin: 0% 0%;\n";
 					echo "}\n";
@@ -186,6 +193,7 @@
 					echo "}\n";
 					echo "</style>\n";
 					
+					echo "<a href='./?roomid=$roomID'>\n";
 					echo "<div id='ca4' class='room'>\n";
 					//echo "Room ID $roomID<BR>\n";
 					echo "<div id='' class='roomBackground'></div>\n";
@@ -194,6 +202,7 @@
 					echo "<div id='ca4_bottomWall' class='roomBorders'></div>\n";
 					echo "<div id='ca4_rightWall' class='roomBorders'></div>\n";
 					echo "</div>\n";
+					echo "</a>\n";
 				}//room layout
 			}//custom room
 		}
