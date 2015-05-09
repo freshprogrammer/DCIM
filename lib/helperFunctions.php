@@ -501,6 +501,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				return true;
 			else if($password=="7c6a180b36896a0a8c02787eeafb0e4c")//md5 of default password "password1"
 				return true;
+			else if($password=="b62a565853f37fb1ec1efc287bfcebf9")//md5 of default password "testPass"
+				return true;
 		}
 		return $result;
 	}
