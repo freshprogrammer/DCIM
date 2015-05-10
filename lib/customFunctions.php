@@ -92,8 +92,13 @@
 				$relativeDepth= 100*$depth/$parentDepth;
 			}
 			
-			if(!in_array($roomID,array(2,5)))
-				CreateGenericRoomLayout($roomID, $name , $fullName, $custAccess, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer); //not a custom room so use the default
+			if($custAccess=="T")//define room color
+				$roomClass= "caBackground";
+			else
+				$roomClass= "roomBackground";
+			
+			if(!in_array($roomID,array(2,5,6)))
+				CreateGenericRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass); //not a custom room so use the default
 			else
 			{//custom layouts
 				if($roomID==2)
@@ -110,6 +115,7 @@
 					echo "	height: $relativeDepth%;\n";
 					echo "	z-index: $layer;\n";
 					echo $rotationTransform;
+					echo "	transform-origin: 0% 0%;\n";
 					echo "}\n";
 					
 					echo "#ca1_topWall {\n";
@@ -151,17 +157,18 @@
 					echo "}\n";
 					echo "</style>\n";
 					
-					echo "<a href='./?roomid=$roomID'>\n";
 					echo "<div id='ca1' class='room'>\n";
-					echo "<div id='ca1_centerBackground' class='roomBackground'></div>\n";
-					echo "<div id='ca1_rightBackground' class='roomBackground'></div>\n";
+					echo "<a href='./?roomid=$roomID' title='$fullName'>\n";
+					echo "<span style='z-index: ".($layer+1).";'>$name</span>\n";
+					echo "<div id='ca1_centerBackground' class='$roomClass'></div>\n";
+					echo "<div id='ca1_rightBackground' class='$roomClass'></div>\n";
 					echo "<div id='ca1_topWall' class='roomBorders'></div>\n";
 					echo "<div id='ca1_topInnerWall' class='roomBorders'></div>\n";
 					echo "<div id='ca1_leftWall' class='roomBorders'></div>\n";
 					echo "<div id='ca1_bottomWall' class='roomBorders'></div>\n";
 					echo "<div id='ca1_rightWall' class='roomBorders'></div>\n";
-					echo "</div>\n";
 					echo "</a>\n";
+					echo "</div>\n";
 				}
 				else if($roomID==5)
 				{//ca 4
@@ -193,16 +200,85 @@
 					echo "}\n";
 					echo "</style>\n";
 					
-					echo "<a href='./?roomid=$roomID'>\n";
 					echo "<div id='ca4' class='room'>\n";
-					//echo "Room ID $roomID<BR>\n";
-					echo "<div id='' class='roomBackground'></div>\n";
+					echo "<a href='./?roomid=$roomID' title='$fullName'>\n";
+					echo "<span style='z-index: ".($layer+1).";'>$name</span>\n";
+					echo "<div id='' class='$roomClass'></div>\n";
 					echo "<div id='ca4_topWall' class='roomBorders'></div>\n";
 					echo "<div id='ca4_leftWall' class='roomBorders'></div>\n";
 					echo "<div id='ca4_bottomWall' class='roomBorders'></div>\n";
 					echo "<div id='ca4_rightWall' class='roomBorders'></div>\n";
-					echo "</div>\n";
 					echo "</a>\n";
+					echo "</div>\n";
+				}
+				if($roomID==6)
+				{//ca 5
+					//percent inset corners
+					$cornerWidthInset = 49.13;
+					$cornerDepthInset = 31.92; 
+					
+					echo "<style>\n";
+					echo "#ca5 {\n";
+					echo "	left: $relativeX%;\n";
+					echo "	top: $relativeY%;\n";
+					echo "	width: $relativeWidth%;\n";
+					echo "	height: $relativeDepth%;\n";
+					echo "	z-index: $layer;\n";
+					echo $rotationTransform;
+					echo "	transform-origin: 0% 0%;\n";
+					echo "}\n";
+					
+					echo "#ca5_topWall {\n";
+					echo "	width: ".(100-$cornerWidthInset)."%;\n";
+					echo "	border-style: solid hidden hidden hidden;\n";
+					echo "}\n";
+					echo "#ca5_rightWall {\n";
+					echo "	top: $cornerDepthInset%;\n";
+					echo "	height: ".(100-$cornerDepthInset)."%;\n";
+					echo "	border-style: hidden solid hidden hidden;\n";
+					echo "}\n";
+					echo "#ca5_bottomWall {\n";
+					echo "	border-style: hidden hidden solid hidden;\n";
+					echo "}\n";
+					echo "#ca5_leftWall {\n";
+					echo "	border-style: hidden hidden hidden solid;\n";
+					echo "}\n";
+					
+					echo "#ca5_rightInnerWall {\n";
+					echo "	height: $cornerDepthInset%;\n";
+					echo "	width: ".(100-$cornerWidthInset)."%;\n";
+					echo "}\n";
+					echo "#ca5_topInnerWall {\n";
+					echo "	left: ".(100-$cornerWidthInset)."%;\n";
+					echo "	width: $cornerWidthInset%;\n";
+					echo "	height: $cornerDepthInset%;\n";
+					echo "	border-bottom-style: solid;\n";
+					echo "	border-left-style: solid;\n";
+					echo "	border-top-style: hidden;\n";
+					echo "	border-right-style: hidden;\n";
+					echo "}\n";
+					
+					echo "#ca5_centerBackground {\n";
+					echo "	width: ".(100-$cornerWidthInset)."%;\n";
+					echo "}\n";
+					echo "#ca5_rightBackground {\n";
+					echo "	top: $cornerDepthInset%;\n";
+					echo "	height: ".(100-$cornerDepthInset)."%;\n";
+					echo "}\n";
+					echo "</style>\n";
+					
+					echo "<div id='ca5' class='room'>\n";
+					echo "<a href='./?roomid=$roomID' title='$fullName'>\n";
+					echo "<span style='z-index: ".($layer+1).";'>$name</span>\n";
+					echo "<div id='ca5_centerBackground' class='$roomClass'></div>\n";
+					echo "<div id='ca5_rightBackground' class='$roomClass'></div>\n";
+					echo "<div id='ca5_topWall' class='roomBorders'></div>\n";
+					echo "<div id='ca5_topInnerWall' class='roomBorders'></div>\n";
+					echo "<div id='ca5_leftWall' class='roomBorders'></div>\n";
+					echo "<div id='ca5_bottomWall' class='roomBorders'></div>\n";
+					echo "<div id='ca5_rightWall' class='roomBorders'></div>\n";
+					echo "</a>\n";
+					echo "</div>\n";
 				}//room layout
 			}//custom room
 		}

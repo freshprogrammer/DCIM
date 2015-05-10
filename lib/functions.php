@@ -5857,7 +5857,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 
-	function CreateGenericRoomLayout($roomID, $name , $fullName, $custAccess, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer)
+	function CreateGenericRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass)
 	{	
 		echo "<style>\n";
 		echo "#room$roomID {\n";
@@ -5871,10 +5871,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "}\n";
 		echo "</style>\n";
 
-		echo "<a href='./?roomid=$roomID'>\n";
 		echo "<div id='room$roomID' class='roomBorders room'>\n";
-		echo "<div id='' class='roomBackground'>$name</div>\n";
-		echo "</div>\n";
+		echo "<a href='./?roomid=$roomID' title='$fullName'>\n";
+		echo "<div id='' class='$roomClass'>$name</div>\n";
 		echo "</a>\n";
+		echo "</div>\n";
 	}
 ?>

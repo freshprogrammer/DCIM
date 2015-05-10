@@ -628,12 +628,29 @@ h2 {
 	-webkit-box-sizing:border-box;
 }
 .room {
+	/* background-color: blue; */
+}
+.room a:link, .room a:visited{
+	color: white;
+} 
+.room span{
+	position: absolute;
+	color: white;
+	margin: 20 20;
+} 
+.siteBackground, .caBackground, .roomBackground{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+.siteBackground{
+	background-color: gray;
+}
+.caBackground{
 	background-color: blue;
 }
 .roomBackground{
-	width: 100%;
-	height: 100%;
-	background-color: gray;
+	background-color: red;
 }
 
 @media only screen and (device-width: 768px) {
