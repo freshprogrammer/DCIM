@@ -72,10 +72,10 @@
 	background-position: top left;
 	background-repeat: repeat-x;
 	
-	//light with black
-	//background-color: #D4CFC7;
-	//border-color: #D4CFC7;
-	//background-image: url(/SalesTool/a4j/g/3_3_1.GAorg.richfaces.renderkit.html.GradientA/DATB/eAF79urt8fNXmAAXoQUq);
+	/* light with black */
+	/* background-color: #D4CFC7; */
+	/* border-color: #D4CFC7; */
+	/* background-image: url(/SalesTool/a4j/g/3_3_1.GAorg.richfaces.renderkit.html.GradientA/DATB/eAF79urt8fNXmAAXoQUq); */
 	
 }
 
@@ -381,20 +381,20 @@ a.internalLink {
 
 button {
 	margin: 0;
-	//height: 16;
-	//padding: 0;
-	//padding-top: 0;
+	/* height: 16; */
+	/* padding: 0; */
+	/* padding-top: 0; */
 	padding-bottom: 0;
 }
 
 input[type=submit] {
-	//padding: 0;
-	//padding-top: 0;
+	/* padding: 0; */
+	/* padding-top: 0; */
 	padding-bottom: 0;
 }
 
 tr.dataRowOne, tr.dataRowTwo{
-	//vertical-align: top;
+	/* vertical-align: top; */
 }
 
 tr.dataRowOne {
@@ -429,9 +429,9 @@ td.powerAuditCellDouble {
 }
 
 td.powerAuditCellEmpty {
-	//background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif");
-	//background-repeat: round;
-	//background-size: 100%;
+	/* background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif"); */
+	/* background-repeat: round; */
+	/* background-size: 100%; */
 	background-color: #CCC;
 }
 
@@ -445,7 +445,7 @@ body {
 }
 
 h1 {
-	color: #111; //overwritten by appname
+	color: #111; /* overwritten by appname */
 	display: block;
 	font-size: 18px;
 	font-weight: bold;
@@ -660,7 +660,7 @@ h2 {
 	/* For general iPad layouts */
 	
 	#appname {
-		//color: #F0F;
+		/* color: #F0F; */
 	}
 	
 	.pageMinWidth {
@@ -691,12 +691,12 @@ h2 {
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
 	/* For iPad portrait layouts only */
 	#appname {
-		//color: #F00;
+		/* color: #F00; */
 	}
 }
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape) {
 	/* For iPad landscape layouts only */
 	#appname {
-		//color: #00F;
+		/* color: #00F; */
 	}
 }

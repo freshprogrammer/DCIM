@@ -97,7 +97,7 @@
 			else
 				$roomClass= "roomBackground";
 			
-			if(!in_array($roomID,array(2,5,6)))
+			if(!in_array($roomID,array(2,3,4,5,6)))
 				CreateGenericRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass); //not a custom room so use the default
 			else
 			{//custom layouts
@@ -105,9 +105,9 @@
 				$roomCustomHTML = "";
 				if($roomID==2)
 				{//ca 1
-					//percent inset corner
+					//percent inset corner - far right corner
 					$cornerWidthInset = 15;
-					$cornerDepthInset = 50; 
+					$cornerDepthInset = 50;
 					
 					$roomCustomStyle .= "#room".$roomID."_topWall {\n";
 					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
@@ -129,7 +129,7 @@
 					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
 					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
 					$roomCustomStyle .= "}\n";
-					$roomCustomStyle .= "#room".$roomID."_topInnerWall {\n";
+					$roomCustomStyle .= "#room".$roomID."_cornerWalls {\n";
 					$roomCustomStyle .= "	left: ".(100-$cornerWidthInset)."%;\n";
 					$roomCustomStyle .= "	width: $cornerWidthInset%;\n";
 					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
@@ -147,7 +147,105 @@
 					$roomCustomHTML .= "<div id='room".$roomID."_centerBackground' class='$roomClass'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_rightBackground' class='$roomClass'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_topWall' class='roomBorders'></div>\n";
-					$roomCustomHTML .= "<div id='room".$roomID."_topInnerWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_cornerWalls' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_leftWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_bottomWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_rightWall' class='roomBorders'></div>\n";
+				}
+				else if($roomID==3)
+				{//ca 2
+					//percent inset corner - close left corner
+					$cornerWidthInset = 59.82;
+					$cornerDepthInset = 23.48;
+					
+					$roomCustomStyle .= "#room".$roomID."_topWall {\n";
+					$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_rightWall {\n";
+					$roomCustomStyle .= "	border-style: hidden solid hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_bottomWall {\n";
+					$roomCustomStyle .= "	left: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "	border-style: hidden hidden solid hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_leftWall {\n";
+					$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "	border-style: hidden hidden hidden solid;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomStyle .= "#room".$roomID."_leftInnerWall {\n";
+					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_cornerWalls {\n";
+					$roomCustomStyle .= "	top: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "	width: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
+					$roomCustomStyle .= "	border-style: solid solid hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomStyle .= "#room".$roomID."_centerBackground {\n";
+					$roomCustomStyle .= "	left: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_rightBackground {\n";
+					$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomHTML .= "<div id='room".$roomID."_centerBackground' class='$roomClass'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_rightBackground' class='$roomClass'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_topWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_cornerWalls' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_leftWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_bottomWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_rightWall' class='roomBorders'></div>\n";
+				}
+				else if($roomID==4)
+				{//ca 3
+					//percent inset corner - close left corner
+					$cornerWidthInset = 55.20;
+					$cornerDepthInset = 19.27;
+					
+					$roomCustomStyle .= "#room".$roomID."_topWall {\n";
+					$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_rightWall {\n";
+					$roomCustomStyle .= "	border-style: hidden solid hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_bottomWall {\n";
+					$roomCustomStyle .= "	left: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "	border-style: hidden hidden solid hidden;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_leftWall {\n";
+					$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "	border-style: hidden hidden hidden solid;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomStyle .= "#room".$roomID."_leftInnerWall {\n";
+					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_cornerWalls {\n";
+					$roomCustomStyle .= "	top: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "	width: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
+					$roomCustomStyle .= "	border-style: solid solid hidden hidden;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomStyle .= "#room".$roomID."_centerBackground {\n";
+					$roomCustomStyle .= "	left: $cornerWidthInset%;\n";
+					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					$roomCustomStyle .= "#room".$roomID."_rightBackground {\n";
+					$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+					$roomCustomStyle .= "}\n";
+					
+					$roomCustomHTML .= "<div id='room".$roomID."_centerBackground' class='$roomClass'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_rightBackground' class='$roomClass'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_topWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_cornerWalls' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_leftWall' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_bottomWall' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_rightWall' class='roomBorders'></div>\n";
@@ -179,9 +277,9 @@
 				}
 				if($roomID==6)
 				{//ca 5
-					//percent inset corner
+					//percent inset corner - far right corner
 					$cornerWidthInset = 49.13;
-					$cornerDepthInset = 31.92; 
+					$cornerDepthInset = 31.92;
 					
 					$roomCustomStyle .= "#room".$roomID."_topWall {\n";
 					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
@@ -203,7 +301,7 @@
 					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
 					$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
 					$roomCustomStyle .= "}\n";
-					$roomCustomStyle .= "#room".$roomID."_topInnerWall {\n";
+					$roomCustomStyle .= "#room".$roomID."_cornerWalls {\n";
 					$roomCustomStyle .= "	left: ".(100-$cornerWidthInset)."%;\n";
 					$roomCustomStyle .= "	width: $cornerWidthInset%;\n";
 					$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
@@ -221,7 +319,7 @@
 					$roomCustomHTML .= "<div id='room".$roomID."_centerBackground' class='$roomClass'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_rightBackground' class='$roomClass'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_topWall' class='roomBorders'></div>\n";
-					$roomCustomHTML .= "<div id='room".$roomID."_topInnerWall' class='roomBorders'></div>\n";
+					$roomCustomHTML .= "<div id='room".$roomID."_cornerWalls' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_leftWall' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_bottomWall' class='roomBorders'></div>\n";
 					$roomCustomHTML .= "<div id='room".$roomID."_rightWall' class='roomBorders'></div>\n";

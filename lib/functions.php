@@ -5867,7 +5867,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "	height: $relativeDepth%;\n";
 		echo "	z-index: $layer;\n";
 		echo $rotationTransform;
-		echo "	transform-origin: 0% 0%;\n";
 		echo "}\n";
 		echo "</style>\n";
 
