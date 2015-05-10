@@ -629,6 +629,9 @@ h2 {
 }
 .room {
 	/* background-color: blue; */
+	-ms-transform-origin: 0% 0%; /* IE 9 */
+	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
+	transform-origin: 0% 0%;
 }
 .room a:link, .room a:visited{
 	color: white;
@@ -636,7 +639,7 @@ h2 {
 .room span{
 	position: absolute;
 	color: white;
-	margin: 20 20;
+	margin: 5 5;
 } 
 .siteBackground, .caBackground, .roomBackground{
 	position: absolute;
