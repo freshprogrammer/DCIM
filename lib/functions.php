@@ -4465,95 +4465,122 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListLocationCustomers($roomID)
 	{
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
-		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
-		//TODO this should also have a select at the top to get the details about this location - IE site/room name not use IDs - issue #66
 		global $mysqli;
 		global $pageSubTitle;
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
-			
-		$filter = "l.roomid=?";
-		$needle = $roomID;
-		$panelDescription = "Locations & devices in RoomID#$roomID";
-		$pageSubTitle = "Room ID#$roomID";
 		
-		if($showEmpty)
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
-				FROM dcim_location AS l
-					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
-					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				WHERE $filter
-					AND l.visible='T'
-				ORDER BY r.name, l.name";
-		else
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
-			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+		//lookup site room and circuit info for headers
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
+			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE $filter
-				AND d.locationid=l.locationid
-				AND d.hno=c.hno
-				AND d.status='A'
-			ORDER BY r.name, l.name";
-
-			
-		if (!($stmt = $mysqli->prepare($query))) 
+			WHERE r.roomid=?";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('s', $needle);
-		
+		$stmt->bind_Param('i', $roomID);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
 		$count = $stmt->num_rows;
 		
-		$panelDescription = $panelDescription . " ($count)";
-
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>$panelDescription</div>\n";
-		echo "<div class='panel-body'>\n\n";
-		
-		if($count>0)
-		{
-			//show results
-			$searchTitle = $searchTitle." RoomID#$roomID Location(s)";				
-			echo "<span class='tableTitle'>$searchTitle</span>\n";
-			echo "<BR>";
+		if($count==1 && $stmt->fetch())
+		{//sucsessfull lookup
+			$panelDescription = "Locations & devices in $site $roomFullName";
+			$pageSubTitle = "$site $room";
+			$searchTitle = "$site $roomFullName Location(s)";
 			
-			echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
+			if($showEmpty)
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+					FROM dcim_location AS l
+						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
+						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
+						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					WHERE r.roomid=?
+						AND l.visible='T'
+					ORDER BY r.name, l.name";
+			else
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE r.roomid=?
+					AND d.locationid=l.locationid
+					AND d.hno=c.hno
+					AND d.status='A'
+				ORDER BY r.name, l.name";
+	
+				
+			if (!($stmt = $mysqli->prepare($query))) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$fullLocationName = FormatLocation($site, $room, $location);
-				$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
-				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				if(strlen($customer) > 0)
-					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				else 
-					echo "<td class='data-table-cell'>Empty</td>";
-				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-				echo "</tr>";
+				//TODO handle errors better
+				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			echo "</table>";
-		}
-		else 
+			
+			$stmt->bind_Param('s', $roomID);
+			
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+			$count = $stmt->num_rows;
+			
+			$panelDescription = $panelDescription . " ($count)";
+
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>$panelDescription</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			if($count>0)
+			{
+				//show results
+				echo "<span class='tableTitle'>$searchTitle</span>\n";
+				echo "<BR>";
+				
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch()) 
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$fullLocationName = FormatLocation($site, $room, $location);
+					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					if(strlen($customer) > 0)
+						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					else 
+						echo "<td class='data-table-cell'>Empty</td>";
+					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+					echo "</tr>";
+				}
+				echo "</table>";
+			}
+			else 
+			{
+				echo "No Customers Found in $roomFullName.<BR>\n";
+			}
+		}//sucsessfull lookup
+		else
 		{
-			echo "No Customers Found.<BR>\n";
+			$pageSubTitle = "RoomID#$roomID";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>RoomID#$roomID</div>\n";
+			echo "<div class='panel-body'>\n\n";
+
+			echo "Room($roomID) not found.<BR>\n";
 		}
+			
 		//end panel divs
 		echo "</div>\n";
 		echo "</div>\n";
