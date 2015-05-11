@@ -5856,24 +5856,75 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 	}
+	
+	function CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
+	{
+		$result = "";
+		$result .= "<style>\n";
+		$result .= "#room$roomID {\n";
+		$result .= "	left: $relativeX%;\n";
+		$result .= "	top: $relativeY%;\n";
+		$result .= "	width: $relativeWidth%;\n";
+		$result .= "	height: $relativeDepth%;\n";
+		$result .= "	z-index: $layer;\n";
+		$result .= $rotationTransform;
+		$result .= "}\n";
+		$result .= $roomCustomStyle;
+		$result .= "</style>\n";
 
-	function CreateGenericRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass)
-	{	
-		echo "<style>\n";
-		echo "#room$roomID {\n";
-		echo "	left: $relativeX%;\n";
-		echo "	top: $relativeY%;\n";
-		echo "	width: $relativeWidth%;\n";
-		echo "	height: $relativeDepth%;\n";
-		echo "	z-index: $layer;\n";
-		echo $rotationTransform;
-		echo "}\n";
-		echo "</style>\n";
-
-		echo "<div id='room$roomID' class='roomBorders room'>\n";
-		echo "<a href='./?roomid=$roomID' title='$fullName'>\n";
-		echo "<div id='' class='$roomClass'>$name</div>\n";
-		echo "</a>\n";
-		echo "</div>\n";
+		if(!$roomCustomHTML)
+		{
+			$result .= "<div id='room$roomID' class='room'>\n";
+			$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+			$result .= "<div id='' class='roomBorders $roomClass'>$name</div>\n";
+			$result .= "</a>\n";
+			$result .= "</div>\n";
+		}
+		else
+		{
+			$result .= "<div id='room$roomID' class='room'>\n";
+			$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+			$result .= $roomCustomHTML;
+			$result .= "</a>\n";
+			$result .= "</div>\n";
+		}
+		echo $result;
+	}
+	
+	function CreateRoomLayout_FarRightCornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass, &$roomCustomStyle, &$roomCustomHTML)
+	{//percent inset corner - far right corner
+		$borderThickness = 4;
+		
+		$roomCustomStyle .= "#room".$roomID."_top3Walls {\n";
+		$roomCustomStyle .= "	height: $cornerDepthInset%;\n";
+		$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+		$roomCustomStyle .= "	border-style: solid solid hidden solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_bottom3Walls {\n";
+		$roomCustomStyle .= "	top: $cornerDepthInset%;\n";
+		$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+		$roomCustomStyle .= "	border-style: hidden solid solid solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_midWall {\n";
+		$roomCustomStyle .= "	top: $cornerDepthInset%;\n";
+		$roomCustomStyle .= "	left: calc(100% - $cornerWidthInset% - ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+		$roomCustomStyle .= "	width: calc($cornerWidthInset% + ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+		$roomCustomStyle .= "}\n";
+		
+		$roomCustomStyle .= "#room".$roomID."_centerBackground {\n";
+		$roomCustomStyle .= "	width: ".(100-$cornerWidthInset)."%;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_rightBackground {\n";
+		$roomCustomStyle .= "	top: $cornerDepthInset%;\n";
+		$roomCustomStyle .= "	height: ".(100-$cornerDepthInset)."%;\n";
+		$roomCustomStyle .= "}\n";
+		
+		$roomCustomHTML .= "<div class='$roomTypeClass' id='room".$roomID."_centerBackground'></div>\n";
+		$roomCustomHTML .= "<div class='$roomTypeClass' id='room".$roomID."_rightBackground'></div>\n";
+		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_top3Walls'></div>\n";
+		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_bottom3Walls'></div>\n";
+		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_midWall'></div>\n";
 	}
 ?>

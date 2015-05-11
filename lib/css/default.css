@@ -640,6 +640,7 @@ h2 {
 	position: absolute;
 	color: white;
 	margin: 5 5;
+	text-overflow: clip;
 } 
 .siteBackground, .caBackground, .roomBackground{
 	position: absolute;
@@ -654,6 +655,9 @@ h2 {
 }
 .roomBackground{
 	background-color: red;
+}
+.room a:hover  .caBackground, .room a:hover .roomBackground{
+	background-color: green;
 }
 
 @media only screen and (device-width: 768px) {
