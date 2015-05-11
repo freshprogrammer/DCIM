@@ -3021,7 +3021,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return false;
 	}
 	
-	function ShowCustomerPage($hNo, $siteID)
+	function ShowCustomerPage($hNo)
 	{
 		global $mysqli;
 		global $pageSubTitle;
@@ -4462,7 +4462,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($siteID, $roomID, $row)
+	function ListLocationCustomers($roomID, $row)
 	{
 		//build table of all devices/customers in location range - search only from room/row nav links 	
 		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
@@ -4497,8 +4497,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				WHERE s.siteid = ?
-					AND $filter
+				WHERE $filter
 					AND l.visible='T'
 				ORDER BY r.name, l.name";
 		else
@@ -4506,8 +4505,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE s.siteid=?
-				AND $filter
+			WHERE $filter
 				AND d.locationid=l.locationid
 				AND d.hno=c.hno
 				AND d.status='A'
@@ -4520,7 +4518,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('is', $siteID, $needle);
+		$stmt->bind_Param('s', $needle);
 		
 		$stmt->execute();
 		$stmt->store_result();
@@ -4536,7 +4534,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			$searchTitle = "SITEID#$siteID:";
+			$searchTitle = "SITEID#?:";
 			
 			if(strlen($row) > 0)
 				$searchTitle = $searchTitle." Row ".substr($row,0,2);

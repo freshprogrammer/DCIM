@@ -43,7 +43,6 @@
 	global $versionNote;
 	
 	//varibles definitions
-	$siteID = 0;
 	//dyanmic
 	$pageSubTitle = "";
 	$user = "";
@@ -326,14 +325,14 @@
 		if(strlen($host) > 0)
 		{
 			//build customer page
-			ShowCustomerPage($host, $siteID);
+			ShowCustomerPage($host);
 			
 		}
 		else if(strlen($roomID) > 0 || strlen($row) > 0)
 		{
 			//show all customer at given locations - IE all customers in a location range, like row X or CA X
 			//--these vars are from the header links - should be formatted propperly
-			ListLocationCustomers($siteID, $roomID, $row);
+			ListLocationCustomers($roomID, $row);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{
@@ -377,7 +376,7 @@
 			if($singleCustomerMatch!=false)
 			{
 				//single customer
-				ShowCustomerPage($singleCustomerMatch, $siteID);
+				ShowCustomerPage($singleCustomerMatch);
 			}
 			else 
 			{
