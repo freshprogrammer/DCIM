@@ -59,7 +59,6 @@
 	$locationIDInput = GetInput("locationid");
 	$userIDInput = GetInput("userid");
 	$loc = GetInput("loc");
-	$row = GetInput("row");
 	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
@@ -328,11 +327,9 @@
 			ShowCustomerPage($host);
 			
 		}
-		else if(strlen($roomID) > 0 || strlen($row) > 0)
+		else if(strlen($roomID) > 0)
 		{
-			//show all customer at given locations - IE all customers in a location range, like row X or CA X
-			//--these vars are from the header links - should be formatted propperly
-			ListLocationCustomers($roomID, $row);
+			ListLocationCustomers($roomID);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{

@@ -23,20 +23,6 @@
 			$result .= "<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;\n";
-			$result .= "&nbsp;&nbsp;\n";
-			$result .= "<div class='navLinks'>ROW:</div>\n";
-			$result .= "<a class='navLinks' href='?row=01'>1</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=02'>2</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=03'>3</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=04'>4</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=05'>5</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=06'>6</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=07'>7</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=08'>8</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=09'>9</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=10'>10</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=11'>11</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?row=12'>12</a>&nbsp;\n";
 			return $result;
 		}
 	}

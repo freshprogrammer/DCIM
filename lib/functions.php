@@ -4462,33 +4462,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($roomID, $row)
+	function ListLocationCustomers($roomID)
 	{
-		//build table of all devices/customers in location range - search only from room/row nav links 	
+		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
 		//TODO this should also have a select at the top to get the details about this location - IE site/room name not use IDs - issue #66
 		global $mysqli;
 		global $pageSubTitle;
 		
-		$showEmpty = true;
+		$showEmpty = true;///this was a test feature to hide empty locations
 			
-		$panelDescription = "";
-		if(strlen($row) > 0)
-		{
-			$filter = "l.name LIKE ?";
-			//append "." to end of search for rows and not cabs
-			$needle = $row. ".%";
-			
-			$panelDescription = "Locations on Row $row";
-			$pageSubTitle = "Row #$row";
-		}
-		else
-		{
-			$filter = "l.roomid=?";
-			$needle = $roomID;
-			$panelDescription = "Locations in RoomID#$roomID";
-			$pageSubTitle = "Room ID#$roomID";
-		}
+		$filter = "l.roomid=?";
+		$needle = $roomID;
+		$panelDescription = "Locations & devices in RoomID#$roomID";
+		$pageSubTitle = "Room ID#$roomID";
 		
 		if($showEmpty)
 			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
@@ -4534,14 +4521,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			//show results
-			$searchTitle = "SITEID#?:";
-			
-			if(strlen($row) > 0)
-				$searchTitle = $searchTitle." Row ".substr($row,0,2);
-			else
-				$searchTitle = $searchTitle." RoomID#$roomID";
-			$searchTitle = $searchTitle." Location(s)";				
-			
+			$searchTitle = $searchTitle." RoomID#$roomID Location(s)";				
 			echo "<span class='tableTitle'>$searchTitle</span>\n";
 			echo "<BR>";
 			
