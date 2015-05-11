@@ -5522,146 +5522,187 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanel($pa_roomID,$pa_panel)
 	{
+		
+		//This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
 		global $pageSubTitle;
-
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+		
+		//lookup site room and circuit info for headers
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, p.panel
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
-				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE r.roomid=? AND p.panel=?
 			GROUP BY r.roomid, p.panel, p.circuit
-			ORDER BY p.circuit";
+			ORDER BY p.circuit
+			LIMIT 1";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
-
+		
 		$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
 		$count = $stmt->num_rows;
-
-		//this data should be looked up in seperate easy select - issue #66
-		$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel";
-
-		echo "<script src='lib/js/customerEditScripts.js'></script>\n";
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>\n";
-		echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
-		echo "</div>\n";
 		
-		echo "<div class='panel-body'>\n\n";
-		if($count>0)
-		{
-			//show results
-			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
-			echo "<span class='tableTitle'>Circuits for RoomID:$pa_roomID Panel:$pa_panel</span><BR>\n";
-			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
-			echo "<table style='border-collapse: collapse'>\n";
+		if($count==1 && $stmt->fetch())
+		{//sucsessfull lookup
+			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".FormatPanelName($panel));
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".FormatPanelName($panel));//short room name
+			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>\n";
+			echo "Circuits for $fullPanelDescription\n";
+			echo "</div>\n";
 			
-			$stmt->fetch();
+			echo "<div class='panel-body'>\n\n";
 			
-			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
-			$numberOfCircuitsPerPanel = 42;
-			$tableCircuitNo = 0;
-			$prevWas208Left = false;
-			$prevWas208Right = false;
-			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
+			//select power data
+			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+				FROM dcim_power AS p
+					LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
+					LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
+					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+				WHERE r.roomid=? AND p.panel=?
+				GROUP BY r.roomid, p.panel, p.circuit
+				ORDER BY p.circuit";
+			
+			if (!($stmt = $mysqli->prepare($query)))
 			{
-				//odd circutis are on the left 
-				$tableCircuitNo++;
-				$left = ($tableCircuitNo%2)!=0;
+				//TODO handle errors better
+				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			}
+			
+			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+			$count = $stmt->num_rows;
 				
-				//this will make 0&1 odd color and 2&3 not for every set of 4
-				if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
-				else $cellClass = "powerAuditCellTwo";
+			if($count>0)
+			{
+				//show results
+				echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
+				echo "<span class='tableTitle'>Circuits for $fullPanelDescription</span><BR>\n";
+				echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
+				echo "<table style='border-collapse: collapse'>\n";
 				
-				if($circuit<$tableCircuitNo)
-					$stmt->fetch();
+				$stmt->fetch();
 				
-				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
-				$fullLocationName = FormatLocation($site, $room, $location, false);
-				if($amps>0)
+				//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
+				$numberOfCircuitsPerPanel = 42;
+				$tableCircuitNo = 0;
+				$prevWas208Left = false;
+				$prevWas208Right = false;
+				while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 				{
-					$percentLoad = round(100*$load/$amps,2);
-					if($percentLoad>80)
-						$percentLoad = "<font color=red>$percentLoad</font>";
-				}
-				else
-					$percentLoad = "?";
-				
-				if($left)
-				{//start a new row
-					echo "<tr>\n";
-				}
-				
-				$hasData = ($circuit==$tableCircuitNo);
-				
-				if($hasData)
-				{
-					$rowSpan="";
-					$displayCircuit = $circuit;
-					if($volts==208)//208 volt circuits take up double
+					//odd circutis are on the left 
+					$tableCircuitNo++;
+					$left = ($tableCircuitNo%2)!=0;
+					
+					//this will make 0&1 odd color and 2&3 not for every set of 4
+					if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
+					else $cellClass = "powerAuditCellTwo";
+					
+					if($circuit<$tableCircuitNo)
+						$stmt->fetch();
+					
+					$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
+					$fullLocationName = FormatLocation($site, $room, $location, false);
+					if($amps>0)
 					{
-						if($left)
-							$prevWas208Left = true;
-						else
-							$prevWas208Right = true;
-						$cellClass .= " powerAuditCellDouble";
-						$rowSpan = " rowspan=2";
-						$displayCircuit = Format208CircuitNumber($circuit);
+						$percentLoad = round(100*$load/$amps,2);
+						if($percentLoad>80)
+							$percentLoad = "<font color=red>$percentLoad</font>";
+					}
+					else
+						$percentLoad = "?";
+					
+					if($left)
+					{//start a new row
+						echo "<tr>\n";
 					}
 					
-					echo "<td $rowSpan class='$cellClass'>\n";
-					echo "	<table width=100%><tr>\n";
-					echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
-					echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
-					echo "	</tr></table><table width=100%><tr>\n";
-					//echo "	$fullLocationName ($percentLoad%) ";
-					echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
-					echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
-					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
-					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
-					$checked = ($status==="A") ? " checked" : "";
-					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
-					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
-					echo "	</td></tr>\n";
-					echo "	</table>\n";
+					$hasData = ($circuit==$tableCircuitNo);
 					
-					echo "</td>\n";
-				}
-				else 
-				{
-					if($left && $prevWas208Left)
-						$prevWas208Left = false;
-					else if(!$left && $prevWas208Right)
-						$prevWas208Right = false;
-					else
-						echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
-				}
-				
-				if(!$left)
-				{//end row
-					echo "</tr>\n";
-				}
-			}
-			echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
-			echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
-			echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
-			echo "</table></form>\n";
-		}
-		else
-			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+					if($hasData)
+					{
+						$rowSpan="";
+						$displayCircuit = $circuit;
+						if($volts==208)//208 volt circuits take up double
+						{
+							if($left)
+								$prevWas208Left = true;
+							else
+								$prevWas208Right = true;
+							$cellClass .= " powerAuditCellDouble";
+							$rowSpan = " rowspan=2";
+							$displayCircuit = Format208CircuitNumber($circuit);
+						}
 						
+						echo "<td $rowSpan class='$cellClass'>\n";
+						echo "	<table width=100%><tr>\n";
+						echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
+						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
+						echo "	</tr></table><table width=100%><tr>\n";
+						//echo "	$fullLocationName ($percentLoad%) ";
+						echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
+						echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+						$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
+						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
+						$checked = ($status==="A") ? " checked" : "";
+						echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
+						echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+						echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
+						echo "	</td></tr>\n";
+						echo "	</table>\n";
+						
+						echo "</td>\n";
+					}
+					else 
+					{
+						if($left && $prevWas208Left)
+							$prevWas208Left = false;
+						else if(!$left && $prevWas208Right)
+							$prevWas208Right = false;
+						else
+							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
+					}
+					
+					if(!$left)
+					{//end row
+						echo "</tr>\n";
+					}
+				}
+				echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
+				echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
+				echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
+				echo "</table></form>\n";
+			}
+			else
+				echo "No power circuits found at $fullPanelDescription<BR>\n";
+		}//sucsessfull lookup
+		else//panel/room combo not found
+		{
+			$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel not found";
+			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>\n";
+			echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
+			echo "</div>\n";
+		
+			echo "<div class='panel-body'>\n\n";
+			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+		}	
 		echo "</div>\n";
 		echo "</div>\n";
 		return $count;
