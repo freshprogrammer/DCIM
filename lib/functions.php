@@ -1798,7 +1798,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			else if($type=="H")
 			{
 				//this should be a more complicated lookup - but so rarely changes could just as easily be edited manualy
-				$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168);
+				$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168); //fix this hard code with #100
 				$bottomHalf = in_array($locationID,$bottomIDs);
 				if($bottomHalf)
 					$model = "Half Cab-Bottom";
