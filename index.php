@@ -43,7 +43,6 @@
 	global $versionNote;
 	
 	//varibles definitions
-	$siteID = 0;
 	//dyanmic
 	$pageSubTitle = "";
 	$user = "";
@@ -60,7 +59,6 @@
 	$locationIDInput = GetInput("locationid");
 	$userIDInput = GetInput("userid");
 	$loc = GetInput("loc");
-	$row = GetInput("row");
 	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
@@ -294,25 +292,7 @@
 		<!-- HEADER LINKS -->
 		<table width=100%><tr>
 			<td>
-				<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;
-				<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;
-				<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;
-				<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;
-				<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;
-				&nbsp;&nbsp;
-				<div class="navLinks">ROW:</div> 
-				<a class='navLinks' href='?row=01'>1</a>&nbsp;
-				<a class='navLinks' href='?row=02'>2</a>&nbsp;
-				<a class='navLinks' href='?row=03'>3</a>&nbsp;
-				<a class='navLinks' href='?row=04'>4</a>&nbsp;
-				<a class='navLinks' href='?row=05'>5</a>&nbsp;
-				<a class='navLinks' href='?row=06'>6</a>&nbsp;
-				<a class='navLinks' href='?row=07'>7</a>&nbsp;
-				<a class='navLinks' href='?row=08'>8</a>&nbsp;
-				<a class='navLinks' href='?row=09'>9</a>&nbsp;
-				<a class='navLinks' href='?row=10'>10</a>&nbsp;
-				<a class='navLinks' href='?row=11'>11</a>&nbsp;
-				<a class='navLinks' href='?row=12'>12</a>&nbsp;
+				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
 			</td>
 			<td align='right'>
 				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
@@ -344,14 +324,12 @@
 		if(strlen($host) > 0)
 		{
 			//build customer page
-			ShowCustomerPage($host, $siteID);
+			ShowCustomerPage($host);
 			
 		}
-		else if(strlen($roomID) > 0 || strlen($row) > 0)
+		else if(strlen($roomID) > 0)
 		{
-			//show all customer at given locations - IE all customers in a location range, like row X or CA X
-			//--these vars are from the header links - should be formatted propperly
-			ListLocationCustomers($siteID, $roomID, $row);
+			ListLocationCustomers($roomID);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{
@@ -395,7 +373,7 @@
 			if($singleCustomerMatch!=false)
 			{
 				//single customer
-				ShowCustomerPage($singleCustomerMatch, $siteID);
+				ShowCustomerPage($singleCustomerMatch);
 			}
 			else
 			{

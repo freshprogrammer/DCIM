@@ -16,6 +16,16 @@
 			return $result;
 		}
 		
+		public static function CreateNavigationQuickLinks()
+		{
+			$result  = "<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;\n";
+			return $result;
+		}
+		
 		public static function CreateSiteLayout($siteID)
 		{
 			global $mysqli;
