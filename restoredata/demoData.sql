@@ -7233,8 +7233,8 @@ INSERT INTO `dcim_site` (`siteid`, `name`, `fullname`, `edituser`, `editdate`, `
 --
 
 INSERT INTO `dcim_user` (`userid`, `username`, `name`, `pass`, `email`, `initials`, `note`, `permission`, `passwordreset`, `lastactivity`, `edituser`, `editdate`) VALUES(0, 'Admin', 'Administrator', '259aa8e4f3ee0811eee51dc7ba2c1bb2', '', 'AM', 'the1AdminPass', '9', 0, '2015-04-08 07:55:55', 0, '2015-03-08 13:25:24');
-INSERT INTO `dcim_user` (`userid`, `username`, `name`, `pass`, `email`, `initials`, `note`, `permission`, `passwordreset`, `lastactivity`, `edituser`, `editdate`) VALUES(0, 'writer', 'Test Writer', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TW', 'Test Write Access  testPass', '8', 0, '2015-04-18 09:05:45', 0, '2015-03-09 09:45:56');
-INSERT INTO `dcim_user` (`userid`, `username`, `name`, `pass`, `email`, `initials`, `note`, `permission`, `passwordreset`, `lastactivity`, `edituser`, `editdate`) VALUES(0, 'reader', 'Test Reader', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TR', 'Test Read Access  testPass', '1', 0, '2015-03-24 05:03:23', 0, '2015-03-09 09:45:56');
+INSERT INTO `dcim_user` (`userid`, `username`, `name`, `pass`, `email`, `initials`, `note`, `permission`, `passwordreset`, `lastactivity`, `edituser`, `editdate`) VALUES(1, 'writer', 'Test Writer', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TW', 'Test Write Access  testPass', '8', 0, '2015-04-18 09:05:45', 0, '2015-03-09 09:45:56');
+INSERT INTO `dcim_user` (`userid`, `username`, `name`, `pass`, `email`, `initials`, `note`, `permission`, `passwordreset`, `lastactivity`, `edituser`, `editdate`) VALUES(2, 'reader', 'Test Reader', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TR', 'Test Read Access  testPass', '1', 0, '2015-03-24 05:03:23', 0, '2015-03-09 09:45:56');
 
 
 --
