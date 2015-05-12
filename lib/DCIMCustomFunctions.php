@@ -1,5 +1,5 @@
 <?php
-	//These are the functions that can be overwritten with custom code - defaults provided here dont have to be overwritten but can be 
+	//These are the functions that can be overwritten with custom code - defaults provided here dont have to be overwritten but can be
 	class DCIMCustomFunctions
 	{
 		public static function UserHasDevPermission()

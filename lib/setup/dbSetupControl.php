@@ -3,12 +3,13 @@
 	
 	set_include_path('../'); 
 	
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
-	include 'setup/dbSetupFunctions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
+	require_once 'setup/dbSetupFunctions.php';
 	
 	SQLIConnect_Admin();
 	SessionSetup();

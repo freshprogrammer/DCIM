@@ -1,11 +1,12 @@
 <?php
 	set_include_path('lib/'); 
 	
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
 	
 	UpdateSettingsForiPad();
 	SessionSetup();
@@ -362,7 +363,7 @@
 			}
 			else if($page==="Audits")
 			{
-				include 'audits.php';
+				require_once 'audits.php';
 				BuildAuditsPage();
 			}
 		}
