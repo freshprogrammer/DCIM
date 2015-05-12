@@ -3,23 +3,35 @@
 	
 	set_include_path('../'); 
 	
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
-	include 'setup/dbSetupFunctions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
+	require_once 'setup/dbSetupFunctions.php';
 	
 	SQLIConnect_Admin();
 	SessionSetup();
 	
 	//globals
+	//rebuilds
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
+	//updates
 	$SCRIPTID_DB_UPDATE_1_1 = 11;
 	$SCRIPTID_DB_UPDATE_1_2 = 12;
+	//batches
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
+	//simple procedures
+	$SCRIPTID_RECREATE_ALL_LOGS = 101;
+	
+	//scripts that can be run on live (non demo) environment
+	$liveEnvironmentScripts = array();
+	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_1;
+	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_2;
+	
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
@@ -71,6 +83,8 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
 	</select>
 	<input type='submit' value='Run'>
 	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
@@ -95,7 +109,8 @@ function ConfirmIntent()
 	{
 		if(!isset($demoSiteEnabled) || !$demoSiteEnabled)
 		{//this is not a demo server - anthing other that an update will screw with the core data or structure and is not allowed
-			if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
+			
+			if(in_array($dbScriptID,$liveEnvironmentScripts))
 			{
 				$validAction = true;
 			}
@@ -107,8 +122,6 @@ function ConfirmIntent()
 	if($validAction)
 		$validSession = IsValidSession();
 	if($validSession)
-		$dbStatus = TestDBReadiness($dbScriptID);
-	if($dbStatus==1)
 		$commited = TestUserCommitment($dbScriptID);
 	if($commited)
 	{//must have passed all checks
@@ -122,10 +135,6 @@ function ConfirmIntent()
 			$errorMessage[]= "Cannot wipe data or structure on live production servers. Aborted. DemoServer='$demoSiteEnabled' scriptID=$dbScriptID";
 		else if(!$validSession)
 			$errorMessage[]= "Invalid session. Preveted run on refresh. Re-submit form to run again";
-		else if($dbStatus==0)
-			$errorMessage[]="Database failed readiness check. Aborted";
-		else if($dbStatus==-1)
-			$errorMessage[]="Database Has already been updated. Aborted.";
 		else if(!$commited)
 			$errorMessage[]="User not commited. Aborted.";
 	}
@@ -147,10 +156,16 @@ function ConfirmIntent()
 	{
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
+		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		
-		if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
+		if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2 || $dbScriptID==$SCRIPTID_CREATE_POPULATE_UPDATE)
 		{
-			return IsDatabaseUpToDate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
+			if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1)
+				return IsDatabaseUpToDate_Update1(true,false);
+			else if($dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
+				return IsDatabaseUpToDate_Update1(false,true);
+			else if($dbScriptID==$SCRIPTID_CREATE_POPULATE_UPDATE)
+				return IsDatabaseUpToDate_Update1(true,true);
 		}
 		return 1;
 	}
@@ -172,6 +187,7 @@ function ConfirmIntent()
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
+		global $SCRIPTID_RECREATE_ALL_LOGS;
 		global $errorMessage;
 		
 		switch($dbScriptID)
@@ -196,7 +212,15 @@ function ConfirmIntent()
 			case $SCRIPTID_DB_UPDATE_1_1:
 			case $SCRIPTID_DB_UPDATE_1_2:
 				echo "Processing Update...";
-				RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
+				
+				$dbStatus = TestDBReadiness($dbScriptID);
+				if($dbStatus==1)
+					RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
+				else if($dbStatus==0)
+					$errorMessage[]="Database failed readiness check. Update Aborted";
+				else if($dbStatus==-1)
+					$errorMessage[]="Database Has already been updated. Update Aborted.";
+				
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_CREATE_POPULATE_UPDATE:
@@ -204,10 +228,25 @@ function ConfirmIntent()
 				BuildDB();
 				echo "<BR>Populating Database...";
 				RestoreDBWithDemoData();
-				echo "<BR>Processing Update Part 1...";
-				RunDBUpdate_Update1(true,false);
-				echo "<BR>Processing Update Part 2...";
-				RunDBUpdate_Update1(false,true);
+				
+				$dbStatus = TestDBReadiness($dbScriptID);
+				if($dbStatus==1)
+				{
+					echo "<BR>Processing Update Part 1...";
+					RunDBUpdate_Update1(true,false);
+					echo "<BR>Processing Update Part 2...";
+					RunDBUpdate_Update1(false,true);
+				}
+				else if($dbStatus==0)
+					$errorMessage[]="Database failed readiness check. Update Aborted";
+				else if($dbStatus==-1)
+					$errorMessage[]="Database Has already been updated. Update Aborted.";
+					
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_RECREATE_ALL_LOGS:
+				echo "Rebuilding log records";
+				WipeAndReCreateAllLogs();
 				echo "<BR>Done";
 				break;
 			default:

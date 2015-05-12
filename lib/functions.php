@@ -4568,7 +4568,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else 
 			{
-				echo "No Customers Found in $roomFullName.<BR>\n";
+				echo "No Locations or devices found in $roomFullName.<BR>\n";
 			}
 		}//sucsessfull lookup
 		else

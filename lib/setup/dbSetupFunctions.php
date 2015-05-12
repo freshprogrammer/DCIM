@@ -55,13 +55,13 @@
 		 */
 		global $resultMessage;
 		global $restoreDataSQLFile;
-
-		TruncateAllTables();
+		
+		TruncateTables(true,true);
 		
 		//NOTE: this is just restoring the data in the core tables and not the logs
 		ExecuteThisFile("RD",$restoreDataSQLFile);
 		
-		ReCreateAllLogs();
+		WipeAndReCreateAllLogs();
 		
 		$resultMessage[]= "RestoreDBWithDemoData()-Sucsessfully populated database with demo data";
 	}
@@ -83,7 +83,7 @@
 		}
 		else if($executePart2)
 		{
-			//it part 1 up to date
+			//if part 1 up to date
 			if(IsDatabaseUpToDate_Update1(true,false)==-1)
 			{
 				// do legacy fields still exist
@@ -201,10 +201,11 @@
 		$resultMessage[]= "RunDBUpdate_Update1()-Sucsessfully updated database.";
 	}
 	
-	function ReCreateAllLogs()
+	function WipeAndReCreateAllLogs()
 	{
 		global $resultMessage;
 		
+		TruncateTables(false,true);
 		//create insert log records for all data
 		ExecuteThis("L2","INSERT INTO dcimlog_badge				SELECT NULL,'I' AS logtype,cur.* FROM dcim_badge			AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_customer			SELECT NULL,'I' AS logtype,cur.* FROM dcim_customer			AS cur WHERE 1=1");
@@ -241,7 +242,7 @@
 		$resultMessage[]= "DropAllTables()-Sucsessfully Dropped all tables";
 	}
 	
-	function TruncateAllTables()
+	function TruncateTables($wipeMainTables,$wipeLogTables)
 	{
 		/* This will wipe/truncate all current data in the database in all pre-existing and new tables
 		 */
@@ -249,16 +250,22 @@
 		global $mainTables;
 		global $logTables;
 
-		foreach($mainTables as $table)
+		if($wipeMainTables)
 		{
-			ExecuteThis("D1","TRUNCATE TABLE $table");
+			foreach($mainTables as $table)
+			{
+				ExecuteThis("D1","TRUNCATE TABLE $table");
+			}
 		}
-		foreach($logTables as $table)
+		if($wipeLogTables)
 		{
-			ExecuteThis("D1","TRUNCATE TABLE $table");
-		} 
+			foreach($logTables as $table)
+			{
+				ExecuteThis("D1","TRUNCATE TABLE $table");
+			}
+		}
 		
-		$resultMessage[]= "TruncateAllTables()-Sucsessfully Truncated all tables";
+		$resultMessage[]= "TruncateTables($mainTables,$logTables)-Sucsessfully truncated tables";
 	}
 	
 	function ExecuteThisFile($debugTag,$fileName, $reportSucsess=false)
@@ -283,20 +290,20 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$errorMessage[] = "ExecuteThis()-Prepare failed:($debugTag,$query) (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "ExecuteThis()-Prepare failed:($debugTag,$query) (" . $mysqli->errno . ") - E:" . $mysqli->error;
 			return false;
 		}
 		else
 		{
 			if(!$stmt->execute())
 			{
-				$errorMessage[] = "ExecuteThis()-Error executing($debugTag): $query.";
+				$errorMessage[] = "ExecuteThis()-Error executing($debugTag): $query. - E:" . $mysqli->error;
 				return false;
 			}
 			else 
 			{
 				if($reportSucsess)
-					$resultMessage[] = "ExecuteThis()-Sucsessfully executed($debugTag): $query.";
+					$resultMessage[] = "ExecuteThis()-Sucsessfully executed($debugTag): $query. - E:" . $mysqli->error;
 			}
 			$stmt->close();
 			return true;

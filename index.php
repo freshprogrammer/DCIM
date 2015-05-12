@@ -1,11 +1,12 @@
 <?php
 	set_include_path('lib/'); 
 	
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
 	
 	UpdateSettingsForiPad();
 	SessionSetup();
@@ -280,11 +281,6 @@
 	
 	//BackupDatabase();
 	
-	/* test code
-	$input = "test";  $debugMessage[] = "validDeviceSize '$input'  R-".ValidDeviceSize($input)." '$input'";
-	$input = "2x2";   $debugMessage[] = "validDeviceSize '$input'  R-".ValidDeviceSize($input)." '$input'";
-		*/
-	
 	if(UserHasReadPermission())
 	{
 		//TODO this should be an actual room lookup not hardcoded roomids
@@ -302,13 +298,10 @@
 		<?php
 	}
 		
-	//trim mesages
-	$debugMessageString  = implode("<BR>\n",$debugMessage);
-	$errorMessageString  = implode("<BR>\n",$errorMessage);
-	$resultMessageString = implode("<BR>\n",$resultMessage);
-	if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
-	if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
-	if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
+	//error and reporting mesages - filled in at the bottom of the page with JS
+	echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
+	echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
+	echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
 		
 	if(!UserHasReadPermission())
 	{
@@ -362,7 +355,7 @@
 			}
 			else if($page==="Audits")
 			{
-				include 'audits.php';
+				require_once 'audits.php';
 				BuildAuditsPage();
 			}
 		}
@@ -460,8 +453,15 @@
 <script type="text/javascript" language="JavaScript">
 	<?php 
 		//move focus as necisary
-		echo "InitializePage();";
-
+		echo "InitializePage();\n";
+		
+		//populate messages - and dissable 'hidden' style is msg exists
+		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
+		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
+		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
+		
+		
 		if($focusSearch)
 			echo "FocusMainSearch();\n";
 		//update title if necisarry
