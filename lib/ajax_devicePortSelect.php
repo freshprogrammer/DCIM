@@ -1,9 +1,10 @@
 <?php
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
 	
 	//startup
 	SQLIConnect();

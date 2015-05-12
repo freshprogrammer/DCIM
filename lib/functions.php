@@ -1798,7 +1798,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			else if($type=="H")
 			{
 				//this should be a more complicated lookup - but so rarely changes could just as easily be edited manualy
-				$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168);
+				$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168); //fix this hard code with #100
 				$bottomHalf = in_array($locationID,$bottomIDs);
 				if($bottomHalf)
 					$model = "Half Cab-Bottom";
@@ -3021,7 +3021,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return false;
 	}
 	
-	function ShowCustomerPage($hNo, $siteID)
+	function ShowCustomerPage($hNo)
 	{
 		global $mysqli;
 		global $pageSubTitle;
@@ -3728,6 +3728,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ShowChassisPage($chassisName)
 	{
+		global $pageSubTitle;
+		$pageSubTitle = MakeHTMLSafe($chassisName);
+		
 		if(UserHasWritePermission())
 		{
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
@@ -4459,120 +4462,125 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($siteID, $roomID, $row)
+	function ListLocationCustomers($roomID)
 	{
-		//build table of all devices/customers in location range - search only from room/row nav links 	
-		//TODO this whole block should probably be re done with the new room table - GUI room links would be better
-		//TODO this should also have a select at the top to get the details about this location - IE site/room name not use IDs - issue #66
+		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
 		global $pageSubTitle;
 		
-		$showEmpty = true;
-			
-		$panelDescription = "";
-		if(strlen($row) > 0)
-		{
-			$filter = "l.name LIKE ?";
-			//append "." to end of search for rows and not cabs
-			$needle = $row. ".%";
-			
-			$panelDescription = "Locations on Row $row";
-			$pageSubTitle = "Row #$row";
-		}
-		else
-		{
-			$filter = "l.roomid=?";
-			$needle = $roomID;
-			$panelDescription = "Locations in RoomID#$roomID";
-			$pageSubTitle = "Room ID#$roomID";
-		}
+		$showEmpty = true;///this was a test feature to hide empty locations
 		
-		if($showEmpty)
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
-				FROM dcim_location AS l
-					LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
-					LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				WHERE s.siteid = ?
-					AND $filter
-					AND l.visible='T'
-				ORDER BY r.name, l.name";
-		else
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
-			FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+		//lookup site room and circuit info for headers
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
+			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE s.siteid=?
-				AND $filter
-				AND d.locationid=l.locationid
-				AND d.hno=c.hno
-				AND d.status='A'
-			ORDER BY r.name, l.name";
-
-			
-		if (!($stmt = $mysqli->prepare($query))) 
+			WHERE r.roomid=?";
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('is', $siteID, $needle);
-		
+		$stmt->bind_Param('i', $roomID);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
 		$count = $stmt->num_rows;
 		
-		$panelDescription = $panelDescription . " ($count)";
-
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>$panelDescription</div>\n";
-		echo "<div class='panel-body'>\n\n";
-		
-		if($count>0)
-		{
-			//show results
-			$searchTitle = "SITEID#$siteID:";
+		if($count==1 && $stmt->fetch())
+		{//sucsessfull lookup
+			$panelDescription = "Locations & devices in $site $roomFullName";
+			$pageSubTitle = "$site $room";
+			$searchTitle = "$site $roomFullName Location(s)";
 			
-			if(strlen($row) > 0)
-				$searchTitle = $searchTitle." Row ".substr($row,0,2);
+			if($showEmpty)
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+					FROM dcim_location AS l
+						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
+						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
+						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					WHERE r.roomid=?
+						AND l.visible='T'
+					ORDER BY r.name, l.name";
 			else
-				$searchTitle = $searchTitle." RoomID#$roomID";
-			$searchTitle = $searchTitle." Location(s)";				
-			
-			echo "<span class='tableTitle'>$searchTitle</span>\n";
-			echo "<BR>";
-			
-			echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE r.roomid=?
+					AND d.locationid=l.locationid
+					AND d.hno=c.hno
+					AND d.status='A'
+				ORDER BY r.name, l.name";
+	
+				
+			if (!($stmt = $mysqli->prepare($query))) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$fullLocationName = FormatLocation($site, $room, $location);
-				$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
-				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				if(strlen($customer) > 0)
-					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				else 
-					echo "<td class='data-table-cell'>Empty</td>";
-				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-				echo "</tr>";
+				//TODO handle errors better
+				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			echo "</table>";
-		}
-		else 
+			
+			$stmt->bind_Param('s', $roomID);
+			
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+			$count = $stmt->num_rows;
+			
+			$panelDescription = $panelDescription . " ($count)";
+
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>$panelDescription</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			if($count>0)
+			{
+				//show results
+				echo "<span class='tableTitle'>$searchTitle</span>\n";
+				echo "<BR>";
+				
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch()) 
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$fullLocationName = FormatLocation($site, $room, $location);
+					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					if(strlen($customer) > 0)
+						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					else 
+						echo "<td class='data-table-cell'>Empty</td>";
+					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+					echo "</tr>";
+				}
+				echo "</table>";
+			}
+			else 
+			{
+				echo "No Locations or devices found in $roomFullName.<BR>\n";
+			}
+		}//sucsessfull lookup
+		else
 		{
-			echo "No Customers Found.<BR>\n";
+			$pageSubTitle = "RoomID#$roomID";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>RoomID#$roomID</div>\n";
+			echo "<div class='panel-body'>\n\n";
+
+			echo "Room($roomID) not found.<BR>\n";
 		}
+			
 		//end panel divs
 		echo "</div>\n";
 		echo "</div>\n";
@@ -5113,9 +5121,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 						<td>
 							<select name='childportid' id='EditConnection_childportid' tabindex=2>
-								<option value=1>Port 1</option>
-								<option value=2>Port 2</option>
-								<option value=3>Port 3</option>
+								<option value=1>Loading...</option>
 							</select>
 						</td>
 					</tr>
@@ -5128,9 +5134,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 						<td>
 							<select name='parentportid' id='EditConnection_parentportid' tabindex=4>
-								<option value=1>Port 1</option>
-								<option value=2>Port 2</option>
-								<option value=3>Port 3</option>
+								<option value=1>Loading...</option>
 							</select>
 						</td>
 					</tr>
@@ -5523,146 +5527,187 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanel($pa_roomID,$pa_panel)
 	{
+		
+		//This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
 		global $pageSubTitle;
-
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+		
+		//lookup site room and circuit info for headers
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, p.panel
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
-				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE r.roomid=? AND p.panel=?
 			GROUP BY r.roomid, p.panel, p.circuit
-			ORDER BY p.circuit";
+			ORDER BY p.circuit
+			LIMIT 1";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
-
+		
 		$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
 		$count = $stmt->num_rows;
-
-		//this data should be looked up in seperate easy select - issue #66
-		$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel";
-
-		echo "<script src='lib/js/customerEditScripts.js'></script>\n";
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>\n";
-		echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
-		echo "</div>\n";
 		
-		echo "<div class='panel-body'>\n\n";
-		if($count>0)
-		{
-			//show results
-			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
-			echo "<span class='tableTitle'>Circuits for RoomID:$pa_roomID Panel:$pa_panel</span><BR>\n";
-			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
-			echo "<table style='border-collapse: collapse'>\n";
+		if($count==1 && $stmt->fetch())
+		{//sucsessfull lookup
+			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".FormatPanelName($panel));
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".FormatPanelName($panel));//short room name
+			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>\n";
+			echo "Circuits for $fullPanelDescription\n";
+			echo "</div>\n";
 			
-			$stmt->fetch();
+			echo "<div class='panel-body'>\n\n";
 			
-			//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
-			$numberOfCircuitsPerPanel = 42;
-			$tableCircuitNo = 0;
-			$prevWas208Left = false;
-			$prevWas208Right = false;
-			while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
+			//select power data
+			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+				FROM dcim_power AS p
+					LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
+					LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
+					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+				WHERE r.roomid=? AND p.panel=?
+				GROUP BY r.roomid, p.panel, p.circuit
+				ORDER BY p.circuit";
+			
+			if (!($stmt = $mysqli->prepare($query)))
 			{
-				//odd circutis are on the left 
-				$tableCircuitNo++;
-				$left = ($tableCircuitNo%2)!=0;
+				//TODO handle errors better
+				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			}
+			
+			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+			$count = $stmt->num_rows;
 				
-				//this will make 0&1 odd color and 2&3 not for every set of 4
-				if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
-				else $cellClass = "powerAuditCellTwo";
+			if($count>0)
+			{
+				//show results
+				echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
+				echo "<span class='tableTitle'>Circuits for $fullPanelDescription</span><BR>\n";
+				echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
+				echo "<table style='border-collapse: collapse'>\n";
 				
-				if($circuit<$tableCircuitNo)
-					$stmt->fetch();
+				$stmt->fetch();
 				
-				$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
-				$fullLocationName = FormatLocation($site, $room, $location, false);
-				if($amps>0)
+				//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
+				$numberOfCircuitsPerPanel = 42;
+				$tableCircuitNo = 0;
+				$prevWas208Left = false;
+				$prevWas208Right = false;
+				while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 				{
-					$percentLoad = round(100*$load/$amps,2);
-					if($percentLoad>80)
-						$percentLoad = "<font color=red>$percentLoad</font>";
-				}
-				else
-					$percentLoad = "?";
-				
-				if($left)
-				{//start a new row
-					echo "<tr>\n";
-				}
-				
-				$hasData = ($circuit==$tableCircuitNo);
-				
-				if($hasData)
-				{
-					$rowSpan="";
-					$displayCircuit = $circuit;
-					if($volts==208)//208 volt circuits take up double
+					//odd circutis are on the left 
+					$tableCircuitNo++;
+					$left = ($tableCircuitNo%2)!=0;
+					
+					//this will make 0&1 odd color and 2&3 not for every set of 4
+					if($tableCircuitNo%4<=1) $cellClass = "powerAuditCellOne";
+					else $cellClass = "powerAuditCellTwo";
+					
+					if($circuit<$tableCircuitNo)
+						$stmt->fetch();
+					
+					$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
+					$fullLocationName = FormatLocation($site, $room, $location, false);
+					if($amps>0)
 					{
-						if($left)
-							$prevWas208Left = true;
-						else
-							$prevWas208Right = true;
-						$cellClass .= " powerAuditCellDouble";
-						$rowSpan = " rowspan=2";
-						$displayCircuit = Format208CircuitNumber($circuit);
+						$percentLoad = round(100*$load/$amps,2);
+						if($percentLoad>80)
+							$percentLoad = "<font color=red>$percentLoad</font>";
+					}
+					else
+						$percentLoad = "?";
+					
+					if($left)
+					{//start a new row
+						echo "<tr>\n";
 					}
 					
-					echo "<td $rowSpan class='$cellClass'>\n";
-					echo "	<table width=100%><tr>\n";
-					echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
-					echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
-					echo "	</tr></table><table width=100%><tr>\n";
-					//echo "	$fullLocationName ($percentLoad%) ";
-					echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
-					echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
-					$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
-					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
-					$checked = ($status==="A") ? " checked" : "";
-					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
-					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
-					echo "	</td></tr>\n";
-					echo "	</table>\n";
+					$hasData = ($circuit==$tableCircuitNo);
 					
-					echo "</td>\n";
-				}
-				else 
-				{
-					if($left && $prevWas208Left)
-						$prevWas208Left = false;
-					else if(!$left && $prevWas208Right)
-						$prevWas208Right = false;
-					else
-						echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
-				}
-				
-				if(!$left)
-				{//end row
-					echo "</tr>\n";
-				}
-			}
-			echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
-			echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
-			echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
-			echo "</table></form>\n";
-		}
-		else
-			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+					if($hasData)
+					{
+						$rowSpan="";
+						$displayCircuit = $circuit;
+						if($volts==208)//208 volt circuits take up double
+						{
+							if($left)
+								$prevWas208Left = true;
+							else
+								$prevWas208Right = true;
+							$cellClass .= " powerAuditCellDouble";
+							$rowSpan = " rowspan=2";
+							$displayCircuit = Format208CircuitNumber($circuit);
+						}
 						
+						echo "<td $rowSpan class='$cellClass'>\n";
+						echo "	<table width=100%><tr>\n";
+						echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
+						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
+						echo "	</tr></table><table width=100%><tr>\n";
+						//echo "	$fullLocationName ($percentLoad%) ";
+						echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
+						echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+						$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
+						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
+						$checked = ($status==="A") ? " checked" : "";
+						echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
+						echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+						echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powerid type='hidden' name='c".$circuit."powerid' value='$powerID'>\n";
+						echo "	</td></tr>\n";
+						echo "	</table>\n";
+						
+						echo "</td>\n";
+					}
+					else 
+					{
+						if($left && $prevWas208Left)
+							$prevWas208Left = false;
+						else if(!$left && $prevWas208Right)
+							$prevWas208Right = false;
+						else
+							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
+					}
+					
+					if(!$left)
+					{//end row
+						echo "</tr>\n";
+					}
+				}
+				echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
+				echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
+				echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
+				echo "</table></form>\n";
+			}
+			else
+				echo "No power circuits found at $fullPanelDescription<BR>\n";
+		}//sucsessfull lookup
+		else//panel/room combo not found
+		{
+			$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel not found";
+			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>\n";
+			echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
+			echo "</div>\n";
+		
+			echo "<div class='panel-body'>\n\n";
+			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+		}	
 		echo "</div>\n";
 		echo "</div>\n";
 		return $count;

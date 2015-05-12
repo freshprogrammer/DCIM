@@ -1,11 +1,12 @@
 <?php
 	set_include_path('lib/'); 
 	
-	include 'customFunctions.php';
-	include 'config.php';
-	include 'genericFunctions.php';
-	include 'helperFunctions.php';
-	include 'functions.php';
+	require_once 'DCIMCustomFunctions.php';
+	require_once 'config.php';
+	require_once 'customFunctions.php';
+	require_once 'genericFunctions.php';
+	require_once 'helperFunctions.php';
+	require_once 'functions.php';
 	
 	UpdateSettingsForiPad();
 	SessionSetup();
@@ -43,7 +44,6 @@
 	global $versionNote;
 	
 	//varibles definitions
-	$siteID = 0;
 	//dyanmic
 	$pageSubTitle = "";
 	$user = "";
@@ -60,7 +60,6 @@
 	$locationIDInput = GetInput("locationid");
 	$userIDInput = GetInput("userid");
 	$loc = GetInput("loc");
-	$row = GetInput("row");
 	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
@@ -282,11 +281,6 @@
 	
 	//BackupDatabase();
 	
-	/* test code
-	$input = "test";  $debugMessage[] = "validDeviceSize '$input'  R-".ValidDeviceSize($input)." '$input'";
-	$input = "2x2";   $debugMessage[] = "validDeviceSize '$input'  R-".ValidDeviceSize($input)." '$input'";
-		*/
-	
 	if(UserHasReadPermission())
 	{
 		//TODO this should be an actual room lookup not hardcoded roomids
@@ -294,25 +288,7 @@
 		<!-- HEADER LINKS -->
 		<table width=100%><tr>
 			<td>
-				<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;
-				<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;
-				<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;
-				<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;
-				<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;
-				&nbsp;&nbsp;
-				<div class="navLinks">ROW:</div> 
-				<a class='navLinks' href='?row=01'>1</a>&nbsp;
-				<a class='navLinks' href='?row=02'>2</a>&nbsp;
-				<a class='navLinks' href='?row=03'>3</a>&nbsp;
-				<a class='navLinks' href='?row=04'>4</a>&nbsp;
-				<a class='navLinks' href='?row=05'>5</a>&nbsp;
-				<a class='navLinks' href='?row=06'>6</a>&nbsp;
-				<a class='navLinks' href='?row=07'>7</a>&nbsp;
-				<a class='navLinks' href='?row=08'>8</a>&nbsp;
-				<a class='navLinks' href='?row=09'>9</a>&nbsp;
-				<a class='navLinks' href='?row=10'>10</a>&nbsp;
-				<a class='navLinks' href='?row=11'>11</a>&nbsp;
-				<a class='navLinks' href='?row=12'>12</a>&nbsp;
+				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
 			</td>
 			<td align='right'>
 				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
@@ -322,13 +298,10 @@
 		<?php
 	}
 		
-	//trim mesages
-	$debugMessageString  = implode("<BR>\n",$debugMessage);
-	$errorMessageString  = implode("<BR>\n",$errorMessage);
-	$resultMessageString = implode("<BR>\n",$resultMessage);
-	if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
-	if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
-	if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
+	//error and reporting mesages - filled in at the bottom of the page with JS
+	echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
+	echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
+	echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
 		
 	if(!UserHasReadPermission())
 	{
@@ -344,14 +317,12 @@
 		if(strlen($host) > 0)
 		{
 			//build customer page
-			ShowCustomerPage($host, $siteID);
+			ShowCustomerPage($host);
 			
 		}
-		else if(strlen($roomID) > 0 || strlen($row) > 0)
+		else if(strlen($roomID) > 0)
 		{
-			//show all customer at given locations - IE all customers in a location range, like row X or CA X
-			//--these vars are from the header links - should be formatted propperly
-			ListLocationCustomers($siteID, $roomID, $row);
+			ListLocationCustomers($roomID);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{
@@ -384,7 +355,7 @@
 			}
 			else if($page==="Audits")
 			{
-				include 'audits.php';
+				require_once 'audits.php';
 				BuildAuditsPage();
 			}
 		}
@@ -395,7 +366,7 @@
 			if($singleCustomerMatch!=false)
 			{
 				//single customer
-				ShowCustomerPage($singleCustomerMatch, $siteID);
+				ShowCustomerPage($singleCustomerMatch);
 			}
 			else 
 			{
@@ -480,8 +451,15 @@
 <script type="text/javascript" language="JavaScript">
 	<?php 
 		//move focus as necisary
-		echo "InitializePage();";
-
+		echo "InitializePage();\n";
+		
+		//populate messages - and dissable 'hidden' style is msg exists
+		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
+		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
+		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
+		
+		
 		if($focusSearch)
 			echo "FocusMainSearch();\n";
 		//update title if necisarry
