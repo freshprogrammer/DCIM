@@ -609,40 +609,37 @@ h2 {
 	width: 100%;
 	border-style: hidden;
 }
-.room, .roomBackground, .roomBorders{
+.roomContainer, .roomBackground, .roomBorders{
 	position: absolute;
 	width:100%;
 	height:100%;
 }
 .roomBorders {
-	position: absolute;
 	background-color: transparent;
 	border-style: solid;
 	border-width: 4px;
 	border-color: black;
-	width:100%;
-	height:100%;
 
 	box-sizing:border-box;
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.room,  .roomCorner{
+.roomContainer,  .roomCorner{
 	/* background-color: blue; */
 	-ms-transform-origin: 0% 0%; /* IE 9 */
 	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
 	transform-origin: 0% 0%;
 }
-.room a:link, .room a:visited{
+.roomContainer a:link, .roomContainer a:visited{
 	color: white;
 } 
-.room span{
+.roomContainer span{
 	position: absolute;
 	color: white;
 	margin: 5 5;
 	text-overflow: clip;
 } 
-.siteBackground, .caBackground, .roomBackground{
+.siteBackground, .caBackground, .roomBackground, .roomBorders{
 	position: absolute;
 	width: 100%;
 	height: 100%;
@@ -656,7 +653,7 @@ h2 {
 .roomBackground{
 	background-color: red;
 }
-.room a:hover  .caBackground, .room a:hover .roomBackground{
+.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground{
 	background-color: green;
 }
 

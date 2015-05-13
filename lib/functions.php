@@ -5920,7 +5920,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= $roomCustomStyle;
 		$result .= "</style>\n";
 
-		$result .= "<div id='room$roomID' class='room'>\n";
 		$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
 		if($roomCustomHTML)
 		{
@@ -5931,7 +5930,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "<div id='' class='roomBorders $roomClass'>$name</div>\n";
 		}
 		$result .= "</a>\n";
-		$result .= "</div>\n";
 		
 		echo $result;
 	}

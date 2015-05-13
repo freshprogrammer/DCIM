@@ -426,7 +426,7 @@
 						
 						echo "Welcome to $siteName.";
 						
-						echo CustomFunctions::CreateSiteLayout(0);//this should be a lookup of all sites...
+						echo CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
 						
 						if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 						{

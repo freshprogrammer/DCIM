@@ -1,5 +1,6 @@
 <?php
 	//These are the functions that can be overwritten with custom code - defaults provided here dont have to be overwritten but can be
+	//NOTE many functions refferance the CustomFunctions class that is actualy a child of this. This is not ideal but using self doesnt work (link back to this class instead of possible child), and 'this' is not an option since these are static functions. PHP 5.3 added get_called_class() for this.c
 	class DCIMCustomFunctions
 	{
 		public static function UserHasDevPermission()
@@ -26,31 +27,23 @@
 			return $result;
 		}
 		
-		public static function CreateSiteLayout($siteID)
+		public static function CreateSiteLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation)
 		{
 			global $mysqli;
 			
+			//- site should really always be facing N and be at 0,0
+			$orientation = "N"; // North East South West
 			//from DB in feet
 			$xPos = 0;
 			$yPos = 0;
 			$siteWidth = 171.70;
 			$siteDepth = 143.43;
-			$orientation = "N"; // North East South West
+			$name = "Site";
+			$fullName = "Site Name";
 			
-			//calculated
-			$depthToWidthRatio = 100*$siteDepth/$siteWidth;
+			CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
 			
-			echo "<style>\n";
-			echo "#siteContainer$siteID {\n";
-			echo "	padding-bottom:$depthToWidthRatio%;\n";
-			echo "}\n";
-			echo "</style>\n";
-			
-			echo "<div id='siteContainer$siteID' class='dataceterContainer'>\n";
-			//echo "Site $siteID<BR>\n";
-			
-			
-			//select rooms from table
+			//select rooms from table for rendering each one
 			$query = "SELECT roomid, name , fullname, custaccess, xpos, ypos, width, depth, orientation, layer
 					FROM dcim_room
 					WHERE siteid=? AND width > 0 AND depth > 0";
@@ -67,9 +60,26 @@
 			
 			while($stmt->fetch())
 			{
+				echo "<div id='room$roomID' class='roomContainer'>\n";
 				CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+				echo "</div>\n";
 			}
 			echo "</div>\n";
+		}
+		
+		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation)
+		{
+			//calculated
+			$depthToWidthRatio = 100*$depth/$width;
+			
+			echo "<style>\n";
+			echo "#siteContainer$siteID {\n";
+			echo "	padding-bottom:$depthToWidthRatio%;\n";
+			echo "}\n";
+			echo "</style>\n";
+			
+			echo "<div id='siteContainer$siteID' class='dataceterContainer'>\n";
+			//echo "Site $siteID<BR>\n";
 		}
 		
 		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
@@ -88,6 +98,8 @@
 				$rotation = 90;
 			else if($orientation=="S")
 				$rotation = 180;
+			else if($orientation=="N")
+				$rotation = 0;
 			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
 			
 			//adjust dimentions if rotated
