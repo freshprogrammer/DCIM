@@ -5908,8 +5908,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
 	{
-		$result = "";
-		$result .= "<style>\n";
+		$result = "<style>\n";
 		$result .= "#room$roomID {\n";
 		$result .= "	left: $relativeX%;\n";
 		$result .= "	top: $relativeY%;\n";
@@ -5921,22 +5920,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= $roomCustomStyle;
 		$result .= "</style>\n";
 
-		if(!$roomCustomHTML)
+		$result .= "<div id='room$roomID' class='room'>\n";
+		$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+		if($roomCustomHTML)
 		{
-			$result .= "<div id='room$roomID' class='room'>\n";
-			$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
-			$result .= "<div id='' class='roomBorders $roomClass'>$name</div>\n";
-			$result .= "</a>\n";
-			$result .= "</div>\n";
+			$result .= $roomCustomHTML;
 		}
 		else
 		{
-			$result .= "<div id='room$roomID' class='room'>\n";
-			$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
-			$result .= $roomCustomHTML;
-			$result .= "</a>\n";
-			$result .= "</div>\n";
+			$result .= "<div id='' class='roomBorders $roomClass'>$name</div>\n";
 		}
+		$result .= "</a>\n";
+		$result .= "</div>\n";
+		
 		echo $result;
 	}
 	
@@ -5975,5 +5971,35 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_top3Walls'></div>\n";
 		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_bottom3Walls'></div>\n";
 		$roomCustomHTML .= "<div class='roomBorders' id='room".$roomID."_midWall'></div>\n";
+	}
+	
+	function CreateRoomLayout_FarLeftCornerAngle($cornerWidth, $roomID, $roomTypeClass, $depthToWidthRatio, &$roomCustomStyle, &$roomCustomHTML)
+	{//not finished and not 100% correct
+		$cornerWidth = 34.577;//width of the corner to be rotated into place -  will need to be converted to height percentage
+		$cornerHeight = $cornerWidth*$depthToWidthRatio;
+		$cornerLength = sqrt($cornerWidth*$cornerWidth + $cornerHeight*$cornerHeight);
+		
+		$roomCustomStyle .= "#room".$roomID."_right {\n";
+		$roomCustomStyle .= "	left: $cornerWidth%;\n";
+		$roomCustomStyle .= "	width: ".(100-$cornerWidth)."%;\n";
+		$roomCustomStyle .= "	border-style: solid solid solid hidden;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_left {\n";
+		$roomCustomStyle .= "	top: $cornerHeight%;\n";
+		$roomCustomStyle .= "	width: $cornerWidth%;\n";
+		$roomCustomStyle .= "	height: ".(100-$cornerHeight)."%;\n";
+		$roomCustomStyle .= "	border-style: hidden hidden solid solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_corner {\n";
+		$roomCustomStyle .= "	top: $cornerHeight%;\n";
+		$roomCustomStyle .= "	height: $cornerWidth%;\n";//length into shape
+		$roomCustomStyle .= "	width: $cornerLength%;\n";
+		$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+		$roomCustomStyle .= "	transform: rotate(-45deg);\n";
+		$roomCustomStyle .= "}\n";
+		
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_right'></div>\n";
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_left'></div>\n";
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 ?>

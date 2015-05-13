@@ -627,7 +627,7 @@ h2 {
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.room {
+.room,  .roomCorner{
 	/* background-color: blue; */
 	-ms-transform-origin: 0% 0%; /* IE 9 */
 	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */

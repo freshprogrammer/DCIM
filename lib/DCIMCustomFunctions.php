@@ -101,7 +101,7 @@
 				$relativeWidth = 100*$width/$parentWidth;
 				$relativeDepth= 100*$depth/$parentDepth;
 			}
-
+			
 			$roomCustomStyle = "";
 			$roomCustomHTML = "";
 			if($custAccess=="T")//define room color
@@ -219,6 +219,7 @@
 			}
 			else if($roomID==5)
 			{//ca 4
+				/*
 				$roomCustomStyle .= "#room".$roomID."_topWall {\n";
 				$roomCustomStyle .= "	left: 10%;\n";
 				$roomCustomStyle .= "	width: 90%;\n";
@@ -241,7 +242,7 @@
 				$roomCustomHTML .= "<div id='room".$roomID."_leftWall' class='roomBorders'></div>\n";
 				$roomCustomHTML .= "<div id='room".$roomID."_bottomWall' class='roomBorders'></div>\n";
 				$roomCustomHTML .= "<div id='room".$roomID."_rightWall' class='roomBorders'></div>\n";
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span>$name</span>\n";*/
 			}
 			if($roomID==6)
 			{//ca 5
