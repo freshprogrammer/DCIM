@@ -1,133 +1,623 @@
 <head>
-<title>DC Layout TEST</title>
+<title>IRV01 DC Layout TEST</title>
 <style>
 body {
     background-color: white;
 }
 .dataceterContainer {
-    position: relative;
-    background-color: cyan;
+	position: relative;
+	background-color: cyan;
 	width: 100%;
-	height: 80%;
-	
-    border-style: hidden;
+	border-style: hidden;
 }
 .room, .roomBackground, .roomBorders{
-    position: absolute;
+	position: absolute;
 	width:100%;
 	height:100%;
 }
-.room {
-    z-index: 0;
-    background-color: blue;
-}
-.roomBackground{
-    z-index: 1;
-    background-color: gray;
-}
 .roomBorders {
-    z-index: 2;
-    position: absolute;
-    background-color: transparent;
-    border-width: 4px;
+	position: absolute;
+	background-color: transparent;
+	border-style: solid;
+	border-width: 4px;
 	border-color: black;
 	width:100%;
 	height:100%;
-	
+
 	box-sizing:border-box;
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.topBorder{
-	border-top-style: solid
+.room {
+	/* background-color: blue; */
+	-ms-transform-origin: 0% 0%; /* IE 9 */
+	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
+	transform-origin: 0% 0%;
+	//display:none;
 }
-.leftBorder{
-	border-left-style: solid
+.room a:link, .room a:visited{
+	color: white;
+} 
+.room span{
+	position: absolute;
+	color: white;
+	margin: 5 5;
+} 
+.siteBackground, .caBackground, .roomBackground{
+	position: absolute;
+	width: 100%;
+	height: 100%;
 }
-.bottomBorder{
-    border-bottom-style: solid
+.siteBackground{
+	/* background-color: gray; */
+	background-color: rgba(128, 128, 128, 0.76);
+	//z-index: 500;
 }
-.rightBorder{
-    border-right-style: solid;
+.caBackground{
+	background-color: blue;
 }
-
-#ca1 {
-    left: 40%;
-    top: 40%;
-	width: 21%;
-	height: 22%;
-	transform: rotate(-90deg);
+.roomBackground{
+	background-color: red;
 }
-#ca1_topWall {
-	width: 85%;
+.room a:hover  .caBackground, .room a:hover .roomBackground{
+	background-color: green;
 }
-#ca1_topInnerWall {
-	left: 85%;
-    width: 15%;
-	height:50%;
-	border-bottom-style: solid;
-    border-left-style: solid;
-    border-top-style: hidden;
-    border-right-style: hidden;
+.room a:hover  .caBackground{
+	//background-color: pink;
 }
-#ca1_leftWall {
-}
-#ca1_bottomWall {
-}
-#ca1_rightWall {
-	top: 50%;
-	height: 50%;
-}
-#ca1_rightInnerWall {
-	height: 50%;
-	width: 85%;
-}
-#ca1_centerBackground {
-	width: 85%;
-}
-#ca1_rightBackground {
-	top: 50%;
-	height: 50%;
-}
-#ca4 {
-    left: 2%;
-    top: 2%;
-	width: 41%;
-	height: 36%;
-	transform: rotate(-90deg);
-	//transform-origin: 0% 0%;
-}
-#ca4_topWall {
-	left: 10%;
-	width: 90%;
-}
-#ca4_leftWall {
-	top: 10%;
-	height: 90%;
-}
-#ca4_bottomWall {
-}
-#ca4_rightWall {
+.layoutCorner{
+	height:calc(2*(4.577% * 100/83.535));
+	width:calc(6.47%);
+	border-style: solid hidden hidden hidden;
+	transform-origin: 0% 0%;
 }
 </style>
 </head>
 <body>
-DC Layout TEST<BR>
-<div class='dataceterContainer'>
-	<div id='ca1' class='room'>
-		<div id='ca1_topWall' class='roomBorders topBorder'></div>
-		<div id='ca1_topInnerWall' class='roomBorders topBorder'></div>
-		<div id='ca1_leftWall' class='roomBorders leftBorder'></div>
-		<div id='ca1_bottomWall' class='roomBorders bottomBorder'></div>
-		<div id='ca1_rightWall' class='roomBorders rightBorder'></div>
-		<div id='ca1_centerBackground' class='roomBackground'></div>
-		<div id='ca1_rightBackground' class='roomBackground'></div>
-	</div>
-	<div id='ca4' class='room'>
-		<div id='ca4_topWall' class='roomBorders topBorder'></div>
-		<div id='ca4_leftWall' class='roomBorders leftBorder'></div>
-		<div id='ca4_bottomWall' class='roomBorders bottomBorder'></div>
-		<div id='ca4_rightWall' class='roomBorders rightBorder'></div>
-	</div>
+<div class="panel-body">
+
+Welcome to DCIM Demo.<style>
+#site0 {
+	/* 4.576659 */
+	/* 6.47 hypotenouse corner */
+	padding-bottom:83.535235876529%;
+}
+#site0_background1{
+	width:calc(37% - 4.577%);
+	height:calc(91% - (4.577% * 100/83.535));
+	border-style: solid hidden hidden solid;
+}
+#site0_background2{
+	top:calc(0% + (4.577% * 100/83.535));
+	left:calc(37% - 2*4.577%);/* just double corner to overlap */
+	width:calc(2*4.577%);
+	height:calc(12% - (4.577% * 100/83.535) + 4px);
+	border-style: hidden solid hidden hidden;
+}
+#site0_background3{
+	top:12%;
+	left:calc(37% - 4px);
+	width:calc(100% - 37% - 4.577% + 4px);
+	height:calc(100% - 12% - 23%); /* 23 from background 6 */
+	border-style: solid hidden hidden hidden;
+}
+#site0_background4{
+	top:calc(12% + (4.577% * 100/83.535));
+	left:calc(100% - 2*4.577%);
+	height:calc(100% - 12% - 2*(4.577% * 100/83.535));/* just double corner to overlap */
+	width:calc(2*4.577%);
+	border-style: hidden solid hidden hidden;
+}
+#site0_background5{
+	top:calc(91% - 2*(4.577% * 100/83.535)); /* just double corner to overlap */
+	left:calc(0% + 4.577%);
+	height:calc(2*(4.577% * 100/83.535));
+	width:calc(36.5% - 4.577%);
+	border-style: hidden hidden solid hidden;
+}
+#site0_background6{
+	top:calc(100% - 23%);
+	left:calc(100% - 36% - 4.577%);
+	height:23%;
+	width:calc(36%);
+	border-style: hidden hidden solid solid;
+}
+#site0_entrance_borders{
+	top:calc(100% - 23% + 8.5%); /* 23 from background 6 */
+	left:calc(36.5%);
+	height:calc(23% - 8.5% - (100% - 91%));
+	width:calc(13.5%);
+	border-style: solid hidden hidden solid;
+}
+#site0_corner1{
+	left:calc(37% - 4.577% + 1px);
+	transform: rotate(45deg);
+}
+#site0_corner2{
+	top:12%;
+	left:calc(100% - 4.577%);
+	transform: rotate(45deg);
+}
+#site0_corner3{
+	top: 91%;
+	left:4.577%;
+	transform: rotate(225deg);
+}
+#site0_corner4{
+	top: calc(100% - (4.577% * 100/83.535));
+	left:100%;
+	transform: rotate(135deg);
+}
+</style>
+<div id="site0" class="dataceterContainer">
+<div id="site0_corner1" class="siteBackground roomBorders layoutCorner"></div>
+<div id="site0_corner2" class="siteBackground roomBorders layoutCorner"></div>
+<div id="site0_corner3" class="siteBackground roomBorders layoutCorner"></div>
+<div id="site0_corner4" class="siteBackground roomBorders layoutCorner"></div>
+<div id="site0_background1" class="siteBackground roomBorders"></div>
+<div id="site0_background2" class="siteBackground roomBorders"></div>
+<div id="site0_background3" class="siteBackground roomBorders"></div>
+<div id="site0_background4" class="siteBackground roomBorders"></div>
+<div id="site0_background5" class="siteBackground roomBorders"></div>
+<div id="site0_background6" class="siteBackground roomBorders"></div>
+<div id="site0_entrance_borders" class="roomBorders"></div>
+<style>
+#room1 {
+	left: 89.522422830518%;
+	top: 41.881056961584%;
+	width: 22.25393127548%;
+	height: 10.004880429478%;
+	z-index: 101;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room1" class="roomBorders room">
+<a href="./?roomid=1" title="Main Distribution Frame">
+<div id="" class="roomBackground">MDF</div>
+</a>
+</div>
+<style>
+#room2 {
+	left: 40.064065230052%;
+	top: 52.276371749285%;
+	width: 21.735585323238%;
+	height: 27.867252318204%;
+	z-index: 100;
+-ms-transform: rotate(-90deg); /* IE 9 */ -webkit-transform: rotate(-90deg); /* Safari */ transform: rotate(-90deg);}
+#room2_topWall {
+	width: 85%;
+	border-style: solid hidden hidden hidden;
+}
+#room2_rightWall {
+	top: 50%;
+	height: 50%;
+	border-style: hidden solid hidden hidden;
+}
+#room2_bottomWall {
+	border-style: hidden hidden solid hidden;
+}
+#room2_leftWall {
+	border-style: hidden hidden hidden solid;
+}
+#room2_rightInnerWall {
+	height: 50%;
+	width: 85%;
+}
+#room2_cornerWalls {
+	left: 85%;
+	width: 15%;
+	height: 50%;
+	border-style: hidden hidden solid solid;
+}
+#room2_centerBackground {
+	width: 85%;
+}
+#room2_rightBackground {
+	top: 50%;
+	height: 50%;
+}
+</style>
+<div id="room2" class="room">
+<a href="./?roomid=2" title="Customer Area #1">
+<span style="z-index: 101;">CA#1</span>
+<div id="room2_centerBackground" class="caBackground"></div>
+<div id="room2_rightBackground" class="caBackground"></div>
+<div id="room2_topWall" class="roomBorders"></div>
+<div id="room2_cornerWalls" class="roomBorders"></div>
+<div id="room2_leftWall" class="roomBorders"></div>
+<div id="room2_bottomWall" class="roomBorders"></div>
+<div id="room2_rightWall" class="roomBorders"></div>
+</a>
+</div>
+<style>
+#room3 {
+	left: 99.941758881771%;
+	top: 38.032489716238%;
+	width: 28.811881188119%;
+	height: 39.573311022799%;
+	z-index: 100;
+-ms-transform: rotate(90deg); /* IE 9 */ -webkit-transform: rotate(90deg); /* Safari */ transform: rotate(90deg);}
+#room3_topWall {
+	border-style: solid hidden hidden hidden;
+}
+#room3_rightWall {
+	border-style: hidden solid hidden hidden;
+}
+#room3_bottomWall {
+	left: 59.82%;
+	width: 40.18%;
+	border-style: hidden hidden solid hidden;
+}
+#room3_leftWall {
+	height: 76.52%;
+	border-style: hidden hidden hidden solid;
+}
+#room3_leftInnerWall {
+	height: 23.48%;
+	width: 40.18%;
+}
+#room3_cornerWalls {
+	top: 76.52%;
+	width: 59.82%;
+	height: 23.48%;
+	border-style: solid solid hidden hidden;
+}
+#room3_centerBackground {
+	left: 59.82%;
+	width: 40.18%;
+}
+#room3_rightBackground {
+	height: 76.52%;
+}
+</style>
+<div id="room3" class="room">
+<a href="./?roomid=3" title="Customer Area #2">
+<span style="z-index: 101;">CA#2</span>
+<div id="room3_centerBackground" class="caBackground"></div>
+<div id="room3_rightBackground" class="caBackground"></div>
+<div id="room3_topWall" class="roomBorders"></div>
+<div id="room3_cornerWalls" class="roomBorders"></div>
+<div id="room3_leftWall" class="roomBorders"></div>
+<div id="room3_bottomWall" class="roomBorders"></div>
+<div id="room3_rightWall" class="roomBorders"></div>
+</a>
+</div>
+<style>
+#room4 {
+	left: 99.941758881771%;
+	top: 73.443491598689%;
+	width: 22.317996505533%;
+	height: 40.110158265356%;
+	z-index: 100;
+-ms-transform: rotate(90deg); /* IE 9 */ -webkit-transform: rotate(90deg); /* Safari */ transform: rotate(90deg);}
+#room4_topWall {
+	border-style: solid hidden hidden hidden;
+}
+#room4_rightWall {
+	border-style: hidden solid hidden hidden;
+}
+#room4_bottomWall {
+	left: 55.2%;
+	width: 44.8%;
+	border-style: hidden hidden solid hidden;
+}
+#room4_leftWall {
+	height: 80.73%;
+	border-style: hidden hidden hidden solid;
+}
+#room4_leftInnerWall {
+	height: 19.27%;
+	width: 44.8%;
+}
+#room4_cornerWalls {
+	top: 80.73%;
+	width: 55.2%;
+	height: 19.27%;
+	border-style: solid solid hidden hidden;
+}
+#room4_centerBackground {
+	left: 55.2%;
+	width: 44.8%;
+}
+#room4_rightBackground {
+	height: 80.73%;
+}
+</style>
+<div id="room4" class="room">
+<a href="./?roomid=4" title="Customer Area #3">
+<span style="z-index: 101;">CA#3</span>
+<div id="room4_centerBackground" class="caBackground"></div>
+<div id="room4_rightBackground" class="caBackground"></div>
+<div id="room4_topWall" class="roomBorders"></div>
+<div id="room4_cornerWalls" class="roomBorders"></div>
+<div id="room4_leftWall" class="roomBorders"></div>
+<div id="room4_bottomWall" class="roomBorders"></div>
+<div id="room4_rightWall" class="roomBorders"></div>
+</a>
+</div>
+<style>
+#room5 {
+	left: 0.19219569015725%;
+	top: 90.155476539078%;
+	width: 34.146767617938%;
+	height: 43.191800878477%;
+	z-index: 100;
+-ms-transform: rotate(-90deg); /* IE 9 */ -webkit-transform: rotate(-90deg); /* Safari */ transform: rotate(-90deg);}
+#room5_topWall {
+	left: 10%;
+	width: 90%;
+	border-style: solid hidden hidden hidden;
+}
+#room5_rightWall {
+	border-style: hidden solid hidden hidden;
+}
+#room5_bottomWall {
+	border-style: hidden hidden solid hidden;
+}
+#room5_leftWall {
+	top: 10%;
+	height: 90%;
+	border-style: hidden hidden hidden solid;
+}
+</style>
+<div id="room5" class="room">
+<a href="./?roomid=5" title="Customer Area #4">
+<span style="z-index: 101;">CA#4</span>
+<div id="" class="caBackground"></div>
+<div id="room5_topWall" class="roomBorders"></div>
+<div id="room5_leftWall" class="roomBorders"></div>
+<div id="room5_bottomWall" class="roomBorders"></div>
+<div id="room5_rightWall" class="roomBorders"></div>
+</a>
+</div>
+<style>
+#room6 {
+	left: 0.19219569015725%;
+	top: 48.504496967162%;
+	width: 29.6447291788%;
+	height: 47.270445513491%;
+	z-index: 100;
+-ms-transform: rotate(-90deg); /* IE 9 */ -webkit-transform: rotate(-90deg); /* Safari */ transform: rotate(-90deg);}
+#room6_topWall {
+	width: 50.87%;
+	border-style: solid hidden hidden hidden;
+}
+#room6_rightWall {
+	top: 31.92%;
+	height: 68.08%;
+	border-style: hidden solid hidden hidden;
+}
+#room6_bottomWall {
+	border-style: hidden hidden solid hidden;
+}
+#room6_leftWall {
+	border-style: hidden hidden hidden solid;
+}
+#room6_rightInnerWall {
+	height: 31.92%;
+	width: 50.87%;
+}
+#room6_cornerWalls {
+	left: 50.87%;
+	width: 49.13%;
+	height: 31.92%;
+	border-style: hidden hidden solid solid;
+}
+#room6_centerBackground {
+	width: 50.87%;
+}
+#room6_rightBackground {
+	top: 31.92%;
+	height: 68.08%;
+}
+</style>
+<div id="room6" class="room">
+<a href="./?roomid=6" title="Customer Area #5">
+<span style="z-index: 101;">CA#5</span>
+<div id="room6_centerBackground" class="caBackground"></div>
+<div id="room6_rightBackground" class="caBackground"></div>
+<div id="room6_topWall" class="roomBorders"></div>
+<div id="room6_cornerWalls" class="roomBorders"></div>
+<div id="room6_leftWall" class="roomBorders"></div>
+<div id="room6_bottomWall" class="roomBorders"></div>
+<div id="room6_rightWall" class="roomBorders"></div>
+</a>
+</div>
+<style>
+#room12 {
+	left: 74.344787419918%;
+	top: 42.571289130586%;
+	width: 13.1217239371%;
+	height: 8.7778010179181%;
+	z-index: 101;
+-ms-transform: rotate(90deg); /* IE 9 */ -webkit-transform: rotate(90deg); /* Safari */ transform: rotate(90deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room12" class="roomBorders room">
+<a href="./?roomid=12" title="Old NOC">
+<div id="" class="roomBackground">Old NOC</div>
+</a>
+</div>
+<style>
+#room11 {
+	left: 49.84274898078%;
+	top: 85.993167398731%;
+	width: 10.163075131043%;
+	height: 8.7011085546957%;
+	z-index: 100;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room11" class="roomBorders room">
+<a href="./?roomid=11" title="NOC">
+<div id="" class="roomBackground">NOC</div>
+</a>
+</div>
+<style>
+#room13 {
+	left: 67.268491555038%;
+	top: 13.086523042599%;
+	width: 20.192195690157%;
+	height: 13.860419716935%;
+	z-index: 100;
+-ms-transform: rotate(deg); /* IE 9 */ -webkit-transform: rotate(deg); /* Safari */ transform: rotate(deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room13" class="roomBorders room">
+<a href="./?roomid=13" title="UPS 1">
+<div id="" class="roomBackground">UPS 1</div>
+</a>
+</div>
+<style>
+#room14 {
+	left: 29.906814210833%;
+	top: 13.086523042599%;
+	width: 22.25393127548%;
+	height: 12.166213483929%;
+	z-index: 100;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room14" class="roomBorders room">
+<a href="./?roomid=14" title="UPS 2">
+<div id="" class="roomBackground">UPS 2</div>
+</a>
+</div>
+<style>
+#room15 {
+	left: 71.834595224228%;
+	top: 17.478909572614%;
+	width: 7.5888177052999%;
+	height: 4.775848846127%;
+	z-index: 101;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room15" class="roomBorders room">
+<a href="./?roomid=15" title="Meter 1">
+<div id="" class="roomBackground">Meter 1</div>
+</a>
+</div>
+<style>
+#room16 {
+	left: 30.291205591147%;
+	top: 12.703060726487%;
+	width: 10.09900990099%;
+	height: 6.4700550791327%;
+	z-index: 100;
+-ms-transform: rotate(-90deg); /* IE 9 */ -webkit-transform: rotate(-90deg); /* Safari */ transform: rotate(-90deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room16" class="roomBorders room">
+<a href="./?roomid=16" title="Meter 2">
+<div id="" class="roomBackground">Meter 2</div>
+</a>
+</div>
+<style>
+#room17 {
+	left: 31.578334304019%;
+	top: 17.478909572614%;
+	width: 7.8450786255096%;
+	height: 27.407097538869%;
+	z-index: 101;
+-ms-transform: rotate(deg); /* IE 9 */ -webkit-transform: rotate(deg); /* Safari */ transform: rotate(deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room17" class="roomBorders room">
+<a href="./?roomid=17" title="AC Room">
+<div id="" class="roomBackground">AC Room</div>
+</a>
+</div>
+<style>
+#room18 {
+	left: 51.450203843914%;
+	top: 30.021613330545%;
+	width: 11.252184041934%;
+	height: 17.165167677613%;
+	z-index: 101;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room18" class="roomBorders room">
+<a href="./?roomid=18" title="Storage">
+<div id="" class="roomBackground">Storage</div>
+</a>
+</div>
+<style>
+#room19 {
+	left: 51.706464764123%;
+	top: 12.703060726487%;
+	width: 15.1776354106%;
+	height: 12.856445652932%;
+	z-index: 100;
+-ms-transform: rotate(deg); /* IE 9 */ -webkit-transform: rotate(deg); /* Safari */ transform: rotate(deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room19" class="roomBorders room">
+<a href="./?roomid=19" title="Loading Dock">
+<div id="" class="roomBackground">Ldng</div>
+</a>
+</div>
+<style>
+#room20 {
+	left: 87.914967967385%;
+	top: 13.009830579377%;
+	width: 12.347117064648%;
+	height: 14.090497106603%;
+	z-index: 100;
+-ms-transform: rotate(deg); /* IE 9 */ -webkit-transform: rotate(deg); /* Safari */ transform: rotate(deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room20" class="roomBorders room">
+<a href="./?roomid=20" title="MPOE">
+<div id="" class="roomBackground">MPOE</div>
+</a>
+</div>
+<style>
+#room21 {
+	left: 72.352941176471%;
+	top: 73.443491598689%;
+	width: 5.8532323820617%;
+	height: 6.4700550791327%;
+	z-index: 101;
+-ms-transform: rotate(90deg); /* IE 9 */ -webkit-transform: rotate(90deg); /* Safari */ transform: rotate(90deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room21" class="roomBorders room">
+<a href="./?roomid=21" title="Work Room 1 ">
+<div id="" class="caBackground">WrkRm1</div>
+</a>
+</div>
+<style>
+#room22 {
+	left: 72.352941176471%;
+	top: 80.910548699714%;
+	width: 5.6610366919045%;
+	height: 6.3933626159102%;
+	z-index: 101;
+-ms-transform: rotate(90deg); /* IE 9 */ -webkit-transform: rotate(90deg); /* Safari */ transform: rotate(90deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room22" class="roomBorders room">
+<a href="./?roomid=22" title="Work Room 2">
+<div id="" class="caBackground">WrkRm2</div>
+</a>
+</div>
+<style>
+#room23 {
+	left: 63.086779266162%;
+	top: 83.378651607056%;
+	width: 3.3430401863716%;
+	height: 5.8495433312417%;
+	z-index: 100;
+-ms-transform: rotate(180deg); /* IE 9 */ -webkit-transform: rotate(180deg); /* Safari */ transform: rotate(180deg);	transform-origin: 0% 0%;
+}
+</style>
+<div id="room23" class="roomBorders room">
+<a href="./?roomid=23" title="Camera Room">
+<div id="" class="roomBackground">Cmra Rm</div>
+</a>
+</div>
+</div>
 </div>
 </body>
