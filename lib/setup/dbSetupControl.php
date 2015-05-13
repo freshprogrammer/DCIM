@@ -66,8 +66,8 @@ function ConfirmIntent()
 }
 </script>
 </head>
-<font size=5><b>DCIM Database update control</b></font><BR>
-<?php
+<font size=5><b>DCIM Database update control</b></font><?php
+ 	echo " on PHP v".phpversion()."<BR>\n";
 	
 	//simple action selection form
 	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>
