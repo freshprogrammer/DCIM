@@ -401,29 +401,12 @@
 					if($searchbtn==="T")//mock for empty search
 						$errorMessage[] ="Search for nuthin yields a whole lot of nuthin.";
 					
-					//just logged in - at home page
-					echo "<div class=\"panel\">\n";
-					echo "<div class=\"panel-header\">\n";
-					echo "Welcome\n";
-					echo "</div>\n";
-					
-					echo "<div class=\"panel-body\">\n\n";
-					
-					echo "Welcome to $siteName.";
-					
-					echo CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
-					
-					if(UserHasWritePermission() && IsUserUsingDefaultPassword())
-					{
-						echo "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
-					}
-					
-					echo "</div>\n";
-					echo "</div>\n";
+					echo CustomFunctions::CreateHomePageContent();
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust
 		echo "<BR>";
+		echo "<!--  PAGE BODY END-->\n";
 	}//end - page body vs login - //officaliy logged in with min read access
 	
 	//end of Body

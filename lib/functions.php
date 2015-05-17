@@ -5931,7 +5931,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		$result .= "</a>\n";
 		
-		echo $result;
+		return $result;
 	}
 	
 	function CreateRoomLayout_FarRightCornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass, &$roomCustomStyle, &$roomCustomHTML)

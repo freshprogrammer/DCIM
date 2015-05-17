@@ -27,6 +27,29 @@
 			return $result;
 		}
 		
+		public static function CreateHomePageContent()
+		{//just logged in - at home page
+			global $siteName;
+			
+			$result = "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel-header\">\n";
+			$result .= "$siteName\n";
+			$result .= "</div>\n";
+			
+			$result .= "<div class=\"panel-body\">\n\n";
+			
+			$result .= CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
+			
+			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
+			{
+				$result .= "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
+			}
+			
+			$result .= "</div>\n";
+			$result .= "</div>\n";
+			return $result;
+		}
+		
 		public static function CreateSiteLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation)
 		{
 			global $mysqli;
@@ -41,7 +64,7 @@
 			$name = "Site";
 			$fullName = "Site Name";
 			
-			CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
+			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
 			
 			//select rooms from table for rendering each one
 			$query = "SELECT roomid, name , fullname, custaccess, xpos, ypos, width, depth, orientation, layer
@@ -51,7 +74,7 @@
 			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			$stmt->bind_Param('i', $siteID);
 			$stmt->execute();
@@ -60,11 +83,12 @@
 			
 			while($stmt->fetch())
 			{
-				echo "<div id='room$roomID' class='roomContainer'>\n";
-				CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
-				echo "</div>\n";
+				$result .= "<div id='room$roomID' class='roomContainer'>\n";
+				$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+				$result .= "</div>\n";
 			}
-			echo "</div>\n";
+			$result .= "</div>\n";
+			return $result;
 		}
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation)
@@ -72,14 +96,15 @@
 			//calculated
 			$depthToWidthRatio = 100*$depth/$width;
 			
-			echo "<style>\n";
-			echo "#siteContainer$siteID {\n";
-			echo "	padding-bottom:$depthToWidthRatio%;\n";
-			echo "}\n";
-			echo "</style>\n";
+			$result = "<style>\n";
+			$result .= "#siteContainer$siteID {\n";
+			$result .= "	padding-bottom:$depthToWidthRatio%;\n";
+			$result .= "}\n";
+			$result .= "</style>\n";
 			
-			echo "<div id='siteContainer$siteID' class='dataceterContainer'>\n";
-			//echo "Site $siteID<BR>\n";
+			$result .= "<div id='siteContainer$siteID' class='dataceterContainer'>\n";
+			//$result .= "Site $siteID<BR>\n";
+			return $result;
 		}
 		
 		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
@@ -264,7 +289,7 @@
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}//custom room visual layout
 			
-			CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
+			return CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
 		}//end CreateRoomLayout()
 	}// end DCIMCustomFunctions class
 ?>
