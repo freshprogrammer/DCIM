@@ -398,44 +398,28 @@
 				}
 				else
 				{
-					if($searchbtn==="T")
+					if($searchbtn==="T")//mock for empty search
+						$errorMessage[] ="Search for nuthin yields a whole lot of nuthin.";
+					
+					//just logged in - at home page
+					echo "<div class=\"panel\">\n";
+					echo "<div class=\"panel-header\">\n";
+					echo "Welcome\n";
+					echo "</div>\n";
+					
+					echo "<div class=\"panel-body\">\n\n";
+					
+					echo "Welcome to $siteName.";
+					
+					echo CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
+					
+					if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 					{
-						//mock for empty search
-						$pageSubTitle = "Blank Search";
-						echo "<div class=\"panel\">\n";
-						echo "<div class=\"panel-header\">\n";
-						echo "Search for nuthin ($search) yields a whole lot of nuthin.\n";
-						echo "</div>\n";
-						
-						echo "<div class=\"panel-body\">\n\n";
-						
-						//nothing here
-						
-						echo "</div>\n";
-						echo "</div>\n";
+						echo "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
 					}
-					else
-					{
-						//just logged in - at home page
-						echo "<div class=\"panel\">\n";
-						echo "<div class=\"panel-header\">\n";
-						echo "Welcome\n";
-						echo "</div>\n";
-						
-						echo "<div class=\"panel-body\">\n\n";
-						
-						echo "Welcome to $siteName.";
-						
-						echo CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
-						
-						if(UserHasWritePermission() && IsUserUsingDefaultPassword())
-						{
-							echo "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
-						}
-						
-						echo "</div>\n";
-						echo "</div>\n";
-					}
+					
+					echo "</div>\n";
+					echo "</div>\n";
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust

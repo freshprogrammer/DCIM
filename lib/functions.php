@@ -5973,7 +5973,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function CreateRoomLayout_FarLeftCornerAngle($cornerWidth, $roomID, $roomTypeClass, $depthToWidthRatio, &$roomCustomStyle, &$roomCustomHTML)
 	{//not finished and not 100% correct
-		$cornerWidth = 34.577;//width of the corner to be rotated into place -  will need to be converted to height percentage
+		//$cornerWidth = 34.577;//width of the corner to be rotated into place -  will need to be converted to height percentage
 		$cornerHeight = $cornerWidth*$depthToWidthRatio;
 		$cornerLength = sqrt($cornerWidth*$cornerWidth + $cornerHeight*$cornerHeight);
 		
