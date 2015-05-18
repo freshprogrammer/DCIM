@@ -57,14 +57,15 @@
 			//- site should really always be facing N and be at 0,0
 			$orientation = "N"; // North East South West
 			//from DB in feet
-			$xPos = 0;
+			$xPos = 0;//TODO this needs to be looked up in DB
 			$yPos = 0;
 			$siteWidth = 171.70;
 			$siteDepth = 143.43;
 			$name = "Site";
 			$fullName = "Site Name";
 			
-			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
+			$result = "<div id='siteContainer$siteID' class='siteContainer'>\n";
+			$result .= CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
 			
 			//select rooms from table for rendering each one
 			$query = "SELECT roomid, name , fullname, custaccess, xpos, ypos, width, depth, orientation, layer
@@ -165,11 +166,10 @@
 			$result .= "	border-style: solid hidden hidden hidden;\n";
 			$result .= "}\n";
 			$result .= "#site".$siteID."_Name {\n";
-			$result .= "	left: $rightTopX%;\n";
+			$result .= "	right: 0%;\n";
 			$result .= "}\n";
 			$result .= "</style>\n";
 			
-			$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n"; //this is closed after this functions
 			$result .= "<div class='siteBackground' id='site".$siteID."_TopLeft'></div>\n";
 			$result .= "<div class='siteBackground' id='site".$siteID."_Left'></div>\n";
 			$result .= "<div class='siteBackground' id='site".$siteID."_LeftBottom'></div>\n";
@@ -177,7 +177,7 @@
 			$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
 			$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
 			$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
-			$result .= "<div class='siteLayoutName' id='site".$siteID."_Name'>$fullName</div>\n";
+			$result .= "<span class='siteLabel' id='site".$siteID."_Name'>$fullName</span>\n";
 			return $result;
 		}
 		

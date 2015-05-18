@@ -635,15 +635,19 @@ h2 {
 .roomContainer a:link, .roomContainer a:visited{
 	color: white;
 } 
-.siteLayoutName{
+.siteLabel{
 	position: absolute;
 	width: initial;
-	margin: 10 10;
+	margin: 0 0 0 10;
 	color: #000;
 	font-size: 17px;
 	font-weight: bold;
 	font-family: Arial,Verdana,sans-serif;
-} 
+	
+	border: 4px solid black;
+	background-color: gray;
+	padding: 4px;
+}
 .roomContainer span{
 	position: absolute;
 	color: white;
