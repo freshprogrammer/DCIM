@@ -93,17 +93,91 @@
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation)
 		{
+			$borderThickness = 4;
+			//key percentages for drawing site rectangles
+			$rightTopX = 37;
+			$rightTopY = 12;
+			$leftBottomY = 85.5;
+			$leftBottomBottom = 91;//very bottom left side
+			$rightBottomX = 57;
+			$rightBottomY = 77;
+			$nocWidth = 13.5;
+			
 			//calculated
-			$depthToWidthRatio = 100*$depth/$width;
+			$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
+			$leftHeight = $leftBottomY-$rightTopY;
+			$leftBottomHeight = $leftBottomBottom-$leftBottomY;
+			$rightTopWidth = 100-$rightTopX;
+			$rightTopHeight = $rightBottomY-$rightTopY;
+			$nocHeight = $leftBottomY-$rightBottomY;
+			$rightBottomWidth = 100-$rightBottomX;
+			$rightBottomHeight = 100-$rightBottomY;
+			$stairsWallX = $rightTopX+$nocWidth;
+			$stairsWallWidth = 100 - ($stairsWallX + $rightBottomWidth);
 			
 			$result = "<style>\n";
 			$result .= "#siteContainer$siteID {\n";
 			$result .= "	padding-bottom:$depthToWidthRatio%;\n";
 			$result .= "}\n";
+			$result .= "#site".$siteID."_TopLeft {\n";
+			$result .= "	width: $rightTopX%;\n";
+			$result .= "	height: $rightTopY%;\n";
+			$result .= "	border-style: solid solid hidden solid;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_Left {\n";
+			$result .= "	top: $rightTopY%;\n";
+			$result .= "	width: $rightTopX%;\n";
+			$result .= "	height: $leftHeight%;\n";
+			$result .= "	border-style: hidden hidden hidden solid;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_LeftBottom {\n";
+			$result .= "	top: $leftBottomY%;\n";
+			$result .= "	width: $rightTopX%;\n";
+			$result .= "	height: $leftBottomHeight%;\n";
+			$result .= "	border-style: hidden solid solid solid;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_RightTop {\n";
+			$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
+			$result .= "	top: $rightTopY%;\n";
+			$result .= "	width: calc($rightTopWidth% + ".$borderThickness."px);\n";
+			$result .= "	height: $rightTopHeight%;\n";
+			$result .= "	border-style: solid solid hidden hidden;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_RightBottom {\n";
+			$result .= "	left: $rightBottomX%;\n";
+			$result .= "	top: $rightBottomY%;\n";
+			$result .= "	width: $rightBottomWidth%;\n";
+			$result .= "	height: $rightBottomHeight%;\n";
+			$result .= "	border-style: hidden solid solid solid;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_NOC {\n";
+			$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
+			$result .= "	top: $rightBottomY%;\n";
+			$result .= "	width: calc($nocWidth% + ".$borderThickness."px);\n";
+			$result .= "	height: $nocHeight%;\n";
+			$result .= "	border-style: hidden solid solid hidden;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_StairsWall {\n";
+			$result .= "	left: $stairsWallX%;\n";
+			$result .= "	top: $rightBottomY%;\n";
+			$result .= "	width: $stairsWallWidth%;\n";
+			$result .= "	height: ".$borderThickness."px;\n";
+			$result .= "	border-style: solid hidden hidden hidden;\n";
+			$result .= "}\n";
+			$result .= "#site".$siteID."_Name {\n";
+			$result .= "	left: $rightTopX%;\n";
+			$result .= "}\n";
 			$result .= "</style>\n";
 			
-			$result .= "<div id='siteContainer$siteID' class='dataceterContainer'>\n";
-			//$result .= "Site $siteID<BR>\n";
+			$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n"; //this is closed after this functions
+			$result .= "<div class='siteBackground' id='site".$siteID."_TopLeft'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_Left'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_LeftBottom'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_RightTop'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
+			$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
+			$result .= "<div class='siteLayoutName' id='site".$siteID."_Name'>$fullName</div>\n";
 			return $result;
 		}
 		
