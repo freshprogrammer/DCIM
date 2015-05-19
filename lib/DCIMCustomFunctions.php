@@ -190,7 +190,7 @@
 				$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
 				$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
 				$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
-				$result .= "<span class='siteLabel' id='site".$siteID."_Label'>$fullName</span>\n";
+				$result .= "<span class='siteLabel siteBackground' id='site".$siteID."_Label'>$fullName</span>\n";
 			}//siteID 0 custom layout
 			else
 			{//default site layout
@@ -202,7 +202,7 @@
 				$result .= "</style>\n";
 				
 				$result .= "<div class='siteBackground' id='site".$siteID."'></div>\n";
-				$result .= "<span class='siteLabel' id='site".$siteID."_Label'>$fullName</span>\n";
+				$result .= "<span class='siteLabel siteBackground' id='site".$siteID."_Label'>$fullName</span>\n";
 			}
 			return $result;
 		}
