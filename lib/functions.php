@@ -5904,7 +5904,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
-	function CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
+	function CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
 	{
 		$result = "<style>\n";
 		$result .= "#room$roomID {\n";
@@ -5912,7 +5912,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "	top: $relativeY%;\n";
 		$result .= "	width: $relativeWidth%;\n";
 		$result .= "	height: $relativeDepth%;\n";
-		$result .= "	z-index: $layer;\n";
 		$result .= $rotationTransform;
 		$result .= "}\n";
 		$result .= $roomCustomStyle;

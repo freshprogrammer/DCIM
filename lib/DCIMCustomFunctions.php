@@ -166,7 +166,7 @@
 			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
 			
 			//select rooms from table for rendering each one
-			$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation, layer
+			$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation
 					FROM dcim_room
 					WHERE siteid=? AND width > 0 AND depth > 0";
 			
@@ -177,12 +177,12 @@
 			else
 			{
 				$stmt->store_result();
-				$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+				$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
 				
 				while($stmt->fetch())
 				{
 					$result .= "<div id='room$roomID' class='roomContainer'>\n";
-					$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+					$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
 					$result .= "</div>\n";
 				}
 			}
@@ -271,7 +271,6 @@
 				$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
 				$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
 				$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
-				$result .= "<span class='siteLabel siteBackground' id='site".$siteID."_Label'>$fullName</span>\n";
 			}//siteID 0 custom layout
 			else
 			{//default site layout
@@ -283,20 +282,17 @@
 				$result .= "</style>\n";
 				
 				$result .= "<div class='siteBackground' id='site".$siteID."'></div>\n";
-				$result .= "<span class='siteLabel siteBackground' id='site".$siteID."_Label'>$fullName</span>\n";
 			}
+			$result .= "<span class='siteLabel siteBackground' id='site".$siteID."_Label' title='$fullName'>$name</span>\n";
 			return $result;
 		}
 		
-		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer)
+		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation)
 		{
-			$baseLayer = 100;
-			
 			//calculated
 			$parentDepthToWidthRatio = $parentDepth/$parentWidth;
 			$relativeX = 100*$xPos/$parentWidth;
 			$relativeY= 100*$yPos/$parentDepth;
-			$layer += $baseLayer;
 			
 			if($orientation=="W")
 				$rotation = -90;
@@ -387,7 +383,7 @@
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			
-			return CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
+			return CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
 		}//end CreateRoomLayout()
 	}// end DCIMCustomFunctions class
 ?>

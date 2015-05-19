@@ -139,15 +139,13 @@
 					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `layer` TINYINT( 1 ) NOT NULL DEFAULT  '0' AFTER  `orientation`";
+					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth`";
 			$cmdl = "ALTER TABLE  `dcimlog_room`
 					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `custaccess` ,
 					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `layer` TINYINT( 1 ) NOT NULL DEFAULT  '0' AFTER  `orientation`";
+					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth`";
 			ExecuteThis("UP1M",$cmdm);
 			ExecuteThis("UP1L",$cmdl);
 			
