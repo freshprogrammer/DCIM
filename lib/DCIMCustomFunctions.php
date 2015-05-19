@@ -19,6 +19,7 @@
 		
 		public static function CreateNavigationQuickLinks()
 		{
+			//TODO this should be an actual room lookup not hardcoded roomids
 			$result  = "<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;\n";
@@ -223,7 +224,7 @@
 			//custom layouts
 			if($roomID==2)
 			{//ca 1
-				$cornerWidthInset = -15;//percent inset corner
+				$cornerWidthInset = -16.272;//percent inset corner
 				$cornerDepthInset = 50;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span>$name</span>\n";
@@ -246,8 +247,8 @@
 			}
 			else if($roomID==5)
 			{//ca 4
-				$cornerWidthInset = -5;
-				$cornerDepthInset = -5;
+				$cornerWidthInset = -8.067;
+				$cornerDepthInset = -9.55;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
@@ -260,17 +261,17 @@
 			}
 			else if($roomID==10)
 			{//ups 1
-				$cornerWidthInset = 25;//percent inset corner
-				$cornerDepthInset = 25;
+				$cornerWidthInset = 25.159;//percent inset corner
+				$cornerDepthInset = 35.263;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
 			}
 			else if($roomID==11)
 			{//ups 2
-				$cornerWidthInset = 25;//percent inset corner
-				$cornerDepthInset = 25;
+				$cornerWidthInset = 24.855;//percent inset corner
+				$cornerDepthInset = 21.875;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
 			}
 			else if($roomID==16)
 			{//loading

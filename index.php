@@ -283,7 +283,6 @@
 	
 	if(UserHasReadPermission())
 	{
-		//TODO this should be an actual room lookup not hardcoded roomids
 		?>
 		<!-- HEADER LINKS -->
 		<table width=100%><tr>

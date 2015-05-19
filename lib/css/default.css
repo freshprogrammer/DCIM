@@ -635,7 +635,6 @@ h2 {
 .siteLabel{
 	position: absolute;
 	width: initial;
-	margin: 0 0 0 10;
 	color: #000;
 	font-size: 17px;
 	font-weight: bold;
@@ -648,7 +647,7 @@ h2 {
 .roomContainer span{
 	position: absolute;
 	color: white;
-	margin: 5 5;
+	margin: 6;
 	text-overflow: clip;
 } 
 .siteBackground, .caBackground, .roomBackground, .roomBorders{

@@ -2945,7 +2945,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else 
 		{
-			//TODO fix this to say something better - some locations dont have units or no devices
 			echo "User not Found\n";
 		}
 		echo "</div>\n";
@@ -2960,7 +2959,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		$query = "UPDATE dcim_deviceport SET status=?
 				WHERE  deviceportid=? LIMIT 1 ";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateDevicePortStatusAndUser: Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -2995,7 +2994,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		$query = "UPDATE dcim_user SET lastactivity=CURRENT_TIMESTAMP
 				WHERE userid=? LIMIT 1 ";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateUserLastActivity: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -3027,7 +3026,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 		global $focusSearch;
 		
-		
 		//main customer record or new
 		$addCust = $hNo==="-1";
 		$pageSubTitle = "";
@@ -3037,9 +3035,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$addCust)
 		{
 			$query = "SELECT hno,cno,name,note,status,edituser,editdate,qauser,qadate 
-			FROM dcim_customer 
-			WHERE hno=?";
-		
+				FROM dcim_customer 
+				WHERE hno=?";
+			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
@@ -5919,15 +5917,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "}\n";
 		$result .= $roomCustomStyle;
 		$result .= "</style>\n";
-
+		
 		$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
 		if($roomCustomHTML)
-		{
 			$result .= $roomCustomHTML;
-		}
 		else
 		{
-			$result .= "<div id='' class='roomBorders $roomClass'>$name</div>\n";
+			$result .= "<div id='' class='roomBorders $roomClass'></div>\n";
+			$result .= "<span>$name</span>\n";
 		}
 		$result .= "</a>\n";
 		
