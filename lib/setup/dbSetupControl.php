@@ -15,6 +15,8 @@
 	SessionSetup();
 	
 	//globals
+	global $appName;
+	global $pageTitle;
 	//rebuilds
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
@@ -39,7 +41,7 @@
 	
 ?>
 <head>
-<title>DCIM DB update control</title>
+<title><?php echo $pageTitle;?> - DB update control</title>
 <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
 <link rel="stylesheet" href="../css/default.css">
 <script type='text/javascript'>
@@ -66,8 +68,8 @@ function ConfirmIntent()
 }
 </script>
 </head>
-<font size=5><b>DCIM Database update control</b></font><BR>
-<?php
+<font size=5><b><?php echo $appName;?> Database update control</b></font><?php
+ 	echo " on PHP v".phpversion()."<BR>\n";
 	
 	//simple action selection form
 	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>

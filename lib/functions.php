@@ -3306,9 +3306,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//customer   model  status
 			//location - size   unit
-			//asset 
+			//asset
 			//serial
-			//note 
+			//note
 			
 			//this is the device page - build it...
 			echo "<table width=100%>\n";
