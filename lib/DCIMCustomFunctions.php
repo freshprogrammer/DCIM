@@ -17,6 +17,84 @@
 			return $result;
 		}
 		
+		public static function GetSearchPlaceholder()
+		{
+			$linesOfCode = CountLinesInDir();
+			$dbRecs = CountDBRecords();
+			$rand = rand(0,90);
+			$searchPlaceHolders = array();
+			//ROUGH LIMIT           "------------------------"
+			$searchPlaceHolders[] = "Search";
+			$searchPlaceHolders[] = "Search from here";
+			$searchPlaceHolders[] = "Everyone loves to search";
+			$searchPlaceHolders[] = "Your companion";
+			$searchPlaceHolders[] = "Like a pet but useful";
+			$searchPlaceHolders[] = "Type here";
+			$searchPlaceHolders[] = "Waiting...";
+			$searchPlaceHolders[] = "Got your back";
+			$searchPlaceHolders[] = "It's cool, I got this";
+			$searchPlaceHolders[] = "You know what to do";
+			$searchPlaceHolders[] = "Self explanatory";
+			$searchPlaceHolders[] = "This is where your search";
+			$searchPlaceHolders[] = "See KB for details";
+			$searchPlaceHolders[] = "Search is your friend";
+			$searchPlaceHolders[] = "Search could save your life some day";
+			$searchPlaceHolders[] = "Indexes to the rescue";
+			$searchPlaceHolders[] = "Pioneering Omni-Search";
+			$searchPlaceHolders[] = "Into the depths";
+			$searchPlaceHolders[] = "Almost lunch time";
+			$searchPlaceHolders[] = "Who's behind you";
+			$searchPlaceHolders[] = "Not on break";
+			$searchPlaceHolders[] = "Almost never on break";
+			$searchPlaceHolders[] = "Like an unpaid intern";
+			$searchPlaceHolders[] = "I am so smart... SMRT";
+			$searchPlaceHolders[] = "Your coffee is ready";
+			$searchPlaceHolders[] = "Search never sleeps";
+			$searchPlaceHolders[] = "Wont save you on car inssurance";
+			$searchPlaceHolders[] = "Smoke free for $rand days";
+			$searchPlaceHolders[] = "NSA free for 0 days";
+			$searchPlaceHolders[] = "Not a calculator";
+			$searchPlaceHolders[] = "Still not a calculator";
+			$searchPlaceHolders[] = "Sponsored by your tax dollars";
+			$searchPlaceHolders[] = "You are here *";
+			$searchPlaceHolders[] = "I search to serve";
+			$searchPlaceHolders[] = "Give a man a match...";
+			$searchPlaceHolders[] = "Not from The Simpsons&reg;";
+			$searchPlaceHolders[] = "One man's dream of data";
+			$searchPlaceHolders[] = "Please like and subscribe";
+			$searchPlaceHolders[] = "Doesn't search Facebook";
+			$searchPlaceHolders[] = "No Facebook login";
+			$searchPlaceHolders[] = "No like buttons here";
+				
+			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
+			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
+			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
+			$searchPlaceHolders[] = "10K+ line club";
+			$searchPlaceHolders[] = "$dbRecs+ DB Records";
+			$searchPlaceHolders[] = "$dbRecs Records and counting";
+				
+			$searchPlaceHolders[] = "Google's nemesis";
+			$searchPlaceHolders[] = "Googol * Googol";
+			$searchPlaceHolders[] = "Who cares about Bing";
+			$searchPlaceHolders[] = "Remember Yahoo!?";
+			$searchPlaceHolders[] = "DuckDuckGo";
+			$searchPlaceHolders[] = "One DogPile for all";
+			$searchPlaceHolders[] = "Making search Cuil again";
+			$searchPlaceHolders[] = "Not AltaVista";
+			$searchPlaceHolders[] = "Fetch Jeeves";
+			$searchPlaceHolders[] = "Fresh Search";
+				
+			$searchPlaceHolders[] = "e.g. H######";
+			$searchPlaceHolders[] = "e.g. C######";
+			$searchPlaceHolders[] = "e.g. Company name";
+			$searchPlaceHolders[] = "e.g. Company note";
+			$searchPlaceHolders[] = "e.g. Device Name";
+			$searchPlaceHolders[] = "e.g. Badge Holder";
+			$searchPlaceHolders[] = "e.g. Location Name";
+				
+			return $searchPlaceHolders[array_rand($searchPlaceHolders)];
+		}
+		
 		public static function CreateNavigationQuickLinks()
 		{
 			//TODO this should be an actual room lookup not hardcoded roomids
@@ -32,6 +110,7 @@
 		{//just logged in - at home page
 			global $appName;
 			global $mysqli;
+			global $errorMessage;
 			
 			$result = "<div class=\"panel\">\n";
 			$result .= "<div class=\"panel-header\">\n";
@@ -46,30 +125,31 @@
 			}
 			
 			//select site(s) from table for rendering each one
-			$query = "SELECT siteid, name , fullname, width, depth
+			$query = "SELECT siteid, name, fullname, width, depth
 					FROM dcim_site
 					WHERE width > 0 AND depth > 0";
-			
-			if (!($stmt = $mysqli->prepare($query)))
+
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 			{
-				//TODO handle errors better
-				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$errorMessage[]= "CreateHomePageContent() SQL Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($siteID, $name , $fullName, $width, $depth);
-				
-			while($stmt->fetch())
+			else
 			{
-				$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
-				$result .= "<style>\n";
-				$result .= "#siteContainer$siteID {\n";
-				$result .= "	padding-bottom:$depthToWidthRatio%;\n";
-				$result .= "}\n";
-				$result .= "</style>\n";
-				$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
-				$result .= CustomFunctions::CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
-				$result .= "</div>\n";
+				$stmt->store_result();
+				$stmt->bind_result($siteID, $name , $fullName, $width, $depth);
+				
+				while($stmt->fetch())
+				{
+					$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
+					$result .= "<style>\n";
+					$result .= "#siteContainer$siteID {\n";
+					$result .= "	padding-bottom:$depthToWidthRatio%;\n";
+					$result .= "}\n";
+					$result .= "</style>\n";
+					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
+					$result .= CustomFunctions::CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
+					$result .= "</div>\n";
+				}
 			}
 			
 			
@@ -81,29 +161,30 @@
 		public static function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
 		{
 			global $mysqli;
+			global $errorMessage;
 			
 			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
 			
 			//select rooms from table for rendering each one
-			$query = "SELECT roomid, name , fullname, custaccess, xpos, ypos, width, depth, orientation, layer
+			$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation, layer
 					FROM dcim_room
 					WHERE siteid=? AND width > 0 AND depth > 0";
 			
-			if (!($stmt = $mysqli->prepare($query)))
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute())
 			{
-				//TODO handle errors better
-				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$errorMessage[]= "CreateSiteLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			}
-			$stmt->bind_Param('i', $siteID);
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
-			
-			while($stmt->fetch())
+			else
 			{
-				$result .= "<div id='room$roomID' class='roomContainer'>\n";
-				$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
-				$result .= "</div>\n";
+				$stmt->store_result();
+				$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+				
+				while($stmt->fetch())
+				{
+					$result .= "<div id='room$roomID' class='roomContainer'>\n";
+					$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
+					$result .= "</div>\n";
+				}
 			}
 			return $result;
 		}
@@ -308,83 +389,5 @@
 			
 			return CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $layer, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
 		}//end CreateRoomLayout()
-		
-		public static function GetSearchPlaceholder()
-		{
-			$linesOfCode = CountLinesInDir();
-			$dbRecs = CountDBRecords();
-			$rand = rand(0,90);
-			$searchPlaceHolders = array();
-			//ROUGH LIMIT           "------------------------"
-			$searchPlaceHolders[] = "Search";
-			$searchPlaceHolders[] = "Search from here";
-			$searchPlaceHolders[] = "Everyone loves to search";
-			$searchPlaceHolders[] = "Your companion";
-			$searchPlaceHolders[] = "Like a pet but useful";
-			$searchPlaceHolders[] = "Type here";
-			$searchPlaceHolders[] = "Waiting...";
-			$searchPlaceHolders[] = "Got your back";
-			$searchPlaceHolders[] = "It's cool, I got this";
-			$searchPlaceHolders[] = "You know what to do";
-			$searchPlaceHolders[] = "Self explanatory";
-			$searchPlaceHolders[] = "This is where your search";
-			$searchPlaceHolders[] = "See KB for details";
-			$searchPlaceHolders[] = "Search is your friend";
-			$searchPlaceHolders[] = "Search could save your life some day";
-			$searchPlaceHolders[] = "Indexes to the rescue";
-			$searchPlaceHolders[] = "Pioneering Omni-Search";
-			$searchPlaceHolders[] = "Into the depths";
-			$searchPlaceHolders[] = "Almost lunch time";
-			$searchPlaceHolders[] = "Who's behind you";
-			$searchPlaceHolders[] = "Not on break";
-			$searchPlaceHolders[] = "Almost never on break";
-			$searchPlaceHolders[] = "Like an unpaid intern";
-			$searchPlaceHolders[] = "I am so smart... SMRT";
-			$searchPlaceHolders[] = "Your coffee is ready";
-			$searchPlaceHolders[] = "Search never sleeps";
-			$searchPlaceHolders[] = "Wont save you on car inssurance";
-			$searchPlaceHolders[] = "Smoke free for $rand days";
-			$searchPlaceHolders[] = "NSA free for 0 days";
-			$searchPlaceHolders[] = "Not a calculator";
-			$searchPlaceHolders[] = "Still not a calculator";
-			$searchPlaceHolders[] = "Sponsored by your tax dollars";
-			$searchPlaceHolders[] = "You are here *";
-			$searchPlaceHolders[] = "I search to serve";
-			$searchPlaceHolders[] = "Give a man a match...";
-			$searchPlaceHolders[] = "Not from The Simpsons&reg;";
-			$searchPlaceHolders[] = "One man's dream of data";
-			$searchPlaceHolders[] = "Please like and subscribe";
-			$searchPlaceHolders[] = "Doesn't search Facebook";
-			$searchPlaceHolders[] = "No Facebook login";
-			$searchPlaceHolders[] = "No like buttons here";
-			
-			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
-			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
-			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
-			$searchPlaceHolders[] = "10K+ line club";
-			$searchPlaceHolders[] = "$dbRecs+ DB Records";
-			$searchPlaceHolders[] = "$dbRecs Records and counting";
-			
-			$searchPlaceHolders[] = "Google's nemesis";
-			$searchPlaceHolders[] = "Googol * Googol";
-			$searchPlaceHolders[] = "Who cares about Bing";
-			$searchPlaceHolders[] = "Remember Yahoo!?";
-			$searchPlaceHolders[] = "DuckDuckGo";
-			$searchPlaceHolders[] = "One DogPile for all";
-			$searchPlaceHolders[] = "Making search Cuil again";
-			$searchPlaceHolders[] = "Not AltaVista";
-			$searchPlaceHolders[] = "Fetch Jeeves";
-			$searchPlaceHolders[] = "Fresh Search";
-			
-			$searchPlaceHolders[] = "e.g. H######";
-			$searchPlaceHolders[] = "e.g. C######";
-			$searchPlaceHolders[] = "e.g. Company name";
-			$searchPlaceHolders[] = "e.g. Company note";
-			$searchPlaceHolders[] = "e.g. Device Name";
-			$searchPlaceHolders[] = "e.g. Badge Holder";
-			$searchPlaceHolders[] = "e.g. Location Name";
-			
-			return $searchPlaceHolders[array_rand($searchPlaceHolders)];
-		}
 	}// end DCIMCustomFunctions class
 ?>
