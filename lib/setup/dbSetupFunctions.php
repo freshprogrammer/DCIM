@@ -152,17 +152,11 @@
 			ExecuteThis("UP1L",$cmdl);
 			
 			$cmdm = "ALTER TABLE  `dcim_site`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ;";
+					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
+					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ;";
 			$cmdl = "ALTER TABLE  `dcimlog_site`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ;";
+					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
+					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ;";
 			ExecuteThis("UP2M",$cmdm);
 			ExecuteThis("UP2L",$cmdl);
 			

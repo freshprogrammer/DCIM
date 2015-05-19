@@ -634,7 +634,10 @@ h2 {
 } 
 .siteLabel{
 	position: absolute;
+	left: 50%;
+	transform: translate(-50%,0);-webkit-transform: translate(-50%,0);-ms-transform: translate(-50%,0);
 	width: initial;
+	
 	color: #000;
 	font-size: 17px;
 	font-weight: bold;

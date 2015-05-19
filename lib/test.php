@@ -7,8 +7,11 @@
 	require_once 'functions.php';
 	
 	SQLIConnect();
+	
+	global $appName;
+	
 	?>
-<head><title>Test DCIM</title></head>
+<head><title>Test <?php echo $appName;?></title></head>
 <!--
 <body>
 

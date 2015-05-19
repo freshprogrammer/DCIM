@@ -31,6 +31,7 @@
 		public static function CreateHomePageContent()
 		{//just logged in - at home page
 			global $appName;
+			global $mysqli;
 			
 			$result = "<div class=\"panel\">\n";
 			$result .= "<div class=\"panel-header\">\n";
@@ -39,34 +40,49 @@
 			
 			$result .= "<div class=\"panel-body\">\n\n";
 			
-			$result .= CustomFunctions::CreateSiteLayout(0, "", "", 0, 0, 0, 0, "N");//this should be a lookup of all sites...
-			
 			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 			{
-				$result .= "<BR><BR>Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.";
+				$result .= "Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.<BR><BR>";
 			}
 			
-			$result .= "</div>\n";
+			//select site(s) from table for rendering each one
+			$query = "SELECT siteid, name , fullname, width, depth
+					FROM dcim_site
+					WHERE width > 0 AND depth > 0";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+			{
+				//TODO handle errors better
+				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			}
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $name , $fullName, $width, $depth);
+				
+			while($stmt->fetch())
+			{
+				$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
+				$result .= "<style>\n";
+				$result .= "#siteContainer$siteID {\n";
+				$result .= "	padding-bottom:$depthToWidthRatio%;\n";
+				$result .= "}\n";
+				$result .= "</style>\n";
+				$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
+				$result .= CustomFunctions::CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
+				$result .= "</div>\n";
+			}
+			
+			
+			$result .= "</div>\n";//end panel
 			$result .= "</div>\n";
 			return $result;
 		}
 		
-		public static function CreateSiteLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation)
+		public static function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
 		{
 			global $mysqli;
 			
-			//- site should really always be facing N and be at 0,0
-			$orientation = "N"; // North East South West
-			//from DB in feet
-			$xPos = 0;//TODO this needs to be looked up in DB
-			$yPos = 0;
-			$siteWidth = 171.70;
-			$siteDepth = 143.43;
-			$name = "Site";
-			$fullName = "Site Name";
-			
-			$result = "<div id='siteContainer$siteID' class='siteContainer'>\n";
-			$result .= CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $siteWidth, $siteDepth, $orientation);
+			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
 			
 			//select rooms from table for rendering each one
 			$query = "SELECT roomid, name , fullname, custaccess, xpos, ypos, width, depth, orientation, layer
@@ -89,96 +105,105 @@
 				$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation, $layer);
 				$result .= "</div>\n";
 			}
-			$result .= "</div>\n";
 			return $result;
 		}
 		
-		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation)
+		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $width, $depth)
 		{
 			$borderThickness = 4;
 			//key percentages for drawing site rectangles
-			$rightTopX = 37;
-			$rightTopY = 12;
-			$leftBottomY = 85.5;
-			$leftBottomBottom = 91;//very bottom left side
-			$rightBottomX = 57;
-			$rightBottomY = 77;
-			$nocWidth = 13.5;
-			
-			//calculated
-			$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
-			$leftHeight = $leftBottomY-$rightTopY;
-			$leftBottomHeight = $leftBottomBottom-$leftBottomY;
-			$rightTopWidth = 100-$rightTopX;
-			$rightTopHeight = $rightBottomY-$rightTopY;
-			$nocHeight = $leftBottomY-$rightBottomY;
-			$rightBottomWidth = 100-$rightBottomX;
-			$rightBottomHeight = 100-$rightBottomY;
-			$stairsWallX = $rightTopX+$nocWidth;
-			$stairsWallWidth = 100 - ($stairsWallX + $rightBottomWidth);
-			
-			$result = "<style>\n";
-			$result .= "#siteContainer$siteID {\n";
-			$result .= "	padding-bottom:$depthToWidthRatio%;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_TopLeft {\n";
-			$result .= "	width: $rightTopX%;\n";
-			$result .= "	height: $rightTopY%;\n";
-			$result .= "	border-style: solid solid hidden solid;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_Left {\n";
-			$result .= "	top: $rightTopY%;\n";
-			$result .= "	width: $rightTopX%;\n";
-			$result .= "	height: $leftHeight%;\n";
-			$result .= "	border-style: hidden hidden hidden solid;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_LeftBottom {\n";
-			$result .= "	top: $leftBottomY%;\n";
-			$result .= "	width: $rightTopX%;\n";
-			$result .= "	height: $leftBottomHeight%;\n";
-			$result .= "	border-style: hidden solid solid solid;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_RightTop {\n";
-			$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
-			$result .= "	top: $rightTopY%;\n";
-			$result .= "	width: calc($rightTopWidth% + ".$borderThickness."px);\n";
-			$result .= "	height: $rightTopHeight%;\n";
-			$result .= "	border-style: solid solid hidden hidden;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_RightBottom {\n";
-			$result .= "	left: $rightBottomX%;\n";
-			$result .= "	top: $rightBottomY%;\n";
-			$result .= "	width: $rightBottomWidth%;\n";
-			$result .= "	height: $rightBottomHeight%;\n";
-			$result .= "	border-style: hidden solid solid solid;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_NOC {\n";
-			$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
-			$result .= "	top: $rightBottomY%;\n";
-			$result .= "	width: calc($nocWidth% + ".$borderThickness."px);\n";
-			$result .= "	height: $nocHeight%;\n";
-			$result .= "	border-style: hidden solid solid hidden;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_StairsWall {\n";
-			$result .= "	left: $stairsWallX%;\n";
-			$result .= "	top: $rightBottomY%;\n";
-			$result .= "	width: $stairsWallWidth%;\n";
-			$result .= "	height: ".$borderThickness."px;\n";
-			$result .= "	border-style: solid hidden hidden hidden;\n";
-			$result .= "}\n";
-			$result .= "#site".$siteID."_Name {\n";
-			$result .= "	right: 0%;\n";
-			$result .= "}\n";
-			$result .= "</style>\n";
-			
-			$result .= "<div class='siteBackground' id='site".$siteID."_TopLeft'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_Left'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_LeftBottom'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_RightTop'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
-			$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
-			$result .= "<span class='siteLabel' id='site".$siteID."_Name'>$fullName</span>\n";
+			if(siteID==0)
+			{
+				$rightTopX = 37;
+				$rightTopY = 12;
+				$leftBottomY = 85.5;
+				$leftBottomBottom = 91;//very bottom left side
+				$rightBottomX = 57;
+				$rightBottomY = 77;
+				$nocWidth = 13.5;
+				
+				//calculated
+				$leftHeight = $leftBottomY-$rightTopY;
+				$leftBottomHeight = $leftBottomBottom-$leftBottomY;
+				$rightTopWidth = 100-$rightTopX;
+				$rightTopHeight = $rightBottomY-$rightTopY;
+				$nocHeight = $leftBottomY-$rightBottomY;
+				$rightBottomWidth = 100-$rightBottomX;
+				$rightBottomHeight = 100-$rightBottomY;
+				$stairsWallX = $rightTopX+$nocWidth;
+				$stairsWallWidth = 100 - ($stairsWallX + $rightBottomWidth);
+				
+				$result = "<style>\n";
+				$result .= "#site".$siteID."_TopLeft {\n";
+				$result .= "	width: $rightTopX%;\n";
+				$result .= "	height: $rightTopY%;\n";
+				$result .= "	border-style: solid solid hidden solid;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_Left {\n";
+				$result .= "	top: $rightTopY%;\n";
+				$result .= "	width: $rightTopX%;\n";
+				$result .= "	height: $leftHeight%;\n";
+				$result .= "	border-style: hidden hidden hidden solid;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_LeftBottom {\n";
+				$result .= "	top: $leftBottomY%;\n";
+				$result .= "	width: $rightTopX%;\n";
+				$result .= "	height: $leftBottomHeight%;\n";
+				$result .= "	border-style: hidden solid solid solid;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_RightTop {\n";
+				$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
+				$result .= "	top: $rightTopY%;\n";
+				$result .= "	width: calc($rightTopWidth% + ".$borderThickness."px);\n";
+				$result .= "	height: $rightTopHeight%;\n";
+				$result .= "	border-style: solid solid hidden hidden;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_RightBottom {\n";
+				$result .= "	left: $rightBottomX%;\n";
+				$result .= "	top: $rightBottomY%;\n";
+				$result .= "	width: $rightBottomWidth%;\n";
+				$result .= "	height: $rightBottomHeight%;\n";
+				$result .= "	border-style: hidden solid solid solid;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_NOC {\n";
+				$result .= "	left: calc($rightTopX% - ".$borderThickness."px);\n";
+				$result .= "	top: $rightBottomY%;\n";
+				$result .= "	width: calc($nocWidth% + ".$borderThickness."px);\n";
+				$result .= "	height: $nocHeight%;\n";
+				$result .= "	border-style: hidden solid solid hidden;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_StairsWall {\n";
+				$result .= "	left: $stairsWallX%;\n";
+				$result .= "	top: $rightBottomY%;\n";
+				$result .= "	width: $stairsWallWidth%;\n";
+				$result .= "	height: ".$borderThickness."px;\n";
+				$result .= "	border-style: solid hidden hidden hidden;\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_Label {\n";//label possitioning
+				$result .= "}\n";
+				$result .= "</style>\n";
+				
+				$result .= "<div class='siteBackground' id='site".$siteID."_TopLeft'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_Left'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_LeftBottom'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_RightTop'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_RightBottom'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
+				$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
+				$result .= "<span class='siteLabel' id='site".$siteID."_Label'>$fullName</span>\n";
+			}//siteID 0 custom layout
+			else
+			{//default site layout
+				$result = "<style>\n";
+				$result .= "#site".$siteID." {\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_Label {\n";//label possitioning
+				$result .= "}\n";
+				$result .= "</style>\n";
+				
+				$result .= "<div class='siteBackground' id='site".$siteID."'></div>\n";
+				$result .= "<span class='siteLabel' id='site".$siteID."_Label'>$fullName</span>\n";
+			}
 			return $result;
 		}
 		
