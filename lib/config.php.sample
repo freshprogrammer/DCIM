@@ -1,7 +1,7 @@
 <?php 
 	//--configuration data
 	//Name of this web site - show at top of page near logo
-	$siteName = "DCIM Name";
+	$appName = "DCIM Name";
 	//Prefix appended to the title of each page
 	$pageTitle = "DCIM Title";
 	//note shown under the site name

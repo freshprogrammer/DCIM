@@ -39,7 +39,7 @@
 	//$errorMessage[] = "initialized";
 	//$debugMessage[] = "initialized";
 
-	global $siteName;
+	global $appName;
 	global $pageTitle;
 	global $versionNote;
 	
@@ -107,7 +107,7 @@
 				<a href="./"><img src="images/logo.png" border="0"></a>
 			</td>
 			<td valign="middle">
-				<div id="appname"><h1><?php echo $siteName;?></h1><?php echo $versionNote;?></div>
+				<div id="appname"><h1><?php echo $appName;?></h1><?php echo $versionNote;?></div>
 			</td>
 			<?php
 	if(!UserHasReadPermission())
@@ -350,7 +350,7 @@
 						
 						echo "<div class=\"panel-body\">\n\n";
 						
-						echo "Welcome to $siteName.";
+						echo "Welcome to $appName.";
 						
 						if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 						{
