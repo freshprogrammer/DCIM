@@ -2568,7 +2568,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.type, l.units, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2583,7 +2583,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $type, $units, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
@@ -2595,6 +2595,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
+			
+			$size = "? x ? (temp)";
 			   
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
@@ -2790,7 +2792,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$noteInput = "notes input";
 		
 		$sizeInput = "654321-1";//drop this
-		$statusInput = "A";
+		$statusInput = "A";//drop this
 		$visibleInput = "F";
 
 		//build location combo options
@@ -2914,7 +2916,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</tr></table></td>
 					</tr>
 				</table>
-				<input id=EditLocation_deviceid type='hidden' name='deviceid' value=-1>
+				<input id=EditLocation_locationid type='hidden' name='locationid' value=-1>
 				<input id=EditLocation_action type='hidden' name='action' value='null'>
 				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
@@ -4422,7 +4424,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.size, l.type, l.status
+		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.type
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -4437,7 +4439,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $size, $type, $status);
+			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $type);
 			while ($stmt->fetch()) 
 			{
 				$fullLocationName = FormatLocation($site, $room, $location);
@@ -4552,7 +4554,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 				</table>
-				<input id=EditDevice_deviceid type='hidden' name='deviceid' value=-1>
+				<input id=EditDevice_locationid type='hidden' name='locationid' value=-1>
 				<input id=EditDevice_action type='hidden' name='action' value='null'>
 				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
@@ -5724,7 +5726,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-body'>\n\n";
 			
 			//select power data
-			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
 				FROM dcim_power AS p
 					LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 					LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
@@ -5745,7 +5747,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
 			$count = $stmt->num_rows;
 				
 			if($count>0)

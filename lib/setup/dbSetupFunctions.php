@@ -146,8 +146,8 @@
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth`";
-			ExecuteThis("UP1M",$cmdm);
-			ExecuteThis("UP1L",$cmdl);
+			ExecuteThis("UP1_1M",$cmdm);
+			ExecuteThis("UP1_1L",$cmdl);
 			
 			$cmdm = "ALTER TABLE  `dcim_site`
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
@@ -155,8 +155,8 @@
 			$cmdl = "ALTER TABLE  `dcimlog_site`
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ;";
-			ExecuteThis("UP2M",$cmdm);
-			ExecuteThis("UP2L",$cmdl);
+			ExecuteThis("UP1_2M",$cmdm);
+			ExecuteThis("UP1_2L",$cmdl);
 			
 			$cmdm = "ALTER TABLE  `dcim_location`
 					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ,
@@ -174,8 +174,8 @@
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
 					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `visible` ,
 					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `altname`";
-			ExecuteThis("UP3M",$cmdm);
-			ExecuteThis("UP3L",$cmdl);
+			ExecuteThis("UP1_3M",$cmdm);
+			ExecuteThis("UP1_3L",$cmdl);
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
@@ -185,7 +185,15 @@
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 2 - un safe DB changes";
 			
-			$resultMessage[]= "RunDBUpdate_Update1()-Part 2 EMPTY CODE BLOCK";
+			$cmdm = "ALTER TABLE `dcim_location` DROP `size`;";
+			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `size`;";
+			ExecuteThis("UP2_1M",$cmdm);
+			ExecuteThis("UP2_1L",$cmdl);
+			
+			$cmdm = "ALTER TABLE `dcim_location` DROP `status`;";
+			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `status`;";
+			ExecuteThis("UP2_2M",$cmdm);
+			ExecuteThis("UP2_2L",$cmdl);
 			
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 2 complete";
