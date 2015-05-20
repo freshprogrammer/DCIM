@@ -2568,7 +2568,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.type, l.units, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2583,7 +2583,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $type, $units, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $altName, $type, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
@@ -2596,7 +2596,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
 			
-			$size = "? x ? (temp)";
+			$size = "$width x $depth feet";
 			   
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
@@ -2608,9 +2608,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if(CustomFunctions::UserHasLocationPermission())
 			{
 				$jsSafeName = MakeJSSafeParam($location);
+				$jsSafeAltName = MakeJSSafeParam($altName);
 				$jsSafeNote = MakeJSSafeParam($note);
 				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-				$params = "false, $locationID, $roomID, '$jsSafeName'";//in process
+				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 
 				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 				<?php 
@@ -2867,20 +2868,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<div class='inputToolTipContainer'>
 								<select id=EditLocation_orientation onchange='' name="orientation" tabindex=6>
 									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
-									<option value="S" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
-									<option value="E" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
+									<option value="E" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
+									<option value="S" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
 									<option value="W" <?php if($orientationInput==="W") echo "Selected"; ?>>Left</option>
 								</select>
 							<span class=inputTooltip>When looing at location in room, relative orientation to room.</span></div>
 						</td>
 					</tr>
 					<tr>
-						<td align='right' width=1>X:</td>
+						<td align='right' width=1>Left:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
 								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='0' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from left room edge to back left corner of location (feet)</span></div>
-							Y:
+							Foreward:
 							<div class='inputToolTipContainer'>
 								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='0' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from far room edge to back left corner of location (feet)</span></div>
