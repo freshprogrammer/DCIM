@@ -2568,7 +2568,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2583,7 +2583,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
@@ -2605,11 +2605,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//edit Locationbutton - not visible till in edit mode
 			if(CustomFunctions::UserHasLocationPermission())
 			{
-				//$jsSafeCustomer = MakeJSSafeParam($customer);
-				//$jsSafeNote = MakeJSSafeParam($note);
-				//$params = "false, '$hNo', '$cNo', '$jsSafeCustomer', '$jsSafeNote', '$status'";
-				$params = "false";
-				
+				$jsSafeName = MakeJSSafeParam($location);
+				$jsSafeNote = MakeJSSafeParam($note);
+				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+				$params = "false, $locationID, $roomID, '$jsSafeName'";//in process
+
 				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 				<?php 
 			}
@@ -2787,7 +2787,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$orientationInput = "E";
 		$widthInput = 411.11;
 		$depthInput = 511.11;
-		$notesInput = "notes input";
+		$noteInput = "notes input";
 		
 		$sizeInput = "654321-1";//drop this
 		$statusInput = "A";
@@ -2863,7 +2863,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Orientation:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<select id=EditLocation_type onchange='EditLocationTypeChanged()' name="type" tabindex=6>
+								<select id=EditLocation_orientation onchange='' name="orientation" tabindex=6>
 									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
 									<option value="S" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
 									<option value="E" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
@@ -2899,7 +2899,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditLocation_notes type='text' tabindex=11 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
+							<input id=EditLocation_note type='text' tabindex=11 size=50 name='notes' value='<?php echo $noteInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
