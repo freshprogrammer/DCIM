@@ -8,6 +8,14 @@
 			global $userID;
 			return (int)$userID==0;//admin only
 		}
+		public static function UserHasCircuitPermission()
+		{
+			return UserHasWritePermission();
+		}
+		public static function UserHasLocationPermission()
+		{
+			return UserHasAdminPermission();
+		}
 		
 		public static function CreateInternalLink($hNo, $cNo, $includeOldLink)
 		{//these are internal links for cust and device pages to other applications

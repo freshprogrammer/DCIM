@@ -2591,7 +2591,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->fetch();
 			$fullLocationName = FormatLocation($site, $room, $location);
 			
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
@@ -2603,7 +2603,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			echo "<td align='right'>\n";
 			//edit Locationbutton - not visible till in edit mode
-			if(UserHasLocationPermission())
+			if(CustomFunctions::UserHasLocationPermission())
 			{
 				//$jsSafeCustomer = MakeJSSafeParam($customer);
 				//$jsSafeNote = MakeJSSafeParam($note);
@@ -2614,7 +2614,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				<?php 
 			}
 			//editMode button
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 			}
@@ -2661,6 +2661,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else 
 		{
 			echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
+		}
+		
+		if(UserHasWritePermission())
+		{
+			EditLocationForm();
 		}
 		
 		echo "</div>\n";
@@ -2746,7 +2751,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
@@ -2763,6 +2768,159 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}//location found
 		//return $count;
+	}
+	
+	function EditLocationForm()
+	{
+		global $errorMessage;
+		global $mysqli;
+		
+		//-default values - never seen
+		$actionText = "Addy";
+		$roomIDInput = 2;
+		$nameInput = "location";
+		$altNameInput = "alt Name input";
+		$typeInput = "F";
+		$unitsInput = 6;
+		$xPosInput = 211.11;
+		$yPosInput = 311.11;
+		$orientationInput = "E";
+		$widthInput = 411.11;
+		$depthInput = 511.11;
+		$notesInput = "notes input";
+		
+		$sizeInput = "654321-1";//drop this
+		$statusInput = "A";
+		$visibleInput = "F";
+
+		//build location combo options
+		$locationOptions = "";
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			ORDER BY s.name, r.name";
+			
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditLocationForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
+			while ($stmt->fetch())
+			{
+				$fullRoomName = "$site $roomFullName";
+				$selected = ($roomID==$roomIDInput ? "Selected" : "");
+				$roomOptions .= "<option value='$roomID' $selected>$fullRoomName</option>\n";
+			}
+		}
+		
+		?>
+		<div id='EditLocationMsg' class='hidden'></div>
+		<div id='EditLocationEntry' class='hidden'>
+		<BR>
+		<table><tr><td>
+		<form action="<?php echo $action;?>" method='post' id='EditLocationForm' onsubmit='return SaveLocation()' class=''>
+			<fieldset>
+				<legend id=EditLocationEntryLegend><b><?php echo $actionText;?> Location</b></legend>
+				<table>
+					<tr>
+						<td colspan=1 align=right>Room:</td>
+						<td align='left'>
+							<select id=EditLocation_roomid name="roomid" tabindex=1>
+								<?php echo $roomOptions; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Name:</td>
+						<td align='left'>
+							<input id=EditLocation_name type='text' tabindex=2 size=18 name='name' value='<?php echo $nameInput;?>' placeholder="10.01, G2" class='' >
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Alt&nbsp;Name(s):</td>
+						<td align='left'>
+							<input id=EditLocation_altname type='text' tabindex=3 size=18 name='altname' value='<?php echo $altNameInput;?>' placeholder="10.01.A, G3, Cloud" class='' >
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Type:</td>
+						<td align='left'>
+							<select id=EditLocation_type onchange='EditLocationTypeChanged()' name="type" tabindex=4>
+								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
+								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
+								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
+								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Misc</option>
+								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Rack</option>
+							</select>
+							Units:<input id=EditLocation_units type='number' tabindex=5 size=6 name='size' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Orientation:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<select id=EditLocation_type onchange='EditLocationTypeChanged()' name="type" tabindex=6>
+									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
+									<option value="S" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
+									<option value="E" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
+									<option value="W" <?php if($orientationInput==="W") echo "Selected"; ?>>Left</option>
+								</select>
+							<span class=inputTooltip>When looing at location in room, relative orientation to room.</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>X:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='0' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from left room edge to back left corner of location (feet)</span></div>
+							Y:
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='0' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from far room edge to back left corner of location (feet)</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Width:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>In feet</span></div>
+							Depth:
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>In feet</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Notes:</td>
+						<td align='left'>
+							<input id=EditLocation_notes type='text' tabindex=11 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
+						</td>
+					</tr>
+					<tr>
+						<td colspan=2><table width=100%><tr>
+							<td align=left>
+								<button id='EditLocation_deletebutton' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+							</td>
+							<td align='right'>
+								<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
+								<input type="submit" value="Save" tabindex=12>
+							</td>
+						</tr></table></td>
+					</tr>
+				</table>
+				<input id=EditLocation_deviceid type='hidden' name='deviceid' value=-1>
+				<input id=EditLocation_action type='hidden' name='action' value='null'>
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
+			</fieldset>
+		</form>
+		</td></tr></table></div>
+		<?php
 	}
 	
 	function ShowUsersPage($input)
@@ -4273,8 +4431,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so this error is never seen - fixed with #74
-			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "EditDeviceForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
 		{
@@ -4636,7 +4793,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		echo "<span class='tableTitle'>Power Circuits</span>\n";
 		//Add button
-		if($locationPage && UserHasCircuitPermission())
+		if($locationPage && CustomFunctions::UserHasCircuitPermission())
 		{
 			?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
 			<?php 
@@ -4645,7 +4802,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,UserHasCircuitPermission());
+			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4683,7 +4840,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
 				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-				if(UserHasCircuitPermission())
+				if(CustomFunctions::UserHasCircuitPermission())
 				{
 					//edit button
 					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
@@ -4706,7 +4863,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "No relevant power records found.<BR>\n";
 		}  
 	
-		if(UserHasCircuitPermission())
+		if(CustomFunctions::UserHasCircuitPermission())
 		{
 			if($locationPage)
 			{
@@ -5935,7 +6092,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.layer, l.visible, COUNT(d.deviceid) AS devicecount
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
 				WHERE l.roomid=? AND l.visible='T' AND l.width > 0 AND l.depth > 0
@@ -5949,7 +6106,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $layer, $visible, $deviceCount);
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $visible, $deviceCount);
 				
 			while($stmt->fetch())
 			{

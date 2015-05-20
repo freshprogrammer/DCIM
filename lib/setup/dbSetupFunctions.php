@@ -164,7 +164,6 @@
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `layer` TINYINT( 1 ) NOT NULL DEFAULT  '0' AFTER  `orientation` ,
 					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `visible` ,
 					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `altname`";
 			$cmdl = "ALTER TABLE  `dcimlog_location`
@@ -173,7 +172,6 @@
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `layer` TINYINT( 1 ) NOT NULL DEFAULT  '0' AFTER  `orientation` ,
 					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `visible` ,
 					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `altname`";
 			ExecuteThis("UP3M",$cmdm);

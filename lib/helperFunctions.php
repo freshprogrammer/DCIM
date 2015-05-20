@@ -603,14 +603,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	//permission levels are limited to the magic nubers here - code should refference these functions exclusively for perm testing
-	function UserHasCircuitPermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasLocationPermission()
-	{
-		return UserHasAdminPermission();
-	}
 	function UserHasBadgeDeletePermission()
 	{
 		return UserHasWritePermission();
@@ -701,6 +693,15 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($o=="S")
 			$rotation = 180;
 		return $rotation;
+	}
+	
+	function Oritentation($o)
+	{//relative to parent
+		if($o=="N") return "North";
+		else if($o=="E") return "East";
+		else if($o=="S") return "South";
+		else if($o=="W") return "West";
+		else return "Unknown";
 	}
 	
 	function FormatVLAN($vlan)
