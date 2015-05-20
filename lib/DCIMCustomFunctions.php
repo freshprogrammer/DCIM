@@ -181,9 +181,7 @@
 				
 				while($stmt->fetch())
 				{
-					$result .= "<div id='room$roomID' class='roomContainer'>\n";
 					$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
-					$result .= "</div>\n";
 				}
 			}
 			return $result;
@@ -290,18 +288,10 @@
 		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation)
 		{
 			//calculated
-			$parentDepthToWidthRatio = $parentDepth/$parentWidth;
 			$relativeX = 100*$xPos/$parentWidth;
 			$relativeY= 100*$yPos/$parentDepth;
-			
-			if($orientation=="W")
-				$rotation = -90;
-			else if($orientation=="E")
-				$rotation = 90;
-			else if($orientation=="S")
-				$rotation = 180;
-			else if($orientation=="N")
-				$rotation = 0;
+
+			$rotation = OritentationToDegrees($orientation);
 			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
 			
 			//adjust dimentions if rotated
@@ -383,7 +373,7 @@
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			
-			return CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
+			return CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
 		}//end CreateRoomLayout()
 	}// end DCIMCustomFunctions class
 ?>

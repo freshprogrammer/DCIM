@@ -5904,8 +5904,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
-	function CreateRoomLayout($roomID, $name , $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
+	function CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
 	{
+		global $mysqli;
+		global $errorMessage;
+		
 		$result = "<style>\n";
 		$result .= "#room$roomID {\n";
 		$result .= "	left: $relativeX%;\n";
@@ -5917,6 +5920,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= $roomCustomStyle;
 		$result .= "</style>\n";
 		
+		$result .= "<div id='room$roomID' class='roomContainer'>\n";
 		$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
 		if($roomCustomHTML)
 			$result .= $roomCustomHTML;
@@ -5925,7 +5929,60 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "<div id='' class='roomBorders $roomClass'></div>\n";
 			$result .= "<span>$name</span>\n";
 		}
+		
+		//render locations
+		$parentWidth = $width;
+		$parentDepth = $depth;
+		
+		//select locations from table for rendering each one
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.layer, l.visible, COUNT(d.deviceid) AS devicecount
+				FROM dcim_location AS l
+					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
+				WHERE l.roomid=? AND l.visible='T' AND l.width > 0 AND l.depth > 0
+				GROUP BY l.locationid
+				ORDER BY l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+		{
+			$errorMessage[]= "CreateRoomLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$errorMessage[]="Render Locations room#$roomID-1";
+			$stmt->store_result();
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $layer, $visible, $deviceCount);
+				
+			while($stmt->fetch())
+			{
+				$errorMessage[]="Render Locations room#$roomID-2";
+				$relativeX = 100*$xPos/$parentWidth;
+				$relativeY= 100*$yPos/$parentDepth;
+		
+				$rotation = OritentationToDegrees($orientation);
+				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
+					
+				//adjust dimentions if rotated
+				if($orientation=="E" || $orientation=="W")
+				{
+					$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+					$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+				}
+				else
+				{
+					$relativeWidth = 100*$width/$parentWidth;
+					$relativeDepth= 100*$depth/$parentDepth;
+				}
+		
+				$locationTypeClass = "";
+				$roomCustomStyle = "";
+				$roomCustomHTML = "";
+		
+				$result .= CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $locationTypeClass, $roomCustomHTML, $roomCustomStyle);
+			}
+		}
+		
 		$result .= "</a>\n";
+		$result .= "</div>\n";
 		
 		return $result;
 	}
@@ -6031,5 +6088,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_right'></div>\n";
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_left'></div>\n";
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
+	}
+	
+	function CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $locationClass, $locationCustomHTML="", $locationCustomStyle="")
+	{
+		$result = "<style>\n";
+		$result .= "#location$locationID {\n";
+		$result .= "	left: $relativeX%;\n";
+		$result .= "	top: $relativeY%;\n";
+		$result .= "	width: $relativeWidth%;\n";
+		$result .= "	height: $relativeDepth%;\n";
+		$result .= $rotationTransform;
+		$result .= "}\n";
+		$result .= $locationCustomStyle;
+		$result .= "</style>\n";
+
+		$result .= "<div id='location$locationID' class='locationContainer'>\n";
+		$result .= "<a href='./?locationid=$locationID' title='$name'>\n";
+		if($locationCustomHTML)
+			$result .= $locationCustomHTML;
+		else
+		{
+			$result .= "<div id='' class='locationBackground $locationClass'></div>\n";
+			//$result .= "<span>$name</span>\n";
+		}
+		$result .= "</a>\n";
+		$result .= "</div>\n";
+		
+		return $result;
+		
 	}
 ?>
