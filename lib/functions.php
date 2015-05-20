@@ -5948,13 +5948,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$errorMessage[]="Render Locations room#$roomID-1";
 			$stmt->store_result();
 			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $layer, $visible, $deviceCount);
 				
 			while($stmt->fetch())
 			{
-				$errorMessage[]="Render Locations room#$roomID-2";
 				$relativeX = 100*$xPos/$parentWidth;
 				$relativeY= 100*$yPos/$parentDepth;
 		
@@ -5972,8 +5970,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$relativeWidth = 100*$width/$parentWidth;
 					$relativeDepth= 100*$depth/$parentDepth;
 				}
-		
-				$locationTypeClass = "";
+				
+				if($deviceCount>0)
+					$locationTypeClass = "locationFullBackground";
+				else
+					$locationTypeClass = "locationEmptyBackground";
 				$roomCustomStyle = "";
 				$roomCustomHTML = "";
 		
@@ -6109,7 +6110,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= $locationCustomHTML;
 		else
 		{
-			$result .= "<div id='' class='locationBackground $locationClass'></div>\n";
+			$result .= "<div id='' class='$locationClass'></div>\n";
 			//$result .= "<span>$name</span>\n";
 		}
 		$result .= "</a>\n";
