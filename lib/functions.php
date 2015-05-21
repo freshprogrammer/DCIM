@@ -6097,7 +6097,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//select locations from table for rendering each one
 		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount
 				FROM dcim_location AS l
-					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
+					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 				WHERE l.roomid=? AND l.visible='T' AND l.width > 0 AND l.depth > 0
 				GROUP BY l.locationid
 				ORDER BY l.name";

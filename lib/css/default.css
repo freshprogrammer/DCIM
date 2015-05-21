@@ -676,7 +676,7 @@ h2 {
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground{
+.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground, .locationContainer a:hover .locationFullBackground, .locationContainer a:hover .locationEmptyBackground{
 	background-color: green;
 }
 
