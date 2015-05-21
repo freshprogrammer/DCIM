@@ -295,6 +295,8 @@
 		
 		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation)
 		{
+			$borderThickness = 4;
+		
 			//calculated
 			$relativeX = 100*$xPos/$parentWidth;
 			$relativeY= 100*$yPos/$parentDepth;
@@ -330,16 +332,60 @@
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			else if($roomID==3)
-			{//ca 2
-				//percent inset corner - close left corner
-				$cornerWidthInset = 59.82;
-				$cornerDepthInset = -23.48;
-				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+			{//ca 2 - two close left corner insets
+				$cornerWidthInset1 = 11;
+				$cornerDepthInset1 = -69;
+				$cornerWidthInset2 = 59.82;
+				$cornerDepthInset2 = -23.48;
+
+				$rightWidth = 100-$cornerWidthInset2;
+				$midWidth = 100-$cornerWidthInset1-$rightWidth;
+				$leftTopDepth = 100+$cornerDepthInset1;
+				$midBottomDepth = 100-$leftTopDepth - (-1*$cornerDepthInset2);
+				$rightTopDepth = $leftTopDepth+$midBottomDepth;//wrong
+				$rightBottomDepth = -1*$cornerDepthInset2;
+
+				$roomCustomStyle .= "#room".$roomID."_LeftTop {\n";
+				$roomCustomStyle .= "	width: $cornerWidthInset1%;\n";
+				$roomCustomStyle .= "	height: $leftTopDepth%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden solid solid;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidTop {\n";
+				$roomCustomStyle .= "	left: $cornerWidthInset1%;\n";
+				$roomCustomStyle .= "	width: $midWidth%;\n";
+				$roomCustomStyle .= "	height: $leftTopDepth%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidBottom {\n";
+				$roomCustomStyle .= "	left: $cornerWidthInset1%;\n";
+				$roomCustomStyle .= "	top: calc($leftTopDepth% - ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	width: calc($midWidth% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	height:calc($midBottomDepth% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	border-style: hidden hidden solid solid;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightTop {\n";
+				$roomCustomStyle .= "	left: $cornerWidthInset2%;\n";
+				$roomCustomStyle .= "	width: $rightWidth%;\n";
+				$roomCustomStyle .= "	height: $rightTopDepth%;\n";
+				$roomCustomStyle .= "	border-style: solid solid hidden hidden;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightBottom {\n";
+				$roomCustomStyle .= "	left: $cornerWidthInset2%;\n";
+				$roomCustomStyle .= "	top: $rightTopDepth%;\n";
+				$roomCustomStyle .= "	width: $rightWidth%;\n";
+				$roomCustomStyle .= "	height: $rightBottomDepth%;\n";
+				$roomCustomStyle .= "	border-style: hidden solid solid solid;\n";
+				$roomCustomStyle .= "}\n";
+
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";//last because of overlap
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			else if($roomID==4)
 			{//ca 3
-				//percent inset corner - close left corner
 				$cornerWidthInset = 55.20;
 				$cornerDepthInset = -19.27;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
@@ -374,10 +420,60 @@
 				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
 			}
 			else if($roomID==16)
-			{//loading
-				$cornerWidthInset = -75;//percent inset corner
-				$cornerDepthInset = 25;
-				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+			{//loading - two far right corner insets
+				$cornerWidthInset1 = -65;
+				$cornerDepthInset1 = 15;
+				$cornerWidthInset2 = -18;
+				$cornerDepthInset2 = 36;
+				
+				$leftWidth = 100+$cornerWidthInset1;
+				$midWidth = 100+$cornerWidthInset2-$leftWidth;
+				$rightWidth = -1*$cornerWidthInset2;
+
+				$rightX = $leftWidth+$midWidth;
+				$midTopDepth = $cornerDepthInset2-$cornerDepthInset1;
+				$midBottomDepth = 100-$leftTopDepth - (-1*$cornerDepthInset2);
+				$leftBottomDepth = 100-$cornerDepthInset1;
+				$rightBottomDepth = 100-$cornerDepthInset2;
+
+				$roomCustomStyle .= "#room".$roomID."_LeftTop {\n";
+				$roomCustomStyle .= "	width: $leftWidth%;\n";
+				$roomCustomStyle .= "	height: $cornerDepthInset1%;\n";
+				$roomCustomStyle .= "	border-style: solid solid hidden solid;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_LeftBottom {\n";
+				$roomCustomStyle .= "	top: $cornerDepthInset1%;\n";
+				$roomCustomStyle .= "	width: $leftWidth%;\n";
+				$roomCustomStyle .= "	height: $leftBottomDepth%;\n";
+				$roomCustomStyle .= "	border-style: hidden hidden solid solid;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidTop {\n";
+				$roomCustomStyle .= "	left: calc($leftWidth% - ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	top: $cornerDepthInset1%;\n";
+				$roomCustomStyle .= "	width: calc($midWidth% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	height:calc($midTopDepth% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	border-style: solid solid hidden hidden;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidBottom {\n";
+				$roomCustomStyle .= "	left: $leftWidth%;\n";
+				$roomCustomStyle .= "	top: $cornerDepthInset2%;\n";
+				$roomCustomStyle .= "	width: $midWidth%;\n";
+				$roomCustomStyle .= "	height: $rightBottomDepth%;\n";
+				$roomCustomStyle .= "	border-style: hidden hidden solid hidden;\n";
+				$roomCustomStyle .= "}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightBottom {\n";
+				$roomCustomStyle .= "	left: $rightX%;\n";
+				$roomCustomStyle .= "	top: $cornerDepthInset2%;\n";
+				$roomCustomStyle .= "	width: $rightWidth%;\n";
+				$roomCustomStyle .= "	height: $rightBottomDepth%;\n";
+				$roomCustomStyle .= "	border-style: solid solid solid hidden;\n";
+				$roomCustomStyle .= "}\n";
+				
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";//last because of overlap
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			
