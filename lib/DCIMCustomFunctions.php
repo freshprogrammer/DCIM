@@ -3,16 +3,33 @@
 	//NOTE many functions refferance the CustomFunctions class that is actualy a child of this. This is not ideal but using self doesnt work (link back to this class instead of possible child), and 'this' is not an option since these are static functions. PHP 5.3 added get_called_class() for this.c
 	class DCIMCustomFunctions
 	{
+		//these permissions are custom-ish so they are here so indivudual users can be given specific permissions (like if Tony was in charge of switch ports)
 		public static function UserHasDevPermission()
 		{//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
 			global $userID;
 			return (int)$userID==0;//admin only
+		}
+		public static function UserHasBadgeDeletePermission()
+		{
+			return UserHasWritePermission();
 		}
 		public static function UserHasCircuitPermission()
 		{
 			return UserHasWritePermission();
 		}
 		public static function UserHasLocationPermission()
+		{
+			return UserHasAdminPermission();
+		}
+		public static function UserHasPortAddEditPermission()
+		{
+			return UserHasWritePermission();
+		}
+		public static function UserHasPortDeletePermission()
+		{
+			return UserHasWritePermission();
+		}
+		public static function UserHasRoomPermission()
 		{
 			return UserHasAdminPermission();
 		}

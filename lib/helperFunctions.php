@@ -601,20 +601,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($type === "D") return "Delete";
 		else return "Unknown";
 	}
-	
-	//permission levels are limited to the magic nubers here - code should refference these functions exclusively for perm testing
-	function UserHasBadgeDeletePermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasPortAddEditPermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasPortDeletePermission()
-	{
-		return UserHasWritePermission();
-	}
 	function ValidReadPermission($permissionLevel)
 	{
 		return $permissionLevel >= 1;

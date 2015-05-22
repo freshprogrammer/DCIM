@@ -673,7 +673,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($delete)
 			{
-				if(UserHasBadgeDeletePermission())
+				if(CustomFunctions::UserHasBadgeDeletePermission())
 				{
 					$query = "DELETE FROM dcim_badge WHERE badgeid=? LIMIT 1";
 				
@@ -1603,7 +1603,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//push changes to DB
 			if($add)
 			{
-				if(UserHasPortAddEditPermission())
+				if(CustomFunctions::UserHasPortAddEditPermission())
 				{
 					$query = "INSERT INTO dcim_deviceport 
 						(deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
@@ -1639,7 +1639,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($delete)
 			{
-				if(UserHasPortDeletePermission())
+				if(CustomFunctions::UserHasPortDeletePermission())
 				{
 					$query = "DELETE FROM dcim_deviceport WHERE deviceportid=? LIMIT 1";
 						
@@ -1674,7 +1674,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				//update port
 				$cont = false;
-				if(UserHasPortAddEditPermission())
+				if(CustomFunctions::UserHasPortAddEditPermission())
 				{
 					$query = "UPDATE dcim_deviceport SET
 							pic = ?,
@@ -3714,7 +3714,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$jsSafeSpeed = MakeJSSafeParam($speed);
 							$jsSafeNote = MakeJSSafeParam($note);
 							//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-							$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+							$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
 							
 							$portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
 							
@@ -4830,6 +4830,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				//show results
 				echo "<span class='tableTitle'>$searchTitle</span>\n";
+				//add location button
+				if(CustomFunctions::UserHasLocationPermission())
+				{
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "true, -1, $roomID, '$jsSafeName', '', '', 0, 'N', 0, 0, 0, 0, ''";
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php 
+				}
 				echo "<BR>";
 				
 				echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
@@ -4866,6 +4873,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			echo "Room($roomID) not found.<BR>\n";
 		}
+		
+		if(CustomFunctions::UserHasLocationPermission())
+			EditLocationForm();
+		
 		return $count;
 	}
 	
@@ -4985,11 +4996,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			echo "</table>";
 		}
-		else 
+		else
 		{
 			echo "No relevant power records found.<BR>\n";
-		}  
-	
+		}
+		
 		if(CustomFunctions::UserHasCircuitPermission())
 		{
 			if($locationPage)
@@ -5523,7 +5534,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
 			//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
 			//redundant check for admin priv, but left for code completion sake
-			echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
 		}
 		
 		//editMode button
@@ -5620,7 +5631,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$jsSafeSpeed = MakeJSSafeParam($speed);
 					$jsSafeNote = MakeJSSafeParam($note);
 					//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-					$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+					$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
 					
 					$record .= "<button onclick=\"$portEditJS\">Edit</button>\n";
 					$record .= "</td>\n";

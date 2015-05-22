@@ -199,18 +199,14 @@
 		</tbody>
 		</table>
 	</div>
-	
-	<!-- Page Body -->
 	<table id="pagecontainer" id="pagecontainer" cellpadding="0" cellspacing="0" class='center pageMinWidth'><tbody><tr><td>
-		
-	<?php
 	
+	<?php
 	//BackupDatabase();
 	
 	if(UserHasReadPermission())
 	{
-		?>
-		<!-- HEADER LINKS -->
+		?><!-- HEADER LINKS -->
 		<table width=100%><tr>
 			<td>
 				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
@@ -219,10 +215,9 @@
 				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
 			</td>
 		</tr></table>
-		<BR>
-		<?php
+		<BR><?php
 	}
-		
+	
 	//error and reporting mesages - filled in at the bottom of the page with JS
 	echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
 	echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
@@ -235,36 +230,21 @@
 		LoginPrompt();
 	}
 	else
-	{
-		//officaliy logged in with min read access-------------------------------------------------------------------------------------------------
+	{//officaliy logged in with min read access-------------------------------------------------------------------------------------------------
 		echo "<!--  PAGE BODY-->\n";
 		
 		if(strlen($host) > 0)
-		{
-			//build customer page
-			ShowCustomerPage($host);
-			
-		}
+			ShowCustomerPage($host);//build customer page
 		else if(strlen($roomID) > 0)
-		{
 			ShowRoomPage($roomID);
-		}
 		else if(strlen($deviceIDInput) > 0)
-		{
 			ShowDevicePage($deviceIDInput);
-		}
 		else if(strlen($chassisnameInput) > 0)
-		{
 			ShowChassisPage($chassisnameInput);
-		}
 		else if(strlen($locationIDInput) > 0)
-		{
 			ShowLocationPage($locationIDInput);
-		}
 		else if(strlen($userIDInput) > 0)
-		{
 			ShowUsersPage($userIDInput);
-		}
 		else if(strlen($page) > 0)
 		{
 			if($page==="PowerAudit")
