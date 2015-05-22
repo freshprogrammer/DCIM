@@ -6095,9 +6095,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount, c.name
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
+					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
 				WHERE l.roomid=? AND l.visible='T' AND l.width > 0 AND l.depth > 0
 				GROUP BY l.locationid
 				ORDER BY l.name";
@@ -6109,7 +6110,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $visible, $deviceCount);
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $visible, $deviceCount, $customer);
 				
 			while($stmt->fetch())
 			{
@@ -6132,12 +6133,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				
 				if($deviceCount>0)
+				{
+					$name = $name . " ($customer)";
 					$locationTypeClass = "locationFullBackground";
+				}
 				else
 					$locationTypeClass = "locationEmptyBackground";
 				$roomCustomStyle = "";
 				$roomCustomHTML = "";
-		
+				
 				$result .= CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $locationTypeClass, $roomCustomHTML, $roomCustomStyle);
 			}
 		}
