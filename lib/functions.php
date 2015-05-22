@@ -4555,7 +4555,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 				</table>
-				<input id=EditDevice_locationid type='hidden' name='locationid' value=-1>
+				<input id=EditDevice_deviceid type='hidden' name='deviceid' value=-1>
 				<input id=EditDevice_action type='hidden' name='action' value='null'>
 				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
@@ -4620,11 +4620,151 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($roomID)
+	function ShowRoomPage($roomID)
+	{
+		global $mysqli;
+		global $deviceModels;
+		global $pageSubTitle;
+		global $focusSearch;
+
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>Room</div>\n";
+		echo "<div class='panel-body'>\n\n";
+		
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE r.roomid=?";
+		
+		if (!($stmt = $mysqli->prepare($query))) 
+		{
+			//TODO hadnle errors better
+			echo "ShowRoomPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		$stmt->bind_Param('i', $roomID);
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($siteID, $site, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
+		$roomFound = $stmt->num_rows==1;
+		
+		if($roomFound)
+		{
+			$stmt->fetch();
+			$fullRoomName = FormatLocation($site, $fullName, "");
+			
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+			{
+				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+			}
+			
+			$size = "$width x $depth feet";
+			
+			echo "<table width=100%><tr>\n";
+			echo "<td align='left'>\n";
+			echo "<span class='customerName'>$fullRoomName</span>\n";
+			echo "</td>\n";
+			
+			echo "<td align='right'>\n";
+			//edit Locationbutton - not visible till in edit mode
+			/*if(CustomFunctions::UserHasLocationPermission())
+			{
+				$jsSafeName = MakeJSSafeParam($location);
+				$jsSafeAltName = MakeJSSafeParam($altName);
+				$jsSafeNote = MakeJSSafeParam($note);
+				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+
+				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+				<?php 
+			}*/
+			//editMode button
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+			{
+				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+			}
+			echo "</td>\n";
+			echo "</tr>\n";
+			echo "</table>\n";
+			
+			//details
+			echo "<table>\n";
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Type:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationType($type);
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Units:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo $units;
+			echo "</td>\n";
+			
+			echo "</tr>\n";
+			echo "<tr>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Size:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "$size";
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Visible:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
+			echo "</td>\n";
+			
+			echo "</tr></table>\n";
+			
+			
+			//render room
+			echo CustomFunctions::CreateRoomLayout($roomID, 0, 0, $room , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
+		}
+		else 
+		{
+			echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
+		}
+		
+		if(UserHasWritePermission())
+		{
+			//EditRoomForm();
+		}
+		
+		echo "</div>\n";
+		echo "</div>\n\n";
+		
+		if($roomFound)
+		{
+			echo "<BR>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Room Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			ListRoomLocationsAndDevices($roomID);
+			
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(CustomFunctions::UserHasLocationPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			}
+		}//room found
+		//return $count;
+	}
+	
+	function ListRoomLocationsAndDevices($roomID)
 	{
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
-		global $pageSubTitle;
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
@@ -4649,7 +4789,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
 			$panelDescription = "Locations & devices in $site $roomFullName";
-			$pageSubTitle = "$site $room";
 			$searchTitle = "$site $roomFullName Location(s)";
 			
 			if($showEmpty)
@@ -4686,12 +4825,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->store_result();
 			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
 			$count = $stmt->num_rows;
-			
-			$panelDescription = $panelDescription . " ($count)";
-
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>$panelDescription</div>\n";
-			echo "<div class='panel-body'>\n\n";
 			
 			if($count>0)
 			{
@@ -4731,17 +4864,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}//sucsessfull lookup
 		else
 		{
-			$pageSubTitle = "RoomID#$roomID";
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>RoomID#$roomID</div>\n";
-			echo "<div class='panel-body'>\n\n";
-
 			echo "Room($roomID) not found.<BR>\n";
 		}
-			
-		//end panel divs
-		echo "</div>\n";
-		echo "</div>\n";
 		return $count;
 	}
 	
@@ -6070,18 +6194,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		
 		$result = "<style>\n";
-		$result .= "#room$roomID {\n";
-		$result .= "	left: $relativeX%;\n";
-		$result .= "	top: $relativeY%;\n";
-		$result .= "	width: $relativeWidth%;\n";
-		$result .= "	height: $relativeDepth%;\n";
-		$result .= $rotationTransform;
-		$result .= "}\n";
+		
+		$standAlonePage = !($relativeWidth > 0 || $relativeDepth>0);
+		
+		if(!$standAlonePage)
+		{
+			$result .= "#room$roomID {\n";
+			$result .= "	left: $relativeX%;\n";
+			$result .= "	top: $relativeY%;\n";
+			$result .= "	width: $relativeWidth%;\n";
+			$result .= "	height: $relativeDepth%;\n";
+			$result .= $rotationTransform;
+			$result .= "}\n";
+		}
+		else
+		{
+			$heightMax = 500;
+			$widthMax = 948;
+			
+			$renderHeight = $heightMax;
+			$renderWidth = $renderHeight*($width/$depth);
+			if($renderWidth>$widthMax)
+			{
+				$renderWidth = $widthMax;
+				$renderHeight = $renderWidth*($depth/$width);
+			}
+			
+			//rendering this room standalone
+			$result .= "#room$roomID {\n";
+			$result .= "	position: relative;\n";
+			$result .= "	width: ".$renderWidth."px;\n";
+			$result .= "	height: ".$renderHeight."px;\n";
+			$result .= $rotationTransform;
+			$result .= "}\n";
+		}
 		$result .= $roomCustomStyle;
 		$result .= "</style>\n";
 		
 		$result .= "<div id='room$roomID' class='roomContainer'>\n";
-		$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+		if(!$standAlonePage)$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
 		if($roomCustomHTML)
 			$result .= $roomCustomHTML;
 		else
@@ -6149,7 +6300,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		
-		$result .= "</a>\n";
+		if(!$standAlonePage)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;

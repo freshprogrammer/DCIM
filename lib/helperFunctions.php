@@ -447,7 +447,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			else
 				$fullLocationName = "$roomName $locationName";
 		}
-		return $fullLocationName;
+		return trim($fullLocationName);
 	}
 	
 	function FormatPanelName($panel)

@@ -247,7 +247,7 @@
 		}
 		else if(strlen($roomID) > 0)
 		{
-			ListLocationCustomers($roomID);
+			ShowRoomPage($roomID);
 		}
 		else if(strlen($deviceIDInput) > 0)
 		{

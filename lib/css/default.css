@@ -656,10 +656,10 @@ h2 {
 	background-color: gray;
 }
 .caBackground{
-	background-color: blue;
+	background-color: rgb(0, 0, 255);
 }
 .roomBackground{
-	background-color: red;
+	background-color: rgb(0, 0, 213);
 }
 .locationEmptyBackground{
 	background-color: pink;

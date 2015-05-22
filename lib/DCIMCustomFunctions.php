@@ -303,22 +303,25 @@
 			$borderThickness = 4;
 		
 			//calculated
-			$relativeX = 100*$xPos/$parentWidth;
-			$relativeY= 100*$yPos/$parentDepth;
-
-			$rotation = OritentationToDegrees($orientation);
-			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
-			
-			//adjust dimentions if rotated
-			if($orientation=="E" || $orientation=="W")
+			if($parentWidth > 0 && $parentDepth>0)
 			{
-				$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
-				$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
-			}
-			else
-			{
-				$relativeWidth = 100*$width/$parentWidth;
-				$relativeDepth= 100*$depth/$parentDepth;
+				$relativeX = 100*$xPos/$parentWidth;
+				$relativeY= 100*$yPos/$parentDepth;
+	
+				$rotation = OritentationToDegrees($orientation);
+				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
+				
+				//adjust dimentions if rotated
+				if($orientation=="E" || $orientation=="W")
+				{
+					$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+					$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+				}
+				else
+				{
+					$relativeWidth = 100*$width/$parentWidth;
+					$relativeDepth= 100*$depth/$parentDepth;
+				}
 			}
 			
 			if($custAccess=="T")//define room color
