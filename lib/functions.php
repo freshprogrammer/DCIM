@@ -6095,7 +6095,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount, c.name
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.visible, COUNT(d.deviceid) AS devicecount, d.hno, c.name
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
@@ -6110,7 +6110,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $visible, $deviceCount, $customer);
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $visible, $deviceCount, $hNo, $customer);
 				
 			while($stmt->fetch())
 			{
@@ -6134,7 +6134,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($deviceCount>0)
 				{
-					$name = $name . " ($customer)";
+					if(CustomFunctions::IsThisHNoInternal($hNo))
+						$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
+					else
+						$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
 					$locationTypeClass = "locationFullBackground";
 				}
 				else

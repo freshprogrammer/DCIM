@@ -17,6 +17,11 @@
 			return UserHasAdminPermission();
 		}
 		
+		public static function IsThisHNoInternal($hNo)
+		{
+			return $hNo=="387046";
+		}
+		
 		public static function CreateInternalLink($hNo, $cNo, $includeOldLink)
 		{//these are internal links for cust and device pages to other applications
 			$result = "<a href='https://internalApp.com?search=$hNo' target='_blank' class='internalLink'>(main system)</a>\n";
@@ -316,14 +321,14 @@
 				$relativeDepth= 100*$depth/$parentDepth;
 			}
 			
-			$roomCustomStyle = "";
-			$roomCustomHTML = "";
 			if($custAccess=="T")//define room color
 				$roomTypeClass = "caBackground";
 			else
 				$roomTypeClass = "roomBackground";
 			
 			//custom layouts
+			$roomCustomStyle = "";
+			$roomCustomHTML = "";
 			if($roomID==2)
 			{//ca 1
 				$cornerWidthInset = -16.272;//percent inset corner
@@ -413,7 +418,7 @@
 				$entranceDepth = 4.5;
 				$farLeftWidth = 50.87;
 				$farLeftDepth= 31.92;
-				$exitWidth = 11;
+				$exitWidth = 13;
 				$exitDepth = 20;// width of AC room
 				
 				$x1 = $entranceWidth;//4 left
