@@ -4652,6 +4652,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$stmt->fetch();
 			$fullRoomName = FormatLocation($site, $fullName, "");
+			$pageSubTitle = "$fullRoomName";
 			
 			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{

@@ -141,6 +141,9 @@
 			global $appName;
 			global $mysqli;
 			global $errorMessage;
+			global $pageSubTitle;
+			
+			$pageSubTitle = "Home";
 			
 			$result = "<div class=\"panel\">\n";
 			$result .= "<div class=\"panel-header\">\n";
