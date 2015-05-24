@@ -2684,10 +2684,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
-				FROM dcim_location AS l
+				FROM dcim_device AS d
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
 				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
@@ -2711,13 +2711,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{
-				//TODO for searches this should have some link, either device or hno or both
-
 				echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
 				
 				//list result data
 				$oddRow = false;
-				while ($stmt->fetch()) 
+				while ($stmt->fetch())
 				{
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
@@ -2743,7 +2741,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			else 
 			{
 				//TODO fix this to say something better - some locations dont have units or no devices
-				echo "No Devices found at location.<BR>\n";
+				echo "No devices found at this location.<BR>\n";
 			}
 			
 			echo "<BR>\n";
