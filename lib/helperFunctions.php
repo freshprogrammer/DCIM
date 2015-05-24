@@ -304,7 +304,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		echo $result;
 	}
 	
-	function CreateDataTableHeader($headers, $showTech=false, $showEditAndQA=false)
+	function CreateDataTableHeader($headers, $showTech=false, $showEdit=false, $showQA=false)
 	{
 		$result = "<table class='data-table'>\n";
 		$result .= "<thead>\n";
@@ -316,9 +316,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		
 		if($showTech)
 			$result .= "<th class='date-table-subheadercell'>Tech</th>\n";
-		if($showEditAndQA)
+		if($showEdit)
 		{
 			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>Edit</th>\n";
+		}
+		if($showQA)
+		{
 			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>QA</th>\n";
 		}
 		$result .= "</tr>\n";

@@ -2908,7 +2908,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td colspan=2><table width=100%><tr>
 							<td align=left>
-								<button id='EditLocation_deletebutton' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+								<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
 							</td>
 							<td align='right'>
 								<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
@@ -3968,7 +3968,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$customerLocations  = implode(" & ",$locationArray);
 			}
 			
-			
 			//select empty as customer to keep return results to match search query
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
 			FROM dcim_badge AS b 
@@ -4006,9 +4005,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"),false,false);
+				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"));
 			else
-				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4334,9 +4333,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"),false,false);
+				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"));
 			else
-				echo CreateDataTableHeader(array(		   "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array(		   "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4793,7 +4792,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$searchTitle = "$site $roomFullName Location(s)";
 			
 			if($showEmpty)
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.visible, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 					FROM dcim_location AS l
 						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
@@ -4803,7 +4802,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						AND l.visible='T'
 					ORDER BY r.name, l.name";
 			else
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.visible, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -4824,7 +4823,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $visible, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
 			$count = $stmt->num_rows;
 			
 			if($count>0)
@@ -4835,12 +4834,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if(CustomFunctions::UserHasLocationPermission())
 				{
 					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-					$params = "true, -1, $roomID, '$jsSafeName', '', '', 0, 'N', 0, 0, 0, 0, ''";
+					$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
 					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php 
 				}
 				echo "<BR>";
 				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, false, false);
 				
 				//list result data
 				$oddRow = false;
@@ -4861,6 +4860,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+					if(false && CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+					{
+						$jsSafeName = MakeJSSafeParam($location);
+						$jsSafeAltName = MakeJSSafeParam($altName);
+						$jsSafeNote = MakeJSSafeParam($note);
+						//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+						$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					
+						?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
+									<?php 
+					}
 					echo "</tr>";
 				}
 				echo "</table>";
@@ -4941,7 +4951,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission());
+			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
 			
 			//list result data
 			$oddRow = false;
@@ -5139,7 +5149,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<BR>";
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission());
+			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -5559,7 +5569,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$tableWithAllData = "";
 			$tableWithActiveData = "";
 
-			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission());
+			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5725,7 +5735,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission());
+			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$lastDevicePortID = -1;
