@@ -164,16 +164,16 @@
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `visible` ,
-					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `altname`";
+					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `name` ,
+					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `visible`";
 			$cmdl = "ALTER TABLE  `dcimlog_location`
 					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ,
 					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
 					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
 					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
 					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `visible` ,
-					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `altname`";
+					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `name` ,
+					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `visible`";
 			ExecuteThis("UP1_3M",$cmdm);
 			ExecuteThis("UP1_3L",$cmdl);
 			

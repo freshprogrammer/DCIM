@@ -2879,12 +2879,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Left:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='0' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
-							<span class=inputTooltip>Distance from left room edge to back left corner of location (feet)</span></div>
+								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from left room edge to back left corner of location in feet (negative for distance from right wall)</span></div>
 							Foreward:
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='0' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
-							<span class=inputTooltip>Distance from far room edge to back left corner of location (feet)</span></div>
+								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from far room edge to back left corner of location in feet (negative for distance from close wall)</span></div>
 						</td>
 					</tr>
 					<tr>
