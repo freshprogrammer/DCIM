@@ -208,6 +208,11 @@
 			$redirectPage = ProcessCircuitAction($action);
 			$tookAction = true;
 		}
+		else if($action==="Location_Add" || $action==="Location_Edit" || $action==="Location_Delete")
+		{
+			$redirectPage = ProcessLocationAction($action);
+			$tookAction = true;
+		}
 		else if($action==="QA_Record")
 		{
 			$redirectPage = ProcessQAAction($action);
@@ -1032,6 +1037,217 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+	}
+	
+	function ProcessLocationAction($action)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$valid = true;
+		
+		$add = $action==="Location_Add";
+		$delete = $action==="Location_Delete";
+		
+		$locationID = GetInput("locationid");
+		$roomID = GetInput("roomid");
+		$name = GetInput("name");
+		$altName = GetInput("altname");
+		$type = GetInput("type");
+		$units = GetInput("units");
+		$orientation = GetInput("orientation");
+		$xPos = GetInput("xpos");
+		$yYos = GetInput("ypos");
+		$width = GetInput("width");
+		$depth = GetInput("depth");
+		$notes = GetInput("notes");
+
+		if(!$delete)
+		{
+			if($valid)$valid = ValidLocationName($name);
+			if($valid)$valid = ValidLocationAltName($altName);
+			if($valid)$valid = ValidLocationType($type);
+			if($valid)$valid = ValidLocationUnits($units);
+			if($valid)$valid = ValidLocationOrientation($orientation);
+			if($valid)$valid = ValidLocationXPos($xPos);
+			if($valid)$valid = ValidLocationYPos($yPos);
+			if($valid)$valid = ValidLocationWidth($width);
+			if($valid)$valid = ValidLocationDepth($depth);
+			if($valid)$valid = ValidNotes($notes);
+		}
+		
+		//validate parent records exist
+		if(!$add)
+			if($valid)$valid = ValidLocation($locationID, true);
+		if($valid)$valid = ValidRoom($roomID, true);
+		
+		//validate that this is not a duplicate name within this room
+		
+		//-------------------------------------//-------------------------------------//-------------------------------------//-------------------------------------//-------------------------------------
+		//STUB
+		$errorMessage[]="ProcessLocationAction() Stub function (add=$add del=$delete valid=$valid); - END";
+		return;
+		/*
+		if($valid && $delete)
+		{
+			//validate badge exists and status is R or D
+			$valid = false;
+			$passedDBChecks = false;
+			$query = "SELECT badgeid, status FROM dcim_badge WHERE badgeid=?";
+				
+			if (!($stmt = $mysqli->prepare($query)))
+			{
+				$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{
+				$stmt->bind_Param('i', $badgeID);
+				$stmt->execute();
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+		
+				if($count==1)
+				{
+					$stmt->bind_result($foundBadgeID,$foundStatus);
+					$stmt->fetch();
+						
+					$passedDBChecks = ($foundStatus=="R" || $foundStatus=="D");
+						
+					if(!$passedDBChecks)
+						$errorMessage[] = "Error: Badge is in invalid status to be deleted.";
+				}
+				else if($count>1)
+					$errorMessage[] = "Error: Multiple badges with ID#$badgeID found.";
+				else if($count>1)
+					$errorMessage[] = "Error: Badge with ID#$badgeID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//do actions
+		if($valid)
+		{
+			$updateAdditionalFields = "";
+			$enroll = false;
+			if($status==="E")
+			{
+				$enroll = true;
+				$status="A";
+			}
+				
+			if($add)
+			{
+				$handDate = "'0000-00-00'";
+				if($enroll)
+					$handDate = "CURDATE()";
+					
+				$query = "INSERT INTO dcim_badge
+					(hno,name,badgeno,status,issue,hand,edituser,editdate)
+					VALUES(?,?,?,?,?,".$handDate.",?,CURRENT_TIMESTAMP)";
+					
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{//					   hnbsiu
+					$stmt->bind_Param('issssi', $hNo, $name, $badgeNo, $status, $issue, $userID);
+						
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute badge add (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully added badge (H".$hNo.",".$name.").";
+							LogDBChange("dcim_badge",-1,"I","hno='$hNo' AND name='$name' AND badgeno='$badgeNo'");
+						}
+						else
+						{
+							$errorMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+			}
+			else if($delete)
+			{
+				if(CustomFunctions::UserHasBadgeDeletePermission())
+				{
+					$query = "DELETE FROM dcim_badge WHERE badgeid=? LIMIT 1";
+		
+					if (!($stmt = $mysqli->prepare($query)))
+						$errorMessage[] = "Process Badge Delete Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{
+						$stmt->bind_Param('i', $badgeID);
+		
+						if (!$stmt->execute())//execute
+							$errorMessage[] = "Failed to execute Badge Delete '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
+						else
+						{
+							$affectedCount = $stmt->affected_rows;
+							$totalAffectedCount += $affectedCount;
+							if($affectedCount==1)
+							{
+								$resultMessage[] = "Successfully Deleted Badge.";
+								LogDBChange("dcim_badge",$badgeID,"D");
+							}
+							else
+								$errorMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+				else
+				{
+					$errorMessage[] = "Your do not have permission to delete badges";
+				}
+			}
+			else
+			{
+				if($pastStatus==="A" && $status==="R")
+				{
+					//changeing status to returned
+					$updateAdditionalFields = $updateAdditionalFields.", returned=CURDATE()"	;
+				}
+				else if($enroll)
+					$updateAdditionalFields = $updateAdditionalFields.", hand=CURDATE()";
+		
+		
+				$query = "UPDATE dcim_badge
+					SET name=?, badgeno=?, status=?, issue=?".$updateAdditionalFields."
+					WHERE badgeid=?
+					LIMIT 1";
+		
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				else
+				{
+					$stmt->bind_Param('ssssi', $name, $badgeNo, $status, $issue, $badgeID);
+						
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute badge edit (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully edited badge (H".$hNo.",".$name."). $totalAffectedCount records updated.";
+							UpdateRecordEditUser("dcim_badge","badgeid",$badgeID);//do this seperate to distinquish actual record changes from identical updates
+							LogDBChange("dcim_badge",$badgeID,"U");
+						}
+						else
+						{
+							$resultMessage[] = "Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+			}
+		}*/
 	}
 	
 	function ProcessSubnetAction($action)
@@ -2857,7 +3073,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Misc</option>
 								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Rack</option>
 							</select>
-							Units:<input id=EditLocation_units type='number' tabindex=5 size=6 name='size' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+							Units:<input id=EditLocation_units type='number' tabindex=5 size=6 name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
 						</td>
 					</tr>
 					<tr>
