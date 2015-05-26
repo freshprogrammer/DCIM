@@ -1559,7 +1559,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 
 	function ValidLocationName($input)
 	{
-		return ValidString($input,"Location name",3,50);
+		return ValidString($input,"Location name",2,50);
 	}
 	
 	function ValidLocationAltName($input)

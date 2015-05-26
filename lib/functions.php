@@ -1047,23 +1047,32 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $resultMessage;
 		
 		$valid = true;
+		$totalAffectedCount = 0;
 		
-		$add = $action==="Location_Add";
-		$delete = $action==="Location_Delete";
+		if(!CustomFunctions::UserHasLocationPermission())
+		{
+			$valid = false;
+			$errorMessage[] = "Your do not have permission to edit locations. Please contact your administrator.";
+		}
+		else
+		{
+			$add = $action==="Location_Add";
+			$delete = $action==="Location_Delete";
+			
+			$locationID = GetInput("locationid");
+			$roomID = GetInput("roomid");
+			$name = trim(GetInput("name"));
+			$altName = trim(GetInput("altname"));
+			$type = GetInput("type");
+			$units = GetInput("units");
+			$orientation = GetInput("orientation");
+			$xPos = GetInput("xpos");
+			$yPos = GetInput("ypos");
+			$width = GetInput("width");
+			$depth = GetInput("depth");
+			$notes = trim(GetInput("notes"));
+		}
 		
-		$locationID = GetInput("locationid");
-		$roomID = GetInput("roomid");
-		$name = GetInput("name");
-		$altName = GetInput("altname");
-		$type = GetInput("type");
-		$units = GetInput("units");
-		$orientation = GetInput("orientation");
-		$xPos = GetInput("xpos");
-		$yYos = GetInput("ypos");
-		$width = GetInput("width");
-		$depth = GetInput("depth");
-		$notes = GetInput("notes");
-
 		if(!$delete)
 		{
 			if($valid)$valid = ValidLocationName($name);
@@ -1084,44 +1093,54 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidRoom($roomID, true);
 		
 		//validate that this is not a duplicate name within this room
-		
-		//-------------------------------------//-------------------------------------//-------------------------------------//-------------------------------------//-------------------------------------
-		//STUB
-		$errorMessage[]="ProcessLocationAction() Stub function (add=$add del=$delete valid=$valid); - END";
-		return;
-		/*
-		if($valid && $delete)
+		if($valid)
 		{
-			//validate badge exists and status is R or D
-			$valid = false;
-			$passedDBChecks = false;
-			$query = "SELECT badgeid, status FROM dcim_badge WHERE badgeid=?";
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT l.locationid, l.name, l.altname FROM dcim_location AS l WHERE l.roomid=? AND locationid!=? AND (l.name=? OR l.altname=?);";
 				
-			if (!($stmt = $mysqli->prepare($query)))
-			{
-				$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-			}
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iiss', $roomID,$locationID,$name,$name) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
 			else
 			{
-				$stmt->bind_Param('i', $badgeID);
-				$stmt->execute();
 				$stmt->store_result();
-				$count = $stmt->num_rows;
-		
-				if($count==1)
-				{
-					$stmt->bind_result($foundBadgeID,$foundStatus);
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$stmt->bind_result($foundDeviceID, $foundName, $foundAltName);
 					$stmt->fetch();
-						
-					$passedDBChecks = ($foundStatus=="R" || $foundStatus=="D");
-						
-					if(!$passedDBChecks)
-						$errorMessage[] = "Error: Badge is in invalid status to be deleted.";
+					if(strlen($foundAltName)>0)
+						$foundAltName = " ('".MakeHTMLSafe($foundAltName)."')";
+					$errorMessage[] = "Error: Existing location named '".MakeHTMLSafe($foundName)."'$foundAltName found, ID:$foundDeviceID.";
 				}
-				else if($count>1)
-					$errorMessage[] = "Error: Multiple badges with ID#$badgeID found.";
-				else if($count>1)
-					$errorMessage[] = "Error: Badge with ID#$badgeID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//validate This is a lone location record with no power or devices linked to it so it can be deleted
+		if($delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
+							FROM dcimlog_device AS d 
+							WHERE d.locationid=?
+					UNION
+						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
+							FROM dcimlog_powerloc AS pl
+							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
+							WHERE pl.locationid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $locationID,$locationID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$errorMessage[] = "Error: Cannot delete this location because there are ".($stmt->num_rows)." power/device records linked to it.";
+				}
 			}
 			$valid = $passedDBChecks;
 		}
@@ -1129,125 +1148,80 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//do actions
 		if($valid)
 		{
-			$updateAdditionalFields = "";
-			$enroll = false;
-			if($status==="E")
-			{
-				$enroll = true;
-				$status="A";
-			}
-				
 			if($add)
 			{
-				$handDate = "'0000-00-00'";
-				if($enroll)
-					$handDate = "CURDATE()";
-					
-				$query = "INSERT INTO dcim_badge
-					(hno,name,badgeno,status,issue,hand,edituser,editdate)
-					VALUES(?,?,?,?,?,".$handDate.",?,CURRENT_TIMESTAMP)";
-					
-				if (!($stmt = $mysqli->prepare($query)))
+				$query = "INSERT INTO dcim_location
+					(roomid,name,altname,type,units,xpos,ypos,width,depth,orientation,visible,note,edituser,editdate)
+					VALUES(?,?,?,?,?,?,?,?,?,?,'T',?,?,CURRENT_TIMESTAMP)";
+				//                                                             rnatuxywdonu
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes,$userID))
 					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
-				{//					   hnbsiu
-					$stmt->bind_Param('issssi', $hNo, $name, $badgeNo, $status, $issue, $userID);
-						
-					if (!$stmt->execute())//execute
-						//failed (errorNo-error)
-						$errorMessage[] = "Failed to execute badge add (" . $stmt->errno . "-" . $stmt->error . ").";
+				{
+					if (!$stmt->execute())
+						$errorMessage[] = "Failed to execute location add (" . $stmt->errno . "-" . $stmt->error . ").";
 					else
 					{
 						$affectedCount = $stmt->affected_rows;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-							$resultMessage[] = "Successfully added badge (H".$hNo.",".$name.").";
-							LogDBChange("dcim_badge",-1,"I","hno='$hNo' AND name='$name' AND badgeno='$badgeNo'");
+							$resultMessage[] = "Successfully added location '".$name."' to Room#$roomID.";
+							LogDBChange("dcim_location",-1,"I","roomid=$roomID AND name='$name'");
 						}
 						else
-						{
 							$errorMessage[] = "Success, but affected $affectedCount rows.";
-						}
 					}
 				}
 			}
 			else if($delete)
 			{
-				if(CustomFunctions::UserHasBadgeDeletePermission())
-				{
-					$query = "DELETE FROM dcim_badge WHERE badgeid=? LIMIT 1";
-		
-					if (!($stmt = $mysqli->prepare($query)))
-						$errorMessage[] = "Process Badge Delete Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
-					else
-					{
-						$stmt->bind_Param('i', $badgeID);
-		
-						if (!$stmt->execute())//execute
-							$errorMessage[] = "Failed to execute Badge Delete '".UserHasAdminPermission()."' (" . $stmt->errno . "-" . $stmt->error . ")";
-						else
-						{
-							$affectedCount = $stmt->affected_rows;
-							$totalAffectedCount += $affectedCount;
-							if($affectedCount==1)
-							{
-								$resultMessage[] = "Successfully Deleted Badge.";
-								LogDBChange("dcim_badge",$badgeID,"D");
-							}
-							else
-								$errorMessage[] = "Success, but affected $affectedCount rows.";
-						}
-					}
-				}
+				$query = "DELETE FROM dcim_location WHERE locationid=? LIMIT 1";
+				
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $locationID) || !$stmt->execute())
+					$errorMessage[] = "Process Location Delete Prepare failed: ($action-4) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
 				{
-					$errorMessage[] = "Your do not have permission to delete badges";
+					$affectedCount = $stmt->affected_rows;
+					$totalAffectedCount += $affectedCount;
+					if($affectedCount==1)
+					{
+						$resultMessage[] = "Successfully Deleted Location#$locationID '".$name."' to Room#$roomID..";
+						LogDBChange("dcim_location",$locationID,"D");
+					}
+					else
+						$errorMessage[] = "Success, but affected $affectedCount rows.";
 				}
 			}
 			else
 			{
-				if($pastStatus==="A" && $status==="R")
-				{
-					//changeing status to returned
-					$updateAdditionalFields = $updateAdditionalFields.", returned=CURDATE()"	;
-				}
-				else if($enroll)
-					$updateAdditionalFields = $updateAdditionalFields.", hand=CURDATE()";
-		
-		
-				$query = "UPDATE dcim_badge
-					SET name=?, badgeno=?, status=?, issue=?".$updateAdditionalFields."
-					WHERE badgeid=?
+				$query = "UPDATE dcim_location
+					SET roomid=?,name=?,altname=?,type=?,units=?,xpos=?,ypos=?,width=?,depth=?,orientation=?,note=?
+					WHERE locationid=?
 					LIMIT 1";
-		
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				//                                                             rnatuxywdonk
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes, $locationID))
+					$errorMessage[] = "Process Location Update Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				else
 				{
-					$stmt->bind_Param('ssssi', $name, $badgeNo, $status, $issue, $badgeID);
-						
 					if (!$stmt->execute())//execute
-						//failed (errorNo-error)
-						$errorMessage[] = "Failed to execute badge edit (" . $stmt->errno . "-" . $stmt->error . ").";
+						$errorMessage[] = "Failed to execute location edit (" . $stmt->errno . "-" . $stmt->error . ").";
 					else
 					{
 						$affectedCount = $stmt->affected_rows;
 						$totalAffectedCount += $affectedCount;
 						if($affectedCount==1)
 						{
-							$resultMessage[] = "Successfully edited badge (H".$hNo.",".$name."). $totalAffectedCount records updated.";
-							UpdateRecordEditUser("dcim_badge","badgeid",$badgeID);//do this seperate to distinquish actual record changes from identical updates
-							LogDBChange("dcim_badge",$badgeID,"U");
+							$resultMessage[] = "Successfully edited location '".$name."' to Room#$roomID.. $totalAffectedCount records updated.";
+							UpdateRecordEditUser("dcim_location","locationid",$locationID);//do this seperate to distinquish actual record changes from identical updates
+							LogDBChange("dcim_location",$locationID,"U");
 						}
 						else
-						{
 							$resultMessage[] = "Success, but affected $affectedCount rows.";
-						}
 					}
 				}
 			}
-		}*/
+		}
 	}
 	
 	function ProcessSubnetAction($action)
@@ -2042,6 +2016,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
+				//TODO handle errors better
 				$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
@@ -2072,7 +2047,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$query = "INSERT INTO dcim_device
 					(hno, locationid, name, member, note, unit, type, size, status, asset, serial, model, edituser, editdate) 
 					VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-					
+				
+				//TODO handle errors better
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Insert Prepare failed: ($action -2) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
@@ -2090,7 +2066,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						if($affectedCount==1)
 						{
-							
 							//worked, now look up that record to create ports for it
 							LogDBChange("dcim_device",-1,"I","hno='$hNo' AND name='$deviceName' AND member='$member'");
 							//get deviceID
@@ -2784,7 +2759,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullName, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2799,13 +2774,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $altName, $type, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $locationID, $location, $altName, $type, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
 		{
 			$stmt->fetch();
-			$fullLocationName = FormatLocation($site, $room, $location);
+			$fullLocationName = FormatLocation($site, $roomFullName, $location);
 			
 			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
@@ -2844,6 +2819,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//details
 			echo "<table>\n";
 			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Room:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
+			echo "</td>\n";
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Type:</b>";
 			echo "</td>\n";
