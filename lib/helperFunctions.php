@@ -684,12 +684,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $rotation;
 	}
 	
-	function Oritentation($o)
+	function Orientation($o)
 	{//relative to parent
-		if($o=="N") return "North";
-		else if($o=="E") return "East";
-		else if($o=="S") return "South";
-		else if($o=="W") return "West";
+		if($o=="N") return "Normal";
+		else if($o=="E") return "Right";
+		else if($o=="S") return "Backwards";
+		else if($o=="W") return "Left";
 		else return "Unknown";
 	}
 	

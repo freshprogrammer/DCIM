@@ -2780,13 +2780,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($locationFound)
 		{
 			$stmt->fetch();
-			$fullLocationName = FormatLocation($site, $roomFullName, $location);
+			$fullLocationName = FormatLocation($site, $room, $location);
 			
 			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-			
+
+			$pos = "$xPos x $yPos";
 			$size = "$width x $depth feet";
 			   
 			echo "<table width=100%><tr>\n";
@@ -2825,11 +2826,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
 			echo "</td>\n";
+
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Type:</b>";
+			echo "<b>Position:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo LocationType($type);
+			echo "$pos";
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
@@ -2841,6 +2843,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			echo "</tr>\n";
 			echo "<tr>\n";
+
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Type:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationType($type);
+			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Size:</b>";
@@ -2850,11 +2859,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Orientation:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+			echo "</td>\n";
+			
+			/*echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Visible:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
-			echo "</td>\n";
+			echo "</td>\n";*/
 			
 			echo "</tr></table>\n";
 		}
