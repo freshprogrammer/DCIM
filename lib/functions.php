@@ -2983,6 +2983,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		
 		//-default values - never seen
+		$action = "";
 		$actionText = "Addy";
 		$roomIDInput = 2;
 		$nameInput = "location";
@@ -3016,6 +3017,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
+			$roomOptions = "";
 			while ($stmt->fetch())
 			{
 				$fullRoomName = "$site $roomFullName";

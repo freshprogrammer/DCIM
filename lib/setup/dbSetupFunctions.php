@@ -87,7 +87,7 @@
 			if(IsDatabaseUpToDate_Update1(true,false)==-1)
 			{
 				// do legacy fields still exist
-				if(DoesFieldExist("dcim_location","colo"))
+				if(DoesFieldExist("dcim_location","size"))
 					return 1;// good to update
 				else
 					return -1;//already up to date

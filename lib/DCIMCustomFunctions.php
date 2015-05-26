@@ -142,6 +142,7 @@
 			global $mysqli;
 			global $errorMessage;
 			global $pageSubTitle;
+			global $userID;
 			
 			$pageSubTitle = "Home";
 			
@@ -224,7 +225,7 @@
 		{
 			$borderThickness = 4;
 			//key percentages for drawing site rectangles
-			if(siteID==0)
+			if($siteID==0)
 			{
 				$rightTopX = 37;
 				$rightTopY = 12;
@@ -323,13 +324,18 @@
 			$borderThickness = 4;
 		
 			//calculated
+			$relativeX = 0;
+			$relativeY = 0;
+			$relativeWidth = 0;
+			$relativeDepth = 0;
+			$rotationTransform = "";
 			if($parentWidth > 0 && $parentDepth>0)
 			{
 				$relativeX = 100*$xPos/$parentWidth;
 				$relativeY= 100*$yPos/$parentDepth;
 	
 				$rotation = OritentationToDegrees($orientation);
-				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
+				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 				
 				//adjust dimentions if rotated
 				if($orientation=="E" || $orientation=="W")
@@ -534,7 +540,7 @@
 
 				$rightX = $leftWidth+$midWidth;
 				$midTopDepth = $cornerDepthInset2-$cornerDepthInset1;
-				$midBottomDepth = 100-$leftTopDepth - (-1*$cornerDepthInset2);
+				$midBottomDepth = 100- (-1*$cornerDepthInset2);
 				$leftBottomDepth = 100-$cornerDepthInset1;
 				$rightBottomDepth = 100-$cornerDepthInset2;
 
