@@ -2865,13 +2865,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 			echo "</td>\n";
 			
-			/*echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Visible:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
-			echo "</td>\n";*/
-			
 			echo "</tr></table>\n";
 		}
 		else 
@@ -4841,7 +4834,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-header'>Room</div>\n";
 		echo "<div class='panel-body'>\n\n";
 		
-		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
+		$query = "SELECT s.siteid, s.name AS site, s.fullname, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
 			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE r.roomid=?";
@@ -4855,7 +4848,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
 		$roomFound = $stmt->num_rows==1;
 		
 		if($roomFound)
@@ -4868,7 +4861,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-			
+
+			$pos = "$xPos x $yPos";
 			$size = "$width x $depth feet";
 			
 			echo "<table width=100%><tr>\n";
@@ -4898,25 +4892,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</tr>\n";
 			echo "</table>\n";
 			
-			//details
+			//details//details
 			echo "<table>\n";
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Type:</b>";
+			echo "<b>Site:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo LocationType($type);
+			echo $siteFullName;
+			echo "</td>\n";
+
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Position:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "$pos";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			/*echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Units:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo $units;
-			echo "</td>\n";
+			echo "</td>\n";*/
 			
 			echo "</tr>\n";
 			echo "<tr>\n";
+
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Cust Access:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo RoomCustAccess($custAccess);
+			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Size:</b>";
@@ -4926,10 +4934,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Visible:</b>";
+			echo "<b>Orientation:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
+			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 			echo "</td>\n";
 			
 			echo "</tr></table>\n";
