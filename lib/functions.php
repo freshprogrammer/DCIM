@@ -2786,10 +2786,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-
-			$pos = "$xPos x $yPos";
-			$size = "$width x $depth feet";
-			   
+			
+			$pos = FormatSizeInFeet($xPos,$yPos);
+			$size = FormatSizeInFeet($width,$depth);
+			
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
 			echo "<span class='customerName'>$fullLocationName</span>\n";
@@ -4862,9 +4862,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-
-			$pos = "$xPos x $yPos";
-			$size = "$width x $depth feet";
+			
+			$pos = FormatSizeInFeet($xPos,$yPos);
+			$size = FormatSizeInFeet($width,$depth);
 			
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
@@ -5012,7 +5012,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$searchTitle = "$site $roomFullName Location(s)";
 			
 			if($showEmpty)
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
 					FROM dcim_location AS l
 						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
@@ -5021,7 +5021,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					WHERE r.roomid=?
 					ORDER BY r.name, l.name";
 			else
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -5042,7 +5042,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember);
 			$count = $stmt->num_rows;
 			
 			if($count>0)
@@ -5058,7 +5058,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				echo "<BR>";
 				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, false, false);
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, true, true);
 				
 				//list result data
 				$oddRow = false;
@@ -5070,6 +5070,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					$fullLocationName = FormatLocation($site, $room, $location);
 					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					$pos = FormatSizeInFeet($xPos,$yPos);//not used
+					$size = FormatSizeInFeet($width,$depth);
 					
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -5079,7 +5081,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-					if(false && CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+					if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 					{
 						$jsSafeName = MakeJSSafeParam($location);
 						$jsSafeAltName = MakeJSSafeParam($altName);
@@ -5089,6 +5091,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 						?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
 									<?php 
+						
+						echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate);
 					}
 					echo "</tr>";
 				}
