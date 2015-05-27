@@ -2851,6 +2851,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<table>\n";
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Alt Name:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo MakeHTMLSafe($altName);
+			echo "</td>\n";
+			echo "</tr>\n";
+			
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Room:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
@@ -2893,6 +2902,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+			echo "</td>\n";
+
+			//device notes
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails' valign='top'>\n";
+			echo "<b>Notes:</b>";
+			echo "</td>\n";
+			echo "<td valign=top align=left colspan='5'>\n";
+			echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($note)."</textarea>";
 			echo "</td>\n";
 			
 			echo "</tr></table>\n";
