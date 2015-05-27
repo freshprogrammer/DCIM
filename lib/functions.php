@@ -6431,12 +6431,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
-	function CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
+	function CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$result = "<style>\n";
+		
+		$rotation = OritentationToDegrees($orientation);
+		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		
 		$standAlonePage = !($relativeWidth > 0 || $relativeDepth>0);
 		
@@ -6452,7 +6455,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$heightMax = 500;
+			$heightMax = 650;
 			$widthMax = 948;
 			
 			$renderHeight = $heightMax;
@@ -6510,10 +6513,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				$relativeX = 100*$xPos/$parentWidth;
 				$relativeY= 100*$yPos/$parentDepth;
-		
-				$rotation = OritentationToDegrees($orientation);
-				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);";
-					
+				
 				//adjust dimentions if rotated
 				if($orientation=="E" || $orientation=="W")
 				{
@@ -6539,7 +6539,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$roomCustomStyle = "";
 				$roomCustomHTML = "";
 				
-				$result .= CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $locationTypeClass, $roomCustomHTML, $roomCustomStyle);
+				$result .= CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $locationTypeClass, $roomCustomHTML, $roomCustomStyle);
 			}
 		}
 		
@@ -6652,8 +6652,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $locationClass, $locationCustomHTML="", $locationCustomStyle="")
+	function CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $locationClass, $locationCustomHTML="", $locationCustomStyle="")
 	{
+		$rotation = OritentationToDegrees($orientation);
+		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		$title_rotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+
+		$titleWidth = 100;
+		$titleHeight = 100;
+		if($orientation=="E" || $orientation=="W")
+		{
+			$titleWidth = 100*$relativeDepth/$relativeWidth;
+			$titleHeight = 100*$relativeWidth/$relativeDepth;
+		}
+		
 		$result = "<style>\n";
 		$result .= "#location$locationID {\n";
 		$result .= "	left: $relativeX%;\n";
@@ -6661,6 +6673,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "	width: $relativeWidth%;\n";
 		$result .= "	height: $relativeDepth%;\n";
 		$result .= $rotationTransform;
+		$result .= "}\n";
+		$result .= "#location".$locationID."_title {\n";//flip all values for title
+		$result .= "	width: $titleWidth%;\n";
+		$result .= "	height: $titleHeight%;\n";
+		$result .= $title_rotationTransform;
+
+		if($orientation=="E")
+			$result .= "	top: 100%;\n";
+		else if($orientation=="S")
+		{
+			$result .= "	top: 100%;\n";
+			$result .= "	left: 100%;\n";
+		}
+		else if($orientation=="W")
+			$result .= "	left: 100%;\n";
+		
 		$result .= "}\n";
 		$result .= $locationCustomStyle;
 		$result .= "</style>\n";
@@ -6671,7 +6699,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= $locationCustomHTML;
 		else
 		{
-			$result .= "<div id='' class='$locationClass'></div>\n";
+			$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
 			//$result .= "<span>$name</span>\n";
 		}
 		$result .= "</a>\n";

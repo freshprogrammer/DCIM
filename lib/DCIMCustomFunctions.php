@@ -328,14 +328,13 @@
 			$relativeY = 0;
 			$relativeWidth = 0;
 			$relativeDepth = 0;
-			$rotationTransform = "";
-			if($parentWidth > 0 && $parentDepth>0)
+			
+			$renderingWithinParent = ($parentWidth > 0 && $parentDepth>0);
+			
+			if($renderingWithinParent)
 			{
 				$relativeX = 100*$xPos/$parentWidth;
 				$relativeY= 100*$yPos/$parentDepth;
-	
-				$rotation = OritentationToDegrees($orientation);
-				$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 				
 				//adjust dimentions if rotated
 				if($orientation=="E" || $orientation=="W")
@@ -348,6 +347,10 @@
 					$relativeWidth = 100*$width/$parentWidth;
 					$relativeDepth= 100*$depth/$parentDepth;
 				}
+			}
+			else
+			{
+				$orientation = "N";
 			}
 			
 			if($custAccess=="T")//define room color
@@ -585,7 +588,7 @@
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
 			
-			return CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $rotationTransform, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
+			return CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
 		}//end CreateRoomLayout()
 	}// end DCIMCustomFunctions class
 ?>

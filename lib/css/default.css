@@ -609,10 +609,23 @@ h2 {
 	width: 100%;
 	border-style: hidden;
 }
-.roomContainer, .roomBackground, .roomBorders, .siteBackground, .caBackground, .roomBackground, .locationContainer, .locationEmptyBackground, .locationFullBackground {
+.roomContainer, .roomBackground, .roomBorders, .siteBackground, .caBackground, .roomBackground, .locationContainer, .locationEmptyBackground, .locationFullBackground, .locationTitle {
 	position: absolute;
 	width:100%;
 	height:100%;
+}
+.locationTitle{
+	/* white-space: nowrap;*/
+	overflow: hidden;
+	text-overflow: clip;
+	color: black;
+	/* text-shadow: 2px 2px #FFF;*/
+	/* height: initial; */
+	/* top: 50%;*/
+	/* transform: translateY(-50%); */
+	transform-origin: 0 0;c
+	text-align: center;
+	font-weight: bold;
 }
 .siteBackground, .roomBorders {
 	border-style: solid;
@@ -662,10 +675,10 @@ h2 {
 	background-color: rgb(0, 0, 213);
 }
 .locationEmptyBackground{
-	background-color: pink;
+	background-color: #BBB;
 }
 .locationFullBackground{
-	background-color: purple;
+	background-color: #888;
 }
 .locationEmptyBackground, .locationFullBackground{
 	border-style: solid;

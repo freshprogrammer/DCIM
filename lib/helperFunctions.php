@@ -676,7 +676,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	{
 		$rotation = 0;
 		if($o=="W")
-			$rotation = -90;
+			$rotation = 270;
 		else if($o=="E")
 			$rotation = 90;
 		else if($o=="S")
