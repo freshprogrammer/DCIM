@@ -1092,8 +1092,38 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($valid)$valid = ValidLocation($locationID, true);
 		if($valid)$valid = ValidRoom($roomID, true);
 		
+		//validate room id and look up parent dimentions
+		if(!$delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT r.roomid, r.width, r.depth
+						FROM dcim_room AS r
+						WHERE r.roomid=?;";
+				
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==1;
+				
+				if($passedDBChecks)
+				{//flip xpos to interior of room if negative
+					$stmt->bind_result($roomID, $parentWidth, $parentDepth);
+					$stmt->fetch();
+					if($xPos<0)
+						$xPos = $parentWidth+$xPos;
+					if($yPos<0)
+						$yPos = $parentDepth+$yPos;
+				}
+				else
+					$errorMessage[] = "Error: Room ID#$roomID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
+		
 		//validate that this is not a duplicate name within this room
-		if($valid)
+		if(!$delete && $valid)
 		{
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$query = "SELECT l.locationid, l.name, l.altname FROM dcim_location AS l WHERE l.roomid=? AND locationid!=? AND (l.name=? OR l.altname=?);";
