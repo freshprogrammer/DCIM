@@ -4518,7 +4518,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
 				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4526,7 +4526,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('ssssss', $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('sssssss', $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
@@ -4569,9 +4569,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"));
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device"));
 			else
-				echo CreateDataTableHeader(array(		   "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4592,9 +4592,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				echo "<tr class='$rowClass'>";
+				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				if(!$search)
 				{
