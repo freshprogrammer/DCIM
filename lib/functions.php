@@ -1048,6 +1048,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$valid = true;
 		$totalAffectedCount = 0;
+		$redirectPage = "";
 		
 		if(!CustomFunctions::UserHasLocationPermission())
 		{
@@ -1218,6 +1219,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					{
 						$resultMessage[] = "Successfully Deleted Location#$locationID '".$name."' to Room#$roomID..";
 						LogDBChange("dcim_location",$locationID,"D");
+						$redirectPage = "./?roomid=$roomID";
 					}
 					else
 						$errorMessage[] = "Success, but affected $affectedCount rows.";
@@ -1252,6 +1254,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+		return $redirectPage;
 	}
 	
 	function ProcessSubnetAction($action)
