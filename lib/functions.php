@@ -6635,8 +6635,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//breaks rectangle into 4  corner rectangles #1 - #4 with #1 in top left
 		//then set borders properly and background properly and disables the inset
 		//determines which corner based on inset values such that negative x inset is inset from the right
-		
-		$borderThickness = 4;
+		$borderThickness = CustomFunctions::$roomBorderThickness;
 		
 		$cornerNo = 1;//TL
 		if($cornerWidthInset<0)

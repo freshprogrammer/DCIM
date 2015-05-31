@@ -3,6 +3,10 @@
 	//NOTE many functions refferance the CustomFunctions class that is actualy a child of this. This is not ideal but using self doesnt work (link back to this class instead of possible child), and 'this' is not an option since these are static functions. PHP 5.3 added get_called_class() for this.c
 	class DCIMCustomFunctions
 	{
+		static $locationBorderThickness = 1;
+		static $roomBorderThickness = 3;
+		static $siteBorderThickness = 3;
+		
 		//these permissions are custom-ish so they are here so indivudual users can be given specific permissions (like if Tony was in charge of switch ports)
 		public static function UserHasDevPermission()
 		{//this is used to hide in development proceedures and other stuff above typical admin prilages like access to phpmyadmin
@@ -127,7 +131,6 @@
 		
 		public static function CreateNavigationQuickLinks()
 		{
-			//TODO this should be an actual room lookup not hardcoded roomids
 			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
@@ -193,7 +196,7 @@
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $width, $depth)
 		{
-			$borderThickness = 4;
+			$borderThickness = CustomFunctions::$siteBorderThickness;
 			//key percentages for drawing site rectangles
 			if($siteID==0)
 			{
@@ -291,7 +294,7 @@
 		
 		public static function CreateRoomCustomLayout($roomID, $name, $custAccess, &$roomCustomHTML, &$roomCustomStyle)
 		{//creates custom html and style for specific rooms - returned with ref passes variables roomCustomHTML and roomCustomStyle
-			$borderThickness = 4;
+			$borderThickness = CustomFunctions::$roomBorderThickness;
 			$roomTypeClass = RoomAccesClass($custAccess);
 			
 			//custom layouts

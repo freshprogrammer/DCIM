@@ -629,7 +629,7 @@ h2 {
 }
 .siteBackground, .roomBorders {
 	border-style: solid;
-	border-width: 4px;
+	border-width: 3px;
 	border-color: black;
 
 	box-sizing:border-box;
