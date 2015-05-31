@@ -6543,9 +6543,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		else
-		{
 			$orientation = "N";
-		}
+		
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		
@@ -6615,46 +6614,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				ORDER BY l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
-		{
 			$errorMessage[]= "CreateRoomLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
-		}
 		else
 		{
 			$stmt->store_result();
 			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer);
 				
 			while($stmt->fetch())
-			{
-				$relativeX = 100*$xPos/$parentWidth;
-				$relativeY= 100*$yPos/$parentDepth;
-				
-				//adjust dimentions if rotated
-				if($orientation=="E" || $orientation=="W")
-				{
-					$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
-					$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
-				}
-				else
-				{
-					$relativeWidth = 100*$width/$parentWidth;
-					$relativeDepth= 100*$depth/$parentDepth;
-				}
-				
-				if($deviceCount>0)
-				{
-					if(CustomFunctions::IsThisHNoInternal($hNo))
-						$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
-					else
-						$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
-					$locationTypeClass = "locationFullBackground";
-				}
-				else
-					$locationTypeClass = "locationEmptyBackground";
-				$roomCustomStyle = "";
-				$roomCustomHTML = "";
-				
-				$result .= CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $locationTypeClass, $roomCustomHTML, $roomCustomStyle);
-			}
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
 		}
 		
 		if(!$standAlonePage)$result .= "</a>\n";
@@ -6678,13 +6645,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$cornerNo=3;//BR
 		else if($cornerDepthInset<0)
 			$cornerNo=4;//BL
-
+		
 		$leftWidth = $cornerWidthInset;
 		$topHeight = $cornerDepthInset;
 		
 		if($cornerWidthInset<0)$leftWidth+=100;
 		if($cornerDepthInset<0)$topHeight+=100;
-
+		
 		$rightWidth = 100-$leftWidth;
 		$bottomHeight = 100-$topHeight;
 		
@@ -6720,7 +6687,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($cornerNo==1)$roomCustomStyle .= "	border-top-style: solid;\n";
 		if($cornerNo==3)$roomCustomStyle .= "	border-right-style: solid;\n";
 		$roomCustomStyle .= "}\n";
-
+		
 		if($cornerNo==2)
 		{//special case for this corner because corner 4(BL) is added last it would overlap the inner corner making it look bad 
 			$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomLeft'></div>\n";
@@ -6767,18 +6734,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $locationClass, $locationCustomHTML="", $locationCustomStyle="")
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth)
 	{
+		
+		$relativeX = 100*$xPos/$parentWidth;
+		$relativeY= 100*$yPos/$parentDepth;
+		
+		//adjust dimentions if rotated
+		if($orientation=="E" || $orientation=="W")
+		{
+			$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+			$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+		}
+		else
+		{
+			$relativeWidth = 100*$width/$parentWidth;
+			$relativeDepth= 100*$depth/$parentDepth;
+		}
+		
+		if($deviceCount>0)
+		{
+			if(CustomFunctions::IsThisHNoInternal($hNo))
+				$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
+			else
+				$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
+			$locationClass = "locationFullBackground";
+		}
+		else
+			$locationClass = "locationEmptyBackground";
+		
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		$title_rotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
-
+		
 		$titleWidth = 100;
 		$titleHeight = 100;
 		if($orientation=="E" || $orientation=="W")
 		{
-			$titleWidth = 100*$relativeDepth/$relativeWidth;
-			$titleHeight = 100*$relativeWidth/$relativeDepth;
+			$titleWidth= 100*($depth/$width);
+			$titleHeight = 100*($width/$depth);
 		}
 		
 		$result = "<style>\n";
@@ -6790,36 +6784,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= $rotationTransform;
 		$result .= "}\n";
 		$result .= "#location".$locationID."_title {\n";
-		$result .= "	width: calc($titleWidth% - 1px);\n";//minus 1px to account for border on parent, (should actualy be 2 but bottom is black on black and dont want minus more than I have to) 
-		$result .= "	height: calc($titleHeight% - 1px);\n";
+		$result .= "	width: $titleWidth%;\n"; 
+		$result .= "	height: $titleHeight%;\n";
 		$result .= $title_rotationTransform;
-
+		
 		if($orientation=="E")
 			$result .= "	top: 100%;\n";
-		else if($orientation=="S")
-		{
+		else if($orientation=="S"){
 			$result .= "	top: 100%;\n";
-			$result .= "	left: 100%;\n";
-		}
+			$result .= "	left: 100%;\n";}
 		else if($orientation=="W")
 			$result .= "	left: 100%;\n";
 		
 		$result .= "}\n";
-		$result .= $locationCustomStyle;
 		$result .= "</style>\n";
-
+		
 		$result .= "<div id='location$locationID' class='locationContainer'>\n";
 		$result .= "<a href='./?locationid=$locationID' title='$name'>\n";
-		if($locationCustomHTML)
-			$result .= $locationCustomHTML;
-		else
-		{
-			$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
-			//$result .= "<span>$name</span>\n";
-		}
+		$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
 		$result .= "</a>\n";
 		$result .= "</div>\n";
-		
 		return $result;
 	}
 ?>
