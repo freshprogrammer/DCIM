@@ -4881,126 +4881,125 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
-
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>Room</div>\n";
-		echo "<div class='panel-body'>\n\n";
 		
 		$query = "SELECT s.siteid, s.name AS site, s.fullname, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
 			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE r.roomid=?";
 		
-		if (!($stmt = $mysqli->prepare($query))) 
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute()) 
+			$errorMessage[]= "ShowRoomPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
 		{
-			//TODO hadnle errors better
-			echo "ShowRoomPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		$stmt->bind_Param('i', $roomID);
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
-		$roomFound = $stmt->num_rows==1;
-		
-		if($roomFound)
-		{
-			$stmt->fetch();
-			$fullRoomName = FormatLocation($site, $fullName, "");
-			$pageSubTitle = "$fullRoomName";
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
+			$roomFound = $stmt->num_rows==1;
 			
-			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+			if($roomFound)
 			{
-				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+				$stmt->fetch();
+				$fullRoomName = FormatLocation($site, $fullName, "");
+				$pageSubTitle = "$fullRoomName";
+				
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+				}
+				
+				$pos = FormatSizeInFeet($xPos,$yPos);
+				$size = FormatSizeInFeet($width,$depth);
+				
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>$fullRoomName</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				
+				echo "<table width=100%><tr>\n";
+				echo "<td align='left'>\n";
+				echo "<span class='customerName'>$fullName</span>\n";
+				echo "</td>\n";
+				
+				echo "<td align='right'>\n";
+				//edit Locationbutton - not visible till in edit mode
+				/*if(CustomFunctions::UserHasLocationPermission())
+				{
+					$jsSafeName = MakeJSSafeParam($location);
+					$jsSafeAltName = MakeJSSafeParam($altName);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+					<?php
+				}*/
+				//editMode button
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				}
+				echo "</td>\n";
+				echo "</tr>\n";
+				echo "</table>\n";
+				
+				//details//details
+				echo "<table>\n";
+				echo "<tr>\n";
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Site:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $siteFullName;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Position:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$pos";
+				echo "</td>\n";
+				
+				/*echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Units:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $units;
+				echo "</td>\n";*/
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Cust Access:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo RoomCustAccess($custAccess);
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Size:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$size";
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Orientation:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+				echo "</td>\n";
+				
+				echo "</tr></table>\n";
+				
+				//render room
+				echo CustomFunctions::CreateRoomLayout($roomID, 0, 0, $room , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
 			}
-			
-			$pos = FormatSizeInFeet($xPos,$yPos);
-			$size = FormatSizeInFeet($width,$depth);
-			
-			echo "<table width=100%><tr>\n";
-			echo "<td align='left'>\n";
-			echo "<span class='customerName'>$fullRoomName</span>\n";
-			echo "</td>\n";
-			
-			echo "<td align='right'>\n";
-			//edit Locationbutton - not visible till in edit mode
-			/*if(CustomFunctions::UserHasLocationPermission())
+			else
 			{
-				$jsSafeName = MakeJSSafeParam($location);
-				$jsSafeAltName = MakeJSSafeParam($altName);
-				$jsSafeNote = MakeJSSafeParam($note);
-				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
-
-				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
-				<?php 
-			}*/
-			//editMode button
-			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
-			{
-				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>Room</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				echo "Room ID#$roomID not found.<BR>\n";
 			}
-			echo "</td>\n";
-			echo "</tr>\n";
-			echo "</table>\n";
-			
-			//details//details
-			echo "<table>\n";
-			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Site:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo $siteFullName;
-			echo "</td>\n";
-
-			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Position:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo "$pos";
-			echo "</td>\n";
-			
-			/*echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Units:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo $units;
-			echo "</td>\n";*/
-			
-			echo "</tr>\n";
-			echo "<tr>\n";
-
-			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Cust Access:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo RoomCustAccess($custAccess);
-			echo "</td>\n";
-			
-			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Size:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo "$size";
-			echo "</td>\n";
-			
-			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Orientation:</b>";
-			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
-			echo "</td>\n";
-			
-			echo "</tr></table>\n";
-			
-			
-			//render room
-			echo CustomFunctions::CreateRoomLayout($roomID, 0, 0, $room , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
-		}
-		else 
-		{
-			echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
 		}
 		
 		if(UserHasWritePermission())
@@ -5015,7 +5014,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			echo "<BR>\n";
 			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>Room Details</div>\n";
+			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
 			ListRoomLocationsAndDevices($roomID);
