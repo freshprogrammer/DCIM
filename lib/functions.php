@@ -6726,9 +6726,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "	height: $relativeDepth%;\n";
 		$result .= $rotationTransform;
 		$result .= "}\n";
-		$result .= "#location".$locationID."_title {\n";//flip all values for title
-		$result .= "	width: $titleWidth%;\n";
-		$result .= "	height: $titleHeight%;\n";
+		$result .= "#location".$locationID."_title {\n";
+		$result .= "	width: calc($titleWidth% - 1px);\n";//minus 1px to account for border on parent, (should actualy be 2 but bottom is black on black and dont want minus more than I have to) 
+		$result .= "	height: calc($titleHeight% - 1px);\n";
 		$result .= $title_rotationTransform;
 
 		if($orientation=="E")
