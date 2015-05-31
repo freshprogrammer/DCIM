@@ -128,11 +128,11 @@
 		public static function CreateNavigationQuickLinks()
 		{
 			//TODO this should be an actual room lookup not hardcoded roomids
-			$result  = "<a class='navLinks' href='?roomid=2'>CA1</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=3'>CA2</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=4'>CA3</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=5'>CA4</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=6'>CA5</a>&nbsp;\n";
+			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=4'>CA4</a>&nbsp;\n";
+			$result .= "<a class='navLinks' href='?roomid=5'>CA5</a>&nbsp;\n";
 			return $result;
 		}
 		
@@ -295,19 +295,19 @@
 			$roomTypeClass = RoomAccesClass($custAccess);
 			
 			//custom layouts
-			if($roomID==2)
+			if($roomID==1)
 			{//ca 1
 				$cornerWidthInset = -16.272;//percent inset corner
-				$cornerDepthInset = 50;
+				$cornerDepthInset = 49;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			else if($roomID==3)
+			else if($roomID==2)
 			{//ca 2 - two close left corner insets
 				$cornerWidthInset1 = 11;
-				$cornerDepthInset1 = -69;
-				$cornerWidthInset2 = 59.82;
-				$cornerDepthInset2 = -23.48;
+				$cornerDepthInset1 = -68;
+				$cornerWidthInset2 = 57.82;
+				$cornerDepthInset2 = -22.48;
 				
 				$rightWidth = 100-$cornerWidthInset2;
 				$midWidth = 100-$cornerWidthInset1-$rightWidth;
@@ -355,21 +355,21 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";//last because of overlap
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			else if($roomID==4)
+			else if($roomID==3)
 			{//ca 3
-				$cornerWidthInset = 55.20;
+				$cornerWidthInset = 53;
 				$cornerDepthInset = -19.27;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			else if($roomID==5)
+			else if($roomID==4)
 			{//ca 4
 				$cornerWidthInset = -8.067;
 				$cornerDepthInset = -9.55;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			else if($roomID==6)
+			else if($roomID==5)
 			{//ca 5
 				/* roughly (3 is entrance, 7 is exit)
 				 * 111111
@@ -382,7 +382,7 @@
 				 *             7*/
 				$entranceWidth = 11;//percent inset corner
 				$entranceDepth = 4.5;
-				$farLeftWidth = 50.87;
+				$farLeftWidth = 51.87;
 				$farLeftDepth= 31.92;
 				$exitWidth = 13;
 				$exitDepth = 20;// width of AC room
@@ -450,21 +450,21 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_7Exit'></div>\n";
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			else if($roomID==10)
+			else if($roomID==9)
 			{//ups 1
-				$cornerWidthInset = 25.159;//percent inset corner
-				$cornerDepthInset = 35.263;
+				$cornerWidthInset = 22.159;//percent inset corner
+				$cornerDepthInset = 31.263;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
 			}
-			else if($roomID==11)
+			else if($roomID==10)
 			{//ups 2
 				$cornerWidthInset = 24.855;//percent inset corner
 				$cornerDepthInset = 21.875;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
 			}
-			else if($roomID==16)
+			else if($roomID==15)
 			{//loading - two far right corner insets
 				$cornerWidthInset1 = -65;
 				$cornerDepthInset1 = 15;
