@@ -199,10 +199,11 @@
 			
 			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
 			
-			//select rooms from table for rendering each one
+			//select rooms from table for rendering each one - NOTE these are sorted by layer so rooms that may over lap others can have a proper layer
 			$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation
 					FROM dcim_room
-					WHERE siteid=? AND width > 0 AND depth > 0";
+					WHERE siteid=? AND width > 0 AND depth > 0
+					ORDER BY layer";
 			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute())
 			{

@@ -76,7 +76,7 @@
 		//assumes all changes happen at once - so if 1 is valid they all must be
 		if($executePart1)
 		{
-			if(DoesFieldExist("dcim_room","xpos"))
+			if(DoesFieldExist("dcim_room","xpos") && DoesFieldExist("dcim_room","layer"))//this may warn/error if xpos has already been added but wont break anything the rest will still function
 				return -1;//already up to date
 			else
 				return 1;// good to update
@@ -101,25 +101,10 @@
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
 	function RunDBUpdate_Update1($executePart1, $executePart2)
 	{
-		//paramaters should be mutialy exclusive, so only 1 is true at any time
+		//paramaters should be mutually exclusive, so only 1 is true at any time
 		//$executePart1 = true;//safe db additions
 		//$executePart2 = false; //unsafe db removals that will only work after code has been updated
 		
-		/* // "x" denotes code is ready
-		 * This will Update the Database by doing the following in the main and log tables:
-		 *x	Drop field dcim_deviceport.hno
-		 *x	Change dcim_power panel,circuit, volts, amps to NOT NULL
-		 *x	Change dcim_power.circuit from varchar(5) to tinyint(2)
-		 *x	Rename dcim_power.cload to load - drop cload here - created and mirrored load prior
-		 *x	increase location.name size from 10 to 50
-		 * 	
-		 *x	create dcim_room tables
-		 *x	-create location.roomid
-		 *x	-drop location.colo
-		 *x	-drop location.siteid
-		 * 
-		 */
-
 		//Part 1 cmds should be run as phase one as an opertunity to update code acordingly
 		//after code is updated Part 2 can be run to finalize the data removing old rows and such
 		
@@ -176,6 +161,12 @@
 					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `visible`";
 			ExecuteThis("UP1_3M",$cmdm);
 			ExecuteThis("UP1_3L",$cmdl);
+			
+			//added later so its seperate
+			$cmdm = "ALTER TABLE `dcim_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
+			$cmdl = "ALTER TABLE `dcimlog_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
+			ExecuteThis("UP1_4M",$cmdm);
+			ExecuteThis("UP1_4L",$cmdl);
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
