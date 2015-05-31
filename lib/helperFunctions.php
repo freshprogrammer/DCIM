@@ -677,6 +677,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return round($w,2)."' x ".round($h,2)."'";	
 	}
 	
+	function RoomAccesClass($access)
+	{
+		if($access=="T")//define room color
+			return "caBackground";
+		else
+			return "roomBackground";
+	}
+	
 	function OritentationToDegrees($o)
 	{
 		$rotation = 0;

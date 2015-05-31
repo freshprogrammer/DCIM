@@ -4892,7 +4892,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $room, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $name, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
 			$roomFound = $stmt->num_rows==1;
 			
 			if($roomFound)
@@ -4991,7 +4991,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</tr></table>\n";
 				
 				//render room
-				echo CustomFunctions::CreateRoomLayout($roomID, 0, 0, $room , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
+				echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
 			}
 			else
 			{
@@ -6483,19 +6483,80 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
-	function CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $roomClass, $roomCustomHTML="", $roomCustomStyle="")
+	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		$result = "<style>\n";
+		$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
 		
+		//select rooms from table for rendering each one - NOTE these are sorted by layer so rooms that may over lap others can have a proper layer
+		$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation
+				FROM dcim_room
+				WHERE siteid=? AND width > 0 AND depth > 0
+				ORDER BY layer";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute())
+		{
+			$errorMessage[]= "CreateSiteLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
+			
+			while($stmt->fetch())
+			{
+				$result .= CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, $siteWidth, $siteDepth, $custAccess);
+			}
+		}
+		return $result;
+	}
+	
+	function CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, $parentWidth, $parentDepth, $custAccess)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		//calculated
+		$relativeX = 0;
+		$relativeY = 0;
+		$relativeWidth = 0;
+		$relativeDepth = 0;
+		
+		$renderingWithinParent = ($parentWidth > 0 && $parentDepth>0);
+		if($renderingWithinParent)
+		{
+			$relativeX = 100*$xPos/$parentWidth;
+			$relativeY= 100*$yPos/$parentDepth;
+		
+			//adjust dimentions if rotated
+			if($orientation=="E" || $orientation=="W")
+			{
+				$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+				$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+			}
+			else
+			{
+				$relativeWidth = 100*$width/$parentWidth;
+				$relativeDepth= 100*$depth/$parentDepth;
+			}
+		}
+		else
+		{
+			$orientation = "N";
+		}
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		
-		$standAlonePage = !($relativeWidth > 0 || $relativeDepth>0);
+		//create custom style and html
+		$roomCustomHTML = "";
+		$roomCustomStyle = "";
+		CustomFunctions::CreateRoomCustomLayout($roomID, $name, $custAccess, $roomCustomHTML, $roomCustomStyle);
 		
-		if(!$standAlonePage)
+		//begin creating style and html for this room
+		$result = "<style>\n";
+		if($renderingWithinParent)
 		{
 			$result .= "#room$roomID {\n";
 			$result .= "	left: $relativeX%;\n";
@@ -6530,12 +6591,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "</style>\n";
 		
 		$result .= "<div id='room$roomID' class='roomContainer'>\n";
-		if(!$standAlonePage)$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+		if($renderingWithinParent)$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
 		if($roomCustomHTML)
 			$result .= $roomCustomHTML;
 		else
 		{
-			$result .= "<div id='' class='roomBorders $roomClass'></div>\n";
+			$roomTypeClass = RoomAccesClass($custAccess);
+			$result .= "<div id='' class='roomBorders $roomTypeClass'></div>\n";
 			$result .= "<span>$name</span>\n";
 		}
 		

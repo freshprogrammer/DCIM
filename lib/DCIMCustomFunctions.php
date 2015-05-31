@@ -181,44 +181,13 @@
 					$result .= "}\n";
 					$result .= "</style>\n";
 					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
-					$result .= CustomFunctions::CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
+					$result .= CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
 					$result .= "</div>\n";
 				}
 			}
 			
-			
 			$result .= "</div>\n";//end panel
 			$result .= "</div>\n";
-			return $result;
-		}
-		
-		public static function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
-		{
-			global $mysqli;
-			global $errorMessage;
-			
-			$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
-			
-			//select rooms from table for rendering each one - NOTE these are sorted by layer so rooms that may over lap others can have a proper layer
-			$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation
-					FROM dcim_room
-					WHERE siteid=? AND width > 0 AND depth > 0
-					ORDER BY layer";
-			
-			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute())
-			{
-				$errorMessage[]= "CreateSiteLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			}
-			else
-			{
-				$stmt->store_result();
-				$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
-				
-				while($stmt->fetch())
-				{
-					$result .= CustomFunctions::CreateRoomLayout($roomID, $siteWidth, $siteDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
-				}
-			}
 			return $result;
 		}
 		
@@ -320,48 +289,12 @@
 			return $result;
 		}
 		
-		public static function CreateRoomLayout($roomID, $parentWidth, $parentDepth, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation)
-		{
+		public static function CreateRoomCustomLayout($roomID, $name, $custAccess, &$roomCustomHTML, &$roomCustomStyle)
+		{//creates custom html and style for specific rooms - returned with ref passes variables roomCustomHTML and roomCustomStyle
 			$borderThickness = 4;
-		
-			//calculated
-			$relativeX = 0;
-			$relativeY = 0;
-			$relativeWidth = 0;
-			$relativeDepth = 0;
-			
-			$renderingWithinParent = ($parentWidth > 0 && $parentDepth>0);
-			
-			if($renderingWithinParent)
-			{
-				$relativeX = 100*$xPos/$parentWidth;
-				$relativeY= 100*$yPos/$parentDepth;
-				
-				//adjust dimentions if rotated
-				if($orientation=="E" || $orientation=="W")
-				{
-					$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
-					$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
-				}
-				else
-				{
-					$relativeWidth = 100*$width/$parentWidth;
-					$relativeDepth= 100*$depth/$parentDepth;
-				}
-			}
-			else
-			{
-				$orientation = "N";
-			}
-			
-			if($custAccess=="T")//define room color
-				$roomTypeClass = "caBackground";
-			else
-				$roomTypeClass = "roomBackground";
+			$roomTypeClass = RoomAccesClass($custAccess);
 			
 			//custom layouts
-			$roomCustomStyle = "";
-			$roomCustomHTML = "";
 			if($roomID==2)
 			{//ca 1
 				$cornerWidthInset = -16.272;//percent inset corner
@@ -588,8 +521,6 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";//last because of overlap
 				$roomCustomHTML .= "<span>$name</span>\n";
 			}
-			
-			return CreateRoomLayout($roomID, $width, $depth, $name, $fullName, $relativeX, $relativeY, $relativeWidth, $relativeDepth, $orientation, $roomTypeClass, $roomCustomHTML, $roomCustomStyle);
-		}//end CreateRoomLayout()
+		}//end CreateRoomCustomLayout()
 	}// end DCIMCustomFunctions class
 ?>
