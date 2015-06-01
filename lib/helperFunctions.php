@@ -304,7 +304,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		echo $result;
 	}
 	
-	function CreateDataTableHeader($headers, $showTech=false, $showEditAndQA=false)
+	function CreateDataTableHeader($headers, $showTech=false, $showEdit=false, $showQA=false)
 	{
 		$result = "<table class='data-table'>\n";
 		$result .= "<thead>\n";
@@ -316,13 +316,27 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		
 		if($showTech)
 			$result .= "<th class='date-table-subheadercell'>Tech</th>\n";
-		if($showEditAndQA)
+		if($showEdit)
 		{
 			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>Edit</th>\n";
+		}
+		if($showQA)
+		{
 			$result .= "<th class='date-table-subheadercell  editButtons_hidden'>QA</th>\n";
 		}
 		$result .= "</tr>\n";
 		$result .= "</thead>\n";
+		return $result;
+	}
+	
+	function CreateMessagePanel($panelTitle, $message)
+	{
+		$result = "<div class='panel'>\n";
+		$result .= "<div class='panel-header'>$panelTitle</div>\n";
+		$result .= "<div class='panel-body'>\n\n";
+		$result .= $message;
+		$result .= "</div>\n";
+		$result .= "</div>\n";
 		return $result;
 	}
 	
@@ -447,7 +461,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			else
 				$fullLocationName = "$roomName $locationName";
 		}
-		return $fullLocationName;
+		return trim($fullLocationName);
 	}
 	
 	function FormatPanelName($panel)
@@ -500,6 +514,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			if($password=="f23c9a5dca7aef19a3db264c5c21a2f8")//md5 of default password "Pa55word"
 				return true;
 			else if($password=="7c6a180b36896a0a8c02787eeafb0e4c")//md5 of default password "password1"
+				return true;
+			else if($password=="b62a565853f37fb1ec1efc287bfcebf9")//md5 of default password "testPass"
 				return true;
 		}
 		return $result;
@@ -599,28 +615,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($type === "D") return "Delete";
 		else return "Unknown";
 	}
-	
-	//permission levels are limited to the magic nubers here - code should refference these functions exclusively for perm testing
-	function UserHasCircuitPermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasLocationPermission()
-	{
-		return UserHasAdminPermission();
-	}
-	function UserHasBadgeDeletePermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasPortAddEditPermission()
-	{
-		return UserHasWritePermission();
-	}
-	function UserHasPortDeletePermission()
-	{
-		return UserHasWritePermission();
-	}
 	function ValidReadPermission($permissionLevel)
 	{
 		return $permissionLevel >= 1;
@@ -649,10 +643,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidAdminPermission($permissionLevel);
 	}
 	function DescribeUserPermissionLevel($permission, $simple=false, $showVal=false)
-	{
-		//1 char val
+	{//1 char val
 		$result = "";
-		
 		if(ValidAdminPermission($permission))
 		{
 			if($simple)
@@ -683,19 +675,43 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 			
 		if($showVal)
-		{
 			$result .= " ($permission)";
-		}
 		return $result;
+	}
+	
+	function FormatSizeInFeet($w,$h)
+	{
+		return round($w,2)."' x ".round($h,2)."'";	
+	}
+	
+	function RoomAccesClass($access)
+	{//define room color
+		if($access=="T")return "caBackground";
+		else return "roomBackground";
+	}
+	
+	function OritentationToDegrees($o)
+	{
+		if($o=="E")return 90;
+		else if($o=="S")return 180;
+		else if($o=="W")return 270;
+		else return 0;//"N"
+	}
+	
+	function Orientation($o)
+	{//relative to parent
+		if($o=="N") return "Normal";
+		else if($o=="E") return "Right";
+		else if($o=="S") return "Backwards";
+		else if($o=="W") return "Left";
+		else return "Unknown";
 	}
 	
 	function FormatVLAN($vlan)
 	{
 		$vlan = (int)$vlan;
-		if($vlan<0)
-			return "Temp-".$vlan;
-		else
-			return $vlan;
+		if($vlan<0) return "Temp-".$vlan;
+		else return $vlan;
 	}
 	
 	function FormatTechDetails($editUserID, $editDate, $visibleText="", $qaUserID=-1, $qaDate="")
@@ -725,19 +741,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 	
 		if($qaUserID ==-1)
-		{
 			$qaDescription = "None";
-		}
 		else 
 		{
-			if(!isset($userFullName[$qaUserID]))
-			{//not in array
+			if(!isset($userFullName[$qaUserID]))//not in array
 				$qaUserFullName = "User#$editUserID";
-			}
 			else
-			{
 				$qaUserFullName = $userFullName[$qaUserID];
-			}
 			$qaDescription = "$qaUserFullName";//no need to show date here
 		}
 		
@@ -841,6 +851,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 	}
 	
+	//TODO these functions should be merged into one generic function
 	function ValidCustomer($hNo, $shouldFind=true)
 	{
 		global $mysqli;
@@ -855,6 +866,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
+			//TODO handle Errors better
 			$errorMessage[] = "ValidCustomer($hNo): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			return false;
 		}
@@ -874,7 +886,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				return false;
 			}
 		}
-		if($count==2)
+		else if($count==2)
 		{
 			$errorMessage[] = "Multiple Customers found in ValidCustomer($hNo). Contact Admin.";
 			return false;
@@ -905,6 +917,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
+			//TODO handle Errors better
 			$errorMessage[] = "ValidLocation($locationID): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
@@ -913,6 +926,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		
 		if (!$stmt->execute())//execute 
 		{
+			//TODO handle Errors better
 			//failed (errorNo-error)
 			$errorMessage[] = "Failed to execute ValidLocation($locationID) (" . $stmt->errno . "-" . $stmt->error . ").";
 			return false;
@@ -936,7 +950,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				return false;
 			}
 		}
-		if($count==2)
+		else if($count==2)
 		{
 			$errorMessage[] = "Multiple locations found in ValidLocation($locationID). Contact Admin.";
 			return false;
@@ -946,6 +960,70 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			if($shouldExist)
 			{
 				$errorMessage[] = "Location not found - ValidLocation($locationID).";
+				return false;
+			}
+			else
+				return true;
+		}
+	}
+	
+	function ValidRoom(&$roomID, $shouldExist=true)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		if(!ValidGenericID($roomID,"Room ID"))
+			return false;
+		
+		$query = "SELECT roomid 
+			FROM dcim_room
+			WHERE roomid=?";
+				
+		if (!($stmt = $mysqli->prepare($query))) 
+		{
+			//TODO handle Errors better
+			$errorMessage[] = "ValidRoom($roomID): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			return false;
+		}
+		
+		$stmt->bind_Param('s', $roomID);
+		
+		if (!$stmt->execute())//execute 
+		{
+			//TODO handle Errors better
+			//failed (errorNo-error)
+			$errorMessage[] = "Failed to execute ValidRoom($roomID) (" . $stmt->errno . "-" . $stmt->error . ").";
+			return false;
+		}
+		
+		$stmt->store_result();
+		$count = $stmt->num_rows;
+	
+		if($count==1)
+		{
+			//update input roomid
+			$stmt->bind_result($dbRoomID);
+			$stmt->fetch();
+			$locationID = $dbRoomID;
+			
+			if($shouldExist)
+				return true;
+			else
+			{
+				$errorMessage[] = "Room already exists - ValidRoom($roomID).";
+				return false;
+			}
+		}
+		else if($count==2)
+		{
+			$errorMessage[] = "Multiple rooms found in ValidRoom($roomID). Contact Admin.";
+			return false;
+		}
+		else
+		{
+			if($shouldExist)
+			{
+				$errorMessage[] = "Room not found - ValidRoom($roomID).";
 				return false;
 			}
 			else
@@ -968,6 +1046,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
+			//TODO handle Errors better
 			$errorMessage[] = "Prepare failed: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
@@ -976,6 +1055,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		
 		if (!$stmt->execute())//execute 
 		{
+			//TODO handle Errors better
 			//failed (errorNo-error)
 			$errorMessage[] = "Failed to execute: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $stmt->errno . "-" . $stmt->error . ").";
 			return false;
@@ -1037,11 +1117,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	 * 2:requires seperate user
 	 */
 	function DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate)
-	{
+	{//this could/should also check old dates to force regular QAs
 		global $userID;
-		
-		//this could/should also check old dates to force regular QAs
-		
 		if($qaUserID==-1)
 		{
 			if($editUserID===$userID)//can't QA self
@@ -1058,7 +1135,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $errorMessage;
 		
 		$results = array();
-		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -start- results = (".implode(",",$results).")";
 		$query = "SELECT $keyField FROM $table WHERE $filter";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -1067,26 +1143,19 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		{
 			if (!$stmt->execute())//execute 
 			{
-				//failed (errorNo-error)
 				$errorMessage[] = "Failed to execute: GetKeysFromFilter($table, $filter, $keyField) (" . $stmt->errno . "-" . $stmt->error . ").";
 				return false;
 			}
 			$stmt->store_result();
 			$count = $stmt->num_rows;
-		
 			$stmt->bind_result($key);
 			
 			if($count>0)
 			{
 				while ($stmt->fetch()) 
-				{
-					//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -append- key = $key";
 					$results[] = $key;
-				}
 			}
 		}
-		
-		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -end- results = (".implode(",",$results).")";
 		return $results;
 	}
 	
@@ -1104,6 +1173,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
+			//TODO handle Errors better
 			if($reportErrors)
 				$errorMessage[] = "ValidPowerRecord($powerID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
@@ -1175,7 +1245,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidCustomerName($input)
 	{
-		return ValidString($input,"Customer Name",3);
+		return ValidString($input,"Customer Name",3,50);
 	}
 	
 	function ValidCustomerStatus($input)
@@ -1185,9 +1255,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	function ValidNotes($input)
-	{
-		//TODO - i should filter out html here to prevent HTML injection
-		//actualy its in a text area and should be secure unless they break out of that.
+	{//maybe should filter out html here to prevent HTML injection - actualy its rendered back in a text area and should be secure unless they break out of that.
 		return true;
 	}
 	
@@ -1479,6 +1547,53 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		$resultVLAN = abs($vlan);
 		if($isTemp)$resultVLAN *= -1; 
 		return true;
+	}
+
+	function ValidLocationName($input)
+	{
+		return ValidString($input,"Location name",2,50);
+	}
+	
+	function ValidLocationAltName($input)
+	{
+		return ValidString($input,"Location alt name",0,50);
+	}
+	
+	function ValidLocationType($input)
+	{
+		$validFlags = array('C','F','H','M','R');
+		return ValidFlag($input,"Location type",$validFlags);
+	}
+	
+	function ValidLocationUnits($input)
+	{
+		return ValidNumber($input,"Location units",0,2,0,50);
+	}
+	
+	function ValidLocationOrientation($input)
+	{
+		$validFlags = array('N','S','E','W');
+		return ValidFlag($input,"Location orientation",$validFlags);
+	}
+	
+	function ValidLocationXPos($input)
+	{
+		return ValidNumber($input,"Location left possition",1,8,-9999.99,9999.99);
+	}
+	
+	function ValidLocationYPos($input)
+	{
+		return ValidNumber($input,"Location foreward possition",1,8,-9999.99,9999.99);
+	}
+	
+	function ValidLocationWidth($input)
+	{
+		return ValidNumber($input,"Location width",1,8,0,9999.99);
+	}
+	
+	function ValidLocationDepth($input)
+	{
+		return ValidNumber($input,"Location depth",1,8,0,9999.99);
 	}
 	
 	function ValidQARootTable($table)

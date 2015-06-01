@@ -56,6 +56,7 @@
 	border-width: 1px;
 	border-style: solid;
 	padding: 1px;
+	margin-bottom: 1em;
 }
 
 .panel-header {
@@ -72,10 +73,10 @@
 	background-position: top left;
 	background-repeat: repeat-x;
 	
-	//light with black
-	//background-color: #D4CFC7;
-	//border-color: #D4CFC7;
-	//background-image: url(/SalesTool/a4j/g/3_3_1.GAorg.richfaces.renderkit.html.GradientA/DATB/eAF79urt8fNXmAAXoQUq);
+	/* light with black */
+	/* background-color: #D4CFC7; */
+	/* border-color: #D4CFC7; */
+	/* background-image: url(/SalesTool/a4j/g/3_3_1.GAorg.richfaces.renderkit.html.GradientA/DATB/eAF79urt8fNXmAAXoQUq); */
 	
 }
 
@@ -381,20 +382,20 @@ a.internalLink {
 
 button {
 	margin: 0;
-	//height: 16;
-	//padding: 0;
-	//padding-top: 0;
+	/* height: 16; */
+	/* padding: 0; */
+	/* padding-top: 0; */
 	padding-bottom: 0;
 }
 
 input[type=submit] {
-	//padding: 0;
-	//padding-top: 0;
+	/* padding: 0; */
+	/* padding-top: 0; */
 	padding-bottom: 0;
 }
 
 tr.dataRowOne, tr.dataRowTwo{
-	//vertical-align: top;
+	/* vertical-align: top; */
 }
 
 tr.dataRowOne {
@@ -429,9 +430,9 @@ td.powerAuditCellDouble {
 }
 
 td.powerAuditCellEmpty {
-	//background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif");
-	//background-repeat: round;
-	//background-size: 100%;
+	/* background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif"); */
+	/* background-repeat: round; */
+	/* background-size: 100%; */
 	background-color: #CCC;
 }
 
@@ -445,7 +446,7 @@ body {
 }
 
 h1 {
-	color: #111; //overwritten by appname
+	color: #111; /* overwritten by appname */
 	display: block;
 	font-size: 18px;
 	font-weight: bold;
@@ -603,11 +604,101 @@ h2 {
 	z-index: 999;
 }
 
+.siteContainer {
+	position: relative;
+	 /* background-color: cyan; */
+	width: 100%;
+	border-style: hidden;
+}
+.roomContainer, .roomBackground, .roomBorders, .siteBackground, .caBackground, .roomBackground, .locationContainer, .locationEmptyBackground, .locationFullBackground, .locationTitle {
+	position: absolute;
+	width:100%;
+	height:100%;
+}
+.locationTitle{
+	/* white-space: nowrap;*/
+	overflow: hidden;
+	text-overflow: clip;
+	color: black;
+	/* text-shadow: 2px 2px #FFF;*/
+	/* height: initial; */
+	/* top: 50%;*/
+	/* transform: translateY(-50%); */
+	transform-origin: 0 0;c
+	text-align: center;
+	font-weight: bold;
+}
+.siteBackground, .roomBorders {
+	border-style: solid;
+	border-width: 3px;
+	border-color: black;
+
+	box-sizing:border-box;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+}
+.roomContainer,  .roomCorner, .locationContainer{
+	-ms-transform-origin: 0% 0%; /* IE 9 */
+	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
+	transform-origin: 0% 0%;
+}
+.roomContainer a:link, .roomContainer a:visited{
+	color: white;
+} 
+.siteLabel{
+	position: absolute;
+	left: 50%;
+	transform: translate(-50%,0);-webkit-transform: translate(-50%,0);-ms-transform: translate(-50%,0);
+	width: initial;
+	height: initial;
+	
+	color: #000;
+	font-size: 17px;
+	font-weight: bold;
+	font-family: Arial,Verdana,sans-serif;
+	
+	border: 4px solid black;
+	padding: 4px;
+}
+.roomContainer span{
+	position: absolute;
+	color: white;
+	margin: 6;
+	text-overflow: clip;
+}
+.siteBackground{
+	background-color: gray;
+}
+.caBackground{
+	background-color: rgb(0, 0, 255);
+}
+.roomBackground{
+	background-color: rgb(0, 0, 213);
+}
+.locationEmptyBackground{
+	background-color: #BBB;
+}
+.locationFullBackground{
+	background-color: #888;
+}
+.locationEmptyBackground, .locationFullBackground{
+	border-style: solid;
+	border-width: 1px;
+	border-color: black;
+
+	box-sizing:border-box;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+}
+.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground, .locationContainer a:hover .locationFullBackground, .locationContainer a:hover .locationEmptyBackground{
+	background-color: green;
+}
+
 @media only screen and (device-width: 768px) {
 	/* For general iPad layouts */
 	
 	#appname {
-		//color: #F0F;
+		/* color: #F0F; */
 	}
 	
 	.pageMinWidth {
@@ -638,12 +729,12 @@ h2 {
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
 	/* For iPad portrait layouts only */
 	#appname {
-		//color: #F00;
+		/* color: #F00; */
 	}
 }
 @media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape) {
 	/* For iPad landscape layouts only */
 	#appname {
-		//color: #00F;
+		/* color: #00F; */
 	}
 }

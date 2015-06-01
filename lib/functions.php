@@ -208,6 +208,11 @@
 			$redirectPage = ProcessCircuitAction($action);
 			$tookAction = true;
 		}
+		else if($action==="Location_Add" || $action==="Location_Edit" || $action==="Location_Delete")
+		{
+			$redirectPage = ProcessLocationAction($action);
+			$tookAction = true;
+		}
 		else if($action==="QA_Record")
 		{
 			$redirectPage = ProcessQAAction($action);
@@ -673,7 +678,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($delete)
 			{
-				if(UserHasBadgeDeletePermission())
+				if(CustomFunctions::UserHasBadgeDeletePermission())
 				{
 					$query = "DELETE FROM dcim_badge WHERE badgeid=? LIMIT 1";
 				
@@ -1032,6 +1037,224 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+	}
+	
+	function ProcessLocationAction($action)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$valid = true;
+		$totalAffectedCount = 0;
+		$redirectPage = "";
+		
+		if(!CustomFunctions::UserHasLocationPermission())
+		{
+			$valid = false;
+			$errorMessage[] = "Your do not have permission to edit locations. Please contact your administrator.";
+		}
+		else
+		{
+			$add = $action==="Location_Add";
+			$delete = $action==="Location_Delete";
+			
+			$locationID = GetInput("locationid");
+			$roomID = GetInput("roomid");
+			$name = trim(GetInput("name"));
+			$altName = trim(GetInput("altname"));
+			$type = GetInput("type");
+			$units = GetInput("units");
+			$orientation = GetInput("orientation");
+			$xPos = GetInput("xpos");
+			$yPos = GetInput("ypos");
+			$width = GetInput("width");
+			$depth = GetInput("depth");
+			$notes = trim(GetInput("notes"));
+		}
+		
+		if(!$delete)
+		{
+			if($valid)$valid = ValidLocationName($name);
+			if($valid)$valid = ValidLocationAltName($altName);
+			if($valid)$valid = ValidLocationType($type);
+			if($valid)$valid = ValidLocationUnits($units);
+			if($valid)$valid = ValidLocationOrientation($orientation);
+			if($valid)$valid = ValidLocationXPos($xPos);
+			if($valid)$valid = ValidLocationYPos($yPos);
+			if($valid)$valid = ValidLocationWidth($width);
+			if($valid)$valid = ValidLocationDepth($depth);
+			if($valid)$valid = ValidNotes($notes);
+		}
+		
+		//validate parent records exist
+		if(!$add)
+			if($valid)$valid = ValidLocation($locationID, true);
+		if($valid)$valid = ValidRoom($roomID, true);
+		
+		//validate room id and look up parent dimentions
+		if(!$delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT r.roomid, r.width, r.depth
+						FROM dcim_room AS r
+						WHERE r.roomid=?;";
+				
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==1;
+				
+				if($passedDBChecks)
+				{//flip xpos to interior of room if negative
+					$stmt->bind_result($roomID, $parentWidth, $parentDepth);
+					$stmt->fetch();
+					if($xPos<0)
+						$xPos = $parentWidth+$xPos;
+					if($yPos<0)
+						$yPos = $parentDepth+$yPos;
+				}
+				else
+					$errorMessage[] = "Error: Room ID#$roomID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//validate that this is not a duplicate name within this room
+		if(!$delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT l.locationid, l.name, l.altname FROM dcim_location AS l WHERE l.roomid=? AND locationid!=? AND (l.name=? OR l.altname=?);";
+				
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iiss', $roomID,$locationID,$name,$name) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$stmt->bind_result($foundDeviceID, $foundName, $foundAltName);
+					$stmt->fetch();
+					if(strlen($foundAltName)>0)
+						$foundAltName = " ('".MakeHTMLSafe($foundAltName)."')";
+					$errorMessage[] = "Error: Existing location named '".MakeHTMLSafe($foundName)."'$foundAltName found, ID:$foundDeviceID.";
+				}
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//validate This is a lone location record with no power or devices linked to it so it can be deleted
+		if($delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
+							FROM dcimlog_device AS d 
+							WHERE d.locationid=?
+					UNION
+						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
+							FROM dcimlog_powerloc AS pl
+							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
+							WHERE pl.locationid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $locationID,$locationID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$errorMessage[] = "Error: Cannot delete this location because there are ".($stmt->num_rows)." power/device records linked to it.";
+				}
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//do actions
+		if($valid)
+		{
+			if($add)
+			{
+				$query = "INSERT INTO dcim_location
+					(roomid,name,altname,type,units,xpos,ypos,width,depth,orientation,visible,note,edituser,editdate)
+					VALUES(?,?,?,?,?,?,?,?,?,?,'T',?,?,CURRENT_TIMESTAMP)";
+				//                                                             rnatuxywdonu
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes,$userID))
+					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					if (!$stmt->execute())
+						$errorMessage[] = "Failed to execute location add (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully added location '".$name."' to Room#$roomID.";
+							LogDBChange("dcim_location",-1,"I","roomid=$roomID AND name='$name'");
+						}
+						else
+							$errorMessage[] = "Success, but affected $affectedCount rows.";
+					}
+				}
+			}
+			else if($delete)
+			{
+				$query = "DELETE FROM dcim_location WHERE locationid=? LIMIT 1";
+				
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $locationID) || !$stmt->execute())
+					$errorMessage[] = "Process Location Delete Prepare failed: ($action-4) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$affectedCount = $stmt->affected_rows;
+					$totalAffectedCount += $affectedCount;
+					if($affectedCount==1)
+					{
+						$resultMessage[] = "Successfully Deleted Location#$locationID '".$name."' to Room#$roomID..";
+						LogDBChange("dcim_location",$locationID,"D");
+						$redirectPage = "./?roomid=$roomID";
+					}
+					else
+						$errorMessage[] = "Success, but affected $affectedCount rows.";
+				}
+			}
+			else
+			{
+				$query = "UPDATE dcim_location
+					SET roomid=?,name=?,altname=?,type=?,units=?,xpos=?,ypos=?,width=?,depth=?,orientation=?,note=?
+					WHERE locationid=?
+					LIMIT 1";
+				//                                                             rnatuxywdonk
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes, $locationID))
+					$errorMessage[] = "Process Location Update Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				else
+				{
+					if (!$stmt->execute())//execute
+						$errorMessage[] = "Failed to execute location edit (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully edited location '".$name."' to Room#$roomID.. $totalAffectedCount records updated.";
+							UpdateRecordEditUser("dcim_location","locationid",$locationID);//do this seperate to distinquish actual record changes from identical updates
+							LogDBChange("dcim_location",$locationID,"U");
+						}
+						else
+							$resultMessage[] = "Success, but affected $affectedCount rows.";
+					}
+				}
+			}
+		}
+		return $redirectPage;
 	}
 	
 	function ProcessSubnetAction($action)
@@ -1603,7 +1826,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//push changes to DB
 			if($add)
 			{
-				if(UserHasPortAddEditPermission())
+				if(CustomFunctions::UserHasPortAddEditPermission())
 				{
 					$query = "INSERT INTO dcim_deviceport 
 						(deviceid,pic,port,type,mac,speed,note,status,edituser,editdate) 
@@ -1639,7 +1862,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($delete)
 			{
-				if(UserHasPortDeletePermission())
+				if(CustomFunctions::UserHasPortDeletePermission())
 				{
 					$query = "DELETE FROM dcim_deviceport WHERE deviceportid=? LIMIT 1";
 						
@@ -1674,7 +1897,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				//update port
 				$cont = false;
-				if(UserHasPortAddEditPermission())
+				if(CustomFunctions::UserHasPortAddEditPermission())
 				{
 					$query = "UPDATE dcim_deviceport SET
 							pic = ?,
@@ -1826,6 +2049,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
+				//TODO handle errors better
 				$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
@@ -1856,7 +2080,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$query = "INSERT INTO dcim_device
 					(hno, locationid, name, member, note, unit, type, size, status, asset, serial, model, edituser, editdate) 
 					VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-					
+				
+				//TODO handle errors better
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Insert Prepare failed: ($action -2) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
@@ -1874,7 +2099,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						if($affectedCount==1)
 						{
-							
 							//worked, now look up that record to create ports for it
 							LogDBChange("dcim_device",-1,"I","hno='$hNo' AND name='$deviceName' AND member='$member'");
 							//get deviceID
@@ -2568,7 +2792,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.name, l.locationid, l.name, l.size, l.type, l.units, l.status, l.visible, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullName, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2583,7 +2807,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $room, $locationID, $location, $size, $type, $units, $status, $visible, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $locationID, $location, $altName, $type, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
@@ -2591,11 +2815,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->fetch();
 			$fullLocationName = FormatLocation($site, $room, $location);
 			
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 			}
-			   
+			
+			$pos = FormatSizeInFeet($xPos,$yPos);
+			$size = FormatSizeInFeet($width,$depth);
+			
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
 			echo "<span class='customerName'>$fullLocationName</span>\n";
@@ -2603,18 +2830,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			echo "<td align='right'>\n";
 			//edit Locationbutton - not visible till in edit mode
-			if(UserHasLocationPermission())
+			if(CustomFunctions::UserHasLocationPermission())
 			{
-				//$jsSafeCustomer = MakeJSSafeParam($customer);
-				//$jsSafeNote = MakeJSSafeParam($note);
-				//$params = "false, '$hNo', '$cNo', '$jsSafeCustomer', '$jsSafeNote', '$status'";
-				$params = "false";
-				
+				$jsSafeName = MakeJSSafeParam($location);
+				$jsSafeAltName = MakeJSSafeParam($altName);
+				$jsSafeNote = MakeJSSafeParam($note);
+				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+
 				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 				<?php 
 			}
 			//editMode button
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 			}
@@ -2626,10 +2854,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<table>\n";
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Type:</b>";
+			echo "<b>Alt Name:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo LocationType($type);
+			echo MakeHTMLSafe($altName);
+			echo "</td>\n";
+			echo "</tr>\n";
+			
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Room:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
+			echo "</td>\n";
+
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Position:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "$pos";
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
@@ -2641,6 +2885,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			echo "</tr>\n";
 			echo "<tr>\n";
+
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Type:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationType($type);
+			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Size:</b>";
@@ -2650,10 +2901,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</td>\n";
 			
 			echo "<td align=right class='customerDetails'>\n";
-			echo "<b>Visible:</b>";
+			echo "<b>Orientation:</b>";
 			echo "</td>\n";
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-			echo FormatTechDetails($editUserID,$editDate,LocationVisible($visible), $qaUserID, $qaDate);
+			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+			echo "</td>\n";
+
+			//device notes
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails' valign='top'>\n";
+			echo "<b>Notes:</b>";
+			echo "</td>\n";
+			echo "<td valign=top align=left colspan='5'>\n";
+			echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($note)."</textarea>";
 			echo "</td>\n";
 			
 			echo "</tr></table>\n";
@@ -2663,12 +2923,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Location not found ('".MakeHTMLSafe($input)."')<BR>\n"; 
 		}
 		
+		if(UserHasWritePermission())
+		{
+			EditLocationForm();
+		}
+		
 		echo "</div>\n";
 		echo "</div>\n\n";
 		
 		if($locationFound)
 		{
-			echo "<BR>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -2676,10 +2940,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
-				FROM dcim_location AS l
+				FROM dcim_device AS d
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
 				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
@@ -2703,13 +2967,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{
-				//TODO for searches this should have some link, either device or hno or both
-
 				echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
 				
 				//list result data
 				$oddRow = false;
-				while ($stmt->fetch()) 
+				while ($stmt->fetch())
 				{
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
@@ -2735,7 +2997,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			else 
 			{
 				//TODO fix this to say something better - some locations dont have units or no devices
-				echo "No Devices found at location.<BR>\n";
+				echo "No devices found at this location.<BR>\n";
 			}
 			
 			echo "<BR>\n";
@@ -2746,7 +3008,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			
-			if(UserHasLocationPermission() ||UserHasCircuitPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
@@ -2763,6 +3025,161 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}//location found
 		//return $count;
+	}
+	
+	function EditLocationForm()
+	{
+		global $errorMessage;
+		global $mysqli;
+		
+		//-default values - never seen
+		$action = "";
+		$actionText = "Addy";
+		$roomIDInput = 2;
+		$nameInput = "location";
+		$altNameInput = "alt Name input";
+		$typeInput = "F";
+		$unitsInput = 6;
+		$xPosInput = 211.11;
+		$yPosInput = 311.11;
+		$orientationInput = "E";
+		$widthInput = 411.11;
+		$depthInput = 511.11;
+		$noteInput = "notes input";
+		
+		$sizeInput = "654321-1";//drop this
+		$statusInput = "A";//drop this
+		$visibleInput = "F";
+
+		//build location combo options
+		$locationOptions = "";
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			ORDER BY s.name, r.name";
+			
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditLocationForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
+			$roomOptions = "";
+			while ($stmt->fetch())
+			{
+				$fullRoomName = "$site $roomFullName";
+				$selected = ($roomID==$roomIDInput ? "Selected" : "");
+				$roomOptions .= "<option value='$roomID' $selected>$fullRoomName</option>\n";
+			}
+		}
+		
+		?>
+		<div id='EditLocationMsg' class='hidden'></div>
+		<div id='EditLocationEntry' class='hidden'>
+		<BR>
+		<table><tr><td>
+		<form action="<?php echo $action;?>" method='post' id='EditLocationForm' onsubmit='return SaveLocation()' class=''>
+			<fieldset>
+				<legend id=EditLocationEntryLegend><b><?php echo $actionText;?> Location</b></legend>
+				<table>
+					<tr>
+						<td colspan=1 align=right>Room:</td>
+						<td align='left'>
+							<select id=EditLocation_roomid name="roomid" tabindex=1>
+								<?php echo $roomOptions; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Name:</td>
+						<td align='left'>
+							<input id=EditLocation_name type='text' tabindex=2 size=18 name='name' value='<?php echo $nameInput;?>' placeholder="10.01, G2" class='' >
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Alt&nbsp;Name(s):</td>
+						<td align='left'>
+							<input id=EditLocation_altname type='text' tabindex=3 size=18 name='altname' value='<?php echo $altNameInput;?>' placeholder="10.01.A, G3, Cloud" class='' >
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Type:</td>
+						<td align='left'>
+							<select id=EditLocation_type onchange='EditLocationTypeChanged()' name="type" tabindex=4>
+								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
+								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
+								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
+								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Misc</option>
+								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Rack</option>
+							</select>
+							Units:<input id=EditLocation_units type='number' tabindex=5 size=6 name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Orientation:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<select id=EditLocation_orientation onchange='' name="orientation" tabindex=6>
+									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
+									<option value="E" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
+									<option value="S" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
+									<option value="W" <?php if($orientationInput==="W") echo "Selected"; ?>>Left</option>
+								</select>
+							<span class=inputTooltip>When looing at location in room, relative orientation to room.</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Left:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from left room edge to back left corner of location in feet (negative for distance from right wall)</span></div>
+							Foreward:
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>Distance from far room edge to back left corner of location in feet (negative for distance from close wall)</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Width:</td>
+						<td align='left'>
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>In feet</span></div>
+							Depth:
+							<div class='inputToolTipContainer'>
+								<input id=EditLocation_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+							<span class=inputTooltip>In feet</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Notes:</td>
+						<td align='left'>
+							<input id=EditLocation_note type='text' tabindex=11 size=50 name='notes' value='<?php echo $noteInput;?>' placeholder='Notes' class=''>
+						</td>
+					</tr>
+					<tr>
+						<td colspan=2><table width=100%><tr>
+							<td align=left>
+								<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+							</td>
+							<td align='right'>
+								<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
+								<input type="submit" value="Save" tabindex=12>
+							</td>
+						</tr></table></td>
+					</tr>
+				</table>
+				<input id=EditLocation_locationid type='hidden' name='locationid' value=-1>
+				<input id=EditLocation_action type='hidden' name='action' value='null'>
+				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
+			</fieldset>
+		</form>
+		</td></tr></table></div>
+		<?php
 	}
 	
 	function ShowUsersPage($input)
@@ -2945,7 +3362,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else 
 		{
-			//TODO fix this to say something better - some locations dont have units or no devices
 			echo "User not Found\n";
 		}
 		echo "</div>\n";
@@ -2960,7 +3376,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		$query = "UPDATE dcim_deviceport SET status=?
 				WHERE  deviceportid=? LIMIT 1 ";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateDevicePortStatusAndUser: Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -2995,7 +3411,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		$query = "UPDATE dcim_user SET lastactivity=CURRENT_TIMESTAMP
 				WHERE userid=? LIMIT 1 ";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateUserLastActivity: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -3027,7 +3443,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 		global $focusSearch;
 		
-		
 		//main customer record or new
 		$addCust = $hNo==="-1";
 		$pageSubTitle = "";
@@ -3037,9 +3452,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$addCust)
 		{
 			$query = "SELECT hno,cno,name,note,status,edituser,editdate,qauser,qadate 
-			FROM dcim_customer 
-			WHERE hno=?";
-		
+				FROM dcim_customer 
+				WHERE hno=?";
+			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
@@ -3141,13 +3556,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//bottom data panel
 		if($custCount==1)
 		{
-			echo "<BR>";
-			
 			//data for customer
-			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Customer Details</div>\n";
-			
 			echo "<div class='panel-body'>\n\n";
 				
 			//show devices linked to this hNo
@@ -3308,9 +3719,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//customer   model  status
 			//location - size   unit
-			//asset 
+			//asset
 			//serial
-			//note 
+			//note
 			
 			//this is the device page - build it...
 			echo "<table width=100%>\n";
@@ -3555,7 +3966,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$jsSafeSpeed = MakeJSSafeParam($speed);
 							$jsSafeNote = MakeJSSafeParam($note);
 							//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-							$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+							$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
 							
 							$portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
 							
@@ -3699,7 +4110,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//end top panel and panel body
 			echo "</div>\n";
 			echo "</div>\n";
-			echo "<BR>\n";
 			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
@@ -3809,7 +4219,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$customerLocations  = implode(" & ",$locationArray);
 			}
 			
-			
 			//select empty as customer to keep return results to match search query
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
 			FROM dcim_badge AS b 
@@ -3847,9 +4256,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"),false,false);
+				echo CreateDataTableHeader(array("Customer","Name&#x25B2;","Badge#","Status","Issue","Enroll"));
 			else
-				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4124,7 +4533,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE l.visible='T' AND (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
 				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4132,7 +4541,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('ssssss', $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('sssssss', $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
@@ -4175,9 +4584,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Customer","Location&#x25B2;","Device"),false,false);
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device"));
 			else
-				echo CreateDataTableHeader(array(		   "Location&#x25B2;","Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4198,9 +4607,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				echo "<tr class='$rowClass'>";
+				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				if(!$search)
 				{
@@ -4266,23 +4675,21 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//build location combo options
 		$locationOptions = "";
-		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.size, l.type, l.status
+		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.type
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE l.visible='T'
 			ORDER BY s.name, r.name, l.name";
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so this error is never seen - fixed with #74
-			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "EditDeviceForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
 		{
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $size, $type, $status);
+			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $type);
 			while ($stmt->fetch()) 
 			{
 				$fullLocationName = FormatLocation($site, $room, $location);
@@ -4462,11 +4869,165 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListLocationCustomers($roomID)
+	function ShowRoomPage($roomID)
+	{
+		global $mysqli;
+		global $deviceModels;
+		global $pageSubTitle;
+		global $focusSearch;
+		
+		$query = "SELECT s.siteid, s.name AS site, s.fullname, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE r.roomid=?";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute()) 
+			$errorMessage[]= "ShowRoomPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $siteFullName, $roomID, $name, $fullName, $custAccess, $orientation, $xPos, $yPos, $width, $depth, $siteWidth, $siteDepth, $editUserID, $editDate, $qaUserID, $qaDate);
+			$roomFound = $stmt->num_rows==1;
+			
+			if($roomFound)
+			{
+				$stmt->fetch();
+				$fullRoomName = FormatLocation($site, $fullName, "");
+				$pageSubTitle = "$fullRoomName";
+				
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+				}
+				
+				$pos = FormatSizeInFeet($xPos,$yPos);
+				$size = FormatSizeInFeet($width,$depth);
+				
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>$fullRoomName</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				
+				echo "<table width=100%><tr>\n";
+				echo "<td align='left'>\n";
+				echo "<span class='customerName'>$fullName</span>\n";
+				echo "</td>\n";
+				
+				echo "<td align='right'>\n";
+				//edit Locationbutton - not visible till in edit mode
+				/*if(CustomFunctions::UserHasLocationPermission())
+				{
+					$jsSafeName = MakeJSSafeParam($location);
+					$jsSafeAltName = MakeJSSafeParam($altName);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+					<?php
+				}*/
+				//editMode button
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				}
+				echo "</td>\n";
+				echo "</tr>\n";
+				echo "</table>\n";
+				
+				//details//details
+				echo "<table>\n";
+				echo "<tr>\n";
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Site:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $siteFullName;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Position:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$pos";
+				echo "</td>\n";
+				
+				/*echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Units:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $units;
+				echo "</td>\n";*/
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Cust Access:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo RoomCustAccess($custAccess);
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Size:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$size";
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Orientation:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+				echo "</td>\n";
+				
+				echo "</tr></table>\n";
+				
+				//render room
+				echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
+			}
+			else
+			{
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>Room</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				echo "Room ID#$roomID not found.<BR>\n";
+			}
+		}
+		
+		if(UserHasWritePermission())
+		{
+			//EditRoomForm();
+		}
+		
+		echo "</div>\n";
+		echo "</div>\n\n";
+		
+		if($roomFound)
+		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			ListRoomLocationsAndDevices($roomID);
+			
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(CustomFunctions::UserHasLocationPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			}
+		}//room found
+		//return $count;
+	}
+	
+	function ListRoomLocationsAndDevices($roomID)
 	{
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
-		global $pageSubTitle;
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
@@ -4491,21 +5052,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
 			$panelDescription = "Locations & devices in $site $roomFullName";
-			$pageSubTitle = "$site $room";
 			$searchTitle = "$site $roomFullName Location(s)";
 			
 			if($showEmpty)
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
 					FROM dcim_location AS l
 						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
 						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					WHERE r.roomid=?
-						AND l.visible='T'
 					ORDER BY r.name, l.name";
 			else
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, c.hNo, c.name AS customer, d.deviceid, d.size AS devicesize, d.name AS devicename, d.model, d.member
+				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
 				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -4526,22 +5085,23 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $size, $deviceName, $deviceModel, $deviceMember);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember);
 			$count = $stmt->num_rows;
-			
-			$panelDescription = $panelDescription . " ($count)";
-
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>$panelDescription</div>\n";
-			echo "<div class='panel-body'>\n\n";
 			
 			if($count>0)
 			{
 				//show results
 				echo "<span class='tableTitle'>$searchTitle</span>\n";
+				//add location button
+				if(CustomFunctions::UserHasLocationPermission())
+				{
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php 
+				}
 				echo "<BR>";
 				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"));
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, true, true);
 				
 				//list result data
 				$oddRow = false;
@@ -4553,6 +5113,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					$fullLocationName = FormatLocation($site, $room, $location);
 					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					$pos = FormatSizeInFeet($xPos,$yPos);//not used
+					$size = FormatSizeInFeet($width,$depth);
 					
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -4562,6 +5124,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+					if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+					{
+						$jsSafeName = MakeJSSafeParam($location);
+						$jsSafeAltName = MakeJSSafeParam($altName);
+						$jsSafeNote = MakeJSSafeParam($note);
+						//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+						$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					
+						?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
+									<?php 
+						
+						echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate);
+					}
 					echo "</tr>";
 				}
 				echo "</table>";
@@ -4573,17 +5148,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}//sucsessfull lookup
 		else
 		{
-			$pageSubTitle = "RoomID#$roomID";
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>RoomID#$roomID</div>\n";
-			echo "<div class='panel-body'>\n\n";
-
 			echo "Room($roomID) not found.<BR>\n";
 		}
-			
-		//end panel divs
-		echo "</div>\n";
-		echo "</div>\n";
+		
+		if(CustomFunctions::UserHasLocationPermission())
+			EditLocationForm();
+		
 		return $count;
 	}
 	
@@ -4638,7 +5208,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 		echo "<span class='tableTitle'>Power Circuits</span>\n";
 		//Add button
-		if($locationPage && UserHasCircuitPermission())
+		if($locationPage && CustomFunctions::UserHasCircuitPermission())
 		{
 			?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
 			<?php 
@@ -4647,7 +5217,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,UserHasCircuitPermission());
+			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4685,7 +5255,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
 				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-				if(UserHasCircuitPermission())
+				if(CustomFunctions::UserHasCircuitPermission())
 				{
 					//edit button
 					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
@@ -4703,12 +5273,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			echo "</table>";
 		}
-		else 
+		else
 		{
 			echo "No relevant power records found.<BR>\n";
-		}  
-	
-		if(UserHasCircuitPermission())
+		}
+		
+		if(CustomFunctions::UserHasCircuitPermission())
 		{
 			if($locationPage)
 			{
@@ -4845,7 +5415,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<BR>";
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission());
+			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -5241,7 +5811,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
 			//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
 			//redundant check for admin priv, but left for code completion sake
-			echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditDevicePort(event,true,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",-1,$deviceKeyInput,'$jsSafeDeviceFullName','',0,0,'E','D','','','')\">Add New</button>\n";
 		}
 		
 		//editMode button
@@ -5265,7 +5835,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$tableWithAllData = "";
 			$tableWithActiveData = "";
 
-			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission());
+			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5338,7 +5908,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$jsSafeSpeed = MakeJSSafeParam($speed);
 					$jsSafeNote = MakeJSSafeParam($note);
 					//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-					$portEditJS = "EditDevicePort(event,false,".(UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+					$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
 					
 					$record .= "<button onclick=\"$portEditJS\">Edit</button>\n";
 					$record .= "</td>\n";
@@ -5431,7 +6001,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission());
+			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$lastDevicePortID = -1;
@@ -5569,7 +6139,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-body'>\n\n";
 			
 			//select power data
-			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, l.size, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
+			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
 				FROM dcim_power AS p
 					LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
 					LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
@@ -5590,7 +6160,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $locSize, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
+			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
 			$count = $stmt->num_rows;
 				
 			if($count>0)
@@ -5904,5 +6474,328 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+	}
+	
+	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$result = CustomFunctions::CreateSiteCustomLayout($siteID, $name, $fullName, $siteWidth, $siteDepth);
+		
+		//select rooms from table for rendering each one - NOTE these are sorted by layer so rooms that may over lap others can have a proper layer
+		$query = "SELECT roomid, name, fullname, custaccess, xpos, ypos, width, depth, orientation
+				FROM dcim_room
+				WHERE siteid=? AND width > 0 AND depth > 0
+				ORDER BY layer";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute())
+		{
+			$errorMessage[]= "CreateSiteLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($roomID, $name , $fullName, $custAccess, $xPos, $yPos, $width, $depth, $orientation);
+			
+			while($stmt->fetch())
+			{
+				$result .= CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, $siteWidth, $siteDepth, $custAccess);
+			}
+		}
+		return $result;
+	}
+	
+	function CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, $parentWidth, $parentDepth, $custAccess)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		//calculated
+		$relativeX = 0;
+		$relativeY = 0;
+		$relativeWidth = 0;
+		$relativeDepth = 0;
+		
+		$renderingWithinParent = ($parentWidth > 0 && $parentDepth>0);
+		if($renderingWithinParent)
+		{
+			$relativeX = 100*$xPos/$parentWidth;
+			$relativeY= 100*$yPos/$parentDepth;
+		
+			//adjust dimentions if rotated
+			if($orientation=="E" || $orientation=="W")
+			{
+				$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+				$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+			}
+			else
+			{
+				$relativeWidth = 100*$width/$parentWidth;
+				$relativeDepth= 100*$depth/$parentDepth;
+			}
+		}
+		else
+			$orientation = "N";
+		
+		$rotation = OritentationToDegrees($orientation);
+		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		
+		//create custom style and html
+		$roomCustomHTML = "";
+		$roomCustomStyle = "";
+		CustomFunctions::CreateRoomCustomLayout($roomID, $name, $custAccess, $roomCustomHTML, $roomCustomStyle);
+		
+		//begin creating style and html for this room
+		$result = "<style>\n";
+		if($renderingWithinParent)
+		{
+			$result .= "#room$roomID {\n";
+			$result .= "	left: $relativeX%;\n";
+			$result .= "	top: $relativeY%;\n";
+			$result .= "	width: $relativeWidth%;\n";
+			$result .= "	height: $relativeDepth%;\n";
+			$result .= $rotationTransform;
+			$result .= "}\n";
+		}
+		else
+		{
+			$heightMax = 650;
+			$widthMax = 948;
+			
+			$renderHeight = $heightMax;
+			$renderWidth = $renderHeight*($width/$depth);
+			if($renderWidth>$widthMax)
+			{
+				$renderWidth = $widthMax;
+				$renderHeight = $renderWidth*($depth/$width);
+			}
+			
+			//rendering this room standalone
+			$result .= "#room$roomID {\n";
+			$result .= "	position: relative;\n";
+			$result .= "	width: ".$renderWidth."px;\n";
+			$result .= "	height: ".$renderHeight."px;\n";
+			$result .= $rotationTransform;
+			$result .= "}\n";
+		}
+		$result .= $roomCustomStyle;
+		$result .= "</style>\n";
+		
+		$result .= "<div id='room$roomID' class='roomContainer'>\n";
+		if($renderingWithinParent)$result .= "<a href='./?roomid=$roomID' title='$fullName'>\n";
+		if($roomCustomHTML)
+			$result .= $roomCustomHTML;
+		else
+		{
+			$roomTypeClass = RoomAccesClass($custAccess);
+			$result .= "<div id='' class='roomBorders $roomTypeClass'></div>\n";
+			$result .= "<span>$name</span>\n";
+		}
+		
+		//render locations
+		$parentWidth = $width;
+		$parentDepth = $depth;
+		
+		//select locations from table for rendering each one
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, COUNT(d.deviceid) AS devicecount, d.hno, c.name
+				FROM dcim_location AS l
+					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
+					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
+				WHERE l.roomid=? AND l.width > 0 AND l.depth > 0
+				GROUP BY l.locationid
+				ORDER BY l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+			$errorMessage[]= "CreateRoomLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer);
+				
+			while($stmt->fetch())
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
+		}
+		
+		if(!$standAlonePage)$result .= "</a>\n";
+		$result .= "</div>\n";
+		
+		return $result;
+	}
+	
+	function CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass, &$roomCustomStyle, &$roomCustomHTML)
+	{//percent inset corner
+		//breaks rectangle into 4  corner rectangles #1 - #4 with #1 in top left
+		//then set borders properly and background properly and disables the inset
+		//determines which corner based on inset values such that negative x inset is inset from the right
+		$borderThickness = CustomFunctions::$roomBorderThickness;
+		
+		$cornerNo = 1;//TL
+		if($cornerWidthInset<0)
+			$cornerNo=2;//TR
+		if($cornerWidthInset<0 && $cornerDepthInset<0)
+			$cornerNo=3;//BR
+		else if($cornerDepthInset<0)
+			$cornerNo=4;//BL
+		
+		$leftWidth = $cornerWidthInset;
+		$topHeight = $cornerDepthInset;
+		
+		if($cornerWidthInset<0)$leftWidth+=100;
+		if($cornerDepthInset<0)$topHeight+=100;
+		
+		$rightWidth = 100-$leftWidth;
+		$bottomHeight = 100-$topHeight;
+		
+		$roomCustomStyle .= "#room".$roomID."_TopLeft {\n";
+		$roomCustomStyle .= "	width: calc($leftWidth% + ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	height: calc($topHeight% + ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	border-style: solid hidden hidden solid;\n";
+		if($cornerNo==2)$roomCustomStyle .= "	border-right-style: solid;\n";
+		if($cornerNo==4)$roomCustomStyle .= "	border-bottom-style: solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_TopRight {\n";
+		$roomCustomStyle .= "	left: $leftWidth%;\n";
+		$roomCustomStyle .= "	width: $rightWidth%;\n";
+		$roomCustomStyle .= "	height: calc($topHeight% + ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	border-style: solid solid hidden hidden;\n";
+		if($cornerNo==1)$roomCustomStyle .= "	border-left-style: solid;\n";
+		if($cornerNo==3)$roomCustomStyle .= "	border-bottom-style: solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_BottomRight {\n";
+		$roomCustomStyle .= "	top: $topHeight%;\n";
+		$roomCustomStyle .= "	left: $leftWidth%;\n";
+		$roomCustomStyle .= "	width: $rightWidth%;\n";
+		$roomCustomStyle .= "	height: $bottomHeight%;\n";
+		$roomCustomStyle .= "	border-style: hidden solid solid hidden;\n";
+		if($cornerNo==2)$roomCustomStyle .= "	border-top-style: solid;\n";
+		if($cornerNo==4)$roomCustomStyle .= "	border-left-style: solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_BottomLeft {\n";
+		$roomCustomStyle .= "	top: $topHeight%;\n";
+		$roomCustomStyle .= "	width: calc($leftWidth% + ".$borderThickness."px);\n";
+		$roomCustomStyle .= "	height: $bottomHeight%;\n";
+		$roomCustomStyle .= "	border-style: hidden hidden solid solid;\n";
+		if($cornerNo==1)$roomCustomStyle .= "	border-top-style: solid;\n";
+		if($cornerNo==3)$roomCustomStyle .= "	border-right-style: solid;\n";
+		$roomCustomStyle .= "}\n";
+		
+		if($cornerNo==2)
+		{//special case for this corner because corner 4(BL) is added last it would overlap the inner corner making it look bad 
+			$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomLeft'></div>\n";
+			$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_TopLeft'></div>\n";
+			$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomRight'></div>\n";
+		}
+		else
+		{
+			if($cornerNo!=1)$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_TopLeft'></div>\n";
+			if($cornerNo!=2)$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_TopRight'></div>\n";
+			if($cornerNo!=3)$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomRight'></div>\n";
+			if($cornerNo!=4)$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomLeft'></div>\n";
+		}
+	}
+	
+	
+	function CreateRoomLayout_FarLeftCornerAngle($cornerWidth, $roomID, $roomTypeClass, $depthToWidthRatio, &$roomCustomStyle, &$roomCustomHTML)
+	{//not finished and not 100% correct
+		//$cornerWidth = 34.577;//width of the corner to be rotated into place -  will need to be converted to height percentage
+		$cornerHeight = $cornerWidth*$depthToWidthRatio;
+		$cornerLength = sqrt($cornerWidth*$cornerWidth + $cornerHeight*$cornerHeight);
+		
+		$roomCustomStyle .= "#room".$roomID."_right {\n";
+		$roomCustomStyle .= "	left: $cornerWidth%;\n";
+		$roomCustomStyle .= "	width: ".(100-$cornerWidth)."%;\n";
+		$roomCustomStyle .= "	border-style: solid solid solid hidden;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_left {\n";
+		$roomCustomStyle .= "	top: $cornerHeight%;\n";
+		$roomCustomStyle .= "	width: $cornerWidth%;\n";
+		$roomCustomStyle .= "	height: ".(100-$cornerHeight)."%;\n";
+		$roomCustomStyle .= "	border-style: hidden hidden solid solid;\n";
+		$roomCustomStyle .= "}\n";
+		$roomCustomStyle .= "#room".$roomID."_corner {\n";
+		$roomCustomStyle .= "	top: $cornerHeight%;\n";
+		$roomCustomStyle .= "	height: $cornerWidth%;\n";//length into shape
+		$roomCustomStyle .= "	width: $cornerLength%;\n";
+		$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n";
+		$roomCustomStyle .= "	transform: rotate(-45deg);\n";
+		$roomCustomStyle .= "}\n";
+		
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_right'></div>\n";
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_left'></div>\n";
+		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
+	}
+	
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth)
+	{
+		
+		$relativeX = 100*$xPos/$parentWidth;
+		$relativeY= 100*$yPos/$parentDepth;
+		
+		//adjust dimentions if rotated
+		if($orientation=="E" || $orientation=="W")
+		{
+			$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+			$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+		}
+		else
+		{
+			$relativeWidth = 100*$width/$parentWidth;
+			$relativeDepth= 100*$depth/$parentDepth;
+		}
+		
+		if($deviceCount>0)
+		{
+			if(CustomFunctions::IsThisHNoInternal($hNo))
+				$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
+			else
+				$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
+			$locationClass = "locationFullBackground";
+		}
+		else
+			$locationClass = "locationEmptyBackground";
+		
+		$rotation = OritentationToDegrees($orientation);
+		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		$title_rotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		
+		$titleWidth = 100;
+		$titleHeight = 100;
+		if($orientation=="E" || $orientation=="W")
+		{
+			$titleWidth= 100*($depth/$width);
+			$titleHeight = 100*($width/$depth);
+		}
+		
+		$result = "<style>\n";
+		$result .= "#location$locationID {\n";
+		$result .= "	left: $relativeX%;\n";
+		$result .= "	top: $relativeY%;\n";
+		$result .= "	width: $relativeWidth%;\n";
+		$result .= "	height: $relativeDepth%;\n";
+		$result .= $rotationTransform;
+		$result .= "}\n";
+		$result .= "#location".$locationID."_title {\n";
+		$result .= "	width: $titleWidth%;\n"; 
+		$result .= "	height: $titleHeight%;\n";
+		$result .= $title_rotationTransform;
+		
+		if($orientation=="E")
+			$result .= "	top: 100%;\n";
+		else if($orientation=="S"){
+			$result .= "	top: 100%;\n";
+			$result .= "	left: 100%;\n";}
+		else if($orientation=="W")
+			$result .= "	left: 100%;\n";
+		
+		$result .= "}\n";
+		$result .= "</style>\n";
+		
+		$result .= "<div id='location$locationID' class='locationContainer'>\n";
+		$result .= "<a href='./?locationid=$locationID' title='$name'>\n";
+		$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
+		$result .= "</a>\n";
+		$result .= "</div>\n";
+		return $result;
 	}
 ?>
