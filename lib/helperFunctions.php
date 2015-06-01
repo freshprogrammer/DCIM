@@ -329,6 +329,34 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $result;
 	}
 	
+	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true, $rowSpan=1)
+	{
+		if($cell)
+			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align='center' rowspan='$rowSpan'>\n";
+		else 
+			$resultHTML = "<span class='editButtons_hidden'>QA: ";
+			
+		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
+		if($qaStatus==1)
+		{
+			$instanceID = end($_SESSION['page_instance_ids']);
+			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
+		}
+		else if($qaStatus==0)
+		{
+			$resultHTML .= "<font color='green'>Good</font>";
+		}
+		else if($qaStatus==2)
+		{
+			$resultHTML .= "<font color='black'>Pending</font>";
+		}
+		if($cell)
+			$resultHTML .= "</td>\n";
+		else
+			$resultHTML .= " </span>\n";
+		return $resultHTML;
+	}
+	
 	function CreateMessagePanel($panelTitle, $message)
 	{
 		$result = "<div class='panel'>\n";

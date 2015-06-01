@@ -4324,34 +4324,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true)
-	{
-		if($cell)
-			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align=center>\n";
-		else 
-			$resultHTML = "<span class='editButtons_hidden'>QA: ";
-			
-		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
-		if($qaStatus==1)
-		{
-			$instanceID = end($_SESSION['page_instance_ids']);
-			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
-		}
-		else if($qaStatus==0)
-		{
-			$resultHTML .= "<font color='green'>Good</font>";
-		}
-		else if($qaStatus==2)
-		{
-			$resultHTML .= "<font color='black'>Pending</font>";
-		}
-		if($cell)
-			$resultHTML .= "</td>\n";
-		else
-			$resultHTML .= " </span>\n";
-		return $resultHTML;
-	}
-	
 	function EditBadgeForm($inputHNo)
 	{
 		//edit/Add badge form
@@ -5031,7 +5003,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
-		//lookup site room and circuit info for headers
+		//lookup site/room name for headers
 		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
 			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -5052,29 +5024,23 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
 			$panelDescription = "Locations & devices in $site $roomFullName";
-			$searchTitle = "$site $roomFullName Location(s)";
+			$searchTitle = "$site $roomFullName Locations";
 			
-			if($showEmpty)
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
-					FROM dcim_location AS l
-						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
-						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE r.roomid=?
-					ORDER BY r.name, l.name";
-			else
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
-				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			$deviceJoin = "LEFT";
+			if(!$showEmpty)
+				$deviceJoin = "INNER";
+			
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
+					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member,
+					(SELECT COUNT(*) FROM dcim_device d1 WHERE d1.locationid=l.locationid AND d1.status='A') AS count
+				FROM dcim_location AS l
+					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
+					LEFT JOIN dcim_customer c ON c.hno = d.hno
+					LEFT JOIN dcim_room r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site s ON r.siteid=s.siteid
 				WHERE r.roomid=?
-					AND d.locationid=l.locationid
-					AND d.hno=c.hno
-					AND d.status='A'
 				ORDER BY r.name, l.name";
-	
-				
+			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
 				//TODO handle errors better
@@ -5085,25 +5051,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
+			
+			echo "<span class='tableTitle'>$searchTitle ($count)</span>\n";
+			//add location button
+			if(CustomFunctions::UserHasLocationPermission())
+			{
+				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+				$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
+				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php
+			}
+			echo "<BR>";
 			
 			if($count>0)
 			{
 				//show results
-				echo "<span class='tableTitle'>$searchTitle</span>\n";
-				//add location button
-				if(CustomFunctions::UserHasLocationPermission())
-				{
-					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-					$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
-					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php 
-				}
-				echo "<BR>";
-				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, true, true);
+				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), false, true, true);
 				
 				//list result data
+				$lastLocID = -1;
 				$oddRow = false;
 				while ($stmt->fetch()) 
 				{
@@ -5111,31 +5078,42 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
 					
+					$additionalDevice = ($locationID==$lastLocID);
+					$lastLocID = $locationID;
+					
 					$fullLocationName = FormatLocation($site, $room, $location);
 					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
 					echo "<tr class='$rowClass'>";
-					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					if(!$additionalDevice)
+					{
+						echo "<td class='data-table-cell' rowspan='$deviceCount'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						echo "<td class='data-table-cell' rowspan='$deviceCount'>".MakeHTMLSafe($size)."</td>";
+					}
+					
 					if(strlen($customer) > 0)
 						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					else 
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-					if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+
+					if(!$additionalDevice)
 					{
-						$jsSafeName = MakeJSSafeParam($location);
-						$jsSafeAltName = MakeJSSafeParam($altName);
-						$jsSafeNote = MakeJSSafeParam($note);
-						//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-						$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
-					
-						?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
-									<?php 
+						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+						{
+							$jsSafeName = MakeJSSafeParam($location);
+							$jsSafeAltName = MakeJSSafeParam($altName);
+							$jsSafeNote = MakeJSSafeParam($note);
+							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-						echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate);
+							?><td class='data-table-cell-button editButtons_hidden' rowspan='<?php echo $deviceCount;?>'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
+										<?php 
+							
+							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, $deviceCount);
+						}
 					}
 					echo "</tr>";
 				}
