@@ -214,8 +214,7 @@
 			<td align='right'>
 				<a href='#' class='hidden' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
 			</td>
-		</tr></table>
-		<BR><?php
+		</tr></table><?php
 	}
 	
 	//error and reporting mesages - filled in at the bottom of the page with JS
@@ -227,9 +226,9 @@
 	$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 	$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 	$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
-	$output.= "<script type='text/javascript' language='JavaScript'>";
+	$output.= "<script type='text/javascript' language='JavaScript'>\n";
 	$output.= "	UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
-	$output.= "</script>";
+	$output.= "</script>\n";
 	echo $output;
 	
 	if(!UserHasReadPermission())

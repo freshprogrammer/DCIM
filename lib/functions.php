@@ -338,7 +338,7 @@
 						LogDBChange("dcim_power",$writePowerID,"U");
 					}
 				}
-				$resultMessage[] = "Power Audit Panel - Updated: $inputCount ($goodCount Updates,$badCount Failures) Records.";
+				$resultMessage[] = "Power Audit Panel - Updated $inputCount Records. ($goodCount Updates,$badCount Failures)";
 			}
 		}
 	}

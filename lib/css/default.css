@@ -1,3 +1,10 @@
+/*
+z-index values:
+	98  - .tooltip:hover span
+	99  - .inputToolTipContainer input:hover + .inputTooltip, .inputToolTipContainer input:focus + .inputTooltip
+	101 - .outOfFocusOverlay
+	102 - .helpPopup
+*/
 *::-webkit-input-placeholder { /* WebKit browsers */
 	color: #CCC;
 }
@@ -283,7 +290,7 @@ a.internalLink {
 	width: 100%;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.5);
-	z-index:1001;
+	z-index:101;
 	filter: alpha(opacity=50);
 }
 
@@ -302,7 +309,7 @@ a.internalLink {
 	-webkit-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
 	-moz-box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
 	box-shadow: 10px 10px 20px 0px rgba(0,0,0,0.75);
-	z-index:1002;
+	z-index:102;
 }
 
 .outOfFocusOverlay, .helpPopup {
@@ -506,7 +513,7 @@ h2 {
 	border-radius: 5px 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; 
 	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.1); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
 	font-family: Calibri, Tahoma, Geneva, sans-serif;
-	position: absolute; left: 1.75em; top: 1.75em; z-index: 99;
+	position: absolute; left: 1.75em; top: 1.75em; z-index: 98;
 	margin-left: 0; width: 250px;
 }
 .tooltip:hover img {
@@ -601,7 +608,7 @@ h2 {
 	top: 50%;
 	margin-top: -13.5px;
 	margin-left: 15px;
-	z-index: 999;
+	z-index: 99;
 }
 
 .siteContainer {
