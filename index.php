@@ -212,21 +212,29 @@
 				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
 			</td>
 			<td align='right'>
-				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
+				<a href='#' class='hidden' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
 			</td>
 		</tr></table>
 		<BR><?php
 	}
 	
 	//error and reporting mesages - filled in at the bottom of the page with JS
-	echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
-	echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
-	echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
-		
+	$output = "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
+	$output.= "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
+	$output.= "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
+	
+	//populate messages - and dissable 'hidden' style is msg exists - NOTE: this is run again in the footer its here just in case the page crashes before then
+	$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
+	$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
+	$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+	$output.= "<script type='text/javascript' language='JavaScript'>";
+	$output.= "	UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
+	$output.= "</script>";
+	echo $output;
+	
 	if(!UserHasReadPermission())
 	{
-		echo "<!--  LOGIN PROMPT  -->\n";
-		echo "<BR>\n";
+		echo "<!--  LOGIN PROMPT  -->\n<BR>\n";
 		LoginPrompt();
 	}
 	else
@@ -280,7 +288,6 @@
 					echo "<div class=\"panel-header\">\n";
 					echo "Search for \"".MakeHTMLSafe($search)."\" yields:\n";
 					echo "</div>\n";
-					
 					echo "<div class=\"panel-body\">\n\n";
 					
 					//search in customer (hno, cno, name, note)
@@ -318,16 +325,14 @@
 
 <footer>
 <script type="text/javascript" language="JavaScript">
+	//move focus as necisary
+	InitializePage();
 	<?php 
-		//move focus as necisary
-		echo "InitializePage();\n";
-		
 		//populate messages - and dissable 'hidden' style is msg exists
 		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
 		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
-		
 		
 		if($focusSearch)
 			echo "FocusMainSearch();\n";
