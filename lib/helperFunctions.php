@@ -643,10 +643,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidAdminPermission($permissionLevel);
 	}
 	function DescribeUserPermissionLevel($permission, $simple=false, $showVal=false)
-	{
-		//1 char val
+	{//1 char val
 		$result = "";
-		
 		if(ValidAdminPermission($permission))
 		{
 			if($simple)
@@ -677,9 +675,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 			
 		if($showVal)
-		{
 			$result .= " ($permission)";
-		}
 		return $result;
 	}
 	
@@ -689,23 +685,17 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	function RoomAccesClass($access)
-	{
-		if($access=="T")//define room color
-			return "caBackground";
-		else
-			return "roomBackground";
+	{//define room color
+		if($access=="T")return "caBackground";
+		else return "roomBackground";
 	}
 	
 	function OritentationToDegrees($o)
 	{
-		$rotation = 0;
-		if($o=="W")
-			$rotation = 270;
-		else if($o=="E")
-			$rotation = 90;
-		else if($o=="S")
-			$rotation = 180;
-		return $rotation;
+		if($o=="E")return 90;
+		else if($o=="S")return 180;
+		else if($o=="W")return 270;
+		else return 0;//"N"
 	}
 	
 	function Orientation($o)
@@ -720,10 +710,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function FormatVLAN($vlan)
 	{
 		$vlan = (int)$vlan;
-		if($vlan<0)
-			return "Temp-".$vlan;
-		else
-			return $vlan;
+		if($vlan<0) return "Temp-".$vlan;
+		else return $vlan;
 	}
 	
 	function FormatTechDetails($editUserID, $editDate, $visibleText="", $qaUserID=-1, $qaDate="")
@@ -753,19 +741,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 	
 		if($qaUserID ==-1)
-		{
 			$qaDescription = "None";
-		}
 		else 
 		{
-			if(!isset($userFullName[$qaUserID]))
-			{//not in array
+			if(!isset($userFullName[$qaUserID]))//not in array
 				$qaUserFullName = "User#$editUserID";
-			}
 			else
-			{
 				$qaUserFullName = $userFullName[$qaUserID];
-			}
 			$qaDescription = "$qaUserFullName";//no need to show date here
 		}
 		
@@ -1135,11 +1117,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	 * 2:requires seperate user
 	 */
 	function DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate)
-	{
+	{//this could/should also check old dates to force regular QAs
 		global $userID;
-		
-		//this could/should also check old dates to force regular QAs
-		
 		if($qaUserID==-1)
 		{
 			if($editUserID===$userID)//can't QA self
@@ -1156,7 +1135,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $errorMessage;
 		
 		$results = array();
-		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -start- results = (".implode(",",$results).")";
 		$query = "SELECT $keyField FROM $table WHERE $filter";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -1165,27 +1143,19 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		{
 			if (!$stmt->execute())//execute 
 			{
-				//TODO handle Errors better
-				//failed (errorNo-error)
 				$errorMessage[] = "Failed to execute: GetKeysFromFilter($table, $filter, $keyField) (" . $stmt->errno . "-" . $stmt->error . ").";
 				return false;
 			}
 			$stmt->store_result();
 			$count = $stmt->num_rows;
-		
 			$stmt->bind_result($key);
 			
 			if($count>0)
 			{
 				while ($stmt->fetch()) 
-				{
-					//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -append- key = $key";
 					$results[] = $key;
-				}
 			}
 		}
-		
-		//$errorMessage[] = "Dev - GetKeysFromFilter($table, $filter, $keyField) -end- results = (".implode(",",$results).")";
 		return $results;
 	}
 	
@@ -1285,9 +1255,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	function ValidNotes($input)
-	{
-		//maybe should filter out html here to prevent HTML injection
-		//actualy its rendered back in a text area and should be secure unless they break out of that.
+	{//maybe should filter out html here to prevent HTML injection - actualy its rendered back in a text area and should be secure unless they break out of that.
 		return true;
 	}
 	
