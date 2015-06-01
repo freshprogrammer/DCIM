@@ -329,6 +329,17 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $result;
 	}
 	
+	function CreateMessagePanel($panelTitle, $message)
+	{
+		$result = "<div class='panel'>\n";
+		$result .= "<div class='panel-header'>$panelTitle</div>\n";
+		$result .= "<div class='panel-body'>\n\n";
+		$result .= $message;
+		$result .= "</div>\n";
+		$result .= "</div>\n";
+		return $result;
+	}
+	
 	function FormatSimpleMessage($msg, $severity)
 	{
 		if ($severity==3)

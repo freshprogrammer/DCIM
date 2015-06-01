@@ -41,13 +41,13 @@
 					AS cur
 			GROUP BY cur.badgeid
 			ORDER BY cur.customer, cur.name";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>");
+			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			return $result;
 		}
-			
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($hNo, $cNo, $customer,$name, $badgeNo, $issue, $hand, $locs);
@@ -86,13 +86,13 @@
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			GROUP BY l.locationid,p.powerid
 			ORDER BY s.name, r.name,l.name,p.panel,p.circuit";
-
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>");
+			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error);
 			return $result;
 		}
-			
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($site,$room,$locationName,$panel,$circuit,$cust,$hNo,$load,$percent,$amps,$volts,$status,$editDate);

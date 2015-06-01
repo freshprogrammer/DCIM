@@ -149,6 +149,11 @@
 			
 			$pageSubTitle = "Home";
 			
+			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
+			{
+				echo CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
+			}
+			
 			$result = "<div class=\"panel\">\n";
 			$result .= "<div class=\"panel-header\">\n";
 			$result .= "$appName\n";
@@ -156,19 +161,14 @@
 			
 			$result .= "<div class=\"panel-body\">\n\n";
 			
-			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
-			{
-				$result .= "Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.<BR><BR>";
-			}
-			
 			//select site(s) from table for rendering each one
 			$query = "SELECT siteid, name, fullname, width, depth
 					FROM dcim_site
 					WHERE width > 0 AND depth > 0";
-
+			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 			{
-				$errorMessage[]= "CreateHomePageContent() SQL Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$errorMessage[]= "CreateHomePageContent() SQL Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
 			{

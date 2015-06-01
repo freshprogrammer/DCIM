@@ -2933,7 +2933,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
-			echo "<BR>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -3557,13 +3556,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//bottom data panel
 		if($custCount==1)
 		{
-			echo "<BR>";
-			
 			//data for customer
-			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Customer Details</div>\n";
-			
 			echo "<div class='panel-body'>\n\n";
 				
 			//show devices linked to this hNo
@@ -4115,7 +4110,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//end top panel and panel body
 			echo "</div>\n";
 			echo "</div>\n";
-			echo "<BR>\n";
 			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
@@ -5012,7 +5006,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($roomFound)
 		{
-			echo "<BR>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
 			echo "<div class='panel-body'>\n\n";

@@ -32,9 +32,9 @@
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
-			//in development features
+			//in development features go here
 		}
-		echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
+		echo "</div>\n</div>\n\n";//end panel and panel body
 		
 
 		echo "<div class=\"panel\">\n";
@@ -42,7 +42,7 @@
 		echo "<div class=\"panel-body\">\n";
 		Check_CustomerToQA();
 		Check_BadgesToQA();
-		echo "</div>\n</div>\n<BR>\n\n";//end panel and panel body
+		echo "</div>\n</div>\n\n";//end panel and panel body
 		
 		
 		echo "<div class=\"panel\">\n";
@@ -62,7 +62,6 @@
 		//admin only stuff - just because its stuff they cant fix
 		if(UserHasAdminPermission())
 		{
-			echo "<BR>\n";
 			echo "<div class=\"panel\">\n";
 			echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
 			echo "<div class=\"panel-body\">\n";

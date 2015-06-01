@@ -250,13 +250,9 @@
 			if($page==="PowerAudit")
 			{
 				if(strlen($pa_roomID) > 0 && strlen($pa_panel) > 0)
-				{
 					PowerAuditPanel($pa_roomID,$pa_panel);
-				}
 				else
-				{
 					PowerAuditPanelList();
-				}
 			}
 			else if($page==="Audits")
 			{
@@ -310,7 +306,6 @@
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust
-		echo "<BR>";
 		echo "<!--  PAGE BODY END-->\n";
 	}//end - page body vs login - //officaliy logged in with min read access
 	
