@@ -64,6 +64,7 @@ z-index values:
 	border-style: solid;
 	padding: 1px;
 	margin-bottom: 1em;
+	box-shadow: 5px 5px 5px #888888;
 }
 
 .panel-header {
