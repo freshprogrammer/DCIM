@@ -43,6 +43,13 @@
 			return $hNo=="387046";
 		}
 		
+		public static function IsThisLocationABottomHalfCab($locationID)
+		{
+			//this should be a more complicated lookup - but so rarely changes could just as easily be edited manualy
+			$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168);
+			return in_array($locationID,$bottomIDs);
+		}
+		
 		public static function CreateInternalLink($hNo, $cNo, $includeOldLink)
 		{//these are internal links for cust and device pages to other applications
 			$result = "<a href='https://internalApp.com?search=$hNo' target='_blank' class='internalLink'>(main system)</a>\n";
