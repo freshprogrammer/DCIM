@@ -3876,106 +3876,85 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($dbPortCount>=1)
 				{
-					$topPortDivs = "";
-					$bottomPortDivs = "";
-				
-					//these are not mutualy exclusive - both cen be on "bottom"
-					//
-					if(!$deviceInfo->doubleRow)
-					{
-						//single "bottom" row
-						$oddOnTop = false;
-						$evenOnTop = false;
-					}
-					else 
-					{
-						$oddOnTop  = ($startPort%2!=0);
-						$evenOnTop = ($startPort%2==0);
-					}
+					$portDivs = "";
+					$portCSSTags = "";
 					//build switch port divs
 					while ($stmt->fetch()) 
 					{
 						if($port >= $startPort && $port <= $endPort)//valid port in range
 						{
-							$popupText = "";
-							
-							//$truePortIndex is the true port no from 0 --EX: port 15 in on 13-24 is 2
-							$truePortIndex = $port-$startPort;
-							$setStyle = "";
-							if($truePortIndex < $deviceInfo->portsPerSet * 1) //less than 12
-								$setStyle = "switchPortsSet1";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 2) //less than 24
-								$setStyle = "switchPortsSet2";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 3) //less than 36
-								$setStyle = "switchPortsSet3";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 4) //less than 48
-								$setStyle = "switchPortsSet4";
-							
-							
-							if($status=="A")
-								$statusStyle = "switchPortActive";
-							else if($status=="D")
-								$statusStyle = "switchPortEmpty";
-							else if($status=="R")
-								$statusStyle = "switchPortReserved";
-							else
-								$statusStyle = "switchPortBad";
-							$statusDescrip = DevicePortStatus($status,true);
-								
-							//if odd and not odd on top
-							$onBottom = (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
-							$bottomStyle = "";
-							if($onBottom)
-								$bottomStyle = "switchBottomPort";
-							
-							//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
-							$portFullName = FormatPort($member, $model, $pic, $port, $type);
-							$connectionText = "N/A";
-							if($switchID!=null)
-							{
-								$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-								$connectionText = "$switchName $switchPortFullName";
-							}
-							
-							$tech = $userFullName[$editUserID] . ": ".$editDate;
-							//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
-							$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-							Connection:".MakeHTMLSafe($connectionText)."<BR>
-							Status:$statusDescrip<BR>
-							MAC:".MakeHTMLSafe($mac)." <BR>
-							Speed:".MakeHTMLSafe($speed)." <BR>
-							VLAN(s):$vlan <BR>
-							Tech:$tech <BR>
-							Notes:".MakeHTMLSafe($note);
-							
-							if(CustomFunctions::UserHasDevPermission())
-							{
-								//debug
-								$popupText .= "<BR>
-								<BR>parentDeviceID=$deviceID
-								<BR>DeviePortID=$devicePortID
-								<BR>PortConnectionID=$portConnectionID
-								<BR>SwitchID=$switchID
-								<BR>SwitchPortID=$switchPortID";
-							}
-								
-							
-							$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
-							$jsSafePortFullName = MakeJSSafeParam($portFullName);
-							$jsSafeMac = MakeJSSafeParam($mac);
-							$jsSafeSpeed = MakeJSSafeParam($speed);
-							$jsSafeNote = MakeJSSafeParam($note);
-							//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-							$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
-							
-							$portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
-							
 							if($pic==0)
 							{
-								if($onBottom)
-									$bottomPortDivs .= $portDiv;
+								if($status=="A")
+									$statusStyle = "switchPortActive";
+								else if($status=="D")
+									$statusStyle = "switchPortEmpty";
+								else if($status=="R")
+									$statusStyle = "switchPortReserved";
 								else
-									$topPortDivs .= $portDiv;
+									$statusStyle = "switchPortBad";
+								$statusDescrip = DevicePortStatus($status,true);
+								
+								//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
+								$portFullName = FormatPort($member, $model, $pic, $port, $type);
+								$connectionText = "N/A";
+								if($switchID!=null)
+								{
+									$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
+									$connectionText = "$switchName $switchPortFullName";
+								}
+								
+								//define popup text
+								$popupText = "";
+								$tech = $userFullName[$editUserID] . ": ".$editDate;
+								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
+								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
+								Connection:".MakeHTMLSafe($connectionText)."<BR>
+								Status:$statusDescrip<BR>
+								MAC:".MakeHTMLSafe($mac)." <BR>
+								Speed:".MakeHTMLSafe($speed)." <BR>
+								VLAN(s):$vlan <BR>
+								Tech:$tech <BR>
+								Notes:".MakeHTMLSafe($note);
+								
+								if(CustomFunctions::UserHasDevPermission())
+								{
+									//debug
+									$popupText .= "<BR>
+									<BR>parentDeviceID=$deviceID
+									<BR>DeviePortID=$devicePortID
+									<BR>PortConnectionID=$portConnectionID
+									<BR>SwitchID=$switchID
+									<BR>SwitchPortID=$switchPortID";
+								}
+								
+								
+								//define js for click to edit port
+								$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
+								$jsSafePortFullName = MakeJSSafeParam($portFullName);
+								$jsSafeMac = MakeJSSafeParam($mac);
+								$jsSafeSpeed = MakeJSSafeParam($speed);
+								$jsSafeNote = MakeJSSafeParam($note);
+								//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
+								$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+								
+								//get port possition
+								$xPos = 0; $yPos = 0;
+								$deviceInfo->GetPortPosition($port,$xPos,$yPos);
+								
+								$bottomStyle = "";
+								if($deviceInfo->IsPortOnBottom($port))
+									$bottomStyle = "switchBottomPort";
+								
+								//define Create div and position CSS
+								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
+								$portCSS = "#port$devicePortID {
+									margin-left: ".$xPos."px;
+									margin-top: ".$yPos."px;
+								}";
+								
+								$portDivs .= $portDiv;
+								$portCSSTags .= $portCSS;
 							}
 							else 
 							{
@@ -3984,119 +3963,32 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								//for now dont include them here (on the visual render)  - will still be listed below
 								//will need thier own positioning CSS classes and probably image overlays - meh
 							}
-						}
+						}//port in range
 					}//while
 				}//found ports
 				
-				$portWidth = 28;
-				$portHeight = 20;
-				//dynamic
-				$switchWidth = 948;
-				$switchHeight = 97;
-				$switchImage = "images/devices/ex4200_front.jpg";
-				$topOffset = 25;
-				$bottomOffset = 30;
-				$set1Offset = 18;
-				$set2Offset = 28;
-				$set3Offset = 38;
-				$set4Offset = 48;
-				$marginRight = 2;
-				
-				//TODO quick hack for patch panels
-				if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom")
-				{
-					$switchWidth = 950;
-					$switchHeight = 91;
-					$switchImage = "images/devices/patchpanel.jpg";
-					$topOffset = 0;
-					$bottomOffset = 38;
-					$set1Offset = 60;
-					$set2Offset = 94;
-					$set3Offset = 129;
-					$set4Offset = 166;
-				
-					if($startPort==13)
-					{
-						//bottom half cab - shift ports to right
-						$set1Offset = 489;
-						$set2Offset = 525;
-					}
-				}
-				else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
-				{
-					$switchImage = "images/devices/ex4200_24p_front.jpg";
-				}
-				else if($deviceInfo->name=="WS-X6348")
-				{
-					$switchImage = "images/devices/ws-x6348_front.jpg";
-					$switchWidth = 950;
-					$switchHeight = 105;
-					$topOffset = 25;
-					$bottomOffset = 33;
-					$set1Offset = 57;
-					$set2Offset = 78;
-					$set3Offset = 92;
-					$set4Offset = 102;
-					$marginRight = 6;
-				}
-				else if($deviceInfo->name=="Catalyst 3550")
-				{
-					$switchImage = "images/devices/catalyst2950_front.jpg";
-					$switchWidth = 950;
-					$switchHeight = 89;
-					$topOffset = 19;
-					$bottomOffset = 25;
-					$set1Offset = 59;
-					$set2Offset = 77;
-					$set3Offset = 97;
-				}
-			
 			?>
-
 <style type="text/css">
 #switch {
-	width:<?php echo $switchWidth;?>;
-	height:<?php echo $switchHeight;?>;
-	background-image:url('<?php echo $switchImage;?>'); 
+	width:<?php echo $deviceInfo->deviceWidthPx;?>;
+	height:<?php echo $deviceInfo->deviceHeightPx;?>;
+	background-image:url('<?php echo $deviceInfo->deviceImage;?>'); 
 	background-repeat: no-repeat;
-}
-.switchPortsSet1{
-	left: <?php echo $set1Offset;?>px;
-}
-.switchPortsSet2{
-	left: <?php echo $set2Offset;?>px;
-}
-.switchPortsSet3{
-	left: <?php echo $set3Offset;?>px;
-}
-.switchPortsSet4{
-	left: <?php echo $set4Offset;?>px;
 }
 .switchPortActive, .switchPortBad,
 .switchPortEmpty, .switchPortReserved{
 	background-repeat: no-repeat;
-	top: <?php echo $topOffset;?>px; /*over written by bottom ports*/
-	width:<?php echo $portWidth;?>px;
-	height:<?php echo $portHeight;?>px;
-	margin-right: <?php echo $marginRight;?>px;
-	margin-bottom: 3px;
-	position: relative;
-	float: left;
+	position: absolute;
+	width:<?php echo DeviceModel::$portWidth;?>px;
+	height:<?php echo DeviceModel::$portHeight;?>px;
 }
-.switchBottomPort{
-	top:<?php echo $bottomOffset;?>px;
-}
+<?php echo $portCSSTags;?>
 </style>
 <?php
 				//switch div
 				echo "<div id='switch'>\n";
 				echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
-				if($deviceInfo->doubleRow)
-				{
-					echo $topPortDivs;
-					echo "</td></tr><tr><td>\n";
-				}
-				echo $bottomPortDivs;
+				echo $portDivs;
 				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device

@@ -4,6 +4,12 @@
 	
 	class DeviceModel 
 	{
+		//default constants 
+		static $portWidth = 28;
+		static $portHeight = 20;
+		static $portSerperation = 2;
+		
+		//passed in in constructor
 		public $name = "";
 		public $startPort = 1;
 		public $portCount = 24;
@@ -13,6 +19,11 @@
 		public $doubleRow = false;
 		public $portsPerSet = 12;
 		public $showDeviceImage = false;
+		
+		//further defined in constructor based on model
+		public $deviceWidthPx = 948;
+		public $deviceHeightPx = 97;
+		public $deviceImage = "images/devices/ex4200_front.jpg";
 		
 		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage) 
 		{
@@ -25,11 +36,132 @@
 			$this->doubleRow = $doubleRow; 
 			$this->portsPerSet = $portsPerSet; 
 			$this->showDeviceImage = $showDeviceImage; 
+			
+			//device render properties that are differnet for each model
+			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 91;
+				$this->deviceImage = "images/devices/patchpanel.jpg";
+			}
+			else if($this->name=="EX3200 24p" || $this->name=="EX4200 24p")
+				$this->deviceImage = "images/devices/ex4200_24p_front.jpg";
+			else if($this->name=="WS-X6348")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 105;
+				$this->deviceImage = "images/devices/ws-x6348_front.jpg";
+			}
+			else if($this->name=="Catalyst 3550")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 89;
+				$this->deviceImage = "images/devices/catalyst2950_front.jpg";
+			}
 		}
 
 		public function __toString()
 		{
 			return $this->name;
+		}
+		
+		public function GetPortPosition($port, &$resultX, &$resultY)
+		{
+			//this port possittioning per model should probably be properties of the instance setup in at instantiation
+			
+			$portSerperation = DeviceModel::$portSerperation;
+			//dynamic defaults bassed on ex4200
+			$topOffset = 25;
+			$bottomOffset = 55;
+			$set1Offset = 18;
+			$set2Offset = 28;
+			$set3Offset = 38;
+			$set4Offset = 48;
+			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			{
+				$topOffset = 0;
+				$bottomOffset = 37;
+				$set1Offset = 60;
+				$set2Offset = 94;
+				$set3Offset = 129;
+				$set4Offset = 166;
+			
+				if($this->startPort==13)
+				{//bottom half cab - shift ports to right
+					$set1Offset = 489;
+					$set2Offset = 525;
+				}
+			}
+			else if($this->name=="WS-X6348")
+			{
+				$topOffset = 25;
+				$bottomOffset = 55;
+				$set1Offset = 57;
+				$set2Offset = 78;
+				$set3Offset = 92;
+				$set4Offset = 102;
+				$portSerperation = 6;
+			}
+			else if($this->name=="Catalyst 3550")
+			{
+				$topOffset = 19;
+				$bottomOffset = 47;
+				$set1Offset = 59;
+				$set2Offset = 77;
+				$set3Offset = 97;
+			}
+			
+			//$truePortIndex is the true port no from 0 --EX: port 15 in a set 13-24 is 2
+			$truePortIndex = $port-$this->startPort;
+			$setNo = 0;
+			$setOffset = 0;//no possition info for set 0
+			if($truePortIndex < $this->portsPerSet * 1) //typicly less than 12
+			{
+				$setNo = 1;
+				$setOffset = $set1Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 2) //typicly less than 24
+			{
+				$setNo = 2;
+				$setOffset = $set2Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 3) //typicly less than 36
+			{
+				$setNo = 3;
+				$setOffset = $set3Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 4) //typicly less than 48
+			{
+				$setNo = 4;
+				$setOffset = $set4Offset;
+			}
+			
+			$xRow = $truePortIndex;
+			if($this->doubleRow)
+				$xRow = (int)($truePortIndex/2);
+			
+			$resultX = $setOffset + $xRow*(DeviceModel::$portWidth + $portSerperation);
+			
+			if($this->IsPortOnBottom($port))
+				$resultY = $bottomOffset;
+			else
+				$resultY = $topOffset;
+		}
+		
+		public function IsPortOnBottom($port)
+		{
+			//these are not mutualy exclusive - both can be on "bottom"
+			if(!$this->doubleRow)
+			{//single "bottom" row
+				$oddOnTop = false;
+				$evenOnTop = false;
+			}
+			else
+			{
+				$oddOnTop  = ($this->startPort%2!=0);
+				$evenOnTop = ($this->startPort%2==0);
+			}
+			return (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
 		}
 	}
 	
