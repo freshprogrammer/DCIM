@@ -4871,8 +4871,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
+
 			ListRoomLocationsAndDevices($roomID);
+			echo "<BR>";
+			echo ListPowerPanels($roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -6154,9 +6156,33 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function PowerAuditPanelList()
 	{
 		global $pageSubTitle;
-		global $mysqli;
 		
 		$pageSubTitle = "Power Audit - Panel List";
+		
+		$result = "<div class='panel'>\n";
+		$result.= "<div class='panel-header'>\n";
+		$result.= "Power Panel list\n";
+		$result.= "</div>\n";
+		
+		$result.= "<div class='panel-body'>\n\n";
+		
+		$result.= ListPowerPanels();
+		
+		$result.= "</div>\n";
+		$result.= "</div>\n";
+		echo $result;
+	}
+	
+	function ListPowerPanels($roomID=-1)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$filter = "";
+		if($roomID!=-1)
+			$filter = "r.roomid=?";
+		else
+			$filter = "-1=?";
 		
 		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
 			FROM dcim_power AS p
@@ -6164,57 +6190,50 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE $filter
 			GROUP BY r.roomid, p.panel
 			ORDER BY s.name, r.name, p.panel";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
 		{
-			//TODO handle errors better
-			echo "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
-		$count = $stmt->num_rows;
-		
-		
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>\n";
-		echo "Power Panel list\n";
-		echo "</div>\n";
-		
-		echo "<div class='panel-body'>\n\n";
-		if($count>0)
-		{
-			//show results
-			echo "<span class='tableTitle'>All Panels</span><BR>\n";
-			echo CreateDataTableHeader(array("Site","Room","Panel"));
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
-			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
-				echo "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
-				echo "</tr>";
-			}
-			echo "</table>";
+			$errorMessage[]= "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "SQL error locating power panels";
 		}
 		else
-			echo "No Power panel data found<BR>";
-						
-		echo "</div>\n";
-		echo "</div>\n";
-		return $count;
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
+			$count = $stmt->num_rows;
+			
+			if($count>0)
+			{
+				//show results
+				$result .= CreateDataTableHeader(array("Site","Room","Panel"));
+					
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+			
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+					$result .= "</tr>";
+				}
+				$result .= "</table>";
+			}
+			else
+				$result .= "No Power panel data found<BR>";
+		}
+		return $result;
 	}
-
+	
 	function ChangeHNo($old, $new, $renameDevices)
 	{
 		global $mysqli;
