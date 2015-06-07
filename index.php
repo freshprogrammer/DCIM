@@ -204,21 +204,21 @@
 	<?php
 	//BackupDatabase();
 	
+	$output= "<!-- HEADER LINKS -->\n";
+	$output.= "<table width='100%'><tr>\n";
+	$output.= "	<td>\n";
 	if(UserHasReadPermission())
 	{
-		?><!-- HEADER LINKS -->
-		<table width=100%><tr>
-			<td>
-				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
-			</td>
-			<td align='right'>
-				<a href='#' class='hidden' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
-			</td>
-		</tr></table><?php
+		$output.= CustomFunctions::CreateNavigationQuickLinks();
 	}
+	$output.= "	</td>\n";
+	$output.= "	<td align='right'>\n";
+	$output.= "		<a href='#' class='hidden' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;\n";
+	$output.= "	</td>\n";
+	$output.= "</tr></table>\n";
 	
 	//error and reporting mesages - filled in at the bottom of the page with JS
-	$output = "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
+	$output.= "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
 	$output.= "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
 	$output.= "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
 	
@@ -345,7 +345,7 @@
 		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
 		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 		
-		if($focusSearch)
+		if(UserHasReadPermission() && $focusSearch)
 			echo "FocusMainSearch();\n";
 		//update title if necisarry
 		if(strlen($pageSubTitle) > 0)
