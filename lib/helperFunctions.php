@@ -2,7 +2,7 @@
 //these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
 //some of this is also a type of documentation of DB values like LocationType() or DeviceType(), ect
 	
-	class DeviceModel 
+	class DeviceModel
 	{
 		public $name = "";
 		public $startPort = 1;
@@ -14,17 +14,17 @@
 		public $portsPerSet = 12;
 		public $showDeviceImage = false;
 		
-		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage) 
+		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage)
 		{
 			$this->name = $name;
-			$this->startPort = $startPort; 
-			$this->portCount = $portCount; 
-			$this->coloDevice = $coloDevice; 
-			$this->gigabit = $gigabit; 
-			$this->partOfChasis = $partOfChasis; 
-			$this->doubleRow = $doubleRow; 
-			$this->portsPerSet = $portsPerSet; 
-			$this->showDeviceImage = $showDeviceImage; 
+			$this->startPort = $startPort;
+			$this->portCount = $portCount;
+			$this->coloDevice = $coloDevice;
+			$this->gigabit = $gigabit;
+			$this->partOfChasis = $partOfChasis;
+			$this->doubleRow = $doubleRow;
+			$this->portsPerSet = $portsPerSet;
+			$this->showDeviceImage = $showDeviceImage;
 		}
 
 		public function __toString()
@@ -37,14 +37,13 @@
 	{
 		global $deviceModels;
 		
-		/*
-		 * This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
-		 * I supose this could be a modelid in dcim_device and and dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
+		/* This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
+		 * I supose this could be a modelID in dcim_device and and a dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
 		 * If this ever gets so lots of new models are being added that might be a consideration, but until then this works just fine.
-		 *  - That would probabyl require a UI way to add/edit device models including their images, offsets, colors, port counts, ect.-UGH
+		 *  - That would probably require a UI way to add/edit device models including their images, offsets, colors, port counts, ect.-UGH
 		 * 
-		 * future field ideas
-		 * size(U), type, port spacing, brand 
+		 * future field ideas:
+		 * size(U), type, port spacing and seperation, brand
 		 */
 		$deviceModels = array();
 		
@@ -53,8 +52,8 @@
 		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6, true);
 		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6,false);
 		
-		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true, true, true,12, true);//juniper
-		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true, true, true,12, true);
+		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true,false, true,12, true);//juniper
+		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true,false, true,12, true);
 		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12, true);
 		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12, true);
 		
@@ -63,7 +62,7 @@
 		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1,false);
 	}
 	
-	function GetTableRecordDescription($table) 
+	function GetTableRecordDescription($table)
 	{
 		if($table=="dcim_badge")					$descrip='Badge';
 		else if($table=="dcim_customer")			$descrip='Customer';
@@ -94,7 +93,7 @@
 		return $descrip;
 	}
 	
-	function GetKeyField($table) 
+	function GetKeyField($table)
 	{
 		if($table=="dcim_badge")					$keyFieldName='badgeid';
 		else if($table=="dcim_customer")			$keyFieldName='hno';
@@ -125,7 +124,7 @@
 		return $keyFieldName;
 	}
 	
-	function GetLogTable($table) 
+	function GetLogTable($table)
 	{
 		if($table=="dcim_badge")				$logTable='dcimlog_badge';
 		else if($table=="dcim_customer")		$logTable='dcimlog_customer';
@@ -167,7 +166,7 @@
 		$userInitials = array();
 		
 		$query = "SELECT userid, username, name, initials
-		FROM dcim_user";
+			FROM dcim_user";
 
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -179,7 +178,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
 		
-		while ($stmt->fetch()) 
+		while ($stmt->fetch())
 		{
 			$userName["$userID"] = MakeHTMLSafe($uName);
 			$userFullName["$userID"] = MakeHTMLSafe($uFullName);
@@ -414,15 +413,19 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 		else
 		{
+			$memberText = "";
+			if($deviceInfo->partOfChasis)
+				$memberText = "$member/";
+			
 			if($pic==99)//management port
 			{
 				$portFullName = "em-";
-				$portFullName .= $member."/0/".$port;
+				$portFullName .= $memberText."0/".$port;
 			}
 			else if($pic==98)//console port
 			{
 				$portFullName = "con-";
-				$portFullName .= $member."/0/".$port;
+				$portFullName .= $memberText."0/".$port;
 			}
 			else 
 			{
@@ -437,7 +440,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				}
 				else
 					$portFullName = "fe-";
-				$portFullName .= $member."/".$pic."/".$port;
+				$portFullName .= $memberText.$pic."/".$port;
 			}
 		}
 		return $portFullName;
