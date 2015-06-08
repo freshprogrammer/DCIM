@@ -4893,7 +4893,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullRoomName = FormatLocation($site, $fullName, "");
 				$pageSubTitle = "$fullRoomName";
 				
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 				}
@@ -4924,7 +4924,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<?php
 				}*/
 				//editMode button
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 				}
@@ -5013,7 +5013,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			
-			if(CustomFunctions::UserHasLocationPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
@@ -5099,7 +5099,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				echo "<BR>";
 				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, true, true);
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$oddRow = false;
