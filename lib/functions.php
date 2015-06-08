@@ -4757,7 +4757,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullRoomName = FormatLocation($site, $fullName, "");
 				$pageSubTitle = "$fullRoomName";
 				
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 				}
@@ -4788,7 +4788,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<?php
 				}*/
 				//editMode button
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 				}
@@ -4879,7 +4879,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "</div>\n";
 			echo "</div>\n";
 			
-			if(CustomFunctions::UserHasLocationPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
@@ -4957,14 +4957,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>";
 			
 			if($count>0)
-			{
-				//show results
-				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), false, true, true);
+			{//show results
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
 				$oddRow = false;
-				while ($stmt->fetch()) 
+				while ($stmt->fetch())
 				{
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
@@ -4990,7 +4989,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else 
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-
+					
 					if(!$additionalDevice)
 					{
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
@@ -5091,7 +5090,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//list result data
 			$oddRow = false;
-			while ($stmt->fetch()) 
+			while ($stmt->fetch())
 			{
 				$fullLocationName = FormatLocation($site, $room, $location);
 			
