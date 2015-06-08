@@ -6503,7 +6503,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
 		}
 		
-		if(!$standAlonePage)$result .= "</a>\n";
+		if(!$renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;
