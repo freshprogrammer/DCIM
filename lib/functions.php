@@ -338,7 +338,7 @@
 						LogDBChange("dcim_power",$writePowerID,"U");
 					}
 				}
-				$resultMessage[] = "Power Audit Panel - Updated: $inputCount ($goodCount Updates,$badCount Failures) Records.";
+				$resultMessage[] = "Power Audit Panel - Updated $inputCount Records. ($goodCount Updates,$badCount Failures)";
 			}
 		}
 	}
@@ -2020,9 +2020,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($type=="H")
 			{
-				//this should be a more complicated lookup - but so rarely changes could just as easily be edited manualy
-				$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168); //fix this hard code with #100
-				$bottomHalf = in_array($locationID,$bottomIDs);
+				$bottomHalf = CustomFunctions::IsThisLocationABottomHalfCab($locationID);
 				if($bottomHalf)
 					$model = "Half Cab-Bottom";
 				else
@@ -3876,106 +3874,85 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if($dbPortCount>=1)
 				{
-					$topPortDivs = "";
-					$bottomPortDivs = "";
-				
-					//these are not mutualy exclusive - both cen be on "bottom"
-					//
-					if(!$deviceInfo->doubleRow)
-					{
-						//single "bottom" row
-						$oddOnTop = false;
-						$evenOnTop = false;
-					}
-					else 
-					{
-						$oddOnTop  = ($startPort%2!=0);
-						$evenOnTop = ($startPort%2==0);
-					}
+					$portDivs = "";
+					$portCSSTags = "";
 					//build switch port divs
 					while ($stmt->fetch()) 
 					{
 						if($port >= $startPort && $port <= $endPort)//valid port in range
 						{
-							$popupText = "";
-							
-							//$truePortIndex is the true port no from 0 --EX: port 15 in on 13-24 is 2
-							$truePortIndex = $port-$startPort;
-							$setStyle = "";
-							if($truePortIndex < $deviceInfo->portsPerSet * 1) //less than 12
-								$setStyle = "switchPortsSet1";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 2) //less than 24
-								$setStyle = "switchPortsSet2";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 3) //less than 36
-								$setStyle = "switchPortsSet3";
-							else if($truePortIndex < $deviceInfo->portsPerSet * 4) //less than 48
-								$setStyle = "switchPortsSet4";
-							
-							
-							if($status=="A")
-								$statusStyle = "switchPortActive";
-							else if($status=="D")
-								$statusStyle = "switchPortEmpty";
-							else if($status=="R")
-								$statusStyle = "switchPortReserved";
-							else
-								$statusStyle = "switchPortBad";
-							$statusDescrip = DevicePortStatus($status,true);
-								
-							//if odd and not odd on top
-							$onBottom = (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
-							$bottomStyle = "";
-							if($onBottom)
-								$bottomStyle = "switchBottomPort";
-							
-							//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
-							$portFullName = FormatPort($member, $model, $pic, $port, $type);
-							$connectionText = "N/A";
-							if($switchID!=null)
-							{
-								$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-								$connectionText = "$switchName $switchPortFullName";
-							}
-							
-							$tech = $userFullName[$editUserID] . ": ".$editDate;
-							//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
-							$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-							Connection:".MakeHTMLSafe($connectionText)."<BR>
-							Status:$statusDescrip<BR>
-							MAC:".MakeHTMLSafe($mac)." <BR>
-							Speed:".MakeHTMLSafe($speed)." <BR>
-							VLAN(s):$vlan <BR>
-							Tech:$tech <BR>
-							Notes:".MakeHTMLSafe($note);
-							
-							if(CustomFunctions::UserHasDevPermission())
-							{
-								//debug
-								$popupText .= "<BR>
-								<BR>parentDeviceID=$deviceID
-								<BR>DeviePortID=$devicePortID
-								<BR>PortConnectionID=$portConnectionID
-								<BR>SwitchID=$switchID
-								<BR>SwitchPortID=$switchPortID";
-							}
-								
-							
-							$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
-							$jsSafePortFullName = MakeJSSafeParam($portFullName);
-							$jsSafeMac = MakeJSSafeParam($mac);
-							$jsSafeSpeed = MakeJSSafeParam($speed);
-							$jsSafeNote = MakeJSSafeParam($note);
-							//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
-							$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
-							
-							$portDiv = "<div onClick=\"$portEditJS\" class='$statusStyle $setStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
-							
 							if($pic==0)
 							{
-								if($onBottom)
-									$bottomPortDivs .= $portDiv;
+								if($status=="A")
+									$statusStyle = "switchPortActive";
+								else if($status=="D")
+									$statusStyle = "switchPortEmpty";
+								else if($status=="R")
+									$statusStyle = "switchPortReserved";
 								else
-									$topPortDivs .= $portDiv;
+									$statusStyle = "switchPortBad";
+								$statusDescrip = DevicePortStatus($status,true);
+								
+								//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
+								$portFullName = FormatPort($member, $model, $pic, $port, $type);
+								$connectionText = "N/A";
+								if($switchID!=null)
+								{
+									$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
+									$connectionText = "$switchName $switchPortFullName";
+								}
+								
+								//define popup text
+								$popupText = "";
+								$tech = $userFullName[$editUserID] . ": ".$editDate;
+								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
+								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
+								Connection:".MakeHTMLSafe($connectionText)."<BR>
+								Status:$statusDescrip<BR>
+								MAC:".MakeHTMLSafe($mac)." <BR>
+								Speed:".MakeHTMLSafe($speed)." <BR>
+								VLAN(s):$vlan <BR>
+								Tech:$tech <BR>
+								Notes:".MakeHTMLSafe($note);
+								
+								if(CustomFunctions::UserHasDevPermission())
+								{
+									//debug
+									$popupText .= "<BR>
+									<BR>parentDeviceID=$deviceID
+									<BR>DeviePortID=$devicePortID
+									<BR>PortConnectionID=$portConnectionID
+									<BR>SwitchID=$switchID
+									<BR>SwitchPortID=$switchPortID";
+								}
+								
+								
+								//define js for click to edit port
+								$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullNameShort);
+								$jsSafePortFullName = MakeJSSafeParam($portFullName);
+								$jsSafeMac = MakeJSSafeParam($mac);
+								$jsSafeSpeed = MakeJSSafeParam($speed);
+								$jsSafeNote = MakeJSSafeParam($note);
+								//EditDevicePort(event,add, devicePortID, deviceID, deviceName, portName, pic, port, type, status, speed, mac, note)
+								$portEditJS = "EditDevicePort(event,false,".(CustomFunctions::UserHasPortAddEditPermission()?"true":"false").",$devicePortID,$deviceID,'$jsSafeDeviceFullName','$jsSafePortFullName',$pic,$port,'$type','$status','$jsSafeSpeed','$jsSafeMac','$jsSafeNote')";
+								
+								//get port possition
+								$xPos = 0; $yPos = 0;
+								$deviceInfo->GetPortPosition($port,$xPos,$yPos);
+								
+								$bottomStyle = "";
+								if($deviceInfo->IsPortOnBottom($port))
+									$bottomStyle = "switchBottomPort";
+								
+								//define Create div and position CSS
+								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
+								$portCSS = "#port$devicePortID {
+									margin-left: ".$xPos."px;
+									margin-top: ".$yPos."px;
+								}";
+								
+								$portDivs .= $portDiv;
+								$portCSSTags .= $portCSS;
 							}
 							else 
 							{
@@ -3984,119 +3961,32 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								//for now dont include them here (on the visual render)  - will still be listed below
 								//will need thier own positioning CSS classes and probably image overlays - meh
 							}
-						}
+						}//port in range
 					}//while
 				}//found ports
 				
-				$portWidth = 28;
-				$portHeight = 20;
-				//dynamic
-				$switchWidth = 948;
-				$switchHeight = 97;
-				$switchImage = "images/devices/ex4200_front.jpg";
-				$topOffset = 25;
-				$bottomOffset = 30;
-				$set1Offset = 18;
-				$set2Offset = 28;
-				$set3Offset = 38;
-				$set4Offset = 48;
-				$marginRight = 2;
-				
-				//TODO quick hack for patch panels
-				if($deviceInfo->name=="Full Cab" || $deviceInfo->name=="Half Cab-Top" || $deviceInfo->name=="Half Cab-Bottom")
-				{
-					$switchWidth = 950;
-					$switchHeight = 91;
-					$switchImage = "images/devices/patchpanel.jpg";
-					$topOffset = 0;
-					$bottomOffset = 38;
-					$set1Offset = 60;
-					$set2Offset = 94;
-					$set3Offset = 129;
-					$set4Offset = 166;
-				
-					if($startPort==13)
-					{
-						//bottom half cab - shift ports to right
-						$set1Offset = 489;
-						$set2Offset = 525;
-					}
-				}
-				else if($deviceInfo->name=="EX3200 24p" || $deviceInfo->name=="EX4200 24p")
-				{
-					$switchImage = "images/devices/ex4200_24p_front.jpg";
-				}
-				else if($deviceInfo->name=="WS-X6348")
-				{
-					$switchImage = "images/devices/ws-x6348_front.jpg";
-					$switchWidth = 950;
-					$switchHeight = 105;
-					$topOffset = 25;
-					$bottomOffset = 33;
-					$set1Offset = 57;
-					$set2Offset = 78;
-					$set3Offset = 92;
-					$set4Offset = 102;
-					$marginRight = 6;
-				}
-				else if($deviceInfo->name=="Catalyst 3550")
-				{
-					$switchImage = "images/devices/catalyst2950_front.jpg";
-					$switchWidth = 950;
-					$switchHeight = 89;
-					$topOffset = 19;
-					$bottomOffset = 25;
-					$set1Offset = 59;
-					$set2Offset = 77;
-					$set3Offset = 97;
-				}
-			
 			?>
-
 <style type="text/css">
 #switch {
-	width:<?php echo $switchWidth;?>;
-	height:<?php echo $switchHeight;?>;
-	background-image:url('<?php echo $switchImage;?>'); 
+	width:<?php echo $deviceInfo->deviceWidthPx;?>;
+	height:<?php echo $deviceInfo->deviceHeightPx;?>;
+	background-image:url('<?php echo $deviceInfo->deviceImage;?>'); 
 	background-repeat: no-repeat;
-}
-.switchPortsSet1{
-	left: <?php echo $set1Offset;?>px;
-}
-.switchPortsSet2{
-	left: <?php echo $set2Offset;?>px;
-}
-.switchPortsSet3{
-	left: <?php echo $set3Offset;?>px;
-}
-.switchPortsSet4{
-	left: <?php echo $set4Offset;?>px;
 }
 .switchPortActive, .switchPortBad,
 .switchPortEmpty, .switchPortReserved{
 	background-repeat: no-repeat;
-	top: <?php echo $topOffset;?>px; /*over written by bottom ports*/
-	width:<?php echo $portWidth;?>px;
-	height:<?php echo $portHeight;?>px;
-	margin-right: <?php echo $marginRight;?>px;
-	margin-bottom: 3px;
-	position: relative;
-	float: left;
+	position: absolute;
+	width:<?php echo DeviceModel::$portWidth;?>px;
+	height:<?php echo DeviceModel::$portHeight;?>px;
 }
-.switchBottomPort{
-	top:<?php echo $bottomOffset;?>px;
-}
+<?php echo $portCSSTags;?>
 </style>
 <?php
 				//switch div
 				echo "<div id='switch'>\n";
 				echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
-				if($deviceInfo->doubleRow)
-				{
-					echo $topPortDivs;
-					echo "</td></tr><tr><td>\n";
-				}
-				echo $bottomPortDivs;
+				echo $portDivs;
 				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device
@@ -4322,34 +4212,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		
 		return $count;
-	}
-	
-	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true)
-	{
-		if($cell)
-			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align=center>\n";
-		else 
-			$resultHTML = "<span class='editButtons_hidden'>QA: ";
-			
-		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
-		if($qaStatus==1)
-		{
-			$instanceID = end($_SESSION['page_instance_ids']);
-			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
-		}
-		else if($qaStatus==0)
-		{
-			$resultHTML .= "<font color='green'>Good</font>";
-		}
-		else if($qaStatus==2)
-		{
-			$resultHTML .= "<font color='black'>Pending</font>";
-		}
-		if($cell)
-			$resultHTML .= "</td>\n";
-		else
-			$resultHTML .= " </span>\n";
-		return $resultHTML;
 	}
 	
 	function EditBadgeForm($inputHNo)
@@ -4895,7 +4757,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullRoomName = FormatLocation($site, $fullName, "");
 				$pageSubTitle = "$fullRoomName";
 				
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
 				}
@@ -4926,7 +4788,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<?php
 				}*/
 				//editMode button
-				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasCircuitPermission())
+				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 				{
 					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 				}
@@ -5009,13 +4871,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
+
 			ListRoomLocationsAndDevices($roomID);
+			echo "<BR>";
+			echo ListPowerPanels($roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
 			
-			if(CustomFunctions::UserHasLocationPermission())
+			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
@@ -5031,7 +4895,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
-		//lookup site room and circuit info for headers
+		//lookup site/room name for headers
 		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
 			FROM dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -5052,29 +4916,23 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
 			$panelDescription = "Locations & devices in $site $roomFullName";
-			$searchTitle = "$site $roomFullName Location(s)";
+			$searchTitle = "$site $roomFullName Locations";
 			
-			if($showEmpty)
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
-					FROM dcim_location AS l
-						LEFT JOIN dcim_device AS d ON l.locationID = d.locationid AND d.status='A'
-						LEFT JOIN dcim_customer AS c ON c.hno = d.hno
-						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE r.roomid=?
-					ORDER BY r.name, l.name";
-			else
-				$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member
-				FROM dcim_location AS l, dcim_device AS d, dcim_customer AS c
-					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			$deviceJoin = "LEFT";
+			if(!$showEmpty)
+				$deviceJoin = "INNER";
+			
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
+					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member,
+					(SELECT COUNT(*) FROM dcim_device d1 WHERE d1.locationid=l.locationid AND d1.status='A') AS count
+				FROM dcim_location AS l
+					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
+					LEFT JOIN dcim_customer c ON c.hno = d.hno
+					LEFT JOIN dcim_room r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site s ON r.siteid=s.siteid
 				WHERE r.roomid=?
-					AND d.locationid=l.locationid
-					AND d.hno=c.hno
-					AND d.status='A'
 				ORDER BY r.name, l.name";
-	
-				
+			
 			if (!($stmt = $mysqli->prepare($query))) 
 			{
 				//TODO handle errors better
@@ -5085,31 +4943,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
-			if($count>0)
+			echo "<span class='tableTitle'>$searchTitle ($count)</span>\n";
+			//add location button
+			if(CustomFunctions::UserHasLocationPermission())
 			{
-				//show results
-				echo "<span class='tableTitle'>$searchTitle</span>\n";
-				//add location button
-				if(CustomFunctions::UserHasLocationPermission())
-				{
-					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-					$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
-					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php 
-				}
-				echo "<BR>";
-				
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, true, true);
+				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+				$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
+				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php
+			}
+			echo "<BR>";
+			
+			if($count>0)
+			{//show results
+				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
+				$lastLocID = -1;
 				$oddRow = false;
-				while ($stmt->fetch()) 
+				while ($stmt->fetch())
 				{
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
+					
+					$additionalDevice = ($locationID==$lastLocID);
+					$lastLocID = $locationID;
 					
 					$fullLocationName = FormatLocation($site, $room, $location);
 					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
@@ -5117,25 +4978,33 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$size = FormatSizeInFeet($width,$depth);
 					
 					echo "<tr class='$rowClass'>";
-					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					if(!$additionalDevice)
+					{
+						echo "<td class='data-table-cell' rowspan='$deviceCount'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						echo "<td class='data-table-cell' rowspan='$deviceCount'>".MakeHTMLSafe($size)."</td>";
+					}
+					
 					if(strlen($customer) > 0)
 						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					else 
 						echo "<td class='data-table-cell'>Empty</td>";
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
-					if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
-					{
-						$jsSafeName = MakeJSSafeParam($location);
-						$jsSafeAltName = MakeJSSafeParam($altName);
-						$jsSafeNote = MakeJSSafeParam($note);
-						//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-						$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 					
-						?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
-									<?php 
+					if(!$additionalDevice)
+					{
+						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+						{
+							$jsSafeName = MakeJSSafeParam($location);
+							$jsSafeAltName = MakeJSSafeParam($altName);
+							$jsSafeNote = MakeJSSafeParam($note);
+							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-						echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate);
+							?><td class='data-table-cell-button editButtons_hidden' rowspan='<?php echo $deviceCount;?>'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
+										<?php 
+							
+							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, $deviceCount);
+						}
 					}
 					echo "</tr>";
 				}
@@ -5221,7 +5090,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//list result data
 			$oddRow = false;
-			while ($stmt->fetch()) 
+			while ($stmt->fetch())
 			{
 				$fullLocationName = FormatLocation($site, $room, $location);
 			
@@ -6286,9 +6155,33 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function PowerAuditPanelList()
 	{
 		global $pageSubTitle;
-		global $mysqli;
 		
 		$pageSubTitle = "Power Audit - Panel List";
+		
+		$result = "<div class='panel'>\n";
+		$result.= "<div class='panel-header'>\n";
+		$result.= "Power Panel list\n";
+		$result.= "</div>\n";
+		
+		$result.= "<div class='panel-body'>\n\n";
+		
+		$result.= ListPowerPanels();
+		
+		$result.= "</div>\n";
+		$result.= "</div>\n";
+		echo $result;
+	}
+	
+	function ListPowerPanels($roomID=-1)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$filter = "";
+		if($roomID!=-1)
+			$filter = "r.roomid=?";
+		else
+			$filter = "-1=?";
 		
 		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
 			FROM dcim_power AS p
@@ -6296,57 +6189,50 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE $filter
 			GROUP BY r.roomid, p.panel
 			ORDER BY s.name, r.name, p.panel";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
 		{
-			//TODO handle errors better
-			echo "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
-		$count = $stmt->num_rows;
-		
-		
-		echo "<div class='panel'>\n";
-		echo "<div class='panel-header'>\n";
-		echo "Power Panel list\n";
-		echo "</div>\n";
-		
-		echo "<div class='panel-body'>\n\n";
-		if($count>0)
-		{
-			//show results
-			echo "<span class='tableTitle'>All Panels</span><BR>\n";
-			echo CreateDataTableHeader(array("Site","Room","Panel"));
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
-			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
-				echo "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
-				echo "</tr>";
-			}
-			echo "</table>";
+			$errorMessage[]= "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "SQL error locating power panels";
 		}
 		else
-			echo "No Power panel data found<BR>";
-						
-		echo "</div>\n";
-		echo "</div>\n";
-		return $count;
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
+			$count = $stmt->num_rows;
+			
+			if($count>0)
+			{
+				//show results
+				$result .= CreateDataTableHeader(array("Site","Room","Panel"));
+					
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+			
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+					$result .= "</tr>";
+				}
+				$result .= "</table>";
+			}
+			else
+				$result .= "No Power panel data found<BR>";
+		}
+		return $result;
 	}
-
+	
 	function ChangeHNo($old, $new, $renameDevices)
 	{
 		global $mysqli;
@@ -6617,7 +6503,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
 		}
 		
-		if(!$standAlonePage)$result .= "</a>\n";
+		if(!$renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;

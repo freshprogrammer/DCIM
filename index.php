@@ -204,29 +204,48 @@
 	<?php
 	//BackupDatabase();
 	
+	$output= "<!-- HEADER LINKS -->\n";
+	$output.= "<table width='100%'><tr>\n";
+	$output.= "	<td>\n";
 	if(UserHasReadPermission())
 	{
-		?><!-- HEADER LINKS -->
-		<table width=100%><tr>
-			<td>
-				<?php echo CustomFunctions::CreateNavigationQuickLinks() ?>
-			</td>
-			<td align='right'>
-				<a href='#' class='' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;
-			</td>
-		</tr></table>
-		<BR><?php
+		$output.= CustomFunctions::CreateNavigationQuickLinks();
 	}
+	$output.= "	</td>\n";
+	$output.= "	<td align='right'>\n";
+	$output.= "		<a href='#' class='hidden' id='showMessagesButton' onclick='ToggleMessgeVisibility()'>Show Messages</a>&nbsp;\n";
+	$output.= "	</td>\n";
+	$output.= "</tr></table>\n";
 	
 	//error and reporting mesages - filled in at the bottom of the page with JS
-	echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
-	echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
-	echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
-		
+	$output.= "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  style='display:none;' class='debugMessage'></div>\n";
+	$output.= "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  style='display:none;' class='errorMessage'></div>\n";
+	$output.= "<!-- RESULT MESSAGE -->\n<div id='resultMessage' style='display:none;' class='resultMessage'></div>\n";
+	
+	//populate messages - and dissable 'hidden' style is msg exists - NOTE: this is run again in the footer its here just in case the page crashes before then
+	$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
+	$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
+	$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+	$output.= "<script type='text/javascript' language='JavaScript'>\n";
+	$output.= "	UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
+	$output.= "</script>\n";
+	echo $output;
+	
 	if(!UserHasReadPermission())
 	{
-		echo "<!--  LOGIN PROMPT  -->\n";
-		echo "<BR>\n";
+		if(isset($demoSiteEnabled) && $demoSiteEnabled)
+		{
+			echo "<!--  Demo Message  -->\n<BR>\n";
+			$demoMessage = "<span style='font-size: 12px;'>
+			This is a demo environment of DCIM.<BR>
+			creds...<BR>
+			<BR>
+			The entire database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.<BR>
+			Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a>.
+			</span>";
+			echo CreateMessagePanel("Demo Notice:",$demoMessage);
+		}
+		echo "<!--  LOGIN PROMPT  -->\n<BR>\n";
 		LoginPrompt();
 	}
 	else
@@ -280,7 +299,6 @@
 					echo "<div class=\"panel-header\">\n";
 					echo "Search for \"".MakeHTMLSafe($search)."\" yields:\n";
 					echo "</div>\n";
-					
 					echo "<div class=\"panel-body\">\n\n";
 					
 					//search in customer (hno, cno, name, note)
@@ -318,18 +336,16 @@
 
 <footer>
 <script type="text/javascript" language="JavaScript">
+	//move focus as necisary
+	InitializePage();
 	<?php 
-		//move focus as necisary
-		echo "InitializePage();\n";
-		
 		//populate messages - and dissable 'hidden' style is msg exists
 		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
 		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 		
-		
-		if($focusSearch)
+		if(UserHasReadPermission() && $focusSearch)
 			echo "FocusMainSearch();\n";
 		//update title if necisarry
 		if(strlen($pageSubTitle) > 0)

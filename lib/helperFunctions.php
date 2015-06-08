@@ -2,8 +2,14 @@
 //these are generaly validation and formmatting functions. They dont really interact with the data directly other that to check specific things
 //some of this is also a type of documentation of DB values like LocationType() or DeviceType(), ect
 	
-	class DeviceModel 
+	class DeviceModel
 	{
+		//default constants
+		static $portWidth = 28;
+		static $portHeight = 20;
+		static $portSerperation = 2;
+		
+		//passed in in constructor
 		public $name = "";
 		public $startPort = 1;
 		public $portCount = 24;
@@ -14,22 +20,148 @@
 		public $portsPerSet = 12;
 		public $showDeviceImage = false;
 		
+		//further defined in constructor based on model
+		public $deviceWidthPx = 948;
+		public $deviceHeightPx = 97;
+		public $deviceImage = "images/devices/ex4200_front.jpg";
+		
 		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage) 
 		{
 			$this->name = $name;
-			$this->startPort = $startPort; 
-			$this->portCount = $portCount; 
-			$this->coloDevice = $coloDevice; 
-			$this->gigabit = $gigabit; 
-			$this->partOfChasis = $partOfChasis; 
-			$this->doubleRow = $doubleRow; 
-			$this->portsPerSet = $portsPerSet; 
-			$this->showDeviceImage = $showDeviceImage; 
+			$this->startPort = $startPort;
+			$this->portCount = $portCount;
+			$this->coloDevice = $coloDevice;
+			$this->gigabit = $gigabit;
+			$this->partOfChasis = $partOfChasis;
+			$this->doubleRow = $doubleRow;
+			$this->portsPerSet = $portsPerSet;
+			$this->showDeviceImage = $showDeviceImage;
+			
+			//device render properties that are differnet for each model
+			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 91;
+				$this->deviceImage = "images/devices/patchpanel.jpg";
+			}
+			else if($this->name=="EX3200 24p" || $this->name=="EX4200 24p")
+				$this->deviceImage = "images/devices/ex4200_24p_front.jpg";
+			else if($this->name=="WS-X6348")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 105;
+				$this->deviceImage = "images/devices/ws-x6348_front.jpg";
+			}
+			else if($this->name=="Catalyst 3550")
+			{
+				$this->deviceWidthPx = 950;
+				$this->deviceHeightPx = 89;
+				$this->deviceImage = "images/devices/catalyst2950_front.jpg";
+			}
 		}
-
+		
 		public function __toString()
 		{
 			return $this->name;
+		}
+		
+		public function GetPortPosition($port, &$resultX, &$resultY)
+		{
+			//this port possittioning per model should probably be properties of the instance setup in at instantiation
+			
+			$portSerperation = DeviceModel::$portSerperation;
+			//dynamic defaults bassed on ex4200
+			$topOffset = 25;
+			$bottomOffset = 55;
+			$set1Offset = 18;
+			$set2Offset = 28;
+			$set3Offset = 38;
+			$set4Offset = 48;
+			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			{
+				$topOffset = 0;
+				$bottomOffset = 37;
+				$set1Offset = 60;
+				$set2Offset = 94;
+				$set3Offset = 129;
+				$set4Offset = 166;
+			
+				if($this->startPort==13)
+				{//bottom half cab - shift ports to right
+					$set1Offset = 489;
+					$set2Offset = 525;
+				}
+			}
+			else if($this->name=="WS-X6348")
+			{
+				$topOffset = 25;
+				$bottomOffset = 55;
+				$set1Offset = 57;
+				$set2Offset = 78;
+				$set3Offset = 92;
+				$set4Offset = 102;
+				$portSerperation = 6;
+			}
+			else if($this->name=="Catalyst 3550")
+			{
+				$topOffset = 19;
+				$bottomOffset = 47;
+				$set1Offset = 59;
+				$set2Offset = 77;
+				$set3Offset = 97;
+			}
+			
+			//$truePortIndex is the true port no from 0 --EX: port 15 in a set 13-24 is 2
+			$truePortIndex = $port-$this->startPort;
+			$setNo = 0;
+			$setOffset = 0;//no possition info for set 0
+			if($truePortIndex < $this->portsPerSet * 1) //typicly less than 12
+			{
+				$setNo = 1;
+				$setOffset = $set1Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 2) //typicly less than 24
+			{
+				$setNo = 2;
+				$setOffset = $set2Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 3) //typicly less than 36
+			{
+				$setNo = 3;
+				$setOffset = $set3Offset;
+			}
+			else if($truePortIndex < $this->portsPerSet * 4) //typicly less than 48
+			{
+				$setNo = 4;
+				$setOffset = $set4Offset;
+			}
+			
+			$xRow = $truePortIndex;
+			if($this->doubleRow)
+				$xRow = (int)($truePortIndex/2);
+			
+			$resultX = $setOffset + $xRow*(DeviceModel::$portWidth + $portSerperation);
+			
+			if($this->IsPortOnBottom($port))
+				$resultY = $bottomOffset;
+			else
+				$resultY = $topOffset;
+		}
+		
+		public function IsPortOnBottom($port)
+		{
+			//these are not mutualy exclusive - both can be on "bottom"
+			if(!$this->doubleRow)
+			{//single "bottom" row
+				$oddOnTop = false;
+				$evenOnTop = false;
+			}
+			else
+			{
+				$oddOnTop  = ($this->startPort%2!=0);
+				$evenOnTop = ($this->startPort%2==0);
+			}
+			return (($port%2!=0 && !$oddOnTop) || ($port%2==0 && !$evenOnTop));
 		}
 	}
 	
@@ -37,14 +169,13 @@
 	{
 		global $deviceModels;
 		
-		/*
-		 * This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
-		 * I supose this could be a modelid in dcim_device and and dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
+		/* This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
+		 * I supose this could be a modelID in dcim_device and and a dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
 		 * If this ever gets so lots of new models are being added that might be a consideration, but until then this works just fine.
-		 *  - That would probabyl require a UI way to add/edit device models including their images, offsets, colors, port counts, ect.-UGH
+		 *  - That would probably require a UI way to add/edit device models including their images, offsets, colors, port counts, ect.-UGH
 		 * 
-		 * future field ideas
-		 * size(U), type, port spacing, brand 
+		 * future field ideas:
+		 * size(U), type, port spacing and seperation, brand
 		 */
 		$deviceModels = array();
 		
@@ -53,8 +184,8 @@
 		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6, true);
 		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6,false);
 		
-		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true, true, true,12, true);//juniper
-		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true, true, true,12, true);
+		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true,false, true,12, true);//juniper
+		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true,false, true,12, true);
 		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12, true);
 		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12, true);
 		
@@ -63,7 +194,7 @@
 		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1,false);
 	}
 	
-	function GetTableRecordDescription($table) 
+	function GetTableRecordDescription($table)
 	{
 		if($table=="dcim_badge")					$descrip='Badge';
 		else if($table=="dcim_customer")			$descrip='Customer';
@@ -94,7 +225,7 @@
 		return $descrip;
 	}
 	
-	function GetKeyField($table) 
+	function GetKeyField($table)
 	{
 		if($table=="dcim_badge")					$keyFieldName='badgeid';
 		else if($table=="dcim_customer")			$keyFieldName='hno';
@@ -125,7 +256,7 @@
 		return $keyFieldName;
 	}
 	
-	function GetLogTable($table) 
+	function GetLogTable($table)
 	{
 		if($table=="dcim_badge")				$logTable='dcimlog_badge';
 		else if($table=="dcim_customer")		$logTable='dcimlog_customer';
@@ -167,7 +298,7 @@
 		$userInitials = array();
 		
 		$query = "SELECT userid, username, name, initials
-		FROM dcim_user";
+			FROM dcim_user";
 
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -179,7 +310,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
 		
-		while ($stmt->fetch()) 
+		while ($stmt->fetch())
 		{
 			$userName["$userID"] = MakeHTMLSafe($uName);
 			$userFullName["$userID"] = MakeHTMLSafe($uFullName);
@@ -329,6 +460,34 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $result;
 	}
 	
+	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true, $rowSpan=1)
+	{
+		if($cell)
+			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align='center' rowspan='$rowSpan'>\n";
+		else 
+			$resultHTML = "<span class='editButtons_hidden'>QA: ";
+			
+		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
+		if($qaStatus==1)
+		{
+			$instanceID = end($_SESSION['page_instance_ids']);
+			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
+		}
+		else if($qaStatus==0)
+		{
+			$resultHTML .= "<font color='green'>Good</font>";
+		}
+		else if($qaStatus==2)
+		{
+			$resultHTML .= "<font color='black'>Pending</font>";
+		}
+		if($cell)
+			$resultHTML .= "</td>\n";
+		else
+			$resultHTML .= " </span>\n";
+		return $resultHTML;
+	}
+	
 	function CreateMessagePanel($panelTitle, $message)
 	{
 		$result = "<div class='panel'>\n";
@@ -414,15 +573,19 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 		else
 		{
+			$memberText = "";
+			if($deviceInfo->partOfChasis)
+				$memberText = "$member/";
+			
 			if($pic==99)//management port
 			{
 				$portFullName = "em-";
-				$portFullName .= $member."/0/".$port;
+				$portFullName .= $memberText."0/".$port;
 			}
 			else if($pic==98)//console port
 			{
 				$portFullName = "con-";
-				$portFullName .= $member."/0/".$port;
+				$portFullName .= $memberText."0/".$port;
 			}
 			else 
 			{
@@ -437,7 +600,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 				}
 				else
 					$portFullName = "fe-";
-				$portFullName .= $member."/".$pic."/".$port;
+				$portFullName .= $memberText.$pic."/".$port;
 			}
 		}
 		return $portFullName;
