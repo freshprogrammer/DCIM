@@ -511,15 +511,22 @@ h2 {
 	position: absolute;
 }
 .tooltip:hover span {
-	border-radius: 5px 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; 
-	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.1); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
+	border-radius: 10px 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; 
+	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.4); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.4);
+	position: absolute; 
+	//left: calc(250px / -2 + 28px / 2); 
+	left: 15px; 
+	top: 15px;
+	margin-left: 0; 
+	width: 200px;
+	z-index: 98;
 	font-family: Calibri, Tahoma, Geneva, sans-serif;
-	position: absolute; left: 1.75em; top: 1.75em; z-index: 98;
-	margin-left: 0; width: 250px;
 }
 .tooltip:hover img {
-	border: 0; margin: -10px 0 0 -55px;
-	float: left; position: absolute;
+	position: absolute;
+	float: left; 
+	margin: -10px 0 0 -55px;
+	border: 0; 
 }
 .tooltip:hover em {
 	font-family: Candara, Tahoma, Geneva, sans-serif; font-size: 1.2em; font-weight: bold;
