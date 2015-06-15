@@ -3907,13 +3907,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$tech = $userFullName[$editUserID] . ": ".$editDate;
 								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
 								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-								Connection:".MakeHTMLSafe($connectionText)."<BR>
-								Status:$statusDescrip<BR>
-								MAC:".MakeHTMLSafe($mac)." <BR>
-								Speed:".MakeHTMLSafe($speed)." <BR>
-								VLAN(s):$vlan <BR>
-								Tech:$tech <BR>
-								Notes:".MakeHTMLSafe($note);
+									Connection:".MakeHTMLSafe($connectionText)."<BR>
+									Status:$statusDescrip<BR>
+									MAC:".MakeHTMLSafe($mac)." <BR>
+									Speed:".MakeHTMLSafe($speed)." <BR>
+									VLAN(s):$vlan <BR>
+									Tech:$tech <BR>
+									Notes:".MakeHTMLSafe($note);
 								
 								if(CustomFunctions::UserHasDevPermission())
 								{
@@ -3945,7 +3945,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									$bottomStyle = "switchBottomPort";
 								
 								//define Create div and position CSS
-								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
+								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle $bottomStyle tooltip'><span class='toolTip_PortDetails'>$popupText</span></div>\n";
 								$portCSS = "#port$devicePortID {
 									margin-left: ".$xPos."px;
 									margin-top: ".$yPos."px;
@@ -6476,7 +6476,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$roomTypeClass = RoomAccesClass($custAccess);
 			$result .= "<div id='' class='roomBorders $roomTypeClass'></div>\n";
-			$result .= "<span>$name</span>\n";
+			$result .= "<span class='roomLayoutTitle'>$name</span>\n";
 		}
 		
 		//render locations
@@ -6614,6 +6614,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth)
 	{
+		$toolTipOffset = 15;
 		
 		$relativeX = 100*$xPos/$parentWidth;
 		$relativeY= 100*$yPos/$parentDepth;
@@ -6643,7 +6644,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
-		$title_rotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
 		
 		$titleWidth = 100;
 		$titleHeight = 100;
@@ -6664,7 +6665,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "#location".$locationID."_title {\n";
 		$result .= "	width: $titleWidth%;\n"; 
 		$result .= "	height: $titleHeight%;\n";
-		$result .= $title_rotationTransform;
+		$result .= $reverseRotationTransform;
 		
 		if($orientation=="E")
 			$result .= "	top: 100%;\n";
@@ -6675,12 +6676,27 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "	left: 100%;\n";
 		
 		$result .= "}\n";
+		$result .= "#location".$locationID."_tooltip {\n";
+		$result .= $reverseRotationTransform;
+		if($orientation=="E")
+			$result .= "	top: calc(100% - ".$toolTipOffset."px);\n";
+		else if($orientation=="S"){
+			$result .= "	top: calc(100% - ".$toolTipOffset."px);\n";
+			$result .= "	left: calc(100% - ".$toolTipOffset."px);\n";}
+		else if($orientation=="W")
+			$result .= "	left: calc(100% - ".$toolTipOffset."px);\n";
+		$result .= "}\n";
 		$result .= "</style>\n";
 		
+		$popupText = "test popup text";
+		
 		$result .= "<div id='location$locationID' class='locationContainer'>\n";
-		$result .= "<a href='./?locationid=$locationID' title='$name'>\n";
-		$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
-		$result .= "</a>\n";
+		$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
+		$result .= "	<div id='' class='$locationClass tooltip'>\n";
+		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
+		$result .= "		<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
+		$result .= "	</div>\n";
+		$result .= "	</a>\n";
 		$result .= "</div>\n";
 		return $result;
 	}
