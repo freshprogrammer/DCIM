@@ -3967,7 +3967,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 			?>
 <style type="text/css">
-#switch {
+#deviceLayout {
 	width:<?php echo $deviceInfo->deviceWidthPx;?>;
 	height:<?php echo $deviceInfo->deviceHeightPx;?>;
 	background-image:url('<?php echo $deviceInfo->deviceImage;?>'); 
@@ -3983,11 +3983,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 <?php echo $portCSSTags;?>
 </style>
 <?php
-				//switch div
-				echo "<div id='switch'>\n";
-				echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
+				//deviceLayout div
+				echo "<div id='deviceLayout'>\n";
 				echo $portDivs;
-				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device
 			

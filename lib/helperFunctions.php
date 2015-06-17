@@ -71,44 +71,44 @@
 			
 			$portSerperation = DeviceModel::$portSerperation;
 			//dynamic defaults bassed on ex4200
-			$topOffset = 25;
-			$bottomOffset = 55;
-			$set1Offset = 18;
-			$set2Offset = 28;
-			$set3Offset = 38;
-			$set4Offset = 48;
+			$topOffset = 27;
+			$bottomOffset = 57;
+			$set1Offset = 20;
+			$set2Offset = 30;
+			$set3Offset = 40;
+			$set4Offset = 50;
 			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
 			{
-				$topOffset = 0;
-				$bottomOffset = 37;
-				$set1Offset = 60;
-				$set2Offset = 94;
-				$set3Offset = 129;
-				$set4Offset = 166;
+				$topOffset = 2;
+				$bottomOffset = 39;
+				$set1Offset = 62;
+				$set2Offset = 96;
+				$set3Offset = 131;
+				$set4Offset = 168;
 			
 				if($this->startPort==13)
 				{//bottom half cab - shift ports to right
-					$set1Offset = 489;
-					$set2Offset = 525;
+					$set1Offset = 491;
+					$set2Offset = 527;
 				}
 			}
 			else if($this->name=="WS-X6348")
 			{
-				$topOffset = 25;
-				$bottomOffset = 55;
-				$set1Offset = 57;
-				$set2Offset = 78;
-				$set3Offset = 92;
-				$set4Offset = 102;
-				$portSerperation = 6;
+				$topOffset = 27;
+				$bottomOffset = 59;
+				$set1Offset = 55;
+				$set2Offset = 74;
+				$set3Offset = 83;
+				$set4Offset = 85;
+				$portSerperation = 7;
 			}
 			else if($this->name=="Catalyst 3550")
 			{
-				$topOffset = 19;
-				$bottomOffset = 47;
-				$set1Offset = 59;
-				$set2Offset = 77;
-				$set3Offset = 97;
+				$topOffset = 21;
+				$bottomOffset = 49;
+				$set1Offset = 61;
+				$set2Offset = 79;
+				$set3Offset = 99;
 			}
 			
 			//$truePortIndex is the true port no from 0 --EX: port 15 in a set 13-24 is 2
