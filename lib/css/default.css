@@ -713,7 +713,11 @@ h2 {
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground, .locationContainer a:hover .locationFullBackground, .locationContainer a:hover .locationEmptyBackground{
+/* NOTE: the hover on the room a is to prevent false hovers on notched/custom room layouts. Locations are all rectangular so its not a problem to be on the container*/
+.roomContainer a:hover  .caBackground, 
+.roomContainer a:hover .roomBackground, 
+.locationContainer:hover a .locationFullBackground, 
+.locationContainer:hover a .locationEmptyBackground{
 	background-color: green;
 }
 
