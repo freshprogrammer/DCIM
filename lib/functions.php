@@ -6423,7 +6423,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$orientation = "N";
 		
 		$rotation = OritentationToDegrees($orientation);
-		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		$rotationTransform = "";
+		if($rotation!=0)
+			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		
 		//create custom style and html
 		$roomCustomHTML = "";
@@ -6641,7 +6643,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$locationClass = "locationEmptyBackground";
 		
 		$rotation = OritentationToDegrees($orientation);
-		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		$rotationTransform = "";
+		if($rotation!=0)
+			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
 		
 		$titleWidth = 100;
@@ -6675,7 +6679,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result .= "}\n";
 		$result .= "#location".$locationID."_tooltip {\n";
-		$result .= $reverseRotationTransform;
+		//$result .= $reverseRotationTransform;
 		if($orientation=="E")
 			$result .= "	top: calc(100% - ".$toolTipOffset."px);\n";
 		else if($orientation=="S"){
@@ -6691,8 +6695,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "<div id='location$locationID' class='locationContainer'>\n";
 		$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
 		$result .= "	<div id='' class='$locationClass tooltip'>\n";
-		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
 		$result .= "		<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
+		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
 		$result .= "	</div>\n";
 		$result .= "	</a>\n";
 		$result .= "</div>\n";
