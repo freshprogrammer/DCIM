@@ -6500,7 +6500,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer);
 				
 			while($stmt->fetch())
-				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth,$renderingWithinParent);
 		}
 		
 		if(!$renderingWithinParent)$result .= "</a>\n";
@@ -6612,12 +6612,29 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth)
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite)
 	{
 		$toolTipOffset = 15;
 		
+		//these are the back left of the location so it can be rotated into place
 		$relativeX = 100*$xPos/$parentWidth;
 		$relativeY= 100*$yPos/$parentDepth;
+		
+		//these are true top left on the screen for tooltips
+		$relativeTopLeftX = $xPos;
+		$relativeTopLeftY = $yPos;
+		if($orientation=="E")
+			$relativeTopLeftX -= $depth;
+		else if($orientation=="W")
+			$relativeTopLeftY -= $width;
+		else if($orientation=="S")
+		{
+			$relativeTopLeftX -= $width;
+			$relativeTopLeftY -= $depth;
+		}
+		
+		$relativeTopLeftX = 100*($relativeTopLeftX/$parentWidth);
+		$relativeTopLeftY= 100*($relativeTopLeftY/$parentDepth);
 		
 		//adjust dimentions if rotated
 		if($orientation=="E" || $orientation=="W")
@@ -6627,8 +6644,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$relativeWidth = 100*$width/$parentWidth;
-			$relativeDepth= 100*$depth/$parentDepth;
+			$relativeWidth = 100*($width/$parentWidth);
+			$relativeDepth= 100*($depth/$parentDepth);
 		}
 		
 		if($deviceCount>0)
@@ -6678,28 +6695,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "	left: 100%;\n";
 		
 		$result .= "}\n";
-		$result .= "#location".$locationID."_tooltip {\n";
-		//$result .= $reverseRotationTransform;
-		if($orientation=="E")
-			$result .= "	top: calc(100% - ".$toolTipOffset."px);\n";
-		else if($orientation=="S"){
-			$result .= "	top: calc(100% - ".$toolTipOffset."px);\n";
-			$result .= "	left: calc(100% - ".$toolTipOffset."px);\n";}
-		else if($orientation=="W")
-			$result .= "	left: calc(100% - ".$toolTipOffset."px);\n";
-		$result .= "}\n";
+		if(!$renderingWithinSite)
+		{
+			$result .= "#location".$locationID."_tooltip {\n";
+			$result .= "	left: $relativeTopLeftX%;\n";
+			$result .= "	top: $relativeTopLeftY%;\n";
+			$result .= "}\n";
+		}
 		$result .= "</style>\n";
 		
 		$popupText = "test popup text";
 		
-		$result .= "<div id='location$locationID' class='locationContainer'>\n";
+		$result .= "<div id='location$locationID' class='locationContainer tooltip'>\n";
 		$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
-		$result .= "	<div id='' class='$locationClass tooltip'>\n";
-		$result .= "		<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
+		$result .= "	<div id='' class='$locationClass'>\n";
 		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
 		$result .= "	</div>\n";
 		$result .= "	</a>\n";
 		$result .= "</div>\n";
+		if(!$renderingWithinSite)
+		{
+			$result .= "<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
+		}
 		return $result;
 	}
 ?>

@@ -500,51 +500,44 @@ h2 {
 /* Custom ToolTip styles */
 /* tooltips     - origin: http://sixrevisions.com/css/css-only-tooltips/	*/
 .tooltip {
-	/*border-bottom: 1px dotted #000000; color: #000000;*/ 
+	/*border-bottom: 1px dotted #000000; color: #000000; */
 	outline: none;
 	cursor: help; text-decoration: none;
 	position: relative;
 }
-.tooltip span {
+/* Default style for all tooltips (hidden) */
+.toolTip_PortDetails, .toolTip_LocationDetails {
 	margin-left: -999em;
 	position: absolute;
-}
-.tooltip:hover span {
+	font-family: Calibri, Tahoma, Geneva, sans-serif;
+	color: black;
+	z-index: 98;
+	width: 200px;
+	padding: 0.8em 1em;
+	background: #FFFFAA;
+	border: 1px solid #FFAD33;
 	border-radius: 10px 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; 
 	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.4); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.4);
-	position: absolute; 
-	//left: calc(250px / -2 + 28px / 2); 
-	left: 15px; 
+}
+.tooltip:hover .toolTip_PortDetails{
+	left: 15px;
 	top: 15px;
-	margin-left: 0; 
-	width: 200px;
-	z-index: 98;
-	font-family: Calibri, Tahoma, Geneva, sans-serif;
-	color: black
+	margin-left: 0;
+}
+.tooltip:hover + .toolTip_LocationDetails,
+.tooltip + .toolTip_LocationDetails:hover{
+	margin: 12px 0 0 15px;
 }
 .tooltip:hover img {
-	position: absolute;
-	float: left; 
+	float: left;
 	margin: -10px 0 0 -55px;
 	border: 0; 
 }
 .tooltip:hover em {
-	display: block; 
+	display: block;
 	padding: 0.2em 0 0.6em 0;
-	font-family: Candara, Tahoma, Geneva, sans-serif; 
-	font-size: 1.2em; 
+	font-size: 1.2em;
 	font-weight: bold;
-}
-.toolTip_PortDetails {
-	padding: 0.8em 1em;
-	background: #FFFFAA;
-	border: 1px solid #FFAD33;
-}
-.toolTip_LocationDetails {
-	-ms-transform-origin: 0% 0%; -webkit-transform-origin: 0% 0%; transform-origin: 0% 0%;
-	padding: 0.8em 1em;
-	background: #FFFFAA;
-	border: 1px solid #FFAD33;
 }
 * html a:hover {
 	background: transparent;
