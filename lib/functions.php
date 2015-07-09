@@ -6661,9 +6661,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "";
+		$reverseRotationTransform = "";
 		if($rotation!=0)
+		{
 			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
-		$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+			$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		}
 		
 		$titleWidth = 100;
 		$titleHeight = 100;
