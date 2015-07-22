@@ -5396,7 +5396,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName.$portFullName)."</option>\n";
+				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName." ".$portFullName)."</option>\n";
 			}
 		}
 		
