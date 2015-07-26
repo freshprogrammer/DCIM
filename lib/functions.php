@@ -4846,8 +4846,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "</tr></table>\n";
 				
-				//render room
-				echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
+				//render room - ignore 0 width or height rooms
+				if($width>0 && $depth>0)
+					echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
 			}
 			else
 			{
