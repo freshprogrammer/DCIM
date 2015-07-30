@@ -2589,7 +2589,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $resultMessage;
 		global $errorMessage;
-	
+		
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
@@ -2599,9 +2599,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			return;
 		}
 		
-		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate=''
+		$updateQASQL = ", qauser=-1, qadate=''";
+		if(!DoesTableHaveQAFields($table))$updateQASQL = "";
+		
+		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP $updateQASQL
 				WHERE  $keyField = $key LIMIT 1 ";
-
+	
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateRecordEditUser: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
