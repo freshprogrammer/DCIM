@@ -6650,8 +6650,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($deviceCount>0)
 		{
-			if(CustomFunctions::IsThisHNoInternal($hNo))
-				$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
+			if(CustomFunctions::IsThisHNoInternal($hNo) || $deviceCount>1)
+				$name = $name . " ($customer [$deviceCount device".($deviceCount>1?"s":"")."])";
 			else
 				$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
 			$locationClass = "locationFullBackground";
