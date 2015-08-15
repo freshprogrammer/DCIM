@@ -4962,7 +4962,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{//show results
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
