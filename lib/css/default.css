@@ -511,13 +511,19 @@ h2 {
 	position: absolute;
 	font-family: Calibri, Tahoma, Geneva, sans-serif;
 	color: black;
+	white-space: nowrap;
 	z-index: 98;
-	width: 200px;
 	padding: 0.8em 1em;
 	background: #FFFFAA;
 	border: 1px solid #FFAD33;
 	border-radius: 10px 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; 
 	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.4); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.4);
+}
+.toolTip_PortDetails{
+}
+.toolTip_LocationDetails{
+	font-size: 12px;
+	line-height: 1.2;
 }
 .tooltip:hover .toolTip_PortDetails{
 	left: 15px;
@@ -658,9 +664,6 @@ h2 {
 .roomContainer,  .roomCorner, .locationContainer{
 	-ms-transform-origin: 0% 0%; -webkit-transform-origin: 0% 0%; transform-origin: 0% 0%;
 }
-.roomContainer a:link, .roomContainer a:visited{
-	color: white;
-} 
 .siteLabel{
 	position: absolute;
 	left: 50%;

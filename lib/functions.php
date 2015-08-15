@@ -6484,12 +6484,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, COUNT(d.deviceid) AS devicecount, d.hno, c.name
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, COUNT(Distinct l.locationid) AS countl, COUNT(Distinct d.deviceid) AS countd
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
+					LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
+					LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
 				WHERE l.roomid=? AND l.width > 0 AND l.depth > 0
-				GROUP BY l.locationid
+				GROUP BY l.xpos, l.ypos, l.width, l.depth, l.orientation
 				ORDER BY l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
@@ -6497,10 +6499,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer);
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $countL, $countD);
 				
 			while($stmt->fetch())
-				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth,$renderingWithinParent);
+			{
+				//countL should always be >=1
+				if($countL>1 || $countD>1)
+				{
+					$popupText = "$countL locations with $countD devices";
+				}
+				else
+				{
+					$fullLocationName = FormatLocation($site, $room, $name);
+					if($countD==0)
+						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Empty";
+					else if($countD==1)
+						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 Device<BR>
+					<a href='?host=$hNo'>$customer</a><BR>
+					<a href='?deviceid=$deviceid'>$deviceName</a>";
+					//device type,size, sorted by unit
+				}
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth,$renderingWithinParent, $popupText);
+			}
 		}
 		
 		if(!$renderingWithinParent)$result .= "</a>\n";
@@ -6612,7 +6632,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite)
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite, $popupText)
 	{
 		$toolTipOffset = 15;
 		
@@ -6707,14 +6727,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		$result .= "</style>\n";
 		
-		$popupText = "test popup text";
-		
 		$result .= "<div id='location$locationID' class='locationContainer tooltip'>\n";
-		$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
+		if($renderingWithinSite)
+			$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
 		$result .= "	<div id='' class='$locationClass'>\n";
 		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
 		$result .= "	</div>\n";
-		$result .= "	</a>\n";
+		if($renderingWithinSite)
+			$result .= "	</a>\n";
 		$result .= "</div>\n";
 		if(!$renderingWithinSite)
 		{
