@@ -240,7 +240,7 @@
 			This is a demo environment of DCIM.<BR>
 			creds...<BR>
 			<BR>
-			The entire database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.<BR>
+			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.<BR>
 			Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a>.
 			</span>";
 			echo CreateMessagePanel("Demo Notice:",$demoMessage);

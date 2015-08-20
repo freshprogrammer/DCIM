@@ -6495,29 +6495,77 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				ORDER BY l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
-			$errorMessage[]= "CreateRoomLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[]= "CreateRoomLayout() SQL setup 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
 		{
 			$stmt->store_result();
 			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $countL, $countD);
-				
+
+			$lastLocationID = PHP_INT_MAX;
 			while($stmt->fetch())
 			{
+				$firstDevice = true;
+				$popupText = "";
+				
 				//countL should always be >=1
-				if($countL>1 || $countD>1)
+				if(true || $countL>1 || $countD>1)//XXX this extra SELECT per locaition* could be avoided if the counts were 1 but would require duplication the popup text generation code 
 				{
-					$popupText = "$countL locations with $countD devices";
+					//full locattion name, type, size
+					//full device name type,size, sorted by cust, devicename
+					
+					//look up each location  & customer here
+					$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device
+						FROM dcim_location AS l
+							LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
+							LEFT JOIN dcim_customer AS c ON d.hno = c.hno
+							LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
+							LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
+						WHERE l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
+						ORDER BY l.name, c.name, c.hno, d.name";
+					
+					if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('dddds', $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
+						$errorMessage[]= "CreateRoomLayout() SQL setup 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{
+						$stmt2->store_result();
+						$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName);
+						
+						$lastCustomerID = PHP_INT_MAX;
+						while($stmt2->fetch())
+						{
+							$newLocation = ($lastLocationID!=$locationID);
+							$newCustomer = ($lastCustomerID!=$hNo);
+							$fullLocationName = FormatLocation($site, $room, $name);
+							
+							if(!$firstDevice)
+								$popupText .= "<BR>";
+							
+							if($newLocation)
+								$popupText .= "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>\n";
+							
+							if($hNo==NULL)
+								$popupText .= "EMPTY";
+							else
+							{
+								if($newCustomer)
+									$popupText .= "<a href='?host=$hNo'>$customer</a><BR>\n";
+								$popupText .= "<a href='?deviceid=$deviceid'>$deviceName</a>";
+							}
+							$firstDevice = false;
+							$lastLocationID=$locationID;
+							$lastCustomerID = $hNo;
+						}
+					}
 				}
 				else
-				{
+				{ /* disabled since this code is not active and not up to date - see above comment
 					$fullLocationName = FormatLocation($site, $room, $name);
 					if($countD==0)
-						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Empty";
+						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>Empty";
 					else if($countD==1)
-						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1 Device<BR>
+						$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>
 					<a href='?host=$hNo'>$customer</a><BR>
-					<a href='?deviceid=$deviceid'>$deviceName</a>";
-					//device type,size, sorted by unit
+					<a href='?deviceid=$deviceid'>$deviceName</a>";*/
 				}
 				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth,$renderingWithinParent, $popupText);
 			}
