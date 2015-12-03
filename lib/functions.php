@@ -1153,11 +1153,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
-							FROM dcimlog_device AS d 
+							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
 						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
-							FROM dcimlog_powerloc AS pl
+							FROM dcim_powerloc AS pl
 							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
 							WHERE pl.locationid=?";
 			
