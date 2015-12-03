@@ -6570,6 +6570,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<a href='?deviceid=$deviceid'>$deviceName</a>";*/
 					}
 				}
+				else
+				{//rendering within parent - simplify popup for title
+					//if($countD>1)$customer = "Multiple";//could do this better with SQL group
+					//if($countL>1)$name = "Multiple";
+				}
 				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinParent, $popupText);
 			}
 		}
