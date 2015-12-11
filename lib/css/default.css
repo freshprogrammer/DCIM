@@ -497,43 +497,59 @@ h2 {
 }
 
 
-/* Switch styles  - specifics are swapped in the php*/
-/* tooltips */
-/* http://sixrevisions.com/css/css-only-tooltips/	*/
+/* Custom ToolTip styles */
+/* tooltips     - origin: http://sixrevisions.com/css/css-only-tooltips/	*/
 .tooltip {
-	/*border-bottom: 1px dotted #000000; color: #000000;*/ 
+	/*border-bottom: 1px dotted #000000; color: #000000; */
 	outline: none;
 	cursor: help; text-decoration: none;
 	position: relative;
 }
-.tooltip span {
+/* Default style for all tooltips (hidden) */
+.toolTip_PortDetails, .toolTip_LocationDetails {
 	margin-left: -999em;
 	position: absolute;
-}
-.tooltip:hover span {
-	border-radius: 5px 5px; -moz-border-radius: 5px; -webkit-border-radius: 5px; 
-	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.1); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.1);
 	font-family: Calibri, Tahoma, Geneva, sans-serif;
-	position: absolute; left: 1.75em; top: 1.75em; z-index: 98;
-	margin-left: 0; width: 250px;
+	color: black;
+	white-space: nowrap;
+	z-index: 98;
+	padding: 0.8em 1em;
+	background: #FFFFAA;
+	border: 1px solid #FFAD33;
+	border-radius: 10px 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; 
+	box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4); -webkit-box-shadow: 5px 5px rgba(0, 0, 0, 0.4); -moz-box-shadow: 5px 5px rgba(0, 0, 0, 0.4);
+}
+.toolTip_PortDetails{
+}
+.toolTip_LocationDetails{
+	font-size: 12px;
+	line-height: 1.2;
+}
+.tooltip:hover .toolTip_PortDetails{
+	left: 15px;
+	top: 15px;
+	margin-left: 0;
+}
+.tooltip:hover + .toolTip_LocationDetails,
+.tooltip + .toolTip_LocationDetails:hover{
+	margin: 12px 0 0 15px;
 }
 .tooltip:hover img {
-	border: 0; margin: -10px 0 0 -55px;
-	float: left; position: absolute;
+	float: left;
+	margin: -10px 0 0 -55px;
+	border: 0; 
 }
 .tooltip:hover em {
-	font-family: Candara, Tahoma, Geneva, sans-serif; font-size: 1.2em; font-weight: bold;
-	display: block; padding: 0.2em 0 0.6em 0;
+	display: block;
+	padding: 0.2em 0 0.6em 0;
+	font-size: 1.2em;
+	font-weight: bold;
 }
-.classic { padding: 0.8em 1em; }
-.custom { padding: 0.5em 0.8em 0.8em 2em; }
-* html a:hover { background: transparent; }
-.classic {background: #FFFFAA; border: 1px solid #FFAD33; }
-.critical { background: #FFCCAA; border: 1px solid #FF3334;	}
-.help { background: #9FDAEE; border: 1px solid #2BB0D7;	}
-.info { background: #9FDAEE; border: 1px solid #2BB0D7;	}
-.warning { background: #FFFFAA; border: 1px solid #FFAD33; }
+* html a:hover {
+	background: transparent;
+}
 
+/* Port Overlays */
 .switchPortActive:after, .switchPortBad:after, 
 .switchPortEmpty:after, .switchPortReserved:after{
 	content: "";
@@ -646,13 +662,8 @@ h2 {
 	-webkit-box-sizing:border-box;
 }
 .roomContainer,  .roomCorner, .locationContainer{
-	-ms-transform-origin: 0% 0%; /* IE 9 */
-	-webkit-transform-origin: 0% 0%; /* Chrome, Safari, Opera */
-	transform-origin: 0% 0%;
+	-ms-transform-origin: 0% 0%; -webkit-transform-origin: 0% 0%; transform-origin: 0% 0%;
 }
-.roomContainer a:link, .roomContainer a:visited{
-	color: white;
-} 
 .siteLabel{
 	position: absolute;
 	left: 50%;
@@ -668,7 +679,7 @@ h2 {
 	border: 4px solid black;
 	padding: 4px;
 }
-.roomContainer span{
+.roomContainer .roomLayoutTitle{
 	position: absolute;
 	color: white;
 	margin: 6;
@@ -698,7 +709,11 @@ h2 {
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 }
-.roomContainer a:hover  .caBackground, .roomContainer a:hover .roomBackground, .locationContainer a:hover .locationFullBackground, .locationContainer a:hover .locationEmptyBackground{
+/* NOTE: the hover on the room a is to prevent false hovers on notched/custom room layouts. Locations are all rectangular so its not a problem to be on the container*/
+.roomContainer a:hover  .caBackground, 
+.roomContainer a:hover .roomBackground, 
+.locationContainer:hover a .locationFullBackground, 
+.locationContainer:hover a .locationEmptyBackground{
 	background-color: green;
 }
 

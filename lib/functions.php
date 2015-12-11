@@ -1153,11 +1153,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
-							FROM dcimlog_device AS d 
+							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
 						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
-							FROM dcimlog_powerloc AS pl
+							FROM dcim_powerloc AS pl
 							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
 							WHERE pl.locationid=?";
 			
@@ -2589,7 +2589,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $resultMessage;
 		global $errorMessage;
-	
+		
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
@@ -2599,9 +2599,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			return;
 		}
 		
-		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate=''
+		$updateQASQL = ", qauser=-1, qadate=''";
+		if(!DoesTableHaveQAFields($table))$updateQASQL = "";
+		
+		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP $updateQASQL
 				WHERE  $keyField = $key LIMIT 1 ";
-
+	
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateRecordEditUser: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -3907,13 +3910,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$tech = $userFullName[$editUserID] . ": ".$editDate;
 								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
 								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-								Connection:".MakeHTMLSafe($connectionText)."<BR>
-								Status:$statusDescrip<BR>
-								MAC:".MakeHTMLSafe($mac)." <BR>
-								Speed:".MakeHTMLSafe($speed)." <BR>
-								VLAN(s):$vlan <BR>
-								Tech:$tech <BR>
-								Notes:".MakeHTMLSafe($note);
+									Connection:".MakeHTMLSafe($connectionText)."<BR>
+									Status:$statusDescrip<BR>
+									MAC:".MakeHTMLSafe($mac)." <BR>
+									Speed:".MakeHTMLSafe($speed)." <BR>
+									VLAN(s):$vlan <BR>
+									Tech:$tech <BR>
+									Notes:".MakeHTMLSafe($note);
 								
 								if(CustomFunctions::UserHasDevPermission())
 								{
@@ -3945,7 +3948,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									$bottomStyle = "switchBottomPort";
 								
 								//define Create div and position CSS
-								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle tooltip $bottomStyle'><span class='classic'>$popupText</span></div>\n";
+								$portDiv = "<div id='port$devicePortID' onClick=\"$portEditJS\" class='$statusStyle $bottomStyle tooltip'><span class='toolTip_PortDetails'>$popupText</span></div>\n";
 								$portCSS = "#port$devicePortID {
 									margin-left: ".$xPos."px;
 									margin-top: ".$yPos."px;
@@ -3967,7 +3970,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 			?>
 <style type="text/css">
-#switch {
+#deviceLayout {
 	width:<?php echo $deviceInfo->deviceWidthPx;?>;
 	height:<?php echo $deviceInfo->deviceHeightPx;?>;
 	background-image:url('<?php echo $deviceInfo->deviceImage;?>'); 
@@ -3983,11 +3986,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 <?php echo $portCSSTags;?>
 </style>
 <?php
-				//switch div
-				echo "<div id='switch'>\n";
-				echo "	<table class='switchTable' width=100%><tr><td class='switchTableCell'>\n";
+				//deviceLayout div
+				echo "<div id='deviceLayout'>\n";
 				echo $portDivs;
-				echo "	</td></tr></table>\n";
 				echo "</div>\n";
 			}//show device
 			
@@ -4846,8 +4847,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "</tr></table>\n";
 				
-				//render room
-				echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
+				//render room - ignore 0 width or height rooms
+				if($width>0 && $depth>0)
+					echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
 			}
 			else
 			{
@@ -4958,7 +4960,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{//show results
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -4991,7 +4993,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					
 					if(!$additionalDevice)
-					{
+					{//on spanned location record
+						echo "<td class='data-table-cell' rowspan='$deviceCount'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
 							$jsSafeName = MakeJSSafeParam($location);
@@ -5394,7 +5398,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName.$portFullName)."</option>\n";
+				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName." ".$portFullName)."</option>\n";
 			}
 		}
 		
@@ -6425,7 +6429,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$orientation = "N";
 		
 		$rotation = OritentationToDegrees($orientation);
-		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+		$rotationTransform = "";
+		if($rotation!=0)
+			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
 		
 		//create custom style and html
 		$roomCustomHTML = "";
@@ -6476,7 +6482,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$roomTypeClass = RoomAccesClass($custAccess);
 			$result .= "<div id='' class='roomBorders $roomTypeClass'></div>\n";
-			$result .= "<span>$name</span>\n";
+			$result .= "<span class='roomLayoutTitle'>$name</span>\n";
 		}
 		
 		//render locations
@@ -6484,23 +6490,103 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, COUNT(d.deviceid) AS devicecount, d.hno, c.name
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, COUNT(Distinct l.locationid) AS countl, COUNT(Distinct d.deviceid) AS countd
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
+					LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
+					LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
 				WHERE l.roomid=? AND l.width > 0 AND l.depth > 0
-				GROUP BY l.locationid
+				GROUP BY l.xpos, l.ypos, l.width, l.depth, l.orientation
 				ORDER BY l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
-			$errorMessage[]= "CreateRoomLayout() SQL setup failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[]= "CreateRoomLayout() SQL setup 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer);
-				
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $countL, $countD);
+
+			$lastLocationID = PHP_INT_MAX;
 			while($stmt->fetch())
-				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth);
+			{
+				$firstDevice = true;
+				$popupText = "";
+				
+				if(!$renderingWithinParent)
+				{
+					//countL should always be >=1
+					if(true || $countL>1 || $countD>1)//XXX this extra SELECT per locaition* could be avoided if the counts were 1 but would require duplication the popup text generation code 
+					{
+						//full locattion name, type, size
+						//full device name type,size, sorted by cust, devicename
+						
+						//look up each location  & customer here
+						$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, d.model, d.member
+							FROM dcim_location AS l
+								LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
+								LEFT JOIN dcim_customer AS c ON d.hno = c.hno
+								LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
+								LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
+							WHERE l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
+							ORDER BY l.name, c.name, c.hno, d.name, d.unit";
+						
+						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('dddds', $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
+							$errorMessage[]= "CreateRoomLayout() SQL setup 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+						else
+						{
+							$stmt2->store_result();
+							$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $model, $member);
+							
+							$lastCustomerID = PHP_INT_MAX;
+							while($stmt2->fetch())
+							{
+								$newLocation = ($lastLocationID!=$locationID);
+								$newCustomer = ($lastCustomerID!=$hNo);
+								$fullLocationName = FormatLocation($site, $room, $name);
+								$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+
+								if(!$firstDevice)
+									$popupText .= "<BR>";
+								
+								if($newLocation && !$firstDevice)
+									$popupText .= "<BR>";//blank line between locations
+								
+								if($newLocation)
+									$popupText .= "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>\n";
+								
+								if($hNo==NULL)
+									$popupText .= "Empty";
+								else
+								{
+									if($newCustomer)
+										$popupText .= "<a href='?host=$hNo'>$customer</a><BR>\n";
+									$popupText .= "&nbsp;&nbsp;&nbsp;&nbsp;<a href='?deviceid=$deviceid'>$deviceFullName</a>";
+								}
+								$firstDevice = false;
+								$lastLocationID=$locationID;
+								$lastCustomerID = $hNo;
+							}
+						}
+					}
+					else
+					{ /* disabled since this code is not active and not up to date - see above comment
+						$fullLocationName = FormatLocation($site, $room, $name);
+						if($countD==0)
+							$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>Empty";
+						else if($countD==1)
+							$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>
+						<a href='?host=$hNo'>$customer</a><BR>
+						<a href='?deviceid=$deviceid'>$deviceName</a>";*/
+					}
+				}
+				else
+				{//rendering within parent - simplify popup for title
+					//if($countD>1)$customer = "Multiple";//could do this better with SQL group
+					//if($countL>1)$name = "Multiple";
+				}
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinParent, $popupText);
+			}
 		}
 		
 		if(!$renderingWithinParent)$result .= "</a>\n";
@@ -6612,11 +6698,29 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth)
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite, $popupText)
 	{
+		$toolTipOffset = 15;
 		
+		//these are the back left of the location so it can be rotated into place
 		$relativeX = 100*$xPos/$parentWidth;
 		$relativeY= 100*$yPos/$parentDepth;
+		
+		//these are true top left on the screen for tooltips
+		$relativeTopLeftX = $xPos;
+		$relativeTopLeftY = $yPos;
+		if($orientation=="E")
+			$relativeTopLeftX -= $depth;
+		else if($orientation=="W")
+			$relativeTopLeftY -= $width;
+		else if($orientation=="S")
+		{
+			$relativeTopLeftX -= $width;
+			$relativeTopLeftY -= $depth;
+		}
+		
+		$relativeTopLeftX = 100*($relativeTopLeftX/$parentWidth);
+		$relativeTopLeftY= 100*($relativeTopLeftY/$parentDepth);
 		
 		//adjust dimentions if rotated
 		if($orientation=="E" || $orientation=="W")
@@ -6626,14 +6730,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			$relativeWidth = 100*$width/$parentWidth;
-			$relativeDepth= 100*$depth/$parentDepth;
+			$relativeWidth = 100*($width/$parentWidth);
+			$relativeDepth= 100*($depth/$parentDepth);
 		}
 		
 		if($deviceCount>0)
 		{
-			if(CustomFunctions::IsThisHNoInternal($hNo))
-				$name = $name . " [$customer ($deviceCount device".($deviceCount>1?"s":"").")]";
+			if(CustomFunctions::IsThisHNoInternal($hNo) || $deviceCount>1)
+				$name = $name . " ($customer [$deviceCount device".($deviceCount>1?"s":"")."])";
 			else
 				$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
 			$locationClass = "locationFullBackground";
@@ -6642,8 +6746,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$locationClass = "locationEmptyBackground";
 		
 		$rotation = OritentationToDegrees($orientation);
-		$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
-		$title_rotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		$rotationTransform = "";
+		$reverseRotationTransform = "";
+		if($rotation!=0)
+		{
+			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+			$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		}
 		
 		$titleWidth = 100;
 		$titleHeight = 100;
@@ -6664,7 +6773,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$result .= "#location".$locationID."_title {\n";
 		$result .= "	width: $titleWidth%;\n"; 
 		$result .= "	height: $titleHeight%;\n";
-		$result .= $title_rotationTransform;
+		$result .= $reverseRotationTransform;
 		
 		if($orientation=="E")
 			$result .= "	top: 100%;\n";
@@ -6675,13 +6784,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "	left: 100%;\n";
 		
 		$result .= "}\n";
+		if(!$renderingWithinSite)
+		{
+			$result .= "#location".$locationID."_tooltip {\n";
+			$result .= "	left: $relativeTopLeftX%;\n";
+			$result .= "	top: $relativeTopLeftY%;\n";
+			$result .= "}\n";
+		}
 		$result .= "</style>\n";
 		
-		$result .= "<div id='location$locationID' class='locationContainer'>\n";
-		$result .= "<a href='./?locationid=$locationID' title='$name'>\n";
-		$result .= "<div id='' class='$locationClass'><div id='location".$locationID."_title' class='locationTitle'>$name</div></div>\n";
-		$result .= "</a>\n";
+		$result .= "<div id='location$locationID' class='locationContainer tooltip'>\n";
+		if($renderingWithinSite)
+			$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
+		$result .= "	<div id='' class='$locationClass'>\n";
+		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
+		$result .= "	</div>\n";
+		if($renderingWithinSite)
+			$result .= "	</a>\n";
 		$result .= "</div>\n";
+		if(!$renderingWithinSite)
+		{
+			$result .= "<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
+		}
 		return $result;
 	}
 ?>

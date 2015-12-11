@@ -310,7 +310,7 @@
 				$cornerWidthInset = -16.272;//percent inset corner
 				$cornerDepthInset = 49;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==2)
 			{//ca 2 - two close left corner insets
@@ -363,21 +363,21 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightTop'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightBottom'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";//last because of overlap
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==3)
 			{//ca 3
 				$cornerWidthInset = 53;
 				$cornerDepthInset = -19.27;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==4)
 			{//ca 4
 				$cornerWidthInset = -8.067;
 				$cornerDepthInset = -9.55;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==5)
 			{//ca 5
@@ -458,21 +458,21 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_4'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_5'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_7Exit'></div>\n";
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==9)
 			{//ups 1
 				$cornerWidthInset = 22.159;//percent inset corner
 				$cornerDepthInset = 31.263;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
+				$roomCustomHTML .= "<span style='left:$cornerWidthInset%' class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==10)
 			{//ups 2
 				$cornerWidthInset = 24.855;//percent inset corner
 				$cornerDepthInset = 21.875;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
-				$roomCustomHTML .= "<span style='left:$cornerWidthInset%'>$name</span>\n";
+				$roomCustomHTML .= "<span style='left:$cornerWidthInset%' class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==15)
 			{//loading - two far right corner insets
@@ -529,7 +529,7 @@
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightBottom'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";//last because of overlap
-				$roomCustomHTML .= "<span>$name</span>\n";
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
 			}
 		}//end CreateRoomCustomLayout()
 	}// end DCIMCustomFunctions class
