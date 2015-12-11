@@ -274,6 +274,13 @@
 		return $logTable;
 	}
 	
+	function DoesTableHaveQAFields($table)
+	{
+		$result = true;
+		if($table=="dcim_user")	$result=false;
+		return $result;
+	}
+	
 	function ClearUserLogin()
 	{
 		//update cookie info - remove rights - set time to -1h - for some reason just the un set doesnt work and the cooking still exists a frame later

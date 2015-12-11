@@ -1153,11 +1153,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
-							FROM dcimlog_device AS d 
+							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
 						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
-							FROM dcimlog_powerloc AS pl
+							FROM dcim_powerloc AS pl
 							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
 							WHERE pl.locationid=?";
 			
@@ -2589,7 +2589,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $resultMessage;
 		global $errorMessage;
-	
+		
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
@@ -2599,9 +2599,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			return;
 		}
 		
-		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate=''
+		$updateQASQL = ", qauser=-1, qadate=''";
+		if(!DoesTableHaveQAFields($table))$updateQASQL = "";
+		
+		$query = "UPDATE $table SET edituser=$userID, editdate=CURRENT_TIMESTAMP $updateQASQL
 				WHERE  $keyField = $key LIMIT 1 ";
-
+	
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "UpdateRecordEditUser: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -4844,8 +4847,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "</tr></table>\n";
 				
-				//render room
-				echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
+				//render room - ignore 0 width or height rooms
+				if($width>0 && $depth>0)
+					echo CreateRoomLayout($roomID, $name, $fullName, $xPos, $yPos, $width, $depth, $orientation, 0, 0, $custAccess);
 			}
 			else
 			{
@@ -4956,7 +4960,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{//show results
-				echo CreateDataTableHeader(array("Location","Customer","Device","Size"), false, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -4989,7 +4993,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					
 					if(!$additionalDevice)
-					{
+					{//on spanned location record
+						echo "<td class='data-table-cell' rowspan='$deviceCount'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
 							$jsSafeName = MakeJSSafeParam($location);
@@ -5392,7 +5398,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName.$portFullName)."</option>\n";
+				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName." ".$portFullName)."</option>\n";
 			}
 		}
 		

@@ -44,7 +44,7 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error);
 			return $result;
 		}
 		
