@@ -6516,21 +6516,21 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						//full device name type,size, sorted by cust, devicename
 						
 						//look up each location  & customer here
-						$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device
+						$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, d.model, d.member
 							FROM dcim_location AS l
 								LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 								LEFT JOIN dcim_customer AS c ON d.hno = c.hno
 								LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
 								LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
 							WHERE l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
-							ORDER BY l.name, c.name, c.hno, d.name";
+							ORDER BY l.name, c.name, c.hno, d.name, d.unit";
 						
 						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('dddds', $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
 							$errorMessage[]= "CreateRoomLayout() SQL setup 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 						else
 						{
 							$stmt2->store_result();
-							$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName);
+							$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $model, $member);
 							
 							$lastCustomerID = PHP_INT_MAX;
 							while($stmt2->fetch())
@@ -6538,20 +6538,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$newLocation = ($lastLocationID!=$locationID);
 								$newCustomer = ($lastCustomerID!=$hNo);
 								$fullLocationName = FormatLocation($site, $room, $name);
-								
+								$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+
 								if(!$firstDevice)
 									$popupText .= "<BR>";
+								
+								if($newLocation && !$firstDevice)
+									$popupText .= "<BR>";//blank line between locations
 								
 								if($newLocation)
 									$popupText .= "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>\n";
 								
 								if($hNo==NULL)
-									$popupText .= "EMPTY";
+									$popupText .= "Empty";
 								else
 								{
 									if($newCustomer)
 										$popupText .= "<a href='?host=$hNo'>$customer</a><BR>\n";
-									$popupText .= "<a href='?deviceid=$deviceid'>$deviceName</a>";
+									$popupText .= "&nbsp;&nbsp;&nbsp;&nbsp;<a href='?deviceid=$deviceid'>$deviceFullName</a>";
 								}
 								$firstDevice = false;
 								$lastLocationID=$locationID;
