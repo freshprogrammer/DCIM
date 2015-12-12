@@ -4384,19 +4384,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
+					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR l.note LIKE ?)
 				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4404,13 +4404,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('sssssss', $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('sssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -4430,7 +4430,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		
