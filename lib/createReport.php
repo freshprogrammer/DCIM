@@ -8,14 +8,17 @@
 	
 	//startup
 	SQLIConnect();
-	
+
 	$report = GetInput("report");
+	$date = GetInput("date");
 	
 	if($report==="ActiveBadgeList")
 		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
 	else if($report==="PowerAudit")
 		OutputCSV("PowerAudit-".date("Y-m-d").".csv",CreatePowerAuditExportArray(0));//NOTE: this is only running for site 0
-	else 
+	else if($report==="PowerHistory")
+		OutputCSV("PowerHistory-$date.csv",CreatePowerHistoryExportArray(0,$date));//NOTE: this is only running for site 0
+	else
 	{
 		echo "No Report Specified";
 	}
@@ -108,7 +111,7 @@
 			$showNAForEmptyLocations = true;
 			$skipLinesBetweenLocationsAndOnlyFirstCustName = true;
 			$lastLoc = "";
-			//list result data
+			//list result data - collected by customer
 			while ($stmt->fetch())
 			{
 				$fullLocationName = FormatLocation($site, $room, $locationName);
@@ -120,17 +123,65 @@
 				{
 					if($lastLoc==$fullLocationName)
 					{
-						$cust = "";//dont show this 
+						$cust = "";//dont show customer name and number on multiple circuits fo same customer 
 						$hNo = "";
 					}
 					else 
-					{
+					{//add a blank line afer each new location - skip the first (new) location
 						if(strlen($lastLoc)>0)//this is just for the first loc
 							$result[] = array("");
 					}
 					$lastLoc = $fullLocationName;
 				}
 				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$load."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
+			}
+		}
+		return $result;
+	}
+	
+	function CreatePowerHistoryExportArray($siteID, $date)
+	{
+		global $mysqli;
+		
+		$result = array();
+		
+		//this is grouped by circuit
+		$query = "SELECT cur.* FROM (
+			SELECT p.powerid, p.panel,p.circuit, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
+				FROM dcimlog_power AS p
+					WHERE p.editdate<='$date'
+				ORDER BY p.panel,p.circuit,p.editdate DESC
+			) AS cur
+			GROUP BY cur.powerid";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$result[] = array("Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error);
+			return $result;
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($powerid, $panel,$circuit,$load,$percent,$amps,$volts,$status,$editDate);
+		$count = $stmt->num_rows;
+		
+		if($count>0)
+		{
+			//create result array
+			//headers
+			$result[] = array("All Power Readings as of date($date)");//
+			$result[] = array("Panel","Circuit","Reading","Reading%","Amps","Volts","On/Off","Date");
+
+			$showNAForEmptyLocations = true;
+			$skipLinesBetweenLocationsAndOnlyFirstCustName = true;
+			$lastLoc = "";
+			//list result data
+			while ($stmt->fetch())
+			{
+				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
+				$circuit = ($volts==208)?("=\"".$circuit."/".($circuit+2)."\""):$circuit;
+				
+				$result[] = array($panel,$circuit,$load,substr($percent,0,5)."%",$amps,$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
 			}
 		}
 		return $result;
