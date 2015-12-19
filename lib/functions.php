@@ -3832,6 +3832,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//show device image with port overlays
+			$connectionSymbol = ">";
+								
 			if($deviceInfo->showDeviceImage)
 			{
 				//process port data for switchview
@@ -3841,8 +3843,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$dbPortCount = 0;
 				
 				$query = "SELECT 
-						dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-						sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+						dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, c.hno, c.name AS cname, dp.mac,
+						sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport, s.hno AS shno, sc.name AS scname,
 						dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 						CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
 					FROM dcim_device AS d
@@ -3855,6 +3857,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						LEFT JOIN dcim_deviceport AS sp ON pc.destportid=sp.deviceportid
 						LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 						LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
+						LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+						LEFT JOIN dcim_customer AS sc ON s.hno=sc.hno
 					WHERE d.deviceid=?
 					GROUP BY dp.deviceportid
 					ORDER BY 3,4,6,7";
@@ -3869,8 +3873,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$stmt->bind_Param('i', $deviceID);
 					$stmt->execute();
 					$stmt->store_result();
-					$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-									   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+					$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $hno, $customer, $mac, 
+									   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $shno, $switchCustomer, 
 									   $type, $speed, $note, $status, $portConnectionID, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 					$dbPortCount = $stmt->num_rows;
 				}
@@ -3898,20 +3902,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								
 								//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
 								$portFullName = FormatPort($member, $model, $pic, $port, $type);
-								$connectionText = "N/A";
+								$connectionText = "$connectionSymbol Not Connected";
 								if($switchID!=null)
 								{
 									$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-									$connectionText = "$switchName $switchPortFullName";
+									$connectionText = "$connectionSymbol <a href='./?host=$shno'>".MakeHTMLSafe($switchCustomer)."</a><BR>
+										$connectionSymbol <a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchName)."</a> ".MakeHTMLSafe($switchPortFullName);
 								}
 								
 								//define popup text
 								$popupText = "";
 								$tech = $userFullName[$editUserID] . ": ".$editDate;
 								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
-								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-									Connection:".MakeHTMLSafe($connectionText)."<BR>
+								$popupText = "<a href='./?host=$hno'>$customer</a><BR>
+									<a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a> $portFullName <BR>
 									Status:$statusDescrip<BR>
+									$connectionText<BR>
 									MAC:".MakeHTMLSafe($mac)." <BR>
 									Speed:".MakeHTMLSafe($speed)." <BR>
 									VLAN(s):$vlan <BR>
