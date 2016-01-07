@@ -139,6 +139,9 @@
 		return $result;
 	}
 	
+	/*
+	 * root/lib/createReport.php?report=PowerHistory&date=2016-01-01
+	 */
 	function CreatePowerHistoryExportArray($siteID, $date)
 	{
 		global $mysqli;
