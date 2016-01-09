@@ -155,7 +155,8 @@
 					WHERE p.editdate<='$date'
 				ORDER BY p.panel,p.circuit,p.editdate DESC
 			) AS cur
-			GROUP BY cur.powerid";
+			GROUP BY cur.powerid
+			ORDER BY panel,circuit,editdate DESC";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -175,9 +176,6 @@
 			$result[] = array("All Power Readings as of date($date)");//
 			$result[] = array("Panel","Circuit","Reading","Reading%","Amps","Volts","On/Off","Date");
 
-			$showNAForEmptyLocations = true;
-			$skipLinesBetweenLocationsAndOnlyFirstCustName = true;
-			$lastLoc = "";
 			//list result data
 			while ($stmt->fetch())
 			{
