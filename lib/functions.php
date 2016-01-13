@@ -5057,7 +5057,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.hno=?
+			WHERE d.hno=? AND d.status='A'
 			GROUP BY p.panel, p.circuit
 			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
