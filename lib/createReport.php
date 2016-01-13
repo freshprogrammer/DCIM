@@ -15,9 +15,9 @@
 	if($report==="ActiveBadgeList")
 		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
 	else if($report==="PowerAudit")
-		OutputCSV("PowerAudit-".date("Y-m-d").".csv",CreatePowerAuditExportArray(0));//NOTE: this is only running for site 0
+		OutputCSV("Location Power Audit - ".date("Y-m-d").".csv",CreatePowerAuditExportArray(0));//NOTE: this is only running for site 0
 	else if($report==="PowerHistory")
-		OutputCSV("PowerHistory-$date.csv",CreatePowerHistoryExportArray(0,$date));//NOTE: this is only running for site 0
+		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray(0,$date));//NOTE: this is only running for site 0
 	else
 	{
 		echo "No Report Specified";
@@ -140,7 +140,7 @@
 	}
 	
 	/*
-	 * root/lib/createReport.php?report=PowerHistory&date=2016-01-01
+	 * url: root/lib/createReport.php?report=PowerHistory&date=2016-01-01
 	 */
 	function CreatePowerHistoryExportArray($siteID, $date)
 	{

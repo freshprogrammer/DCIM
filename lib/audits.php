@@ -20,15 +20,20 @@
 	{
 		global $pageSubTitle;
 		$pageSubTitle = "Data Audits";
-
+		
 		//Audit functions
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Audit Functions</div>\n";
 		echo "<div class=\"panel-body\">\n";
-
+		
 		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>&nbsp;&nbsp;";
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Current Power Readings as CSV</button> ";
+		
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
+				
+		echo "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
+		echo "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
+		
+		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Location Power Readings as CSV</button>";
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
@@ -36,7 +41,7 @@
 		}
 		echo "</div>\n</div>\n\n";//end panel and panel body
 		
-
+		
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data to QA</div>\n";
 		echo "<div class=\"panel-body\">\n";
@@ -87,7 +92,7 @@
 	function Check_CircuitInactiveWithLoad()
 	{
 		global $mysqli;
-
+		
 		$reportTitle = "Circuits off but still reporting load";
 		$reportNote = "";
 		
@@ -150,7 +155,7 @@
 	function Check_CircuitOverLoaded($threshold=80)
 	{
 		global $mysqli;
-
+		
 		$reportTitle = "Circuits past threshhold ($threshold%) utilization";
 		$reportNote = "";
 		
@@ -176,7 +181,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
@@ -191,7 +196,7 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-
+				
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -302,7 +307,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($cust, $name, $badgeNo, $hno);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
@@ -364,7 +369,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
@@ -427,7 +432,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($customer, $badgeID, $hNo, $name, $badgeNo, $status, $issue, $hand, $returned, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
@@ -531,7 +536,7 @@
 		
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s) or in Unknown.";
-
+		
 		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -563,9 +568,9 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-
+				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
-		
+				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
@@ -576,7 +581,7 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
@@ -593,31 +598,31 @@
 	
 		$reportTitle = "Device Ports Without Devices or Customers";
 		$reportNote = "Disconnected record(s).";
-	
+		
 		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE c.name IS NULL OR d.name IS NULL
 			ORDER BY d.name,d.member, dp.deviceid,dp.pic,dp.port";
-	
+		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			echo "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
 			return -1;
 		}
-	
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName, $member, $model, $pic, $port, $type);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("DevicePortID","Device","H#","Port"));
-	
+			
 			//list result data
 			$oddRow = false;
 			while ($stmt->fetch())
@@ -625,10 +630,10 @@
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-	
+				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
-	
+				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>$deviceportid</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe("#$deviceID - Ref:$deviceFullName")."</a></td>\n";
@@ -637,7 +642,7 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-	
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Ports",3);
 		}
@@ -670,7 +675,7 @@
 		$stmt->store_result();
 		$stmt->bind_result($cust, $name, $badgeNo, $hno);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
@@ -707,10 +712,10 @@
 	function Check_DevicesActiveUnderInactiveCustomer()
 	{
 		global $mysqli;
-	
+		
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
-	
+		
 		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
@@ -768,7 +773,7 @@
 		
 		$reportTitle = "Power records without any linking location record";
 		$reportNote = "Disconnected record(s).";
-
+		
 		$query = "SELECT p.powerid, p.panel, p.circuit
 			FROM dcim_power AS p
 				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
@@ -824,7 +829,7 @@
 		
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
-
+		
 		$query = "SELECT pl.powerlocid, pl.powerid, pl.locationid, p.powerid, l.locationid
 			FROM dcim_powerloc AS pl
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
@@ -866,7 +871,7 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Errors",3);
 		}
@@ -883,7 +888,7 @@
 		
 		$reportTitle = "Location records linked to missing records";
 		$reportNote = "Disconnected from room or power (0 power count).";
-
+		
 		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid, COUNT(pl.locationid) AS powerCount
 			FROM dcim_location AS l
 				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
@@ -928,7 +933,7 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		
+			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Locations",2);
 		}

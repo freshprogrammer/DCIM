@@ -50,6 +50,17 @@
 			return in_array($locationID,$bottomIDs);
 		}
 		
+		public static function RemotePowerPanelAuditHelpPopup()
+		{
+			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Automation</span><BR>
+After a DC power audit has been done and the data has all been updated a RPP Audit workbook can be created and uploaded as necessary. 
+Simply export the power data then run the RPP Audit creation tool. 
+The tool will prompt for a data file and a template file and then create the new workbook for you. 
+From there you can easily save it with an appropriate name and store it.<BR>
+</span>";
+			return $result;
+		}
+		
 		public static function CreateInternalLink($hNo, $cNo, $includeOldLink)
 		{//these are internal links for cust and device pages to other applications
 			$result = "<a href='https://internalApp.com?search=$hNo' target='_blank' class='internalLink'>(main system)</a>\n";
