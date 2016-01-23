@@ -169,7 +169,8 @@
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status ='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE (p.load/p.amps*100) > $threshold
-			ORDER BY 1,2,3";
+			GROUP BY p.powerid, c.hno
+			ORDER BY s.name, r.name, p.panel, p.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -187,7 +188,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Location","Customer","Panel","Circuit","Volts","Amps","Load","Utilization","Reading"));
+			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load","Utilization","Reading","Customer"));
 			
 			//list result data
 			$oddRow = false;
@@ -201,7 +202,6 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
@@ -209,6 +209,7 @@
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($load)."A</td>\n";
 				$longResult.= "<td class='data-table-cell'><font color=red>".substr($utilization,0,5)."%</font></td>\n";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,date("F jS, Y",strtotime($editDate)), $qaUserID, $qaDate)."</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
