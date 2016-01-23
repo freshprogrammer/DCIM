@@ -6372,6 +6372,187 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
+	function CreatePanel($panel, $circuitCount, $status, $locationID, $userID)
+	{
+		//used for batch creating of circuits (a whole panel worth)
+		//create all circuits (power records)
+		//create link to location (connected to "unknown" or generic location
+		
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		
+		//for error reporting
+		$action = "CreatePanel()";
+		
+		$volts = 120;
+		$amps = 20;
+		$load = 0;
+
+		$circuit= GetInput("circuit");
+		
+		if(!isset($status) || strlen($status)==0)
+			$status = "D";
+		
+		$totalAffectedCount = 0;
+		$valid = true;
+		
+		if($valid)$valid = ValidPowerPanel($panel);
+		if($valid)$valid = ValidPowerVolts($volts);
+		if($valid)$valid = ValidPowerAmps($amps);
+		if($valid)$valid = ValidPowerStatus($status);
+		if($valid)$valid = ValidPowerLoad($load);
+		
+		//check for location in table
+		if($valid)$valid = ValidLocation($locationID,true);
+		
+		
+		
+		for($circuit=1; $circuit<=$circuitCount; $circuit++)
+		{
+			if($valid)
+			{
+				//check for existing panel circuit combo
+				$valid = false;
+				$passedDBChecks = false;
+				//this could be optomised by filtering inner selects by panel and/or range of circuit
+				$isDoubleCircuit = (int)$volts == 208;
+				$filter = "";
+				if(!$isDoubleCircuit)
+					$filter = "csr.panel=? AND csr.circuit=?";
+				else
+					$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+				
+				$query = "SELECT * FROM (
+				SELECT powerid,panel,circuit,volts,amps
+				FROM dcim_power
+				UNION
+				SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+				FROM dcim_power HAVING NOT(cir IS NULL)
+				) AS csr
+				WHERE $filter";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				else
+				{
+					if(!$isDoubleCircuit)
+						$stmt->bind_Param('ss', $panel, $circuit);
+					else
+					{
+						$secondCircuit = 2+(int)$circuit;
+						$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+					}
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "CreatePanel() Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$stmt->store_result();
+						$count = $stmt->num_rows;
+							
+						if($count==0)
+							$passedDBChecks = true;
+						else
+						{
+							$stmt->bind_result($k, $p, $c, $v, $a);
+							$stmt->fetch();
+							
+							$errorMessage[] = "CreatePanel() Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+						}
+					}
+				}
+				$valid=$passedDBChecks;
+			}
+			
+			//push each circuit to DB
+			if($valid)
+			{
+				$query = "INSERT INTO dcim_power
+					(panel,circuit,volts,amps,status,`load`,edituser,editdate)
+					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{//					   pcvaslu
+					$stmt->bind_Param('ssssssi', $panel, $circuit, $volts, $amps, $status, $load, $userID);
+					
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "CreatePanel() Failed to execute power circuit add (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
+							$resultMessage[] = "Successfully added power circuit (Panel:".$panel." Circuit#".$circuit.").";
+						}
+						else
+							$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
+						
+						//look up inserted id
+						$query = "SELECT powerid FROM dcim_power WHERE panel=? AND circuit=?";
+						
+						if (!($stmt = $mysqli->prepare($query)))
+							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+						else
+						{
+							$stmt->bind_Param('ss', $panel, $circuit);
+							$stmt->execute();
+							$stmt->store_result();
+							$count = $stmt->num_rows;
+							
+							if($count==1)
+							{
+								//update input locationid
+								$stmt->bind_result($powerID);
+								$stmt->fetch();
+								//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
+								
+								//sucsessfull Insert - insert circuit-location link record
+								$query = "INSERT INTO dcim_powerloc
+									(powerid,locationid,edituser,editdate)
+									VALUES(?,?,?,CURRENT_TIMESTAMP)";
+									
+								if (!($stmt = $mysqli->prepare($query)))
+									$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+								else
+								{//					   plu
+									$stmt->bind_Param('iii', $powerID, $locationID, $userID);
+									
+									if (!$stmt->execute())//execute
+										//failed (errorNo-error)
+										$errorMessage[] = "CreatePanel() Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
+									else
+									{
+										$affectedCount = $stmt->affected_rows;
+										$totalAffectedCount += $affectedCount;
+										
+										if($affectedCount==1)
+										{
+											LogDBChange("dcim_powerloc",-1,"I","powerid=$powerID AND locationid=$locationID");
+											$resultMessage[] = "Successfully added power circuit location link (powerID:".$powerID.",locationID:".$locationID.").";
+										}
+										else
+											$errorMessage[] = "CreatePanel() Power circuit location link added successfully, but affected $affectedCount rows.";
+									}
+								}
+								$resultMessage[] = "$totalAffectedCount total records created.";
+							}
+							else
+							{
+								$errorMessage[] = "CreatePanel() Failed to locate inserted record. Power (if created) is not linked to Location.";
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
 	{
 		global $mysqli;
