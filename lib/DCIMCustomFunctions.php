@@ -52,6 +52,8 @@
 		
 		public static function RemotePowerPanelAuditHelpPopup()
 		{
+			//links to direct files left off so custom links can be included.
+			//Power Audit Creator can be found in a seperate repo here http://github.com/freshprogrammer/ExcelController/releases
 			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Automation</span><BR>
 After a DC power audit has been done and the data has all been updated a RPP Audit workbook can be created and uploaded as necessary. 
 Simply export the power data then run the RPP Audit creation tool. 
