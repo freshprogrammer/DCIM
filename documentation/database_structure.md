@@ -116,7 +116,7 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |powerid|smallint(8) unsigned|NO|PRI|*NULL*|auto_increment|
-|panel|varchar(3)|NO||*NULL*||
+|panel|varchar(8)|NO||*NULL*||
 |circuit|tinyint(2)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
 |amps|tinyint(2)|NO||20||
@@ -333,7 +333,7 @@
 |powerlogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
 |powerid|int(8)|NO|MUL|*NULL*||
-|panel|varchar(3)|NO||*NULL*||
+|panel|varchar(8)|NO||*NULL*||
 |circuit|tinyint(2)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
 |amps|tinyint(2)|NO||20||

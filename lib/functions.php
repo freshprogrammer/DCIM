@@ -3832,6 +3832,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 			//show device image with port overlays
+			$connectionSymbol = ">";
+								
 			if($deviceInfo->showDeviceImage)
 			{
 				//process port data for switchview
@@ -3841,8 +3843,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$dbPortCount = 0;
 				
 				$query = "SELECT 
-						dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-						sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+						dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, c.hno, c.name AS cname, dp.mac,
+						sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport, s.hno AS shno, sc.name AS scname,
 						dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 						CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
 					FROM dcim_device AS d
@@ -3855,6 +3857,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						LEFT JOIN dcim_deviceport AS sp ON pc.destportid=sp.deviceportid
 						LEFT JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 						LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
+						LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+						LEFT JOIN dcim_customer AS sc ON s.hno=sc.hno
 					WHERE d.deviceid=?
 					GROUP BY dp.deviceportid
 					ORDER BY 3,4,6,7";
@@ -3869,8 +3873,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$stmt->bind_Param('i', $deviceID);
 					$stmt->execute();
 					$stmt->store_result();
-					$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-									   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+					$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $hno, $customer, $mac, 
+									   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $shno, $switchCustomer, 
 									   $type, $speed, $note, $status, $portConnectionID, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 					$dbPortCount = $stmt->num_rows;
 				}
@@ -3898,20 +3902,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								
 								//XXX this does not support mutiple vlans, probably need to write fresh SQL and code for that
 								$portFullName = FormatPort($member, $model, $pic, $port, $type);
-								$connectionText = "N/A";
+								$connectionText = "$connectionSymbol Not Connected";
 								if($switchID!=null)
 								{
 									$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-									$connectionText = "$switchName $switchPortFullName";
+									$connectionText = "$connectionSymbol <a href='./?host=$shno'>".MakeHTMLSafe($switchCustomer)."</a><BR>
+										$connectionSymbol <a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchName)."</a> ".MakeHTMLSafe($switchPortFullName);
 								}
 								
 								//define popup text
 								$popupText = "";
 								$tech = $userFullName[$editUserID] . ": ".$editDate;
 								//$tech = FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate);
-								$popupText = MakeHTMLSafe($deviceName)." $portFullName <BR>
-									Connection:".MakeHTMLSafe($connectionText)."<BR>
+								$popupText = "<a href='./?host=$hno'>$customer</a><BR>
+									<a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a> $portFullName <BR>
 									Status:$statusDescrip<BR>
+									$connectionText<BR>
 									MAC:".MakeHTMLSafe($mac)." <BR>
 									Speed:".MakeHTMLSafe($speed)." <BR>
 									VLAN(s):$vlan <BR>
@@ -4384,19 +4390,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
+					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '', l.locationid, l.name, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?)
+						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR l.note LIKE ?)
 				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4404,13 +4410,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('sssssss', $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('sssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -4430,7 +4436,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		
@@ -5057,7 +5063,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.hno=?
+			WHERE d.hno=? AND d.status='A'
 			GROUP BY p.panel, p.circuit
 			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
 		}
@@ -5121,7 +5127,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -6001,8 +6007,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
-			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".FormatPanelName($panel));
-			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".FormatPanelName($panel));//short room name
+			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
@@ -6099,7 +6105,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						echo "<td $rowSpan class='$cellClass'>\n";
 						echo "	<table width=100%><tr>\n";
-						echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
+						echo "	<td><b>".MakeHTMLSafe($panel)." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
 						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 						echo "	</tr></table><table width=100%><tr>\n";
 						//echo "	$fullLocationName ($percentLoad%) ";
@@ -6123,7 +6129,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						else if(!$left && $prevWas208Right)
 							$prevWas208Right = false;
 						else
-							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
+							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
 					}
 					
 					if(!$left)
@@ -6226,7 +6232,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "</tr>";
 				}
 				$result .= "</table>";
@@ -6360,6 +6366,187 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					{
 						$affectedCount = $stmt->affected_rows;
 						$resultMessage[] = "Sucsesfully changed HNo ($old -> $new) - Renamed $affectedCount devices.";
+					}
+				}
+			}
+		}
+	}
+	
+	function CreatePanel($panel, $circuitCount, $status, $locationID, $userID)
+	{
+		//used for batch creating of circuits (a whole panel worth)
+		//create all circuits (power records)
+		//create link to location (connected to "unknown" or generic location
+		
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		
+		//for error reporting
+		$action = "CreatePanel()";
+		
+		$volts = 120;
+		$amps = 20;
+		$load = 0;
+
+		$circuit= GetInput("circuit");
+		
+		if(!isset($status) || strlen($status)==0)
+			$status = "D";
+		
+		$totalAffectedCount = 0;
+		$valid = true;
+		
+		if($valid)$valid = ValidPowerPanel($panel);
+		if($valid)$valid = ValidPowerVolts($volts);
+		if($valid)$valid = ValidPowerAmps($amps);
+		if($valid)$valid = ValidPowerStatus($status);
+		if($valid)$valid = ValidPowerLoad($load);
+		
+		//check for location in table
+		if($valid)$valid = ValidLocation($locationID,true);
+		
+		
+		
+		for($circuit=1; $circuit<=$circuitCount; $circuit++)
+		{
+			if($valid)
+			{
+				//check for existing panel circuit combo
+				$valid = false;
+				$passedDBChecks = false;
+				//this could be optomised by filtering inner selects by panel and/or range of circuit
+				$isDoubleCircuit = (int)$volts == 208;
+				$filter = "";
+				if(!$isDoubleCircuit)
+					$filter = "csr.panel=? AND csr.circuit=?";
+				else
+					$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+				
+				$query = "SELECT * FROM (
+				SELECT powerid,panel,circuit,volts,amps
+				FROM dcim_power
+				UNION
+				SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+				FROM dcim_power HAVING NOT(cir IS NULL)
+				) AS csr
+				WHERE $filter";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				else
+				{
+					if(!$isDoubleCircuit)
+						$stmt->bind_Param('ss', $panel, $circuit);
+					else
+					{
+						$secondCircuit = 2+(int)$circuit;
+						$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+					}
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "CreatePanel() Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$stmt->store_result();
+						$count = $stmt->num_rows;
+							
+						if($count==0)
+							$passedDBChecks = true;
+						else
+						{
+							$stmt->bind_result($k, $p, $c, $v, $a);
+							$stmt->fetch();
+							
+							$errorMessage[] = "CreatePanel() Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+						}
+					}
+				}
+				$valid=$passedDBChecks;
+			}
+			
+			//push each circuit to DB
+			if($valid)
+			{
+				$query = "INSERT INTO dcim_power
+					(panel,circuit,volts,amps,status,`load`,edituser,editdate)
+					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{//					   pcvaslu
+					$stmt->bind_Param('ssssssi', $panel, $circuit, $volts, $amps, $status, $load, $userID);
+					
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "CreatePanel() Failed to execute power circuit add (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
+							$resultMessage[] = "Successfully added power circuit (Panel:".$panel." Circuit#".$circuit.").";
+						}
+						else
+							$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
+						
+						//look up inserted id
+						$query = "SELECT powerid FROM dcim_power WHERE panel=? AND circuit=?";
+						
+						if (!($stmt = $mysqli->prepare($query)))
+							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+						else
+						{
+							$stmt->bind_Param('ss', $panel, $circuit);
+							$stmt->execute();
+							$stmt->store_result();
+							$count = $stmt->num_rows;
+							
+							if($count==1)
+							{
+								//update input locationid
+								$stmt->bind_result($powerID);
+								$stmt->fetch();
+								//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
+								
+								//sucsessfull Insert - insert circuit-location link record
+								$query = "INSERT INTO dcim_powerloc
+									(powerid,locationid,edituser,editdate)
+									VALUES(?,?,?,CURRENT_TIMESTAMP)";
+									
+								if (!($stmt = $mysqli->prepare($query)))
+									$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+								else
+								{//					   plu
+									$stmt->bind_Param('iii', $powerID, $locationID, $userID);
+									
+									if (!$stmt->execute())//execute
+										//failed (errorNo-error)
+										$errorMessage[] = "CreatePanel() Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
+									else
+									{
+										$affectedCount = $stmt->affected_rows;
+										$totalAffectedCount += $affectedCount;
+										
+										if($affectedCount==1)
+										{
+											LogDBChange("dcim_powerloc",-1,"I","powerid=$powerID AND locationid=$locationID");
+											$resultMessage[] = "Successfully added power circuit location link (powerID:".$powerID.",locationID:".$locationID.").";
+										}
+										else
+											$errorMessage[] = "CreatePanel() Power circuit location link added successfully, but affected $affectedCount rows.";
+									}
+								}
+								$resultMessage[] = "$totalAffectedCount total records created.";
+							}
+							else
+							{
+								$errorMessage[] = "CreatePanel() Failed to locate inserted record. Power (if created) is not linked to Location.";
+							}
+						}
 					}
 				}
 			}
