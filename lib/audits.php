@@ -166,7 +166,7 @@
 				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status ='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE (p.load/p.amps*100) > $threshold
 			ORDER BY 1,2,3";
