@@ -133,7 +133,7 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
@@ -202,7 +202,7 @@
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>".FormatPanelName($panel)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";

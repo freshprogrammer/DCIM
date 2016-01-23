@@ -5127,7 +5127,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 				echo "<td class='data-table-cell'>$volts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
@@ -6007,8 +6007,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
-			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".FormatPanelName($panel));
-			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".FormatPanelName($panel));//short room name
+			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
@@ -6105,7 +6105,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						echo "<td $rowSpan class='$cellClass'>\n";
 						echo "	<table width=100%><tr>\n";
-						echo "	<td><b>".MakeHTMLSafe(FormatPanelName($panel))." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
+						echo "	<td><b>".MakeHTMLSafe($panel)." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
 						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 						echo "	</tr></table><table width=100%><tr>\n";
 						//echo "	$fullLocationName ($percentLoad%) ";
@@ -6129,7 +6129,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						else if(!$left && $prevWas208Right)
 							$prevWas208Right = false;
 						else
-							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe(FormatPanelName($panel))." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
+							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
 					}
 					
 					if(!$left)
@@ -6232,7 +6232,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe(FormatPanelName($panel))."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "</tr>";
 				}
 				$result .= "</table>";

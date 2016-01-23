@@ -634,11 +634,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return trim($fullLocationName);
 	}
 	
-	function FormatPanelName($panel)
-	{
-		return "UPS-$panel";//this is mainly just to keep this out of the main code if this is ever not "UPS-"
-	}
-	
 	function Format208CircuitNumber($circuit)
 	{
 		return $circuit."/".((int)$circuit+2);
@@ -1613,14 +1608,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerPanel($input)
 	{
-		global $errorMessage;
+		/*global $errorMessage;
 		//this should matcht the JS
 		$regex = "/^(\d|\d\d|\d-\d)$/"; 
 		if(!preg_match($regex,$input))
 		{
 			$errorMessage[] = "Invalid Panel.";
 			return false;
-		}
+		}*/
 		return true;
 	}
 	
