@@ -212,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_power` (
   `powerlogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
   `powerid` int(8) NOT NULL,
-  `panel` varchar(3) NOT NULL,
+  `panel` varchar(8) NOT NULL,
   `circuit` tinyint(2) NOT NULL,
   `volts` smallint(3) NOT NULL DEFAULT '120',
   `amps` tinyint(2) NOT NULL DEFAULT '20',
@@ -506,7 +506,7 @@ CREATE TABLE IF NOT EXISTS `dcim_portvlan` (
 DROP TABLE IF EXISTS `dcim_power`;
 CREATE TABLE IF NOT EXISTS `dcim_power` (
   `powerid` smallint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `panel` varchar(3) NOT NULL,
+  `panel` varchar(8) NOT NULL,
   `circuit` tinyint(2) NOT NULL,
   `volts` smallint(3) NOT NULL DEFAULT '120',
   `amps` tinyint(2) NOT NULL DEFAULT '20',
