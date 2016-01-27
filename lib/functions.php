@@ -2938,6 +2938,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
+			//list devices at this location - cant use notml list function because this list is ordered by unit for displaying devices in the cab as they actualy are
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
@@ -2947,7 +2948,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
-				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
+				ORDER BY status, site, room, loc, unit!=0, unit DESC, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
