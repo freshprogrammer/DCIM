@@ -1156,7 +1156,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
-						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
+						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT(p.panel,' CRK#',p.circuit)
 							FROM dcim_powerloc AS pl
 							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
 							WHERE pl.locationid=?";
