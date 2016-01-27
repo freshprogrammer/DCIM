@@ -119,7 +119,7 @@
 |panel|varchar(8)|NO||*NULL*||
 |circuit|tinyint(2)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
-|amps|tinyint(2)|NO||20||
+|amps|tinyint(3)|NO||20||
 |status|varchar(1)|NO||*NULL*||
 |load|decimal(4,2)|NO||0.00||
 |edituser|int(8)|NO||*NULL*||
@@ -336,7 +336,7 @@
 |panel|varchar(8)|NO||*NULL*||
 |circuit|tinyint(2)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
-|amps|tinyint(2)|NO||20||
+|amps|tinyint(3)|NO||20||
 |status|varchar(1)|NO||*NULL*||
 |load|decimal(4,2)|NO||0.00||
 |edituser|int(8)|NO||*NULL*||
