@@ -789,7 +789,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerVolts($volts);
 		if($valid)$valid = ValidPowerAmps($amps);
 		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load);
+		if($valid)$valid = ValidPowerLoad($load, $amps);
 		
 		//DB CHECKS
 		//check for location in table
@@ -1156,7 +1156,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
-						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT('UPS-',p.panel,' CRK#',p.circuit)
+						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT(p.panel,' CRK#',p.circuit)
 							FROM dcim_powerloc AS pl
 							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
 							WHERE pl.locationid=?";
@@ -2938,6 +2938,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
+			//list devices at this location - cant use notml list function because this list is ordered by unit for displaying devices in the cab as they actualy are
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
 					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
@@ -2947,7 +2948,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				WHERE l.locationid=?
-				ORDER BY site, room, loc, unit!=0, unit DESC, name, member";
+				ORDER BY status, site, room, loc, unit!=0, unit DESC, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -5207,6 +5208,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<select id=EditCircuit_amps name="amps" tabindex=4>
 								<option value='20'>20A</option>
 								<option value='30'>30A</option>
+								<option value='40'>40A</option>
+								<option value='50'>50A</option>
+								<option value='100'>100A</option>
 							</select>
 						</td>
 					</tr>
@@ -5215,7 +5219,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td width=1 align='left'>
 							<input id=EditCircuit_status type='checkbox' tabindex=5 name='status' value='A' onclick='EditCircuit_StatusClicked()' class=''>
 							Load:
-							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=30 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
+							<input id=EditCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=100 step=0.01 onchange='EditCircuit_LoadChanged()' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -6385,6 +6389,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//for error reporting
 		$action = "CreatePanel()";
 		
+		//default generic values
 		$volts = 120;
 		$amps = 20;
 		$load = 0;
@@ -6401,7 +6406,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerVolts($volts);
 		if($valid)$valid = ValidPowerAmps($amps);
 		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load);
+		if($valid)$valid = ValidPowerLoad($load, $amps);
 		
 		//check for location in table
 		if($valid)$valid = ValidLocation($locationID,true);
@@ -6424,13 +6429,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
 				
 				$query = "SELECT * FROM (
-				SELECT powerid,panel,circuit,volts,amps
-				FROM dcim_power
-				UNION
-				SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
-				FROM dcim_power HAVING NOT(cir IS NULL)
-				) AS csr
-				WHERE $filter";
+						SELECT powerid,panel,circuit,volts,amps
+							FROM dcim_power
+							UNION
+						SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+							FROM dcim_power HAVING NOT(cir IS NULL)
+						) AS csr
+					WHERE $filter";
 				
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";

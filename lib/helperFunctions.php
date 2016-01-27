@@ -1632,7 +1632,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerAmps($input)
 	{
-		$validFlags = array('20','30');
+		$validFlags = array('20','30','40','50','100');
 		return ValidFlag($input,"Power Amps",$validFlags);
 	}
 	
@@ -1642,9 +1642,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidFlag($input,"Power Status",$validFlags);
 	}
 	
-	function ValidPowerLoad($input)
+	function ValidPowerLoad($input, $amps)
 	{
-		return ValidNumber($input,"Power Load",1,0,0,33);
+		return ValidNumber($input,"Power Load",1,0,0,$amps);
 	}
 	
 	function ValidSubnet($input)
