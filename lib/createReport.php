@@ -150,11 +150,11 @@
 		
 		//this is grouped by circuit
 		$query = "SELECT cur.* FROM (
-			SELECT p.powerid, p.panel,p.circuit, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
-				FROM dcimlog_power AS p
-					WHERE p.editdate<='$date'
-				ORDER BY p.panel,p.circuit,p.editdate DESC
-			) AS cur
+				SELECT p.powerid, p.panel,p.circuit, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
+					FROM dcimlog_power AS p
+						WHERE DATE(p.editdate)<='$date'
+					ORDER BY p.panel,p.circuit,p.editdate DESC
+				) AS cur
 			GROUP BY cur.powerid
 			ORDER BY panel,circuit,editdate DESC";
 		
