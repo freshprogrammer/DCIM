@@ -789,7 +789,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerVolts($volts);
 		if($valid)$valid = ValidPowerAmps($amps);
 		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load);
+		if($valid)$valid = ValidPowerLoad($load, $amps);
 		
 		//DB CHECKS
 		//check for location in table
@@ -6405,7 +6405,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerVolts($volts);
 		if($valid)$valid = ValidPowerAmps($amps);
 		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load);
+		if($valid)$valid = ValidPowerLoad($load, $amps);
 		
 		//check for location in table
 		if($valid)$valid = ValidLocation($locationID,true);
