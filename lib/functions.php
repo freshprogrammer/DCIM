@@ -4883,7 +4883,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 			ListRoomLocationsAndDevices($roomID);
 			echo "<BR>";
-			echo ListPowerPanels($roomID);
+			echo ListPowerPanels(false, $roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -6179,23 +6179,35 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result.= "<div class='panel-body'>\n\n";
 		
-		$result.= ListPowerPanels();
+		$result.= ListPowerPanels(false);
 		
 		$result.= "</div>\n";
 		$result.= "</div>\n";
 		echo $result;
 	}
 	
-	function ListPowerPanels($roomID=-1)
+	function ListPowerPanels($search, $input=-1)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$filter = "";
-		if($roomID!=-1)
-			$filter = "r.roomid=?";
+		if($search)
+		{
+			//replace '-' and ' ' to '' and compare to search
+			//$input = str_replace("-","",$input);
+			//$input = str_replace(" ","",$input);
+			$input = "%".$input."%";
+			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
+			$filter = "p.panel LIKE =?";
+		}
 		else
-			$filter = "-1=?";
+		{
+			if($input!=-1)
+				$filter = "r.roomid=?";
+			else
+				$filter = "-1=?";
+		}
 		
 		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
 			FROM dcim_power AS p
@@ -6209,7 +6221,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
 		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input) || !$stmt->execute())
 		{
 			$errorMessage[]= "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			$result .= "SQL error locating power panels";

@@ -311,6 +311,10 @@
 					
 					//search in device (name, note)
 					$resultCount += ListDevices(true,$search);
+					echo "<BR>\n";
+					
+					//search for panels
+					echo ListPowerPanels(true, $search);
 					
 					echo "</div>\n";
 					echo "</div>\n";
