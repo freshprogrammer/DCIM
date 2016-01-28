@@ -226,6 +226,9 @@
 	$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 	$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 	$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+	$debugMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $debugMessageString);
+	$errorMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $errorMessageString);
+	$resultMessageString = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $resultMessageString);
 	$output.= "<script type='text/javascript' language='JavaScript'>\n";
 	$output.= "	UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 	$output.= "</script>\n";
@@ -343,6 +346,9 @@
 		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+		$debugMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $debugMessageString);
+		$errorMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $errorMessageString);
+		$resultMessageString = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $resultMessageString);
 		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 		
 		if(UserHasReadPermission() && $focusSearch)
