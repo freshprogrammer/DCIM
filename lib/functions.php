@@ -5453,7 +5453,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function EditSubnetForm($action, $hNo)
 	{
 		global $mysqli;
-		
+		global $errorMessage;
 		
 		//select all Active Switch ports for/linked to this customer
 		//UNION all connected chilren
@@ -5488,7 +5488,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so the error is never seen
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
