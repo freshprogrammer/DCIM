@@ -5390,7 +5390,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
 			<?php 
 		}*/
-		echo "<BR>";
+		$result .= "<BR>";
 		if($count>0)
 		{
 			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
@@ -5453,7 +5453,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function EditSubnetForm($action, $hNo)
 	{
 		global $mysqli;
-		
+		global $errorMessage;
 		
 		//select all Active Switch ports for/linked to this customer
 		//UNION all connected chilren
@@ -5488,7 +5488,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so the error is never seen
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
@@ -6295,7 +6294,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//$input = str_replace(" ","",$input);
 			$input = "%".$input."%";
 			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
-			$filter = "p.panel LIKE =?";
+			$filter = "p.panel LIKE ?";
 		}
 		else
 		{
