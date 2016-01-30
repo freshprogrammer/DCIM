@@ -102,7 +102,7 @@
 <body>
 	<!-- Title -->
 	<div id="header-bg">
-	<table align=center border="0" class='pageMinWidth center'><tbody><tr>
+	<table class='pageMinWidth center'><tbody><tr>
 			<td width="1">
 				<a href="./"><img src="images/logo.png" border="0"></a>
 			</td>
@@ -133,7 +133,7 @@
 	
 	<!--  MENU  -->
 	<div id="top-nav">
-		<table border="0" align=center cellpadding="0" cellspacing="0" class="dr-toolbar-ext rich-toolbar pageMinWidth center">
+		<table class="dr-toolbar-ext rich-toolbar pageMinWidth center">
 		<tbody>
 		<tr valign="middle">
 	<?php
@@ -199,7 +199,7 @@
 		</tbody>
 		</table>
 	</div>
-	<table id="pagecontainer" id="pagecontainer" cellpadding="0" cellspacing="0" class='center pageMinWidth'><tbody><tr><td>
+	<table id="pagecontainer" id="pagecontainer" class='center pageMinWidth'><tbody><tr><td>
 	
 	<?php
 	//BackupDatabase();
@@ -226,6 +226,9 @@
 	$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 	$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 	$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+	$debugMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $debugMessageString);
+	$errorMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $errorMessageString);
+	$resultMessageString = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $resultMessageString);
 	$output.= "<script type='text/javascript' language='JavaScript'>\n";
 	$output.= "	UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 	$output.= "</script>\n";
@@ -339,7 +342,7 @@
 </body>
 
 <footer>
-<script type="text/javascript" language="JavaScript">
+<script>
 	//move focus as necisary
 	InitializePage();
 	<?php 
@@ -347,6 +350,9 @@
 		$debugMessageString  = str_replace('"',"&quot;", implode("<BR>",$debugMessage));
 		$errorMessageString  = str_replace('"',"&quot;", implode("<BR>",$errorMessage));
 		$resultMessageString = str_replace('"',"&quot;", implode("<BR>",$resultMessage));
+		$debugMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $debugMessageString);
+		$errorMessageString  = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $errorMessageString);
+		$resultMessageString = str_replace("\n","<BR>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", $resultMessageString);
 		echo "UpdatePageLoadMessages(\"$debugMessageString\",\"$errorMessageString\",\"$resultMessageString\");\n";
 		
 		if(UserHasReadPermission() && $focusSearch)

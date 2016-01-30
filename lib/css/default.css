@@ -20,6 +20,7 @@ z-index values:
 
 #pagecontainer {
 	position: relative;
+	border-spacing: 0px;
 }
 
 #header-bg {

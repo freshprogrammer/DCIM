@@ -119,7 +119,7 @@
 			<TR><td colspan=2 align=center><input type="submit" value="Submit"></td></tr>
 		</table>
 		</form>
-		<script type="text/javascript" language="JavaScript">
+		<script>
 			document.forms['login'].elements['logInUserName'].focus();
 		</script>
 		<BR>
@@ -3164,15 +3164,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
-							<td align=left>
-								<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
-							</td>
-							<td align='right'>
-								<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
-								<input type="submit" value="Save" tabindex=12>
-							</td>
-						</tr></table></td>
+						<td colspan='2'>
+							<table style='width:100%;'>
+								<tr>
+									<td align=left>
+										<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+									</td>
+									<td align='right'>
+										<button type='button' onclick='HideAllEditForms()' tabindex=13>Cancel</button>
+										<input type='submit' value='Save' tabindex=12>
+									</td>
+								</tr>
+							</table>
+						</td>
 					</tr>
 				</table>
 				<input id=EditLocation_locationid type='hidden' name='locationid' value=-1>
@@ -4359,7 +4363,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align='left'>
 								<button id=EditDevicePort_deletebtn type="button" onclick="DeleteDevicePort()" tabindex=11>Delete</button>
 							</td>
@@ -5223,7 +5227,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
 								<?php if($locationPage)echo "<button id='EditCircuit_deletebutton' type='button' onclick='DeleteCircuit()' tabindex=9>Delete</button>";?>
 							</td>
@@ -5475,7 +5479,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
 								<button id='EditSubnet_deletebutton' type='button' onclick='DeleteSubnet()' tabindex=11>Delete</button>
 							</td>
@@ -5568,7 +5572,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right'>Child Device:</td>
 						<td width=1>
-							<select name='childdeviceid' id='EditConnection_childdeviceid' onchange='DeviceSelectChanged(true,-1)' tabindex=1 diabled>
+							<select name='childdeviceid' id='EditConnection_childdeviceid' onchange='DeviceSelectChanged(true,-1)' tabindex=1>
 								<?php echo $childDeviceOptions;?>
 							</select>
 						</td>
@@ -6732,10 +6736,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								LEFT JOIN dcim_customer AS c ON d.hno = c.hno
 								LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
 								LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
-							WHERE l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
+							WHERE r.roomid=? AND l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
 							ORDER BY l.name, c.name, c.hno, d.name, d.unit";
 						
-						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('dddds', $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
+						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('idddds', $roomID, $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
 							$errorMessage[]= "CreateRoomLayout() SQL setup 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 						else
 						{
