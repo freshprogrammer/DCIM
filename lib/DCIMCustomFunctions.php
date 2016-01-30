@@ -206,6 +206,9 @@ From there you can easily save it with an appropriate name and store it.<BR>
 					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
 					$result .= CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
 					$result .= "</div>\n";
+					
+					$result .= "<BR>\n";
+					$result .= ListSiteRooms($siteID, $fullName);
 				}
 			}
 			

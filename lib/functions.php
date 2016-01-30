@@ -5358,6 +5358,98 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ListSiteRooms($siteID, $siteFullName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		//$formAction = "./?host=$hNo";
+		
+		$query = "SELECT r.roomid, r.name, r.fullname, r.custaccess, s.name, r.edituser, r.editdate, r.qauser, r.qadate
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.siteid=?
+			ORDER BY r.fullname";
+		
+		if (!($stmt = $mysqli->prepare($query))) 
+		{
+			$errorMessage[] = "ListSiteRooms() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		
+		$stmt->bind_Param('i', $siteID);
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
+		$count = $stmt->num_rows;
+		
+		$result .= "<span class='tableTitle'>$siteFullName Rooms</span>\n";
+		//Add button
+		/*if(UserHasWritePermission())
+		{
+		$result .=
+			//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
+			<?php 
+		}*/
+		echo "<BR>";
+		if($count>0)
+		{
+			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
+			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				if($custAccess=="T")$custAccess = "Yes";
+				else $custAccess = "No";
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomFullName)."</a></td>";
+				$result .= "<td class='data-table-cell'>".$custAccess."</td>";
+				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				/*if(UserHasWritePermission())
+				{
+					//edit button
+					$result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
+					
+					$jsSafeVLAN = MakeJSSafeParam($vlan);
+					$jsSafeSubnet = MakeJSSafeParam($subnet);
+					$jsSafeMask = MakeJSSafeParam($mask);
+					$jsSafeFirst = MakeJSSafeParam($first);
+					$jsSafeLast = MakeJSSafeParam($last);
+					$jsSafeGateway = MakeJSSafeParam($gateway);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+					$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
+					?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
+					<?php 
+					$result .= "</td>\n";
+					
+					$result .= CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+				}*/
+				$result .= "</tr>";
+			}
+			$result .= "</table>";
+		}
+		else 
+		{
+			$result .= "No room records found.<BR>\n";
+		}
+		
+		/*if(UserHasWritePermission())
+		{
+			EditSubnetForm($formAction,$hNo);
+		}*/
+		
+		return $result;
+	}
+	
 	function EditSubnetForm($action, $hNo)
 	{
 		global $mysqli;
