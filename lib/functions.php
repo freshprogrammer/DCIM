@@ -6295,7 +6295,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//$input = str_replace(" ","",$input);
 			$input = "%".$input."%";
 			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
-			$filter = "p.panel LIKE =?";
+			$filter = "p.panel LIKE ?";
 		}
 		else
 		{
