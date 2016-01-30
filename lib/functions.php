@@ -5390,7 +5390,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
 			<?php 
 		}*/
-		echo "<BR>";
+		$result .= "<BR>";
 		if($count>0)
 		{
 			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
