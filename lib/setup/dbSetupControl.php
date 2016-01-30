@@ -148,6 +148,10 @@ function ConfirmIntent()
 	if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
 	if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
 	
+	//show db structure documentation on page for reffereance
+	echo "<BR>";
+	echo "Description of the live DB<BR>";
+	echo DescribeDBInTables();
 	
 	//END PAGE - Begin local Functions - All actual processing functions are in the refferenced file
 	
