@@ -171,10 +171,10 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			
 			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 			{
-				echo CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
+				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
 			
-			$result = "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel\">\n";
 			$result .= "<div class=\"panel-header\">\n";
 			$result .= "$appName\n";
 			$result .= "</div>\n";
@@ -206,6 +206,9 @@ From there you can easily save it with an appropriate name and store it.<BR>
 					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
 					$result .= CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
 					$result .= "</div>\n";
+					
+					$result .= "<BR>\n";
+					$result .= ListSiteRooms($siteID, $fullName);
 				}
 			}
 			

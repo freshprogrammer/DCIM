@@ -119,7 +119,7 @@
 			<TR><td colspan=2 align=center><input type="submit" value="Submit"></td></tr>
 		</table>
 		</form>
-		<script type="text/javascript" language="JavaScript">
+		<script>
 			document.forms['login'].elements['logInUserName'].focus();
 		</script>
 		<BR>
@@ -3164,15 +3164,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
-							<td align=left>
-								<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
-							</td>
-							<td align='right'>
-								<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
-								<input type="submit" value="Save" tabindex=12>
-							</td>
-						</tr></table></td>
+						<td colspan='2'>
+							<table style='width:100%;'>
+								<tr>
+									<td align=left>
+										<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+									</td>
+									<td align='right'>
+										<button type='button' onclick='HideAllEditForms()' tabindex=13>Cancel</button>
+										<input type='submit' value='Save' tabindex=12>
+									</td>
+								</tr>
+							</table>
+						</td>
 					</tr>
 				</table>
 				<input id=EditLocation_locationid type='hidden' name='locationid' value=-1>
@@ -4359,7 +4363,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align='left'>
 								<button id=EditDevicePort_deletebtn type="button" onclick="DeleteDevicePort()" tabindex=11>Delete</button>
 							</td>
@@ -4883,7 +4887,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 			ListRoomLocationsAndDevices($roomID);
 			echo "<BR>";
-			echo ListPowerPanels($roomID);
+			echo ListPowerPanels(false, $roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -5223,7 +5227,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
 								<?php if($locationPage)echo "<button id='EditCircuit_deletebutton' type='button' onclick='DeleteCircuit()' tabindex=9>Delete</button>";?>
 							</td>
@@ -5354,10 +5358,102 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ListSiteRooms($siteID, $siteFullName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		//$formAction = "./?host=$hNo";
+		
+		$query = "SELECT r.roomid, r.name, r.fullname, r.custaccess, s.name, r.edituser, r.editdate, r.qauser, r.qadate
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.siteid=?
+			ORDER BY r.fullname";
+		
+		if (!($stmt = $mysqli->prepare($query))) 
+		{
+			$errorMessage[] = "ListSiteRooms() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		
+		$stmt->bind_Param('i', $siteID);
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
+		$count = $stmt->num_rows;
+		
+		$result .= "<span class='tableTitle'>$siteFullName Rooms</span>\n";
+		//Add button
+		/*if(UserHasWritePermission())
+		{
+		$result .=
+			//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
+			<?php 
+		}*/
+		$result .= "<BR>";
+		if($count>0)
+		{
+			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
+			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				if($custAccess=="T")$custAccess = "Yes";
+				else $custAccess = "No";
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomFullName)."</a></td>";
+				$result .= "<td class='data-table-cell'>".$custAccess."</td>";
+				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				/*if(UserHasWritePermission())
+				{
+					//edit button
+					$result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
+					
+					$jsSafeVLAN = MakeJSSafeParam($vlan);
+					$jsSafeSubnet = MakeJSSafeParam($subnet);
+					$jsSafeMask = MakeJSSafeParam($mask);
+					$jsSafeFirst = MakeJSSafeParam($first);
+					$jsSafeLast = MakeJSSafeParam($last);
+					$jsSafeGateway = MakeJSSafeParam($gateway);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+					$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
+					?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
+					<?php 
+					$result .= "</td>\n";
+					
+					$result .= CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+				}*/
+				$result .= "</tr>";
+			}
+			$result .= "</table>";
+		}
+		else 
+		{
+			$result .= "No room records found.<BR>\n";
+		}
+		
+		/*if(UserHasWritePermission())
+		{
+			EditSubnetForm($formAction,$hNo);
+		}*/
+		
+		return $result;
+	}
+	
 	function EditSubnetForm($action, $hNo)
 	{
 		global $mysqli;
-		
+		global $errorMessage;
 		
 		//select all Active Switch ports for/linked to this customer
 		//UNION all connected chilren
@@ -5392,7 +5488,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle this better - this runs further down the page - so the error is never seen
 			$errorMessage[] = "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
@@ -5475,7 +5570,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td colspan=2><table width=100%><tr>
+						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
 								<button id='EditSubnet_deletebutton' type='button' onclick='DeleteSubnet()' tabindex=11>Delete</button>
 							</td>
@@ -5568,7 +5663,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right'>Child Device:</td>
 						<td width=1>
-							<select name='childdeviceid' id='EditConnection_childdeviceid' onchange='DeviceSelectChanged(true,-1)' tabindex=1 diabled>
+							<select name='childdeviceid' id='EditConnection_childdeviceid' onchange='DeviceSelectChanged(true,-1)' tabindex=1>
 								<?php echo $childDeviceOptions;?>
 							</select>
 						</td>
@@ -6179,23 +6274,35 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result.= "<div class='panel-body'>\n\n";
 		
-		$result.= ListPowerPanels();
+		$result.= ListPowerPanels(false);
 		
 		$result.= "</div>\n";
 		$result.= "</div>\n";
 		echo $result;
 	}
 	
-	function ListPowerPanels($roomID=-1)
+	function ListPowerPanels($search, $input=-1)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$filter = "";
-		if($roomID!=-1)
-			$filter = "r.roomid=?";
+		if($search)
+		{
+			//replace '-' and ' ' to '' and compare to search
+			//$input = str_replace("-","",$input);
+			//$input = str_replace(" ","",$input);
+			$input = "%".$input."%";
+			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
+			$filter = "p.panel LIKE ?";
+		}
 		else
-			$filter = "-1=?";
+		{
+			if($input!=-1)
+				$filter = "r.roomid=?";
+			else
+				$filter = "-1=?";
+		}
 		
 		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
 			FROM dcim_power AS p
@@ -6209,7 +6316,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
 		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input) || !$stmt->execute())
 		{
 			$errorMessage[]= "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			$result .= "SQL error locating power panels";
@@ -6720,10 +6827,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								LEFT JOIN dcim_customer AS c ON d.hno = c.hno
 								LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
 								LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
-							WHERE l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
+							WHERE r.roomid=? AND l.xpos=? AND l.ypos=? AND l.width=? AND l.depth=? AND l.orientation=?
 							ORDER BY l.name, c.name, c.hno, d.name, d.unit";
 						
-						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('dddds', $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
+						if (!($stmt2 = $mysqli->prepare($query2)) || !$stmt2->bind_Param('idddds', $roomID, $xPos,$yPos,$width,$depth,$orientation) || !$stmt2->execute())
 							$errorMessage[]= "CreateRoomLayout() SQL setup 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 						else
 						{

@@ -352,6 +352,69 @@
 		return $result;
 	}
 	
+	function DescribeDBInTables()
+	{//show count for all tables in DB
+		global $mysqli;
+		global $errorMessage;
+		
+		$result = "";
+		
+		$query = "SHOW TABLES";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = $errorMessage."DescribeDBInTables() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($table);
+			
+			while ($stmt->fetch())
+			{
+				$query2 = "Describe  $table";
+					
+				if (!($stmt2 = $mysqli->prepare($query2)))
+				{
+					$errorMessage[] = $errorMessage."DescribeDBInTables() - Prepare 2 failed: ($query2) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+				}
+				else
+				{
+					$cellStyle = "style='border:1px solid black; border-collapse:collapse;'";
+					$result .= "<B> Describe $table</B><BR>\n";
+					$result .= "<table $cellStyle>\n";
+					$result .= "<tr>
+							<th $cellStyle>Field</th>
+							<th $cellStyle>Type</th>
+							<th $cellStyle>Null</th>
+							<th $cellStyle>Key</th>
+							<th $cellStyle>Default</th>
+							<th $cellStyle>Extra</th>
+							</tr>\n";
+					
+					$stmt2->execute();
+					$stmt2->store_result();
+					$stmt2->bind_result($field,$type,$null,$key,$default,$extra);
+					
+					while ($stmt2->fetch())
+					{
+						$result .= "<tr>
+							<td $cellStyle>$field</td>
+							<td $cellStyle>$type</td>
+							<td $cellStyle>$null</td>
+							<td $cellStyle>$key</td>
+							<td $cellStyle>".(is_null($default)?"<i>NULL</i>":$default)."</td>
+							<td $cellStyle>$extra</td>
+							<tr>\n";
+					}
+					$result .= "</table><BR>\n";
+				}
+			}
+		}
+		return $result;
+	}
+	
 	function OutputCSV($fileName,$data) 
 	{
 		header("Content-Type: text/csv");

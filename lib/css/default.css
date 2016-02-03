@@ -20,6 +20,7 @@ z-index values:
 
 #pagecontainer {
 	position: relative;
+	border-spacing: 0px;
 }
 
 #header-bg {
@@ -692,7 +693,7 @@ h2 {
 	background-color: rgb(0, 0, 255);
 }
 .roomBackground{
-	background-color: rgb(0, 0, 213);
+	background-color: rgb(0, 0, 180);
 }
 .locationEmptyBackground{
 	background-color: #BBB;
