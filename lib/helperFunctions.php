@@ -256,6 +256,18 @@
 		return $keyFieldName;
 	}
 	
+	function GetRecordPageKey($table)
+	{
+		//TODO cust is really the only odd ball, i should probably just change it to hno
+		if($table=="dcim_customer")		$pageKey='host';
+		else if($table=="dcim_device")	$pageKey='deviceid';
+		else if($table=="dcim_location")$pageKey='locationid';
+		else if($table=="dcim_room")	$pageKey='roomid';
+		else if($table=="dcim_user")	$pageKey='userid';
+		else $pageKey = null;
+		return $pageKey;
+	}
+	
 	function GetLogTable($table)
 	{
 		if($table=="dcim_badge")				$logTable='dcimlog_badge';
