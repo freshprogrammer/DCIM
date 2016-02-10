@@ -279,7 +279,7 @@
 			else if($page==="Audits")
 			{
 				require_once 'audits.php';
-				BuildAuditsPage();
+				echo BuildAuditsPage();
 			}
 		}
 		else

@@ -20,74 +20,77 @@
 	{
 		global $pageSubTitle;
 		$pageSubTitle = "Data Audits";
+		$result = "";
 		
 		//Audit functions
-		echo "<div class=\"panel\">\n";
-		echo "<div class=\"panel-header\">Audit Functions</div>\n";
-		echo "<div class=\"panel-body\">\n";
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
 		
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
+		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
 				
-		echo "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
-		echo "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
+		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
+		$result .= "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		
-		echo "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Location Power Readings as CSV</button>";
+		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Location Power Readings as CSV</button>";
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
 			//in development features go here
 		}
-		echo "</div>\n</div>\n\n";//end panel and panel body
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		
-		echo "<div class=\"panel\">\n";
-		echo "<div class=\"panel-header\">Data to QA</div>\n";
-		echo "<div class=\"panel-body\">\n";
-		echo Check_CustomerToQA();
-		echo Check_BadgesToQA();
-		echo "</div>\n</div>\n\n";//end panel and panel body
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Data to QA</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_CustomerToQA();
+		$result .= Check_BadgesToQA();
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		
-		echo "<div class=\"panel\">\n";
-		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
-		echo "<div class=\"panel-body\">\n";
-		echo Check_BadgesActiveUnderInactiveCustomer();
-		echo Check_ColoPatch0();
-		echo Check_DevicesActiveUnderInactiveCustomer();
-		echo Check_VLANLinkedToDisabledPort();
-		echo Check_CircuitOverLoaded();
-		echo Check_CircuitInactiveWithLoad();
-		//echo Check_DeviceWithInvalidLocation();
-		//echo Check_SwitchIsMainDeviceOnDevicePortRecords();
-		echo "</div>\n</div>\n\n";//end panel and panel body
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Data Inconsistencies</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_BadgesActiveUnderInactiveCustomer();
+		$result .= Check_ColoPatch0();
+		$result .= Check_DevicesActiveUnderInactiveCustomer();
+		$result .= Check_VLANLinkedToDisabledPort();
+		$result .= Check_CircuitOverLoaded();
+		$result .= Check_CircuitInactiveWithLoad();
+		//$result .= Check_DeviceWithInvalidLocation();
+		//$result .= Check_SwitchIsMainDeviceOnDevicePortRecords();
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		
 		//admin only stuff - just because its stuff they cant fix
 		if(UserHasAdminPermission())
 		{
-			echo "<div class=\"panel\">\n";
-			echo "<div class=\"panel-header\">Admin Data Audits</div>\n";
-			echo "<div class=\"panel-body\">\n";
+			$result .= "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			$result .= "<div class=\"panel-body\">\n";
 			
 			$output = "";
 			$recCount = CountDBRecords($output);
-			echo CreateReport("Database Record Counts","$recCount records",$output,"");
+			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
 
 			$output = "";
 			$lineCount = CountLinesInDir($output);
-			echo CreateReport("Lines of Code","$lineCount lines",$output,"");
+			$result .= CreateReport("Lines of Code","$lineCount lines",$output,"");
 			
-			echo Check_BadgesWithoutCustomers();
-			echo Check_DevicesWithoutCustomersOrLocation();
-			echo Check_DevicePortsWithoutCustomersOrDevices();
-			echo Check_LocationWithoutPowerLocOrRoom();
-			echo Check_PowerLocWithoutLocationOrPower();
-			echo Check_PowerWithoutPowerLoc();
-			echo Check_RecordsMisingInsertLog();
-			echo "</div>\n</div>\n";//end panel and panel body
+			$result .= Check_BadgesWithoutCustomers();
+			$result .= Check_DevicesWithoutCustomersOrLocation();
+			$result .= Check_DevicePortsWithoutCustomersOrDevices();
+			$result .= Check_LocationWithoutPowerLocOrRoom();
+			$result .= Check_PowerLocWithoutLocationOrPower();
+			$result .= Check_PowerWithoutPowerLoc();
+			$result .= Check_RecordsMisingInsertLog();
+			$result .= "</div>\n</div>\n";//end panel and panel body
 		}
+		
+		return $result;
 	}
 	
 	function Check_CircuitInactiveWithLoad()
