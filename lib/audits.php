@@ -96,6 +96,7 @@
 	function Check_CircuitInactiveWithLoad()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Circuits off but still reporting load";
 		$reportNote = "";
@@ -111,15 +112,15 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CircuitInactiveWithLoad()";
 		}
-				
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($site, $room, $locationID, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
 		$count = $stmt->num_rows;
-	
+		
 		$shortResult = "";
 		$longResult = "";
 		//data title
@@ -159,6 +160,7 @@
 	function Check_CircuitOverLoaded($threshold=80)
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Circuits past threshhold ($threshold%) utilization";
 		$reportNote = "";
@@ -178,8 +180,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_CircuitOverLoaded() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_CircuitOverLoaded() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CircuitOverLoaded()";
 		}
 				
 		$stmt->execute();
@@ -231,6 +233,7 @@
 	function Check_VLANLinkedToDisabledPort()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "VLAN Linked to Disabled Port";
 		$reportNote = "These are VLANs linked to ports marked disabled.";
@@ -243,8 +246,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_VLANLinkedToDisabledPort()";
 		}
 				
 		$stmt->execute();
@@ -293,6 +296,7 @@
 	function Check_BadgesWithoutCustomers()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Badges Without Customers";
 		$reportNote = "Disconnected record(s).";
@@ -304,8 +308,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_BadgesWithoutCustomers() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_BadgesWithoutCustomers()";
 		}
 		
 		$stmt->execute();
@@ -349,6 +353,7 @@
 	function Check_ColoPatch0()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Colos with patch 0";
 		$reportNote= "These are impossible connections left over from old system.";
@@ -366,8 +371,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_ColoPatch0()";
 		}
 				
 		$stmt->execute();
@@ -416,6 +421,7 @@
 	function Check_BadgesToQA()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Badges Pending QA";
 		$reportNote = "These badges need to be verified in badge server.";
@@ -429,8 +435,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_BadgesToQA()";
 		}
 				
 		$stmt->execute();
@@ -477,6 +483,7 @@
 	function Check_CustomerToQA()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Customers Pending QA";
 		$reportNote = "These just  need the name, status, and account numbers of the customer validated.";
@@ -489,8 +496,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomerToQA()";
 		}
 		
 		$stmt->execute();
@@ -538,6 +545,7 @@
 	function Check_DevicesWithoutCustomersOrLocation()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s) or in Unknown.";
@@ -551,8 +559,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicesWithoutCustomersOrLocation() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_DevicesWithoutCustomersOrLocation() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicesWithoutCustomersOrLocation()";
 		}
 		
 		$stmt->execute();
@@ -600,7 +608,8 @@
 	function Check_DevicePortsWithoutCustomersOrDevices()
 	{
 		global $mysqli;
-	
+		global $errorMessage;
+		
 		$reportTitle = "Device Ports Without Devices or Customers";
 		$reportNote = "Disconnected record(s).";
 		
@@ -613,8 +622,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_DevicePortsWithoutCustomersOrDevices() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicePortsWithoutCustomersOrDevices()";
 		}
 		
 		$stmt->execute();
@@ -661,6 +670,7 @@
 	function Check_BadgesActiveUnderInactiveCustomer()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Active badges where customer is not active";
 		$reportNote = "These badges need to be deactivated.";
@@ -672,8 +682,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_BadgesActiveUnderInactiveCustomer()";
 		}
 		
 		$stmt->execute();
@@ -717,6 +727,7 @@
 	function Check_DevicesActiveUnderInactiveCustomer()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
@@ -729,8 +740,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicesActiveUnderInactiveCustomer()";
 		}
 		
 		$stmt->execute();
@@ -775,6 +786,7 @@
 	function Check_PowerWithoutPowerLoc()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Power records without any linking location record";
 		$reportNote = "Disconnected record(s).";
@@ -787,8 +799,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_PowerWithoutPowerLoc()";
 		}
 		
 		$stmt->execute();
@@ -831,6 +843,7 @@
 	function Check_PowerLocWithoutLocationOrPower()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
@@ -844,8 +857,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
 		}
 		
 		$stmt->execute();
@@ -890,6 +903,7 @@
 	function Check_LocationWithoutPowerLocOrRoom()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Location records linked to missing records";
 		$reportNote = "Disconnected from room or power (0 power count).";
@@ -905,8 +919,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
 		}
 		
 		$stmt->execute();
@@ -952,6 +966,7 @@
 	function Check_RecordsMisingInsertLog()
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$reportTitle = "Data Records missing data history";
 		$reportNote= "These are records that managed to exist without proper insert log records to match.";
@@ -976,8 +991,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			echo "Prepare failed: Check_RecordsMisingInsertLog() - (" . $mysqli->errno . ") " . $mysqli->error . "<BR>\n";
-			return -1;
+			$errorMessage[] = "Prepare failed: Check_RecordsMisingInsertLog() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_RecordsMisingInsertLog()";
 		}
 				
 		$stmt->execute();
