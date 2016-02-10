@@ -45,22 +45,22 @@
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data to QA</div>\n";
 		echo "<div class=\"panel-body\">\n";
-		Check_CustomerToQA();
-		Check_BadgesToQA();
+		echo Check_CustomerToQA();
+		echo Check_BadgesToQA();
 		echo "</div>\n</div>\n\n";//end panel and panel body
 		
 		
 		echo "<div class=\"panel\">\n";
 		echo "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		echo "<div class=\"panel-body\">\n";
-		Check_BadgesActiveUnderInactiveCustomer();
-		Check_ColoPatch0();
-		Check_DevicesActiveUnderInactiveCustomer();
-		Check_VLANLinkedToDisabledPort();
-		Check_CircuitOverLoaded();
-		Check_CircuitInactiveWithLoad();
-		//Check_DeviceWithInvalidLocation();
-		//Check_SwitchIsMainDeviceOnDevicePortRecords();
+		echo Check_BadgesActiveUnderInactiveCustomer();
+		echo Check_ColoPatch0();
+		echo Check_DevicesActiveUnderInactiveCustomer();
+		echo Check_VLANLinkedToDisabledPort();
+		echo Check_CircuitOverLoaded();
+		echo Check_CircuitInactiveWithLoad();
+		//echo Check_DeviceWithInvalidLocation();
+		//echo Check_SwitchIsMainDeviceOnDevicePortRecords();
 		echo "</div>\n</div>\n\n";//end panel and panel body
 		
 		
@@ -79,13 +79,13 @@
 			$lineCount = CountLinesInDir($output);
 			echo CreateReport("Lines of Code","$lineCount lines",$output,"");
 			
-			Check_BadgesWithoutCustomers();
-			Check_DevicesWithoutCustomersOrLocation();
-			Check_DevicePortsWithoutCustomersOrDevices();
-			Check_LocationWithoutPowerLocOrRoom();
-			Check_PowerLocWithoutLocationOrPower();
-			Check_PowerWithoutPowerLoc();
-			Check_RecordsMisingInsertLog();
+			echo Check_BadgesWithoutCustomers();
+			echo Check_DevicesWithoutCustomersOrLocation();
+			echo Check_DevicePortsWithoutCustomersOrDevices();
+			echo Check_LocationWithoutPowerLocOrRoom();
+			echo Check_PowerLocWithoutLocationOrPower();
+			echo Check_PowerWithoutPowerLoc();
+			echo Check_RecordsMisingInsertLog();
 			echo "</div>\n</div>\n";//end panel and panel body
 		}
 	}
@@ -150,7 +150,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_CircuitOverLoaded($threshold=80)
@@ -222,7 +222,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_VLANLinkedToDisabledPort()
@@ -284,7 +284,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesWithoutCustomers()
@@ -340,7 +340,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_ColoPatch0()
@@ -407,7 +407,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesToQA()
@@ -468,7 +468,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_CustomerToQA()
@@ -529,7 +529,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_DevicesWithoutCustomersOrLocation()
@@ -591,7 +591,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_DevicePortsWithoutCustomersOrDevices()
@@ -652,7 +652,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesActiveUnderInactiveCustomer()
@@ -708,7 +708,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 
 	function Check_DevicesActiveUnderInactiveCustomer()
@@ -766,7 +766,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_PowerWithoutPowerLoc()
@@ -822,7 +822,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_PowerLocWithoutLocationOrPower()
@@ -881,7 +881,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_LocationWithoutPowerLocOrRoom()
@@ -943,7 +943,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_RecordsMisingInsertLog()
@@ -1018,6 +1018,6 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 ?>
