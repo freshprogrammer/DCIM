@@ -456,7 +456,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function CreateDataTableHeader($headers, $showTech=false, $showEdit=false, $showQA=false)
 	{
-		$result = "<table class='data-table'>\n";
+		$result = "<table class='data-table sortable'>\n";
 		$result .= "<thead>\n";
 		$result .= "<tr>\n";
 		foreach($headers as $h) 

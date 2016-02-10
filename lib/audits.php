@@ -23,6 +23,7 @@
 		$result = "";
 		
 		//Audit functions
+		$result .= "<script src='lib/js/sorttable.js'></script>";
 		$result .= "<div class=\"panel\">\n";
 		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
