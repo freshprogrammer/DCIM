@@ -451,7 +451,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$result .= "</script>\n";
 		}
 		$result .= "</div>\n";
-		echo $result;
+		return $result;
 	}
 	
 	function CreateDataTableHeader($headers, $showTech=false, $showEdit=false, $showQA=false)

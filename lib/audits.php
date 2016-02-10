@@ -73,11 +73,11 @@
 			
 			$output = "";
 			$recCount = CountDBRecords($output);
-			CreateReport("Database Record Counts","$recCount records",$output,"");
+			echo CreateReport("Database Record Counts","$recCount records",$output,"");
 
 			$output = "";
 			$lineCount = CountLinesInDir($output);
-			CreateReport("Lines of Code","$lineCount lines",$output,"");
+			echo CreateReport("Lines of Code","$lineCount lines",$output,"");
 			
 			Check_BadgesWithoutCustomers();
 			Check_DevicesWithoutCustomersOrLocation();
@@ -150,7 +150,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_CircuitOverLoaded($threshold=80)
@@ -222,7 +222,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_VLANLinkedToDisabledPort()
@@ -284,7 +284,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesWithoutCustomers()
@@ -340,7 +340,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_ColoPatch0()
@@ -407,7 +407,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesToQA()
@@ -468,7 +468,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_CustomerToQA()
@@ -529,7 +529,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_DevicesWithoutCustomersOrLocation()
@@ -591,7 +591,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_DevicePortsWithoutCustomersOrDevices()
@@ -652,7 +652,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_BadgesActiveUnderInactiveCustomer()
@@ -708,7 +708,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 
 	function Check_DevicesActiveUnderInactiveCustomer()
@@ -766,7 +766,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_PowerWithoutPowerLoc()
@@ -822,7 +822,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_PowerLocWithoutLocationOrPower()
@@ -881,7 +881,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_LocationWithoutPowerLocOrRoom()
@@ -943,7 +943,7 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
 	function Check_RecordsMisingInsertLog()
@@ -1018,6 +1018,6 @@
 		{
 			$shortResult.= FormatSimpleMessage("All Good",1);
 		}
-		CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+		echo CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 ?>
