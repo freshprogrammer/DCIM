@@ -6841,7 +6841,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							while($stmt2->fetch())
 							{
 								$newLocation = ($lastLocationID!=$locationID);
-								$newCustomer = ($lastCustomerID!=$hNo);
+								$newCustomer = ($lastCustomerID!=$hNo || $newLocation);
 								$fullLocationName = FormatLocation($site, $room, $name);
 								$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 
