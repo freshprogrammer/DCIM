@@ -122,7 +122,7 @@
 	{
 		//show welcome and logout button
 		?>
-		<td width="1" valign="middle" align=right><h2>Welcome, <?php echo $user; ?>!</h2></td>
+		<td width="1" valign="middle" align=right><h2>Welcome <?php echo $user; ?>!</h2></td>
 		<td width="1" valign="middle">
 			<a style="padding-left: 18px;" href="?loginbtn=N"><img src="images/logout.png" border=0 /></a>
 		</td><?php
@@ -240,11 +240,10 @@
 		{
 			echo "<!--  Demo Message  -->\n<BR>\n";
 			$demoMessage = "<span style='font-size: 12px;'>
-			This is a demo environment of DCIM.<BR>
-			creds...<BR>
+			This is a demo environment of DCIM. Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a><BR>
+			Test login credentials can be found <a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/creds.md'>here</a><BR>
 			<BR>
-			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.<BR>
-			Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a>.
+			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.
 			</span>";
 			echo CreateMessagePanel("Demo Notice:",$demoMessage);
 		}
