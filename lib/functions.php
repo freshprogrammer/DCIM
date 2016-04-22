@@ -6073,7 +6073,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function PowerAuditPanel($pa_roomID,$pa_panel)
+	function PowerAuditPanel($pa_panel)
 	{
 		
 		//This really should be using a panelID from a panel table but that not currently necisarry
@@ -6087,7 +6087,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE r.roomid=? AND p.panel=?
+			WHERE p.panel=?
 			GROUP BY r.roomid, p.panel, p.circuit
 			ORDER BY p.circuit
 			LIMIT 1";
@@ -6098,7 +6098,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+		$stmt->bind_Param('s' ,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
@@ -6106,8 +6106,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
+			//TODO: This room name is not guranteed to be the room the panel is in so it could be a little confusing. it is just a room linked to at least one of the circuitts.
 			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
-			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name 
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
@@ -6125,7 +6126,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE r.roomid=? AND p.panel=?
+				WHERE p.panel=?
 				GROUP BY r.roomid, p.panel, p.circuit
 				ORDER BY p.circuit";
 			
@@ -6135,7 +6136,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			
-			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+			$stmt->bind_Param('s', $pa_panel);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
@@ -6246,15 +6247,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}//sucsessfull lookup
 		else//panel/room combo not found
 		{
-			$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel not found";
+			$pageSubTitle = "Power Audit - Panel:$pa_panel not found";
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
-			echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
+			echo "Circuits for Panel:$pa_panel\n";
 			echo "</div>\n";
 		
 			echo "<div class='panel-body'>\n\n";
-			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+			echo "No power circuits found for Panel:$pa_panel<BR>\n";
 		}	
 		echo "</div>\n";
 		echo "</div>\n";
@@ -6311,8 +6312,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE $filter
-			GROUP BY r.roomid, p.panel
-			ORDER BY s.name, r.name, p.panel";
+			GROUP BY p.panel
+			ORDER BY s.name, p.panel";
 		
 		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
 		
@@ -6330,7 +6331,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($count>0)
 			{
 				//show results
-				$result .= CreateDataTableHeader(array("Site","Room","Panel"));
+				$result .= CreateDataTableHeader(array("Site","Panel","Room"));
 					
 				//list result data
 				$oddRow = false;
@@ -6342,8 +6343,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "</tr>";
 				}
 				$result .= "</table>";

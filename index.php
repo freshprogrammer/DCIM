@@ -271,8 +271,8 @@
 		{
 			if($page==="PowerAudit")
 			{
-				if(strlen($pa_roomID) > 0 && strlen($pa_panel) > 0)
-					PowerAuditPanel($pa_roomID,$pa_panel);
+				if(strlen($pa_panel) > 0)
+					PowerAuditPanel($pa_panel);
 				else
 					PowerAuditPanelList();
 			}
