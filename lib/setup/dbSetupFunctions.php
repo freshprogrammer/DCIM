@@ -99,8 +99,9 @@
 	}
 	
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
-	function RunDBUpdate_Update1($executePart1, $executePart2)
+	function RunDBUpdate_Update($executePart1, $executePart2)
 	{
+		//updates in sync with v1.1.6
 		//paramaters should be mutually exclusive, so only 1 is true at any time
 		//$executePart1 = true;//safe db additions
 		//$executePart2 = false; //unsafe db removals that will only work after code has been updated
@@ -117,7 +118,8 @@
 		if($executePart1)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 1 - safe prep";
-			
+
+			/*
 			//add new files to room, site and location tables for site layout values
 			$cmdm = "ALTER TABLE  `dcim_room`
 					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `custaccess` ,
@@ -167,7 +169,7 @@
 			$cmdl = "ALTER TABLE `dcimlog_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
 			ExecuteThis("UP1_4M",$cmdm);
 			ExecuteThis("UP1_4L",$cmdl);
-			
+			*/
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
 		
@@ -175,7 +177,7 @@
 		if($executePart2)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 2 - un safe DB changes";
-			
+			/*
 			$cmdm = "ALTER TABLE `dcim_location` DROP `size`;";
 			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `size`;";
 			ExecuteThis("UP2_1M",$cmdm);
@@ -185,7 +187,7 @@
 			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `status`;";
 			ExecuteThis("UP2_2M",$cmdm);
 			ExecuteThis("UP2_2L",$cmdl);
-			
+			*/
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 2 complete";
 		}
