@@ -4,8 +4,6 @@ Web interface for tracking and maintaining data on customers, devices, networkin
 
 
 ## [Screenshots](/documentation/screenshots/)
-![Data center map](/documentation/screenshots/DCMap.jpg "Data center map")
-![Customer page](/documentation/screenshots/CustomerPage.jpg "Customer page")
 ![Switch view](/documentation/screenshots/SwitchView.jpg "Switch view")
 
 
