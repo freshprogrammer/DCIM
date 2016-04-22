@@ -169,6 +169,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			
 			$pageSubTitle = "Home";
 			
+			$result = "";
 			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 			{
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
