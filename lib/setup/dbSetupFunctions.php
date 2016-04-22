@@ -30,17 +30,11 @@
 	$logTables[]="dcimlog_site";
 	$logTables[]="dcimlog_vlan";
 	
-	
-
-	$restoreStructureSQLFile = "../../restoredata/structure.sql";
-	$restoreDataSQLFile = "../../restoredata/demoData.sql";
-
-	function BuildDB()
+	function BuildDB($restoreStructureSQLFile)
 	{
 		/* This will drop and recreate create the DB to current DB specs found in the documentation folder
 		 */
 		global $resultMessage;
-		global $restoreStructureSQLFile;
 		
 		DropAllTables();
 		
@@ -49,12 +43,11 @@
 		$resultMessage[]= "BuildDB()-Sucsessfully created database structure";
 	}
 	
-	function RestoreDBWithDemoData()
+	function RestoreDBWithDemoData($restoreDataSQLFile)
 	{
 		/* This will wipe/truncate all current data in the database and repopulate it all with demo data and fresh logs
 		 */
 		global $resultMessage;
-		global $restoreDataSQLFile;
 		
 		TruncateTables(true,true);
 		
@@ -99,8 +92,9 @@
 	}
 	
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
-	function RunDBUpdate_Update1($executePart1, $executePart2)
+	function RunDBUpdate_Update($executePart1, $executePart2)
 	{
+		//updates in sync with v1.1.6
 		//paramaters should be mutually exclusive, so only 1 is true at any time
 		//$executePart1 = true;//safe db additions
 		//$executePart2 = false; //unsafe db removals that will only work after code has been updated
@@ -117,7 +111,8 @@
 		if($executePart1)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 1 - safe prep";
-			
+
+			/*
 			//add new files to room, site and location tables for site layout values
 			$cmdm = "ALTER TABLE  `dcim_room`
 					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `custaccess` ,
@@ -167,7 +162,7 @@
 			$cmdl = "ALTER TABLE `dcimlog_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
 			ExecuteThis("UP1_4M",$cmdm);
 			ExecuteThis("UP1_4L",$cmdl);
-			
+			*/
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
 		
@@ -175,7 +170,7 @@
 		if($executePart2)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 2 - un safe DB changes";
-			
+			/*
 			$cmdm = "ALTER TABLE `dcim_location` DROP `size`;";
 			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `size`;";
 			ExecuteThis("UP2_1M",$cmdm);
@@ -185,7 +180,7 @@
 			$cmdl = "ALTER TABLE  `dcimlog_location` DROP `status`;";
 			ExecuteThis("UP2_2M",$cmdm);
 			ExecuteThis("UP2_2L",$cmdl);
-			
+			*/
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 2 complete";
 		}
@@ -306,230 +301,256 @@
 	function GenRandomCompanyName()
 	{
 		$companyNameNouns = array();
-		$companyNameNouns[]="Hosting       ";
+		$companyNameNouns[]="American      ";
+		$companyNameNouns[]="Applications  ";
 		$companyNameNouns[]="Apps          ";
-		$companyNameNouns[]="Cars          ";
-		$companyNameNouns[]="Search        ";
-		$companyNameNouns[]="Tech          ";
-		$companyNameNouns[]="Technology    ";
-		$companyNameNouns[]="SEO           ";
-		$companyNameNouns[]="Computing     ";
-		$companyNameNouns[]="Revolution    ";
-		$companyNameNouns[]="Labs          ";
-		$companyNameNouns[]="Data          ";
 		$companyNameNouns[]="Baking        ";
-		$companyNameNouns[]="Corp          ";
-		$companyNameNouns[]="Solutions     ";
+		$companyNameNouns[]="Bit           ";
+		$companyNameNouns[]="Bits          ";
+		$companyNameNouns[]="Boating       ";
+		$companyNameNouns[]="Bubbles       ";
+		$companyNameNouns[]="Burgers       ";
+		$companyNameNouns[]="Byte          ";
+		$companyNameNouns[]="Bytes         ";
+		$companyNameNouns[]="Carbs         ";
+		$companyNameNouns[]="Cars          ";
+		$companyNameNouns[]="Coding        ";
+		$companyNameNouns[]="Comms         ";
+		$companyNameNouns[]="Communications";
+		$companyNameNouns[]="Computer      ";
 		$companyNameNouns[]="Computers     ";
-		$companyNameNouns[]="Devices       ";
+		$companyNameNouns[]="Computing     ";
 		$companyNameNouns[]="Connections   ";
 		$companyNameNouns[]="Consulting    ";
-		$companyNameNouns[]="Applications  ";
-		$companyNameNouns[]="Computers     ";
-		$companyNameNouns[]="Computer      ";
-		$companyNameNouns[]="American      ";
-		$companyNameNouns[]="Bit           ";
-		$companyNameNouns[]="Byte          ";
-		$companyNameNouns[]="Bits          ";
-		$companyNameNouns[]="Bytes         ";
-		$companyNameNouns[]="Systems       ";
-		$companyNameNouns[]="Software      ";
-		$companyNameNouns[]="Coding        ";
-		$companyNameNouns[]="Solutions     ";
-		$companyNameNouns[]="Communications";
-		$companyNameNouns[]="Comms         ";
-		$companyNameNouns[]="Gyms          ";
-		$companyNameNouns[]="Genisis       ";
-		$companyNameNouns[]="Interactive   ";
+		$companyNameNouns[]="Corp          ";
 		$companyNameNouns[]="Credits       ";
-		$companyNameNouns[]="TV            ";
-		$companyNameNouns[]="Dynamics      ";
+		$companyNameNouns[]="Data          ";
+		$companyNameNouns[]="Devices       ";
 		$companyNameNouns[]="Drones        ";
-		$companyNameNouns[]="Carbs         ";
-		$companyNameNouns[]="Bubbles       ";
-		$companyNameNouns[]="Portals       ";
+		$companyNameNouns[]="Dynamics      ";
+		$companyNameNouns[]="Firearms      ";
+		$companyNameNouns[]="Fireworks     ";
+		$companyNameNouns[]="Food          ";
 		$companyNameNouns[]="Friends       ";
+		$companyNameNouns[]="Genisis       ";
+		$companyNameNouns[]="Guns          ";
+		$companyNameNouns[]="Gyms          ";
+		$companyNameNouns[]="Hosting       ";
+		$companyNameNouns[]="Interactive   ";
+		$companyNameNouns[]="Labs          ";
+		$companyNameNouns[]="Loads         ";
+		$companyNameNouns[]="Otomization   ";
+		$companyNameNouns[]="Portals       ";
+		$companyNameNouns[]="Reloading     ";
 		$companyNameNouns[]="Resorts       ";
-		$companyNameNouns[]="Boating       ";
+		$companyNameNouns[]="Revolution    ";
+		$companyNameNouns[]="Robotics      ";
+		$companyNameNouns[]="SEO           ";
+		$companyNameNouns[]="Search        ";
+		$companyNameNouns[]="Software      ";
+		$companyNameNouns[]="Solutions     ";
+		$companyNameNouns[]="Sorting       ";
+		$companyNameNouns[]="Systems       ";
+		$companyNameNouns[]="TV            ";
+		$companyNameNouns[]="Tech          ";
+		$companyNameNouns[]="Technology    ";
 		
 		$adjetives = array();
-		$adjetives[]="Mega           ";
-		$adjetives[]="Red            ";
-		$adjetives[]="Green          ";
-		$adjetives[]="Blue           ";
-		$adjetives[]="Great          ";
+		$adjetives[]="Arial          ";
+		$adjetives[]="Base           ";
+		$adjetives[]="Baseline       ";
 		$adjetives[]="Best           ";
 		$adjetives[]="Better         ";
-		$adjetives[]="Good           ";
-		$adjetives[]="The Best       ";
-		$adjetives[]="Learning       ";
+		$adjetives[]="Blue           ";
+		$adjetives[]="Budget         ";
+		$adjetives[]="Centrailized   ";
+		$adjetives[]="Cherry         ";
+		$adjetives[]="Chocolate      ";
 		$adjetives[]="Core           ";
-		$adjetives[]="Main           ";
-		$adjetives[]="Important      ";
+		$adjetives[]="Cornerstone    ";
+		$adjetives[]="Creative       ";
+		$adjetives[]="Data           ";
+		$adjetives[]="E              ";
+		$adjetives[]="Energy         ";
+		$adjetives[]="Global         ";
+		$adjetives[]="Good           ";
+		$adjetives[]="Great          ";
+		$adjetives[]="Green          ";
 		$adjetives[]="Happy          ";
-		$adjetives[]="Sad            ";
+		$adjetives[]="Hyper          ";
+		$adjetives[]="Important      ";
+		$adjetives[]="Internet       ";
+		$adjetives[]="Intuitive      ";
+		$adjetives[]="Lead           ";
+		$adjetives[]="Learning       ";
+		$adjetives[]="Local          ";
+		$adjetives[]="Loud           ";
+		$adjetives[]="Main           ";
+		$adjetives[]="Mega           ";
+		$adjetives[]="Neon           ";
+		$adjetives[]="Net            ";
+		$adjetives[]="New            ";
+		$adjetives[]="One            ";
+		$adjetives[]="Online         ";
+		$adjetives[]="Optical        ";
+		$adjetives[]="Original       ";
+		$adjetives[]="Pacific        ";
+		$adjetives[]="Pivotal        ";
+		$adjetives[]="Planet         ";
+		$adjetives[]="Platinum       ";
 		$adjetives[]="Productive     ";
 		$adjetives[]="Progressive    ";
-		$adjetives[]="White          ";
-		$adjetives[]="Top            ";
-		$adjetives[]="New            ";
+		$adjetives[]="Red            ";
 		$adjetives[]="Revolutionary  ";
-		$adjetives[]="Base           ";
-		$adjetives[]="Net            ";
-		$adjetives[]="Internet       ";
-		$adjetives[]="Global         ";
-		$adjetives[]="Local          ";
-		$adjetives[]="Wireless       ";
+		$adjetives[]="Sad            ";
 		$adjetives[]="Techy          ";
-		$adjetives[]="Centrailized   ";
-		$adjetives[]="Creative       ";
-		$adjetives[]="Cornerstone    ";
-		$adjetives[]="Data           ";
-		$adjetives[]="Online         ";
-		$adjetives[]="Pivotal        ";
-		$adjetives[]="E              ";
-		$adjetives[]="Hyper          ";
-		$adjetives[]="Platinum       ";
-		$adjetives[]="Arial          ";
-		$adjetives[]="Optical        ";
-		$adjetives[]="Budget         ";
-		$adjetives[]="Baseline       ";
-		$adjetives[]="Intuitive      ";
-		$adjetives[]="Original       ";
-		$adjetives[]="Energy         ";
-		$adjetives[]="Lead           ";
-		$adjetives[]="Neon           ";
-		$adjetives[]="One            ";
-		$adjetives[]="Planet         ";
-		$adjetives[]="Pacific        ";
 		$adjetives[]="Test           ";
+		$adjetives[]="The Best       ";
+		$adjetives[]="Top            ";
+		$adjetives[]="Vanila         ";
+		$adjetives[]="White          ";
+		$adjetives[]="Wireless       ";
 		return trim($adjetives[array_rand($adjetives)]) . " " . trim($companyNameNouns[array_rand($companyNameNouns)]);
 	}
 	
 	function GenRandomPersonName()
 	{
 		$firstNames = array();
-		$firstNames[]="Mike       ";
-		$firstNames[]="Michael    ";
+		$firstNames[]="Adam       ";
+		$firstNames[]="Alex       ";
 		$firstNames[]="Anthony    ";
-		$firstNames[]="Kim        ";
-		$firstNames[]="Joe        ";
+		$firstNames[]="Arthur     ";
+		$firstNames[]="Bill       ";
 		$firstNames[]="Bob        ";
-		$firstNames[]="Robert     ";
-		$firstNames[]="Jim        ";
-		$firstNames[]="Bruce      ";
 		$firstNames[]="Brandon    ";
 		$firstNames[]="Brannon    ";
-		$firstNames[]="Roman      ";
-		$firstNames[]="Scott      ";
-		$firstNames[]="Bill       ";
-		$firstNames[]="James      ";
-		$firstNames[]="Adam       ";
-		$firstNames[]="Jason      ";
-		$firstNames[]="Chris      ";
-		$firstNames[]="Tom        ";
-		$firstNames[]="Thommas    ";
-		$firstNames[]="Craig      ";
-		$firstNames[]="Rick       ";
-		$firstNames[]="John       ";
-		$firstNames[]="Richard    ";
-		$firstNames[]="Rich       ";
-		$firstNames[]="Jerry      ";
-		$firstNames[]="Bryan      ";
 		$firstNames[]="Brian      ";
+		$firstNames[]="Brittney   ";
+		$firstNames[]="Bruce      ";
+		$firstNames[]="Bryan      ";
+		$firstNames[]="Burnie     ";
+		$firstNames[]="Chris      ";
+		$firstNames[]="Christopher";
+		$firstNames[]="Clint      ";
+		$firstNames[]="Craig      ";
+		$firstNames[]="Danielle   ";
+		$firstNames[]="Derrick    ";
+		$firstNames[]="Donald     ";
+		$firstNames[]="Doug       ";
+		$firstNames[]="Eric       ";
+		$firstNames[]="EriK       ";
+		$firstNames[]="Gavin      ";
+		$firstNames[]="Greg       ";
+		$firstNames[]="Hank       ";
+		$firstNames[]="Heidi      ";
+		$firstNames[]="Helen      ";
+		$firstNames[]="Homer      ";
+		$firstNames[]="Ivan       ";
+		$firstNames[]="Jack       ";
+		$firstNames[]="James      ";
+		$firstNames[]="Jason      ";
+		$firstNames[]="Jennifer   ";
+		$firstNames[]="Jeremy     ";
+		$firstNames[]="Jerry      ";
+		$firstNames[]="Jesse      ";
+		$firstNames[]="Jim        ";
+		$firstNames[]="Joe        ";
+		$firstNames[]="John       ";
+		$firstNames[]="Joseph     ";
 		$firstNames[]="Josh       ";
 		$firstNames[]="Joshua     ";
-		$firstNames[]="Lori       ";
-		$firstNames[]="Jennifer   ";
 		$firstNames[]="Julie      ";
-		$firstNames[]="Kelly      ";
-		$firstNames[]="Tiffani    ";
-		$firstNames[]="Heidi      ";
-		$firstNames[]="Eric       ";
-		$firstNames[]="Paul       ";
-		$firstNames[]="Joseph     ";
-		$firstNames[]="Greg       ";
-		$firstNames[]="Alex       ";
-		$firstNames[]="Mario      ";
-		$firstNames[]="Ivan       ";
 		$firstNames[]="Justin     ";
-		$firstNames[]="Clint      ";
-		$firstNames[]="Sam        ";
-		$firstNames[]="Hank       ";
-		$firstNames[]="Homer      ";
-		$firstNames[]="Christopher";
-		$firstNames[]="Stan       ";
-		$firstNames[]="Timmy      ";
-		$firstNames[]="Tim        ";
+		$firstNames[]="Kelly      ";
+		$firstNames[]="Kim        ";
 		$firstNames[]="Kyle       ";
-		$firstNames[]="Peter      ";
-		$firstNames[]="Pete       ";
+		$firstNames[]="Lenard     ";
+		$firstNames[]="Leo        ";
+		$firstNames[]="Lori       ";
+		$firstNames[]="Luck       ";
+		$firstNames[]="Mario      ";
 		$firstNames[]="Matt       ";
-		$firstNames[]="Ray        ";
-		$firstNames[]="Jack       ";
-		$firstNames[]="Jeremy     ";
-		$firstNames[]="Jesse      ";
-		$firstNames[]="Arthur     ";
+		$firstNames[]="Michael    ";
+		$firstNames[]="Mike       ";
+		$firstNames[]="Monty      ";
 		$firstNames[]="Pablo      ";
+		$firstNames[]="Paul       ";
+		$firstNames[]="Pete       ";
+		$firstNames[]="Peter      ";
+		$firstNames[]="Ray        ";
+		$firstNames[]="Rich       ";
+		$firstNames[]="Richard    ";
+		$firstNames[]="Rick       ";
+		$firstNames[]="Robert     ";
+		$firstNames[]="Roman      ";
+		$firstNames[]="Sam        ";
+		$firstNames[]="Scott      ";
 		$firstNames[]="Sean       ";
 		$firstNames[]="Shawn      ";
-		$firstNames[]="Helen      ";
-		$firstNames[]="Leo        ";
-		$firstNames[]="Lenard     ";
+		$firstNames[]="Stan       ";
+		$firstNames[]="Thommas    ";
+		$firstNames[]="Tiffani    ";
+		$firstNames[]="Tim        ";
+		$firstNames[]="Timmy      ";
+		$firstNames[]="Tom        ";
 		
 		$lastNames = array();
-		$lastNames[]="Smith      ";
-		$lastNames[]="Jones      ";
-		$lastNames[]="Ryu        ";
-		$lastNames[]="Yun        ";
-		$lastNames[]="Ching      ";
-		$lastNames[]="Roberts    ";
-		$lastNames[]="Chang      ";
+		$lastNames[]="Adams      ";
+		$lastNames[]="Alexander  ";
+		$lastNames[]="Baker      ";
+		$lastNames[]="Barnes     ";
+		$lastNames[]="Bell       ";
 		$lastNames[]="Black      ";
-		$lastNames[]="Hernadez   ";
-		$lastNames[]="Davis      ";
 		$lastNames[]="Brown      ";
-		$lastNames[]="Williams   ";
+		$lastNames[]="Burns      ";
+		$lastNames[]="Campbel    ";
+		$lastNames[]="Carter     ";
+		$lastNames[]="Chang      ";
+		$lastNames[]="Ching      ";
+		$lastNames[]="Clark      ";
+		$lastNames[]="Clinton    ";
+		$lastNames[]="Cooper     ";
+		$lastNames[]="Cox        ";
+		$lastNames[]="Davis      ";
+		$lastNames[]="Garcia     ";
+		$lastNames[]="Gonsolez   ";
+		$lastNames[]="Gray       ";
+		$lastNames[]="Green      ";
+		$lastNames[]="Hall       ";
+		$lastNames[]="Hernadez   ";
+		$lastNames[]="Hill       ";
+		$lastNames[]="Hitler     ";
+		$lastNames[]="Jackson    ";
+		$lastNames[]="Jenkins    ";
+		$lastNames[]="Jones      ";
+		$lastNames[]="Kenedy     ";
 		$lastNames[]="King       ";
 		$lastNames[]="Lopez      ";
-		$lastNames[]="Hill       ";
-		$lastNames[]="Simpson    ";
-		$lastNames[]="Adams      ";
-		$lastNames[]="Baker      ";
-		$lastNames[]="Green      ";
-		$lastNames[]="Garcia     ";
-		$lastNames[]="Clark      ";
-		$lastNames[]="Perez      ";
-		$lastNames[]="Turners    ";
-		$lastNames[]="Nelson     ";
-		$lastNames[]="Carter     ";
 		$lastNames[]="Mitchel    ";
-		$lastNames[]="Gonsolez   ";
-		$lastNames[]="Young      ";
-		$lastNames[]="Hall       ";
+		$lastNames[]="Nelson     ";
+		$lastNames[]="Omm        ";
+		$lastNames[]="Ownens     ";
+		$lastNames[]="Perez      ";
+		$lastNames[]="Phillips   ";
+		$lastNames[]="Pinkerton  ";
+		$lastNames[]="Ramzey     ";
+		$lastNames[]="Reed       ";
+		$lastNames[]="Roberts    ";
+		$lastNames[]="Rodgers    ";
+		$lastNames[]="Ross       ";
+		$lastNames[]="Ryu        ";
+		$lastNames[]="Simpson    ";
+		$lastNames[]="Smith      ";
+		$lastNames[]="Trump      ";
+		$lastNames[]="Turners    ";
 		$lastNames[]="Walker     ";
-		$lastNames[]="Jackson    ";
+		$lastNames[]="Warren     ";
 		$lastNames[]="White      ";
 		$lastNames[]="Whittman   ";
-		$lastNames[]="Ramzey     ";
-		$lastNames[]="Cox        ";
-		$lastNames[]="Gray       ";
+		$lastNames[]="Williams   ";
 		$lastNames[]="Wood       ";
-		$lastNames[]="Pinkerton  ";
-		$lastNames[]="Barnes     ";
-		$lastNames[]="Ross       ";
-		$lastNames[]="Cooper     ";
-		$lastNames[]="Reed       ";
-		$lastNames[]="Rodgers    ";
-		$lastNames[]="Bell       ";
-		$lastNames[]="Phillips   ";
-		$lastNames[]="Campbel    ";
-		$lastNames[]="Alexander  ";
-		$lastNames[]="Jenkins    ";
-		$lastNames[]="Ownens     ";
-		$lastNames[]="Warren     ";
-		$lastNames[]="Kenedy     ";
-		$lastNames[]="Hitler     ";
+		$lastNames[]="Young      ";
+		$lastNames[]="Yun        ";
 		
 		return trim($firstNames[array_rand($firstNames)]) . " " . trim($lastNames[array_rand($lastNames)]);
 	}

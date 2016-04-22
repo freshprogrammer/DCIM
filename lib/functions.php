@@ -5935,7 +5935,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
 				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
 				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, pc.patches, pc.relationship, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
-				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans 
+				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans,
+				l.locationid, l.name, sl.locationid, sl.name
 			FROM dcim_device AS d
 				INNER JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
 				INNER JOIN (
@@ -5950,6 +5951,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				INNER JOIN dcim_deviceport AS sp ON pc.parentportid=sp.deviceportid
 				INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 				LEFT JOIN dcim_portvlan AS pv ON sp.deviceportid=pv.deviceportid
+				INNER JOIN dcim_location AS l ON d.locationid=l.locationid
+				INNER JOIN dcim_location AS sl ON s.locationid=sl.locationid
 			WHERE d.hno=?
 			GROUP BY pc.portconnectionid
 			ORDER BY 3,4,6,7";
@@ -5965,7 +5968,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
 						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
-						   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
+						   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
+							$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
 		$count = $stmt->num_rows;
 		
 		
@@ -5979,7 +5983,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Child Device","Port&#x25B2;","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$lastDevicePortID = -1;
@@ -5993,69 +5997,55 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "<tr class='$rowClass'>";
 				
-				if($devicePortID==$lastDevicePortID && $switchPortID==$lastSwitchPortID)//should only need to test 1 but what the hell
-				{
-					//TODO use fancier SQL to combine VLANS into a single string so i can remove this crapy duplicate row crap
-					//same ports - additional VLAN
-					echo "<td colspan=4 class='data-table-cell'>Additional VLAN</td>";
-					echo "<td class='data-table-cell'>$vlan</td>";
-					echo "<td colspan=3 class='data-table-cell'>-</td>";
-					echo "<td colspan=1 class='data-table-cell-button editButtons_hidden'>-</td>";
-				}
-				else 
-				{
+				$portFullName = FormatPort($member, $model, $pic, $port, $type);
+				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
-					$portFullName = FormatPort($member, $model, $pic, $port, $type);
-					$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+
+				$devicePortTitle = "";
+				$switchPortTitle = "";
+				if(CustomFunctions::UserHasDevPermission())
+				{
+					$devicePortTitle = "switchportid=$devicePortID";
+					$switchPortTitle = "switchportid=$switchPortID";
+				}
+
+				$childCells = "<td class='data-table-cell'><a href='./?locationid=$dLocID'>".MakeHTMLSafe($dLocName)."</a></td>\n";
+				$childCells .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$childCells .=  "<td class='data-table-cell'><span title='$devicePortTitle'>$portFullName</span></td>\n";
+
+				$parentCells = "<td class='data-table-cell'><a href='./?locationid=$sLocID'>".MakeHTMLSafe($sLocName)."</a></td>\n";
+				$parentCells .=  "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>\n";
+				$parentCells .=  "<td class='data-table-cell'><span title='$switchPortTitle'>$switchPortFullName</span></td>\n";
+				
+				if($relationship!="Child")
+				{//swap parent and child
+					$t = $childCells;
+					$childCells = $parentCells;
+					$parentCells = $t;
+				}
+				echo $childCells;
+				echo $parentCells;
+				
+				echo "<td class='data-table-cell'>$vlan</td>";
+				echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
+				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+				
+				//edit button cell
+				if(UserHasWritePermission())
+				{
+					//edit button
+					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
 					
-					$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-					$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+					$jsSafePatchs = MakeJSSafeParam($patches);
+					$editDescription = "$deviceName $portFullName <-> $switchName $switchPortFullName";
+					$params = "false,$portConnectionID,$deviceID,$devicePortID,$switchID,$switchPortID,'$jsSafePatchs','$editDescription'";
+					?><button onclick="EditConnection(<?php echo $params;?>)">Edit</button>
+					<?php 
+					echo "</td>\n";
 					
-					if($relationship=="Child")
-					{
-						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
-						else
-							echo "<td class='data-table-cell'>$portFullName</td>";
-						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
-						else
-							echo "<td class='data-table-cell'>$switchPortFullName</td>";
-					}
-					else 
-					{
-						echo "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>";
-						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell'><span title='switchportid=$switchPortID'>$switchPortFullName</span></td>";
-						else
-							echo "<td class='data-table-cell'>$switchPortFullName</td>";
-						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell'><span title='switchportid=$devicePortID'>$portFullName</span></td>";
-						else
-							echo "<td class='data-table-cell'>$portFullName</td>";
-					}
-					echo "<td class='data-table-cell'>$vlan</td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
-					
-					//edit button cell
-					if(UserHasWritePermission())
-					{
-						//edit button
-						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
-						
-						$jsSafePatchs = MakeJSSafeParam($patches);
-						$editDescription = "$deviceName $portFullName <-> $switchName $switchPortFullName";
-						$params = "false,$portConnectionID,$deviceID,$devicePortID,$switchID,$switchPortID,'$jsSafePatchs','$editDescription'";
-						?><button onclick="EditConnection(<?php echo $params;?>)">Edit</button>
-						<?php 
-						echo "</td>\n";
-						
-						echo CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
-					}
+					echo CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
 				echo "</tr>";
 				$lastDevicePortID = $devicePortID;
@@ -6073,7 +6063,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function PowerAuditPanel($pa_roomID,$pa_panel)
+	function PowerAuditPanel($pa_panel)
 	{
 		
 		//This really should be using a panelID from a panel table but that not currently necisarry
@@ -6087,7 +6077,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE r.roomid=? AND p.panel=?
+			WHERE p.panel=?
 			GROUP BY r.roomid, p.panel, p.circuit
 			ORDER BY p.circuit
 			LIMIT 1";
@@ -6098,7 +6088,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+		$stmt->bind_Param('s' ,$pa_panel);
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
@@ -6106,8 +6096,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
+			//TODO: This room name is not guranteed to be the room the panel is in so it could be a little confusing. it is just a room linked to at least one of the circuitts.
 			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
-			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name
+			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name 
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
@@ -6125,7 +6116,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE r.roomid=? AND p.panel=?
+				WHERE p.panel=?
 				GROUP BY r.roomid, p.panel, p.circuit
 				ORDER BY p.circuit";
 			
@@ -6135,7 +6126,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			
-			$stmt->bind_Param('ss', $pa_roomID,$pa_panel);
+			$stmt->bind_Param('s', $pa_panel);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
@@ -6246,15 +6237,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}//sucsessfull lookup
 		else//panel/room combo not found
 		{
-			$pageSubTitle = "Power Audit - RoomID:$pa_roomID Panel:$pa_panel not found";
+			$pageSubTitle = "Power Audit - Panel:$pa_panel not found";
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
-			echo "Circuits for RoomID:$pa_roomID Panel:$pa_panel\n";
+			echo "Circuits for Panel:$pa_panel\n";
 			echo "</div>\n";
 		
 			echo "<div class='panel-body'>\n\n";
-			echo "No power circuits found for RoomID:$pa_roomID Panel:$pa_panel<BR>\n";
+			echo "No power circuits found for Panel:$pa_panel<BR>\n";
 		}	
 		echo "</div>\n";
 		echo "</div>\n";
@@ -6311,8 +6302,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE $filter
-			GROUP BY r.roomid, p.panel
-			ORDER BY s.name, r.name, p.panel";
+			GROUP BY p.panel
+			ORDER BY s.name, p.panel";
 		
 		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
 		
@@ -6330,7 +6321,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($count>0)
 			{
 				//show results
-				$result .= CreateDataTableHeader(array("Site","Room","Panel"));
+				$result .= CreateDataTableHeader(array("Site","Panel","Room"));
 					
 				//list result data
 				$oddRow = false;
@@ -6342,8 +6333,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
-					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "</tr>";
 				}
 				$result .= "</table>";
@@ -6841,7 +6832,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							while($stmt2->fetch())
 							{
 								$newLocation = ($lastLocationID!=$locationID);
-								$newCustomer = ($lastCustomerID!=$hNo);
+								$newCustomer = ($lastCustomerID!=$hNo || $newLocation);
 								$fullLocationName = FormatLocation($site, $room, $name);
 								$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
 
