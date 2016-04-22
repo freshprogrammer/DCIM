@@ -2,16 +2,12 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- Host: 10.6.173.44
 -- Generation Time: Apr 22, 2016 at 05:15 AM
 -- Server version: 5.5.33
 -- PHP Version: 5.3.4
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
---
--- Database: `freshdcim`
---
 
 -- --------------------------------------------------------
 
