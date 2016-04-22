@@ -2,11 +2,16 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- Generation Time: Apr 27, 2015 at 06:48 AM
+-- Host: 10.6.173.44
+-- Generation Time: Apr 22, 2016 at 05:15 AM
 -- Server version: 5.5.33
 -- PHP Version: 5.3.4
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
+
+--
+-- Database: `freshdcim`
+--
 
 -- --------------------------------------------------------
 
@@ -136,11 +141,16 @@ CREATE TABLE IF NOT EXISTS `dcimlog_location` (
   `locationid` int(8) NOT NULL,
   `roomid` int(8) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `size` varchar(10) NOT NULL DEFAULT '',
+  `altname` varchar(50) NOT NULL DEFAULT '',
   `type` char(1) NOT NULL DEFAULT '',
   `units` int(3) NOT NULL DEFAULT '1',
-  `status` char(1) NOT NULL DEFAULT '',
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
   `visible` char(1) NOT NULL DEFAULT '',
+  `note` text NOT NULL,
   `edituser` int(8) NOT NULL DEFAULT '0',
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -266,6 +276,12 @@ CREATE TABLE IF NOT EXISTS `dcimlog_room` (
   `name` varchar(50) NOT NULL,
   `fullname` varchar(128) NOT NULL,
   `custaccess` varchar(1) NOT NULL DEFAULT 'T',
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `layer` tinyint(1) NOT NULL DEFAULT '0',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -288,6 +304,8 @@ CREATE TABLE IF NOT EXISTS `dcimlog_site` (
   `siteid` int(8) NOT NULL,
   `name` varchar(64) NOT NULL,
   `fullname` varchar(128) NOT NULL,
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -439,11 +457,16 @@ CREATE TABLE IF NOT EXISTS `dcim_location` (
   `locationid` int(8) NOT NULL AUTO_INCREMENT,
   `roomid` int(8) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `size` varchar(10) NOT NULL DEFAULT '',
+  `altname` varchar(50) NOT NULL DEFAULT '',
   `type` char(1) NOT NULL DEFAULT '',
   `units` int(3) NOT NULL DEFAULT '1',
-  `status` char(1) NOT NULL DEFAULT '',
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
   `visible` char(1) NOT NULL DEFAULT '',
+  `note` text NOT NULL,
   `edituser` int(8) NOT NULL DEFAULT '0',
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -554,6 +577,12 @@ CREATE TABLE IF NOT EXISTS `dcim_room` (
   `name` varchar(50) NOT NULL,
   `fullname` varchar(128) NOT NULL,
   `custaccess` varchar(1) NOT NULL DEFAULT 'T',
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `layer` tinyint(1) NOT NULL DEFAULT '0',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
@@ -573,13 +602,15 @@ CREATE TABLE IF NOT EXISTS `dcim_site` (
   `siteid` int(8) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
   `fullname` varchar(128) NOT NULL,
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`siteid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
