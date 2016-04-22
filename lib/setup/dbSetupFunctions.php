@@ -30,17 +30,11 @@
 	$logTables[]="dcimlog_site";
 	$logTables[]="dcimlog_vlan";
 	
-	
-
-	$restoreStructureSQLFile = "../../restoredata/structure.sql";
-	$restoreDataSQLFile = "../../restoredata/demoData.sql";
-
-	function BuildDB()
+	function BuildDB($restoreStructureSQLFile)
 	{
 		/* This will drop and recreate create the DB to current DB specs found in the documentation folder
 		 */
 		global $resultMessage;
-		global $restoreStructureSQLFile;
 		
 		DropAllTables();
 		
@@ -49,12 +43,11 @@
 		$resultMessage[]= "BuildDB()-Sucsessfully created database structure";
 	}
 	
-	function RestoreDBWithDemoData()
+	function RestoreDBWithDemoData($restoreDataSQLFile)
 	{
 		/* This will wipe/truncate all current data in the database and repopulate it all with demo data and fresh logs
 		 */
 		global $resultMessage;
-		global $restoreDataSQLFile;
 		
 		TruncateTables(true,true);
 		
