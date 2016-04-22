@@ -39,6 +39,10 @@
 	$debugMessage = array();
 	$timeStamp = date("Y-m-d H:i:s");
 	
+	
+	$restoreStructureSQLFile = "../../restoredata/structure.sql";
+	$restoreDataSQLFile = "../../restoredata/demoData.sql";
+	
 ?>
 <head>
 <title><?php echo $pageTitle;?> - DB update control</title>
@@ -195,24 +199,26 @@ function ConfirmIntent()
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
 		global $errorMessage;
+		global $restoreStructureSQLFile;
+		global $restoreDataSQLFile;
 		
 		switch($dbScriptID)
 		{
 			case $SCRIPTID_BUILD_DATABASE:
 				echo "Processing Rebuild...";
-				BuildDB();
+				BuildDB($restoreStructureSQLFile);
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_CREATE_DEMO_DATA:
 				echo "Populating Database...";
-				RestoreDBWithDemoData();
+				RestoreDBWithDemoData($restoreDataSQLFile);
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_BUILD_DB_WITH_DEMO_DATA:
 				echo "Processing Rebuild...";
-				BuildDB();
+				BuildDB($restoreStructureSQLFile);
 				echo "<BR>Populating Database...";
-				RestoreDBWithDemoData();
+				RestoreDBWithDemoData($restoreDataSQLFile);
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_DB_UPDATE_1_1:
@@ -231,9 +237,9 @@ function ConfirmIntent()
 				break;
 			case $SCRIPTID_CREATE_POPULATE_UPDATE:
 				echo "Processing Rebuild...";
-				BuildDB();
+				BuildDB($restoreStructureSQLFile);
 				echo "<BR>Populating Database...";
-				RestoreDBWithDemoData();
+				RestoreDBWithDemoData($restoreDataSQLFile);
 				
 				$dbStatus = TestDBReadiness($dbScriptID);
 				if($dbStatus==1)
