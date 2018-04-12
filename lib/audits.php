@@ -78,6 +78,7 @@
 
 			$output = "";
 			$lineCount = CountLinesInDir($output);
+			$result .= "<a href='https://github.com/freshprogrammer/DCIM' target='_blank'>Source on GitHub</a><BR/>";
 			$result .= CreateReport("Lines of Code","$lineCount lines",$output,"");
 			
 			$result .= Check_BadgesWithoutCustomers();
