@@ -2934,13 +2934,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
-			$descendingUnits = true;//maybe optional later
+			$descendingUnits = $type!="R";
 			$unitStart = $units+1;//start decending 42
 			$unitLimit = 1;//stop decending at 1
 			$sqlOrder = "DESC";
 			if(!$descendingUnits)
 			{
-				$unitStart = 1;
+				$unitStart = 0;
 				$unitLimit = $units;
 				$sqlOrder = "";
 			}
@@ -3043,6 +3043,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						{
 							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
 							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
 								echo "<tr class='$rowClass'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
@@ -3052,6 +3055,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						{
 							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
 							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
 								echo "<tr class='$rowClass'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
