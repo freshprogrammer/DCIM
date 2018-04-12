@@ -2566,9 +2566,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$lastPort = $startPortNo + $portCount -1;
 			$portNo = 0;
 			$stmt->bind_Param('iii', $deviceID, $portNo, $userID);
-			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++) 
+			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++)
 			{
-				if (!$stmt->execute())//execute 
+				if (!$stmt->execute())//execute
 					//failed (errorNo-error)
 					$errorMessage[] = "Failed to Add blank port($deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
 				else
@@ -2934,6 +2934,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
+			$descendingUnits = true;//maybe optional later
+			$unitStart = $units+1;//start decending 42
+			$unitLimit = 1;//stop decending at 1
+			$sqlOrder = "DESC";
+			if(!$descendingUnits)
+			{
+				$unitStart = 1;
+				$unitLimit = $units;
+				$sqlOrder = "";
+			}
+			$showEmptyUnits = $type!="C";
+			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -2947,8 +2959,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE l.locationid=?
-				ORDER BY status, site, room, loc, unit!=0, unit DESC, name, member";
+				WHERE l.locationid=? AND d.status='A'
+				ORDER BY status, site, room, loc, unit!=0, unit $sqlOrder, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -2973,8 +2985,31 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				//list result data
 				$oddRow = false;
+				$lastUnit = $unitStart;
 				while ($stmt->fetch())
 				{
+					if($unit!=0 && $showEmptyUnits)
+					{
+						while($lastUnit!=$unit && $lastUnit>-100 && $lastUnit<200)
+						{
+							if($descendingUnits)
+								$lastUnit--;
+							else
+								$lastUnit++;
+							if($lastUnit!=$unit)
+							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
+								//empty unit
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$lastUnit</td>";
+								echo "<td class='data-table-cell' colspan=7></td>";
+								echo "</tr>";
+							}
+						}
+					}
+					
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
@@ -2982,16 +3017,69 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
 					$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+
+					$unitSize=1;
+					if($size[strlen($size)-1]=="U" && $status=="A")
+					{
+						$unitSize = substr($size,0,strlen($size)-1);
+						if($unitSize<1)
+							$unitSize=1;
+					}
 					
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'>$unit</td>";
-					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-					echo "<td class='data-table-cell'>$size</td>";
-					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
-					echo "<td class='data-table-cell'>$visibleNotes</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$size</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceType($type)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceStatus($status)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$visibleNotes</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "</tr>";
+					
+					if($unitSize>1)
+					{
+						if($descendingUnits)
+						{
+							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
+							{
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$i</td>";
+								echo "</tr>";
+							}
+						}
+						else
+						{
+							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
+							{
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$i</td>";
+								echo "</tr>";
+							}
+						}
+					}
+
+					if($unit!=0)
+					{
+						if($descendingUnits)
+							$lastUnit=$unit-$unitSize+1;
+						else
+							$lastUnit=$unit+$unitSize-1;
+					}
+				}
+				while($showEmptyUnits && $lastUnit!=$unitLimit && $lastUnit>-100 && $lastUnit<200)
+				{
+					if($descendingUnits)
+						$lastUnit--;
+					else
+						$lastUnit++;
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					//empty unit
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'>$lastUnit</td>";
+					echo "<td class='data-table-cell' colspan=7></td>";
 					echo "</tr>";
 				}
 				echo "</table>";
