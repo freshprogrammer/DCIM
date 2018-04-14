@@ -12,9 +12,9 @@
 		//passed in in constructor
 		public $name = "";
 		public $startPort = 1;
-		public $portCount = 24;
+		public $portCount = 2;
 		public $coloDevice = false;
-		public $gigabit = false;
+		public $gigabit = true;
 		public $partOfChasis = false;
 		public $doubleRow = false;
 		public $portsPerSet = 12;
@@ -38,13 +38,13 @@
 			$this->showDeviceImage = $showDeviceImage;
 			
 			//device render properties that are differnet for each model
-			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
 			{
 				$this->deviceWidthPx = 950;
 				$this->deviceHeightPx = 91;
 				$this->deviceImage = "images/devices/patchpanel.jpg";
 			}
-			else if($this->name=="EX3200 24p" || $this->name=="EX4200 24p")
+			else if($this->name=="Juniper EX3200 24p" || $this->name=="Juniper EX4200 24p")
 				$this->deviceImage = "images/devices/ex4200_24p_front.jpg";
 			else if($this->name=="WS-X6348")
 			{
@@ -52,7 +52,7 @@
 				$this->deviceHeightPx = 105;
 				$this->deviceImage = "images/devices/ws-x6348_front.jpg";
 			}
-			else if($this->name=="Catalyst 3550")
+			else if($this->name=="Cisco Catalyst 3550")
 			{
 				$this->deviceWidthPx = 950;
 				$this->deviceHeightPx = 89;
@@ -179,19 +179,61 @@
 		 */
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Full Cab"		, 1,24, true,false,false,false, 6, true);//colo cabs and cages
-		$deviceModels[] = new DeviceModel("Half Cab-Top"	, 1,12, true,false,false,false, 6, true);
-		$deviceModels[] = new DeviceModel("Half Cab-Bottom"	,13,12, true,false,false,false, 6, true);
-		$deviceModels[] = new DeviceModel("Cage"			, 1, 6, true,false,false,false, 6,false);
+		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, true);//colo cabs and cages
+		$deviceModels[] = new DeviceModel("Colo Half Cab"				, 1, 2,true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 6,true,false,false,false, 6,false);
 		
-		$deviceModels[] = new DeviceModel("EX3200 24p"		, 0,24,false, true,false, true,12, true);//juniper
-		$deviceModels[] = new DeviceModel("EX3200 48p"		, 0,48,false, true,false, true,12, true);
-		$deviceModels[] = new DeviceModel("EX4200 24p"		, 0,24,false, true, true, true,12, true);
-		$deviceModels[] = new DeviceModel("EX4200 48p"		, 0,48,false, true, true, true,12, true);
+		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1,false);
 		
-		$deviceModels[] = new DeviceModel("Catalyst 3550"	, 1,48,false,false,false, true,16, true);//cisco
-		$deviceModels[] = new DeviceModel("WS-X6348"		, 1,48,false,false, true, true,12, true);
-		$deviceModels[] = new DeviceModel("WS-X6K-SUP2-2GE"	, 1, 2,false, true, true,false, 1,false);
+		$deviceModels[] = new DeviceModel("Alert Logic"					, 1, 1,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco ASA 5505"				, 0, 8,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco ASA 5510"				, 0, 3,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco Catalyst 3550"			, 1,48,false,false,false, true,16, true);//cisco
+		$deviceModels[] = new DeviceModel("Cisco WS-X6348"				, 1,48,false,false, true, true,12, true);
+		$deviceModels[] = new DeviceModel("Cisco WS-X6K-SUP2-2GE"		, 1, 2,false, true, true,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1550"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1650"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1750"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850G2"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G2"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G3"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G2"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G3"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 5324"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R200"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R300"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R310"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R410"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R430"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R510"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R610"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R630"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R710"			, 1, 4,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R720"			, 1, 4,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R730"			, 1, 4,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("EMC DS-300B"					, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper EX3200 24p"			, 0,24,false,true,false,true ,12,true);
+		$deviceModels[] = new DeviceModel("Juniper EX3200 48p"			, 0,48,false,true,false,true ,12,true);
+		$deviceModels[] = new DeviceModel("Juniper EX3300 48p"			, 0,48,false,true,false,true ,12,true);
+		$deviceModels[] = new DeviceModel("Juniper EX4200 24p"			, 0,24,false,true,true ,true ,12,true);
+		$deviceModels[] = new DeviceModel("Juniper EX4200 48p"			, 0,48,false,true,true ,true ,12,true);
+		$deviceModels[] = new DeviceModel("F5 BIG-IP 1600"				, 0, 4,false,true,true ,true , 2,true);
+		$deviceModels[] = new DeviceModel("Juniper MX80"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX100"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX100H2"			, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX220"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX650"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG5"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro 6026T"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro 6027R"			, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro SSG-6027R"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro CSE-836E16-R1200B", 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro SC811T-260"		, 1, 2,false,true,false,false, 1,false);
 	}
 	
 	function GetTableRecordDescription($table)
@@ -757,7 +799,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if($type === "C") return "Cage";
 		else if($type === "F") return "Full Cab";
 		else if($type === "H") return "Half Cab";
-		else if($type === "S") return "Switch";
+		else if($type === "S") return "Physical";
 		else return "Unknown";
 	}
 	

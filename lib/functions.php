@@ -2981,7 +2981,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{
-				echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
+				echo CreateDataTableHeader(array("Unit","Customer","Device","Model","Size","Type","Status","Note"),true);
 				
 				//list result data
 				$oddRow = false;
@@ -3004,7 +3004,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								//empty unit
 								echo "<tr class='$rowClass'>";
 								echo "<td class='data-table-cell'>$lastUnit</td>";
-								echo "<td class='data-table-cell' colspan=7></td>";
+								echo "<td class='data-table-cell' colspan=8></td>";
 								echo "</tr>";
 							}
 						}
@@ -3030,6 +3030,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td class='data-table-cell'>$unit</td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$model</td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize>$size</td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceType($type)."</td>\n";
 					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceStatus($status)."</td>\n";
@@ -3085,7 +3086,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					//empty unit
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'>$lastUnit</td>";
-					echo "<td class='data-table-cell' colspan=7></td>";
+					echo "<td class='data-table-cell' colspan=8></td>";
 					echo "</tr>";
 				}
 				echo "</table>";
@@ -4545,7 +4546,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new Device
 			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'S', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -4554,7 +4555,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($search)
 				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device"));
 			else
-				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4582,6 +4583,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if(!$search)
 				{
 					echo "<td class='data-table-cell'>$unit</td>";
+					echo "<td class='data-table-cell'>$model</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
 					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
@@ -4633,7 +4635,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$hnoInput = "654321";
 		$nameInput = "654321-1";
 		$statusInput = "A";
-		$typeInput = "F";
+		$typeInput = "S";
 		$locationInput = 12;
 		$sizeInput = "Full";
 		$unitInput = "0";
@@ -4693,10 +4695,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Type:</td>
 						<td align='left'>
 							<select id=EditDevice_type onchange='EditDeviceTypeChanged(true)' name="type" tabindex=2>
+								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Physical</option>
 								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
 								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
-								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Switch</option>
 							</select>
 							Size:
 							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='5x7, Full, 2U, Half' class=''>
@@ -4725,7 +4727,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
 							<select id=EditDevice_model name="model" tabindex=7>
-								<option value='Unknown'>Unknown</option>
 							<?php 
 							//This should be a list of all switch (or other non colo device) models
 							foreach($deviceModels as $model)
