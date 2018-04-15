@@ -6879,7 +6879,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		
-		if(!$renderingWithinParent)$result .= "</a>\n";
+		if($renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;
