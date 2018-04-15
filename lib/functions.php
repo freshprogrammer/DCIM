@@ -5476,7 +5476,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
-		$result .= "<span class='tableTitle'>$siteFullName Rooms</span>\n";
+		$result = "<span class='tableTitle'>$siteFullName Rooms</span>\n";
 		//Add button
 		/*if(UserHasWritePermission())
 		{
@@ -6974,7 +6974,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		
-		if(!$renderingWithinParent)$result .= "</a>\n";
+		if($renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;
