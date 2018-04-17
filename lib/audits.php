@@ -19,6 +19,8 @@
 	function BuildAuditsPage()
 	{
 		global $pageSubTitle;
+		global $config_badgesEnabled;
+		global $config_subnetsEnabled;
 		$pageSubTitle = "Data Audits";
 		$result = "";
 		
@@ -27,7 +29,9 @@
 		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		
-		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		
+		if($config_badgesEnabled)
+			$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		
 		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
 				
@@ -47,17 +51,20 @@
 		$result .= "<div class=\"panel-header\">Data to QA</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		$result .= Check_CustomerToQA();
-		$result .= Check_BadgesToQA();
+		if($config_badgesEnabled)
+			$result .= Check_BadgesToQA();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		
 		$result .= "<div class=\"panel\">\n";
 		$result .= "<div class=\"panel-header\">Data Inconsistencies</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
-		$result .= Check_BadgesActiveUnderInactiveCustomer();
+		if($config_badgesEnabled)
+			$result .= Check_BadgesActiveUnderInactiveCustomer();
 		$result .= Check_ColoPatch0();
 		$result .= Check_DevicesActiveUnderInactiveCustomer();
-		$result .= Check_VLANLinkedToDisabledPort();
+		if($config_subnetsEnabled)
+			$result .= Check_VLANLinkedToDisabledPort();
 		$result .= Check_CircuitOverLoaded();
 		$result .= Check_CircuitInactiveWithLoad();
 		//$result .= Check_DeviceWithInvalidLocation();

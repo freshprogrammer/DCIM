@@ -11,6 +11,11 @@
 	$loginCookieDurrationOniPad = 2*60*60;//2 hours
 	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbSetup.php
 	$demoSiteEnabled = false;
+	
+	//if false hides badges from customer page and audits page
+	$config_badgesEnabled = true;
+	//if false hides subnets & vlans from customer page and device page (including switch overlay) and audits page
+	$config_subnetsEnabled = true;
 
 	//DB connect
 	$db_host = "localhost";

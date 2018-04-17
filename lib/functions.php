@@ -3543,6 +3543,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $pageSubTitle;
 		global $focusSearch;
+		global $config_badgesEnabled;
+		global $config_subnetsEnabled;
 		
 		//main customer record or new
 		$addCust = $hNo==="-1";
@@ -3667,16 +3669,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>\n";
 			
 			//badges
-			$badgeCount = ListBadges(false, $hNo);
-			echo "<BR>\n";
+			if($config_badgesEnabled)
+			{
+				$badgeCount = ListBadges(false, $hNo);
+				echo "<BR>\n";
+			}
 			
 			//ports
 			$portCount = ListActiveCustomerDeviceConnections($hNo);
 			echo "<BR>\n";
 			
 			//VLANs
-			$vlanCount = ListCustomerSubnets($hNo);
-			echo "<BR>\n";
+			if($config_subnetsEnabled)
+			{
+				$vlanCount = ListCustomerSubnets($hNo);
+				echo "<BR>\n";
+			}
 			
 			//Power Circuits of devices
 			$powerCircuitsCount = ListPowerCircuits(false,$hNo);
@@ -3768,6 +3776,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $userFullName;
 		global $pageSubTitle;
+		global $config_subnetsEnabled;
 		
 		$pageSubTitle = "";
 		
@@ -4019,9 +4028,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									Status:$statusDescrip<BR>
 									$connectionText<BR>
 									MAC:".MakeHTMLSafe($mac)." <BR>
-									Speed:".MakeHTMLSafe($speed)." <BR>
-									VLAN(s):$vlan <BR>
-									Tech:$tech <BR>
+									Speed:".MakeHTMLSafe($speed)." <BR>\n";
+									
+									if($config_subnetsEnabled)
+										$popupText .= "VLAN(s):$vlan <BR>\n";
+									
+									$popupText .= "Tech:$tech <BR>
 									Notes:".MakeHTMLSafe($note);
 								
 								if(CustomFunctions::UserHasDevPermission())
@@ -5689,6 +5701,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		global $mysqli;
 		global $deviceModels;
+		global $config_subnetsEnabled;
 		
 		//edit/Add Connection form
 		//-default values - never seen
@@ -5787,6 +5800,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<input id='EditConnection_patches' type='text' tabindex=5 size=50 name='patches' value='<?php echo $patchesInput;?>' placeholder='10.01/4 - G/13 - 10.24/1' class=''>
 						</td>
 					</tr>
+					<?php if($config_subnetsEnabled){?>
 					<tr id='EditConnection_updateportsrow'>
 						<td align='right' width=1>Port Changes:</td>
 						<td align='left' colspan='2'>
@@ -5796,6 +5810,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							</select>
 						</td>
 					</tr>
+					<?php }?>
 					<tr>
 						<td colspan='1' align='left'>
 							<button id='EditConnection_deletebutton' type="button" onclick="DeleteConnection()" tabindex=8>Delete</button>
@@ -5818,6 +5833,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListDevicePorts($deviceKeyInput, $deviceFullName, $onChassisPage=false)
 	{
 		global $mysqli;
+		global $config_subnetsEnabled;
 		
 		
 		if($onChassisPage)
@@ -5908,7 +5924,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$tableWithAllData = "";
 			$tableWithActiveData = "";
 
-			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
+			if($config_subnetsEnabled)
+				$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
+			else 
+				$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5966,7 +5985,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$record .= "<td class='data-table-cell'>$switchPortFullName</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($speed)."</td>";
 				$record .= "<td class='data-table-cell'>".DevicePortStatus($status)."</td>";
-				$record .= "<td class='data-table-cell'>$vlan</td>";
+				if($config_subnetsEnabled)
+					$record .= "<td class='data-table-cell'>$vlan</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
 				$record .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				
@@ -6024,6 +6044,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListActiveCustomerDeviceConnections($hNo)
 	{
 		global $mysqli;
+		global $config_subnetsEnabled;
 		$formAction = "./?host=$hNo";
 		
 		$query = "SELECT 
@@ -6078,7 +6099,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			if($config_subnetsEnabled)
+				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			else
+				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			
 			
 			//list result data
 			$lastDevicePortID = -1;
@@ -6123,7 +6148,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo $childCells;
 				echo $parentCells;
 				
-				echo "<td class='data-table-cell'>$vlan</td>";
+				if($config_subnetsEnabled)
+					echo "<td class='data-table-cell'>$vlan</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 				
