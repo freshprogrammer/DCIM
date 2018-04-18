@@ -1546,7 +1546,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				//check if customer (hno or cno) already exists before insertion
-				$query = "SELECT hno,cno FROM dcim_customer WHERE hno=? OR cno=?";
+				//$query = "SELECT hno,cno FROM dcim_customer WHERE hno=? OR cno=?";//disabled cno check
+				$query = "SELECT hno,cno FROM dcim_customer WHERE hno=?";
 				
 				if (!($stmt = $mysqli->prepare($query)))
 				{
@@ -1554,7 +1555,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else
 				{
-					$stmt->bind_Param('ss', $hNo, $cNo);		
+					$stmt->bind_Param('s', $hNo);		
 					$stmt->execute();
 					$stmt->store_result();
 					$custCount = $stmt->num_rows;
