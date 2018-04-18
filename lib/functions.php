@@ -3733,9 +3733,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right' width=1>Hosting&nbsp;Account&nbsp;#:</td>
 						<td align='left' width=1>
-							<input id=EditCustomer_hno type='number' min=100000 max=999999 step=1 tabindex=1 name='hno' maxlength=6 size=6 value='<?php echo $hNoInput;?>' placeholder='000000' class='' readonly>
+							<input id=EditCustomer_hno type='number' min=10000 max=999999 step=1 tabindex=1 name='hno' maxlength=6 size=6 value='<?php echo $hNoInput;?>' placeholder='000000' class='' readonly>
 							Customer&nbsp;#:
-							<input id=EditCustomer_cno type='number' min=100000 max=999999 step=1 tabindex=2 name='cno' maxlength=6 size=6 value='<?php echo $cNoInput;?>' placeholder='000000' class='' readonly>
+							<input id=EditCustomer_cno type='number' min=10000 max=999999 step=1 tabindex=2 name='cno' maxlength=6 size=6 value='<?php echo $cNoInput;?>' placeholder='000000' class='' readonly>
 						</td>
 					</tr>
 					<tr>

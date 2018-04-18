@@ -1454,12 +1454,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidHNo($input)
 	{
-		return ValidNumber($input,"Hosting Account #",6,6);
+		return ValidNumber($input,"Hosting Account #",5,6);
 	}
 	
 	function ValidCNo($input)
 	{
-		return ValidNumber($input,"Customer #",6,6);
+		return ValidNumber($input,"Customer #",5,6);
 	}
 	
 	function ValidCustomerName($input)
