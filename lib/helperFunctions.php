@@ -168,6 +168,8 @@
 	function BuildDeviceModelArrays()
 	{
 		global $deviceModels;
+		global $genericDeviceModel;
+		$genericDeviceModel = new DeviceModel("Generic Device", 1, 1,false,true,false,false, 1,false);
 		
 		/* This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
 		 * I supose this could be a modelID in dcim_device and and a dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
@@ -577,8 +579,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function GetDeviceFromModelName($deviceModelName)
 	{
 		global $deviceModels;
+		global $genericDeviceModel;
 		
-		$device = null;
+		$device = $genericDeviceModel;
 		foreach($deviceModels as $model)
 		{
 			if($model->name==$deviceModelName)
@@ -1585,13 +1588,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function ValidDeviceModel($input)
 	{
 		global $deviceModels;
-		
+		/*
 		$validFlags = array();
 		foreach($deviceModels as $device)
 		{
 			$validFlags[] = $device->name;
 		}
-		return ValidFlag($input,"Device Model",$validFlags);
+		return ValidFlag($input,"Device Model",$validFlags);*/
+		return true;
 	}
 	
 	function ValidPassword($input)
