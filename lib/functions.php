@@ -5972,7 +5972,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if(strlen($switchFullName) > 0)
 					$switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a> - <a href='./?locationid=$switchLocationID'>$switchLocationFullName</a>)";
 				else
+				{
 					$switchDisplayName = "";
+					$switchPortFullName = "";
+				}
 				
 				//table values
 				if($onChassisPage)
