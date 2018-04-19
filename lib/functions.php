@@ -3928,7 +3928,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
 			if(!$deviceInfo->coloDevice)
 			{
-				echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
+				echo  "<b>Asset:</b> ".CustomFunctions::CreateInternalInventoryLink($asset)."<BR>\n";
 				echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
 			}
 			echo "</td>\n";
