@@ -5045,16 +5045,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
 					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member,
-					(SELECT COUNT(*) FROM dcim_device d1 WHERE d1.locationid=l.locationid AND d1.status='A') AS count
+					COUNT(d.locationid) AS count
 				FROM dcim_location AS l
 					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer c ON c.hno = d.hno
 					LEFT JOIN dcim_room r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site s ON r.siteid=s.siteid
 				WHERE r.roomid=?
+				GROUP BY l.locationid
 				ORDER BY r.name, l.name";
 			
-			if (!($stmt = $mysqli->prepare($query))) 
+			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
@@ -5101,19 +5102,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<tr class='$rowClass'>";
 					if(!$additionalDevice)
 					{
-						echo "<td class='data-table-cell' rowspan='$deviceCount'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-						echo "<td class='data-table-cell' rowspan='$deviceCount'>".MakeHTMLSafe($size)."</td>";
+						echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					}
 					
 					if(strlen($customer) > 0)
 						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					else 
 						echo "<td class='data-table-cell'>Empty</td>";
-					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					if($deviceCount==0)
+						echo "<td class='data-table-cell'></td>";
+					else if($deviceCount==1)
+						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					else
+						echo "<td class='data-table-cell'>$deviceCount Devices</td>";
 					
 					if(!$additionalDevice)
 					{//on spanned location record
-						echo "<td class='data-table-cell' rowspan='$deviceCount'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
@@ -5123,10 +5129,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
 							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-							?><td class='data-table-cell-button editButtons_hidden' rowspan='<?php echo $deviceCount;?>'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
+							?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
 										<?php 
 							
-							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, $deviceCount);
+							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, 1);
 						}
 					}
 					echo "</tr>";
