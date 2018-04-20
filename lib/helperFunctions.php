@@ -46,7 +46,7 @@
 			}
 			else if($this->name=="Juniper EX3200 24p" || $this->name=="Juniper EX4200 24p")
 				$this->deviceImage = "images/devices/ex4200_24p_front.jpg";
-			else if($this->name=="WS-X6348")
+			else if($this->name=="Cisco WS-X6348")
 			{
 				$this->deviceWidthPx = 950;
 				$this->deviceHeightPx = 105;
@@ -77,7 +77,7 @@
 			$set2Offset = 30;
 			$set3Offset = 40;
 			$set4Offset = 50;
-			if($this->name=="Full Cab" || $this->name=="Half Cab-Top" || $this->name=="Half Cab-Bottom")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
 			{
 				$topOffset = 2;
 				$bottomOffset = 39;
@@ -92,7 +92,7 @@
 					$set2Offset = 527;
 				}
 			}
-			else if($this->name=="WS-X6348")
+			else if($this->name=="Cisco WS-X6348")
 			{
 				$topOffset = 27;
 				$bottomOffset = 59;
@@ -102,7 +102,7 @@
 				$set4Offset = 85;
 				$portSerperation = 7;
 			}
-			else if($this->name=="Catalyst 3550")
+			else if($this->name=="Cisco Catalyst 3550")
 			{
 				$topOffset = 21;
 				$bottomOffset = 49;
