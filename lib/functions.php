@@ -4199,36 +4199,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			//location search for locations to append to badge visit info - this is outdated and not used any more anyways
-			//TODO delete this since its not needed anymore though this information might still be usefull in the future
-			$locQuery = "SELECT s.name AS site, r.name AS room, l.name 
-			FROM dcim_device AS d 
-				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
-			
-			if (!($stmt = $mysqli->prepare($locQuery)))
-			{
-				//TODO handle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-				return -1;
-			}
-			$stmt->bind_Param('s', $input);
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationName);
-			$locCount = $stmt->num_rows;
-			
-			$customerLocations = "";
-			if($locCount>0)
-			{
-				$locationArray = array();
-				while ($stmt->fetch())
-					$locationArray[] = FormatLocation($site, $room, $locationName);
-				$customerLocations  = implode(" & ",$locationArray);
-			}
-			
 			//select empty as customer to keep return results to match search query
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
 			FROM dcim_badge AS b 
@@ -4280,16 +4250,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "<tr class='$rowClass'>";
 				if($search == true)
-				{
 					echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
-				}
-				else 
-				{
-					//visit info for clipboard - time will be appended in javascript function
-					$visitDescription = " - ".MakeHTMLSafe($customerLocations)." - H$hNo - ".MakeHTMLSafe($customer)." - ".MakeHTMLSafe($name)." - Badge";
-					echo "<td class='data-table-cell' ondblclick='CopyBadgeToClipboard(\"$visitDescription\")'>".MakeHTMLSafe($name)."</td>\n";
-				}
+				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($badgeNo)."</td>\n";
 				echo "<td class='data-table-cell'>".BadgeStatus($status)."</td>\n";
 				echo "<td class='data-table-cell'>$issue</td>\n";
