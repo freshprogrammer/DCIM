@@ -1674,7 +1674,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$errorMessage[] = "Invalid Panel.";
 			return false;
 		}*/
-		return true;
+		return ValidString($input,"Panel Name",1,8);
 	}
 	
 	function ValidPowerCircuit($input)
