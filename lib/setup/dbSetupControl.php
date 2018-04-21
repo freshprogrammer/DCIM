@@ -28,6 +28,8 @@
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	//simple procedures
 	$SCRIPTID_RECREATE_ALL_LOGS = 101;
+	//Data correction functions - Mass QA, ect
+	$SCRIPTID_QA_ALL_RECORDS = 201;
 	
 	//scripts that can be run on live (non demo) environment
 	$liveEnvironmentScripts = array();
@@ -91,6 +93,8 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
 	</select>
 	<input type='submit' value='Run'>
 	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
@@ -198,6 +202,7 @@ function ConfirmIntent()
 		global $SCRIPTID_DB_UPDATE_1_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
+		global $SCRIPTID_QA_ALL_RECORDS;
 		global $errorMessage;
 		global $restoreStructureSQLFile;
 		global $restoreDataSQLFile;
@@ -259,6 +264,11 @@ function ConfirmIntent()
 			case $SCRIPTID_RECREATE_ALL_LOGS:
 				echo "Rebuilding log records";
 				WipeAndReCreateAllLogs();
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_QA_ALL_RECORDS:
+				echo "QAing all records as Admin";
+				QAAllRecordsAsAdmin();
 				echo "<BR>Done";
 				break;
 			default:

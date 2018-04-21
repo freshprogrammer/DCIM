@@ -210,6 +210,25 @@
 		$resultMessage[]= "WipeAndReCreateAllLogs()-Sucsessfully re-created all log records.";
 	}
 	
+	function QAAllRecordsAsAdmin()
+	{
+		$adminUserID=0;
+
+		ExecuteThis("Q1","UPDATE dcim_badge				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_customer			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_device			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_deviceport		SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_location			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_portconnection	SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_portvlan			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_power				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_powerloc			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_room				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_site				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_vlan				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		$resultMessage[]= "QAAllRecordsAsAdmin()-Sucsessfully QAed all outstanding records.";
+	}
+	
 	function DropAllTables()
 	{
 		/* This Drop all existing in all pre-existing and new tables
