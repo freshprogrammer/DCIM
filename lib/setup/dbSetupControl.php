@@ -21,6 +21,7 @@
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
+	$SCRIPTID_RESET_DEMO_CREDS = 4;
 	//updates
 	$SCRIPTID_DB_UPDATE_1_1 = 11;
 	$SCRIPTID_DB_UPDATE_1_2 = 12;
@@ -35,6 +36,7 @@
 	$liveEnvironmentScripts = array();
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_1;
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_2;
+	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
 	
 	$resultMessage = array();
 	$errorMessage = array();
@@ -86,6 +88,7 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
 		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
 		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
+		<option value='$SCRIPTID_RESET_DEMO_CREDS'			>Reset Demo Credentials</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_1'				>Update database with latest update (part 1)</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
@@ -198,6 +201,7 @@ function ConfirmIntent()
 		global $SCRIPTID_BUILD_DATABASE;
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
+		global $SCRIPTID_RESET_DEMO_CREDS;
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
@@ -224,6 +228,11 @@ function ConfirmIntent()
 				BuildDB($restoreStructureSQLFile);
 				echo "<BR>Populating Database...";
 				RestoreDBWithDemoData($restoreDataSQLFile);
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_RESET_DEMO_CREDS:
+				echo "<BR>Restoring default demo credentials...";
+				RestoreDemoCreds();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_DB_UPDATE_1_1:
