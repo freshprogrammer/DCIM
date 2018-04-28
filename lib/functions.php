@@ -4521,7 +4521,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new Device
 			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'S', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -4611,8 +4611,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$nameInput = "654321-1";
 		$statusInput = "A";
 		$typeInput = "S";
-		$locationInput = 12;
-		$sizeInput = "Full";
+		$locationInput = 1;
+		$sizeInput = "1U";
 		$unitInput = "0";
 		$assetInput = "asset";
 		$serialInput = "serial";
@@ -4676,7 +4676,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
 							</select>
 							Size:
-							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='5x7, Full, 2U, Half' class=''>
+							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='2U, Full, 5x7, Half' class=''>
 						</td>
 					</tr>
 					<tr>
