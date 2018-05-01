@@ -6255,8 +6255,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
 				$numberOfCircuitsPerPanel = 42;
 				$tableCircuitNo = 0;
-				$prevWas208Left = false;
-				$prevWas208Right = false;
+				$leftSpan = 1;
+				$rightSpan = 1;
 				while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 				{
 					//odd circutis are on the left 
@@ -6296,12 +6296,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						if($volts==208)//208 volt circuits take up double
 						{
 							if($left)
-								$prevWas208Left = true;
+								$leftSpan = 2;
 							else
-								$prevWas208Right = true;
+								$rightSpan = 2;
 							$cellClass .= " powerAuditCellDouble";
 							$rowSpan = " rowspan=2";
 							$displayCircuit = Format208CircuitNumber($circuit);
+						}
+						else if($volts==308)//208 3 phase circuits take up tripple
+						{
+							if($left)
+								$leftSpan = 3;
+							else
+								$rightSpan = 3;
+							$cellClass .= " powerAuditCellTripple";
+							$rowSpan = " rowspan=3";
+							$displayCircuit = Format3Phase208CircuitNumber($circuit);
 						}
 						
 						echo "<td $rowSpan class='$cellClass'>\n";
@@ -6325,10 +6335,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}
 					else 
 					{
-						if($left && $prevWas208Left)
-							$prevWas208Left = false;
-						else if(!$left && $prevWas208Right)
-							$prevWas208Right = false;
+						if($left && $leftSpan>1)
+							$leftSpan--;
+						else if(!$left && $rightSpan>1)
+							$rightSpan--;
 						else
 							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
 					}

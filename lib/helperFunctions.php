@@ -691,11 +691,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return trim($fullLocationName);
 	}
 	
-	function Format208CircuitNumber($circuit)
-	{
-		return $circuit."/".((int)$circuit+2);
-	}
-	
 	function FormatVolts($volts)
 	{
 		if($volts==308)
@@ -703,6 +698,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else
 			return $volts."v";
 		
+	}
+	
+	function Format208CircuitNumber($circuit)
+	{
+		return $circuit."/".((int)$circuit+2);
 	}
 	
 	function Format3Phase208CircuitNumber($circuit)

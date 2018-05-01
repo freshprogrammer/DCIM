@@ -438,6 +438,11 @@ td.powerAuditCellDouble {
 	background-color: #DDD;
 }
 
+td.powerAuditCellTripple {
+	height: 150px;
+	background-color: #DDD;
+}
+
 td.powerAuditCellEmpty {
 	/* background-image: URL("http://upload.wikimedia.org/wikipedia/commons/4/47/X_solid_red_25.gif"); */
 	/* background-repeat: round; */
