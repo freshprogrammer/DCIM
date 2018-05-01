@@ -696,6 +696,20 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $circuit."/".((int)$circuit+2);
 	}
 	
+	function FormatVolts($volts)
+	{
+		if($volts==308)
+			return "208v3p";
+		else
+			return $volts."v";
+		
+	}
+	
+	function Format3Phase208CircuitNumber($circuit)
+	{
+		return $circuit."/".((int)$circuit+2)."/".((int)$circuit+4);
+	}
+	
 	function TestForSingleCustomerMatch($input)
 	{
 		global $mysqli;
@@ -1684,7 +1698,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerVolts($input)
 	{
-		$validFlags = array('120','208');
+		$validFlags = array('120','208','308');
 		return ValidFlag($input,"Power Volts",$validFlags);
 	}
 	

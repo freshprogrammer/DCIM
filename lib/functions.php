@@ -805,17 +805,23 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$passedDBChecks = false;
 			//this could be optomised by filtering inner selects by panel and/or range of circuit
 			$isDoubleCircuit = (int)$volts == 208; 
+			$isTrippleCircuit = (int)$volts == 308; 
 			$filter = "";
-			if(!$isDoubleCircuit)
-				$filter = "csr.panel=? AND csr.circuit=?";
-			else 
+			if($isDoubleCircuit)
 				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+			if($isTrippleCircuit)
+				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
+			else
+				$filter = "csr.panel=? AND csr.circuit=?";
 			
 			$query = "SELECT * FROM (
 								SELECT powerid,panel,circuit,volts,amps
 								FROM dcim_power
 							UNION 
-								SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+								SELECT powerid,panel,IF(volts=208 OR volts=308,circuit+2,NULL) AS cir,volts,amps
+								FROM dcim_power HAVING NOT(cir IS NULL)
+							UNION 
+								SELECT powerid,panel,IF(volts=308,circuit+4,NULL) AS cir,volts,amps
 								FROM dcim_power HAVING NOT(cir IS NULL)
 						) AS csr
 					WHERE $filter";
@@ -824,12 +830,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
-				if(!$isDoubleCircuit)
-					$stmt->bind_Param('ss', $panel, $circuit);
-				else 
+				if($isDoubleCircuit)
 				{
 					$secondCircuit = 2+(int)$circuit;
 					$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+				}
+				else if($isTrippleCircuit)
+				{
+					$secondCircuit = 2+(int)$circuit;
+					$thirdCircuit = 4+(int)$circuit;
+					$stmt->bind_Param('ssss', $panel, $circuit, $secondCircuit,$thirdCircuit);
+				}
+				else 
+				{
+					$stmt->bind_Param('ss', $panel, $circuit);
 				}	
 				if (!$stmt->execute())//execute 
 					//failed (errorNo-error)
@@ -846,7 +860,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$stmt->bind_result($k, $p, $c, $v, $a);
 						$stmt->fetch();
 						
-						$errorMessage[] = "Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+						$errorMessage[] = "Existing panel Circuit conflict found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
 					}
 				}
 			}
@@ -5201,16 +5215,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else
 					$percentLoad = "";
-					
+				
+				$visibleVolts = FormatVolts($volts);
 				$visibleCircuit = $circuit;
 				if($volts==208)
 					$visibleCircuit = Format208CircuitNumber($circuit);
+				else if($volts==308)
+					$visibleCircuit = Format3Phase208CircuitNumber($circuit);
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
-				echo "<td class='data-table-cell'>$volts</td>";
+				echo "<td class='data-table-cell'>$visibleVolts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
 				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
@@ -5283,6 +5300,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<select id=EditCircuit_volts name="volts" tabindex=3>
 								<option value='120'>120v</option>
 								<option value='208'>208v</option>
+								<option value='308'>208v3p</option>
 							</select>
 							Amps:
 							<select id=EditCircuit_amps name="amps" tabindex=4>
@@ -6158,8 +6176,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanel($pa_panel)
 	{
-		
-		//This really should be using a panelID from a panel table but that not currently necisarry
+		//TODO This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
 		global $pageSubTitle;
 		
@@ -6274,6 +6291,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($hasData)
 					{
 						$rowSpan="";
+						$displayVolts = FormatVolts($volts);
 						$displayCircuit = $circuit;
 						if($volts==208)//208 volt circuits take up double
 						{
@@ -6293,7 +6311,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "	</tr></table><table width=100%><tr>\n";
 						//echo "	$fullLocationName ($percentLoad%) ";
 						echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
-						echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+						echo "	<td align=right>".$displayVolts."-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 						$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 						$checked = ($status==="A") ? " checked" : "";
@@ -6577,6 +6595,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
+		$errorMessage[] = "CreatePanel disabled untill suport for 208v3p.";
+		/*
 		//for error reporting
 		$action = "CreatePanel()";
 		
@@ -6746,7 +6766,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}
 				}
 			}
-		}
+		}*/
 	}
 	
 	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
