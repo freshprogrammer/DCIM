@@ -91,7 +91,8 @@
 			$result .= Check_BadgesWithoutCustomers();
 			$result .= Check_DevicesWithoutCustomersOrLocation();
 			$result .= Check_DevicePortsWithoutCustomersOrDevices();
-			$result .= Check_LocationWithoutPowerLocOrRoom();
+			$result .= Check_LocationWithoutRoom();
+			$result .= Check_ActiveLocationWithoutPower();
 			$result .= Check_PowerLocWithoutLocationOrPower();
 			$result .= Check_PowerWithoutPowerLoc();
 			$result .= Check_RecordsMisingInsertLog();
@@ -908,21 +909,20 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_LocationWithoutPowerLocOrRoom()
+	function Check_LocationWithoutRoom()
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		$reportTitle = "Location records linked to missing records";
-		$reportNote = "Disconnected from room or power (0 power count).";
+		$reportTitle = "Location records linked to invalid room";
+		$reportNote = "Disconnected from room.";
 		
-		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid, COUNT(pl.locationid) AS powerCount
+		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid
 			FROM dcim_location AS l
-				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			GROUP BY l.locationid
-			HAVING powerCount<1 OR r.roomid IS NULL
+			HAVING r.roomid IS NULL
 			ORDER BY s.name, r.name, l.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -933,14 +933,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($locationID, $room, $locationName,$roomID, $linkedRoomID, $powerCount);
+		$stmt->bind_result($locationID, $room, $locationName,$roomID, $linkedRoomID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("LocationID","Room","Location Name","RoomID","LinkedRoomID","PowerCount"));
+			$longResult.= CreateDataTableHeader(array("LocationID","Location Name","Invalid RoomID"));
 				
 			//list result data
 			$oddRow = false;
@@ -952,17 +952,77 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($room)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationName)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($roomID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedRoomID)."</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Invalid Locations",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_ActiveLocationWithoutPower()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Active location with no power";
+		$reportNote = "Location with active device(s) but not linked to power";
+		
+		$query = "SELECT l.locationid, s.name, r.name, l.name, l.roomid, r.roomid, COUNT(d.locationid) AS devicecount, COUNT(pl.locationid) AS powercount
+			FROM dcim_location AS l
+				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
+			GROUP BY l.locationid
+			HAVING powercount=0 AND devicecount>=1
+			ORDER BY s.name, r.name, l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($locationID, $site, $room, $locationName,$roomID, $linkedRoomID, $deviceCount, $powerCount);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Device Count","Power Count"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$fullLocationName = FormatLocation($site, $room, $locationName);
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($deviceCount)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCount)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
 			
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Locations",2);
+			$shortResult.= FormatSimpleMessage("$count Locations",3);
 		}
 		else
 		{
