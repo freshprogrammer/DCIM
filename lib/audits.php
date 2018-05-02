@@ -67,6 +67,8 @@
 			$result .= Check_VLANLinkedToDisabledPort();
 		$result .= Check_CircuitOverLoaded();
 		$result .= Check_CircuitInactiveWithLoad();
+		$result .= Check_DeviceWithoutAsset();
+		$result .= Check_DeviceWithDuplicateAsset();
 		//$result .= Check_DeviceWithInvalidLocation();
 		//$result .= Check_SwitchIsMainDeviceOnDevicePortRecords();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
@@ -367,7 +369,6 @@
 		$reportTitle = "Colos with patch 0";
 		$reportNote= "These are impossible connections left over from old system.";
 		
-		//could properly sort circuits, but meh
 		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
@@ -419,6 +420,156 @@
 			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Colos",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DeviceWithoutAsset()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Devices Missing assets";
+		$reportNote= "These are active physical devices that do not have assets.";
+		
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			FROM dcim_device AS d
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			WHERE d.status='A' AND d.type='S' AND d.asset=''
+			ORDER BY d.status, site, room, loc, unit, d.name, member";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_DeviceWithoutAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DeviceWithoutAsset()";
+		}
+				
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes"),true);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+			
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Devices",2);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DeviceWithDuplicateAsset()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Devices with duplicate assets";
+		$reportNote= "These are active physical devices that have identical assets.";
+		
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			FROM (SELECT d.deviceid, d.name, d.asset, COUNT(d.asset) AS count
+					FROM dcim_device AS d
+					WHERE d.status='A' AND d.asset<>''
+					GROUP BY d.asset
+					HAVING count>1) AS cur
+				LEFT JOIN dcim_device AS d ON d.asset=cur.asset
+				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			ORDER BY d.asset, d.name, d.member";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_DeviceWithDuplicateAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DeviceWithDuplicateAsset()";
+		}
+				
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes"),true);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch()) 
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+			
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
 		else
 		{
@@ -927,8 +1078,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
-			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
+			$errorMessage[] = "Prepare failed: Check_LocationWithoutRoom() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_LocationWithoutRoom()";
 		}
 		
 		$stmt->execute();
@@ -988,8 +1139,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
-			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
+			$errorMessage[] = "Prepare failed: Check_ActiveLocationWithoutPower() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_ActiveLocationWithoutPower()";
 		}
 		
 		$stmt->execute();
