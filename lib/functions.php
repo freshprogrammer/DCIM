@@ -809,7 +809,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$filter = "";
 			if($isDoubleCircuit)
 				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
-			if($isTrippleCircuit)
+			else if($isTrippleCircuit)
 				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
 			else
 				$filter = "csr.panel=? AND csr.circuit=?";
