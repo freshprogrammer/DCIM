@@ -4485,7 +4485,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
+					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR d.asset LIKE ? OR d.serial LIKE ? OR d.model LIKE ?
 				UNION
 					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
@@ -4499,7 +4499,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('sssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('ssssssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
@@ -4542,7 +4542,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device"));
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","Model","Serial","Asset","Note"));
 			else
 				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
@@ -4569,10 +4569,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($search)
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-				if(!$search)
+				if($search)
 				{
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($serial)."</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>";
+					echo "<td class='data-table-cell'>$visibleNotes</td>";
+				}
+				else
+				{//!search
 					echo "<td class='data-table-cell'>$unit</td>";
-					echo "<td class='data-table-cell'>$model</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
 					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
