@@ -3003,6 +3003,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$lastUnit = $unitStart;
 				while ($stmt->fetch())
 				{
+					if($unit==0 && $count==1)//if there is only one device at 0 skip the rest - colo
+						$showEmptyUnits = false;
+					
 					if($unit!=0 && $showEmptyUnits)
 					{
 						while($lastUnit!=$unit && $lastUnit>-100 && $lastUnit<200)
