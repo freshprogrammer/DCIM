@@ -4997,6 +4997,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
 		
+		$result = "";
+		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
 		//lookup site/room name for headers
@@ -5008,7 +5010,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
 		$stmt->bind_Param('i', $roomID);
@@ -5041,7 +5043,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			
 			$stmt->bind_Param('s', $roomID);
@@ -5051,19 +5053,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
-			echo "<span class='tableTitle'>$searchTitle ($count)</span>\n";
+			$result .= "<span class='tableTitle'>$searchTitle ($count)</span>\n";
 			//add location button
 			if(CustomFunctions::UserHasLocationPermission())
 			{
 				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
 				$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
-				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php
+				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Add New</button>";
 			}
-			echo "<BR>";
+			$result .= "<BR>";
 			
 			if($count>0)
 			{//show results
-				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				$result .= CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -5082,27 +5084,27 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
-					echo "<tr class='$rowClass'>";
+					$result .= "<tr class='$rowClass'>";
 					if(!$additionalDevice)
 					{
-						echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-						echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					}
 					
 					if(strlen($customer) > 0)
-						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+						$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					else 
-						echo "<td class='data-table-cell'>Empty</td>";
+						$result .= "<td class='data-table-cell'>Empty</td>";
 					if($deviceCount==0)
-						echo "<td class='data-table-cell'></td>";
+						$result .= "<td class='data-table-cell'></td>";
 					else if($deviceCount==1)
-						echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+						$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					else
-						echo "<td class='data-table-cell'>$deviceCount Devices</td>";
+						$result .= "<td class='data-table-cell'>$deviceCount Devices</td>";
 					
 					if(!$additionalDevice)
 					{//on spanned location record
-						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
@@ -5112,25 +5114,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
 							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-							?><td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
-										<?php 
+							$result .= "<td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Edit</button></td>";
 							
-							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, 1);
+							$result .= CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, 1);
 						}
 					}
-					echo "</tr>";
+					$result .= "</tr>";
 				}
-				echo "</table>";
+				$result .= "</table>";
 			}
 			else 
 			{
-				echo "No Locations or devices found in $roomFullName.<BR>\n";
+				$result .= "No Locations or devices found in $roomFullName.<BR>\n";
 			}
 		}//sucsessfull lookup
 		else
 		{
-			echo "Room($roomID) not found.<BR>\n";
+			$result .= "Room($roomID) not found.<BR>\n";
 		}
+		
+		echo $result;
 		
 		if(CustomFunctions::UserHasLocationPermission())
 			EditLocationForm();
