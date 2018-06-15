@@ -687,7 +687,7 @@ h2 {
 }
 .roomContainer .roomLayoutTitle{
 	position: absolute;
-	color: white;
+	color: blue;
 	margin: 6;
 	text-overflow: clip;
 }
@@ -695,10 +695,13 @@ h2 {
 	background-color: gray;
 }
 .caBackground{
-	background-color: rgb(0, 0, 255);
+	background-color: rgb(184, 184, 184);
+	background-position: 0px 0px;/*placeholder for offsets*/
+	background-size: 15px 15px;
+	background-image: linear-gradient(to right, grey 1px, transparent 1px), linear-gradient(to bottom, grey 1px, transparent 1px);
 }
 .roomBackground{
-	background-color: rgb(0, 0, 180);
+	background-color: rgb(204, 204, 204);
 }
 .locationEmptyBackground{
 	background: linear-gradient(#F22 0%, #BBB 40%);
