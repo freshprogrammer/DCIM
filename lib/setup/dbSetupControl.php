@@ -21,6 +21,7 @@
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
+	$SCRIPTID_RESET_DEMO_CREDS = 4;
 	//updates
 	$SCRIPTID_DB_UPDATE_1_1 = 11;
 	$SCRIPTID_DB_UPDATE_1_2 = 12;
@@ -28,11 +29,14 @@
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	//simple procedures
 	$SCRIPTID_RECREATE_ALL_LOGS = 101;
+	//Data correction functions - Mass QA, ect
+	$SCRIPTID_QA_ALL_RECORDS = 201;
 	
 	//scripts that can be run on live (non demo) environment
 	$liveEnvironmentScripts = array();
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_1;
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_2;
+	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
 	
 	$resultMessage = array();
 	$errorMessage = array();
@@ -84,6 +88,7 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
 		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
 		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
+		<option value='$SCRIPTID_RESET_DEMO_CREDS'			>Reset Demo Credentials</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_1'				>Update database with latest update (part 1)</option>
 		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
@@ -91,6 +96,8 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
+		<option value='0'									>-</option>
+		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
 	</select>
 	<input type='submit' value='Run'>
 	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
@@ -194,10 +201,12 @@ function ConfirmIntent()
 		global $SCRIPTID_BUILD_DATABASE;
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
+		global $SCRIPTID_RESET_DEMO_CREDS;
 		global $SCRIPTID_DB_UPDATE_1_1;
 		global $SCRIPTID_DB_UPDATE_1_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
+		global $SCRIPTID_QA_ALL_RECORDS;
 		global $errorMessage;
 		global $restoreStructureSQLFile;
 		global $restoreDataSQLFile;
@@ -219,6 +228,11 @@ function ConfirmIntent()
 				BuildDB($restoreStructureSQLFile);
 				echo "<BR>Populating Database...";
 				RestoreDBWithDemoData($restoreDataSQLFile);
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_RESET_DEMO_CREDS:
+				echo "<BR>Restoring default demo credentials...";
+				RestoreDemoCreds();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_DB_UPDATE_1_1:
@@ -259,6 +273,11 @@ function ConfirmIntent()
 			case $SCRIPTID_RECREATE_ALL_LOGS:
 				echo "Rebuilding log records";
 				WipeAndReCreateAllLogs();
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_QA_ALL_RECORDS:
+				echo "QAing all records as Admin";
+				QAAllRecordsAsAdmin();
 				echo "<BR>Done";
 				break;
 			default:

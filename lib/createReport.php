@@ -17,7 +17,7 @@
 	else if($report==="PowerAudit")
 		OutputCSV("Location Power Audit - ".date("Y-m-d").".csv",CreatePowerAuditExportArray(0));//NOTE: this is only running for site 0
 	else if($report==="PowerHistory")
-		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray(0,$date));//NOTE: this is only running for site 0
+		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray($date));
 	else
 	{
 		echo "No Report Specified";
@@ -118,7 +118,17 @@
 				if($showNAForEmptyLocations)
 					$cust = (strlen($cust)>0)?$cust:"N/A";
 				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
-				$circuit = ($volts==208)?("=\"".$circuit."/".($circuit+2)."\""):$circuit;
+				
+				if($volts==208)
+					$circuit = "=\"".$circuit."/".($circuit+2)."\"";
+				else if($volts==308)
+					$circuit = "=\"".$circuit."/".($circuit+2)."/".($circuit+4)."\"";
+				
+				if($volts==308)
+					$volts = "208v3p";
+				else
+					$volts = $volts."v";
+				
 				if($skipLinesBetweenLocationsAndOnlyFirstCustName)
 				{
 					if($lastLoc==$fullLocationName)
@@ -133,7 +143,7 @@
 					}
 					$lastLoc = $fullLocationName;
 				}
-				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$load."A",substr($percent,0,5)."%",$amps."A",$volts."V",($status==="A")?"On":"Off",substr($editDate,0,10));
+				$result[] = array($cust,$hNo,$fullLocationName,$panel,$circuit,$load."A",substr($percent,0,5)."%",$amps."A",$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
 			}
 		}
 		return $result;
@@ -142,7 +152,7 @@
 	/*
 	 * url: root/lib/createReport.php?report=PowerHistory&date=2016-01-01
 	 */
-	function CreatePowerHistoryExportArray($siteID, $date)
+	function CreatePowerHistoryExportArray($date)
 	{
 		global $mysqli;
 		
@@ -180,7 +190,14 @@
 			while ($stmt->fetch())
 			{
 				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
-				$circuit = ($volts==208)?("=\"".$circuit."/".($circuit+2)."\""):$circuit;
+				
+				if($volts==208)
+					$circuit = "=\"".$circuit."/".($circuit+2)."\"";
+				else if($volts==308)
+				{
+					$circuit = "=\"".$circuit."/".($circuit+2)."/".($circuit+4)."\"";
+					$volts = 208;
+				}
 				
 				$result[] = array($panel,$circuit,$load,substr($percent,0,5)."%",$amps,$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
 			}

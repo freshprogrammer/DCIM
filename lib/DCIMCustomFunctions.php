@@ -71,6 +71,14 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			return $result;
 		}
 		
+		public static function CreateInternalInventoryLink($asset)
+		{//these are internal links for more info about the asset number
+			if(is_numeric($asset))
+				return "<a href='https://internalApp.com?search=$asset' target='_blank' class='internalLink'>$asset</a>\n";
+			else
+				return MakeHTMLSafe($asset);
+		}
+		
 		public static function GetSearchPlaceholder()
 		{
 			$linesOfCode = CountLinesInDir();
@@ -169,6 +177,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			
 			$pageSubTitle = "Home";
 			
+			$result = "";
 			if(UserHasWritePermission() && IsUserUsingDefaultPassword())
 			{
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");

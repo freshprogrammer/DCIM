@@ -805,17 +805,23 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$passedDBChecks = false;
 			//this could be optomised by filtering inner selects by panel and/or range of circuit
 			$isDoubleCircuit = (int)$volts == 208; 
+			$isTrippleCircuit = (int)$volts == 308; 
 			$filter = "";
-			if(!$isDoubleCircuit)
-				$filter = "csr.panel=? AND csr.circuit=?";
-			else 
+			if($isDoubleCircuit)
 				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+			else if($isTrippleCircuit)
+				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
+			else
+				$filter = "csr.panel=? AND csr.circuit=?";
 			
 			$query = "SELECT * FROM (
 								SELECT powerid,panel,circuit,volts,amps
 								FROM dcim_power
 							UNION 
-								SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
+								SELECT powerid,panel,IF(volts=208 OR volts=308,circuit+2,NULL) AS cir,volts,amps
+								FROM dcim_power HAVING NOT(cir IS NULL)
+							UNION 
+								SELECT powerid,panel,IF(volts=308,circuit+4,NULL) AS cir,volts,amps
 								FROM dcim_power HAVING NOT(cir IS NULL)
 						) AS csr
 					WHERE $filter";
@@ -824,12 +830,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
-				if(!$isDoubleCircuit)
-					$stmt->bind_Param('ss', $panel, $circuit);
-				else 
+				if($isDoubleCircuit)
 				{
 					$secondCircuit = 2+(int)$circuit;
 					$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+				}
+				else if($isTrippleCircuit)
+				{
+					$secondCircuit = 2+(int)$circuit;
+					$thirdCircuit = 4+(int)$circuit;
+					$stmt->bind_Param('ssss', $panel, $circuit, $secondCircuit,$thirdCircuit);
+				}
+				else 
+				{
+					$stmt->bind_Param('ss', $panel, $circuit);
 				}	
 				if (!$stmt->execute())//execute 
 					//failed (errorNo-error)
@@ -846,7 +860,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$stmt->bind_result($k, $p, $c, $v, $a);
 						$stmt->fetch();
 						
-						$errorMessage[] = "Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+						$errorMessage[] = "Existing panel Circuit conflict found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
 					}
 				}
 			}
@@ -1546,7 +1560,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				//check if customer (hno or cno) already exists before insertion
-				$query = "SELECT hno,cno FROM dcim_customer WHERE hno=? OR cno=?";
+				//$query = "SELECT hno,cno FROM dcim_customer WHERE hno=? OR cno=?";//disabled cno check
+				$query = "SELECT hno,cno FROM dcim_customer WHERE hno=?";
 				
 				if (!($stmt = $mysqli->prepare($query)))
 				{
@@ -1554,7 +1569,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else
 				{
-					$stmt->bind_Param('ss', $hNo, $cNo);		
+					$stmt->bind_Param('s', $hNo);		
 					$stmt->execute();
 					$stmt->store_result();
 					$custCount = $stmt->num_rows;
@@ -2566,9 +2581,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$lastPort = $startPortNo + $portCount -1;
 			$portNo = 0;
 			$stmt->bind_Param('iii', $deviceID, $portNo, $userID);
-			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++) 
+			for ($portNo = $startPortNo; $portNo <= $lastPort; $portNo++)
 			{
-				if (!$stmt->execute())//execute 
+				if (!$stmt->execute())//execute
 					//failed (errorNo-error)
 					$errorMessage[] = "Failed to Add blank port($deviceID, $portNo, $userID) (" . $stmt->errno . "-" . $stmt->error . ")\n";
 				else
@@ -2934,6 +2949,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
+			$descendingUnits = $type!="R";
+			$unitStart = $units+1;//start decending 42
+			$unitLimit = 1;//stop decending at 1
+			$sqlOrder = "DESC";
+			if(!$descendingUnits)
+			{
+				$unitStart = 0;
+				$unitLimit = $units;
+				$sqlOrder = "";
+			}
+			$showEmptyUnits = $type!="C";
+			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Location Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
@@ -2947,8 +2974,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE l.locationid=?
-				ORDER BY status, site, room, loc, unit!=0, unit DESC, name, member";
+				WHERE l.locationid=? AND d.status='A'
+				ORDER BY status, site, room, loc, unit!=0, unit $sqlOrder, name, member";
 			
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -2969,12 +2996,38 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			if($count>0)
 			{
-				echo CreateDataTableHeader(array("Unit","Customer","Device","Size","Type","Status","Note"),true);
+				echo CreateDataTableHeader(array("Unit","Customer","Device","Model","Size","Type","Status","Note"),true);
 				
 				//list result data
 				$oddRow = false;
+				$lastUnit = $unitStart;
 				while ($stmt->fetch())
 				{
+					if($unit==0 && $count==1)//if there is only one device at 0 skip the rest - colo
+						$showEmptyUnits = false;
+					
+					if($unit!=0 && $showEmptyUnits)
+					{
+						while($lastUnit!=$unit && $lastUnit>-100 && $lastUnit<200)
+						{
+							if($descendingUnits)
+								$lastUnit--;
+							else
+								$lastUnit++;
+							if($lastUnit!=$unit)
+							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
+								//empty unit
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$lastUnit</td>";
+								echo "<td class='data-table-cell' colspan=8></td>";
+								echo "</tr>";
+							}
+						}
+					}
+					
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
@@ -2982,16 +3035,76 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
 					$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+
+					$unitSize=1;
+					if($size[strlen($size)-1]=="U" && $status=="A")
+					{
+						$unitSize = substr($size,0,strlen($size)-1);
+						if($unitSize<1)
+							$unitSize=1;
+					}
 					
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'>$unit</td>";
-					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-					echo "<td class='data-table-cell'>$size</td>";
-					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
-					echo "<td class='data-table-cell'>$visibleNotes</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$model</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$size</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceType($type)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceStatus($status)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$unitSize>$visibleNotes</td>";
+					echo "<td class='data-table-cell' rowspan=$unitSize>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "</tr>";
+					
+					if($unitSize>1)
+					{
+						if($descendingUnits)
+						{
+							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
+							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$i</td>";
+								echo "</tr>";
+							}
+						}
+						else
+						{
+							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
+							{
+								$oddRow = !$oddRow;
+								if($oddRow) $rowClass = "dataRowOne";
+								else $rowClass = "dataRowTwo";
+								echo "<tr class='$rowClass'>";
+								echo "<td class='data-table-cell'>$i</td>";
+								echo "</tr>";
+							}
+						}
+					}
+
+					if($unit!=0)
+					{
+						if($descendingUnits)
+							$lastUnit=$unit-$unitSize+1;
+						else
+							$lastUnit=$unit+$unitSize-1;
+					}
+				}
+				while($showEmptyUnits && $lastUnit!=$unitLimit && $lastUnit>-100 && $lastUnit<200)
+				{
+					if($descendingUnits)
+						$lastUnit--;
+					else
+						$lastUnit++;
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					//empty unit
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'>$lastUnit</td>";
+					echo "<td class='data-table-cell' colspan=8></td>";
 					echo "</tr>";
 				}
 				echo "</table>";
@@ -3448,6 +3561,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $pageSubTitle;
 		global $focusSearch;
+		global $config_badgesEnabled;
+		global $config_subnetsEnabled;
 		
 		//main customer record or new
 		$addCust = $hNo==="-1";
@@ -3572,16 +3687,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>\n";
 			
 			//badges
-			$badgeCount = ListBadges(false, $hNo);
-			echo "<BR>\n";
+			if($config_badgesEnabled)
+			{
+				$badgeCount = ListBadges(false, $hNo);
+				echo "<BR>\n";
+			}
 			
 			//ports
 			$portCount = ListActiveCustomerDeviceConnections($hNo);
 			echo "<BR>\n";
 			
 			//VLANs
-			$vlanCount = ListCustomerSubnets($hNo);
-			echo "<BR>\n";
+			if($config_subnetsEnabled)
+			{
+				$vlanCount = ListCustomerSubnets($hNo);
+				echo "<BR>\n";
+			}
 			
 			//Power Circuits of devices
 			$powerCircuitsCount = ListPowerCircuits(false,$hNo);
@@ -3630,9 +3751,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right' width=1>Hosting&nbsp;Account&nbsp;#:</td>
 						<td align='left' width=1>
-							<input id=EditCustomer_hno type='number' min=100000 max=999999 step=1 tabindex=1 name='hno' maxlength=6 size=6 value='<?php echo $hNoInput;?>' placeholder='000000' class='' readonly>
+							<input id=EditCustomer_hno type='number' min=10000 max=999999 step=1 tabindex=1 name='hno' maxlength=6 size=6 value='<?php echo $hNoInput;?>' placeholder='000000' class='' readonly>
 							Customer&nbsp;#:
-							<input id=EditCustomer_cno type='number' min=100000 max=999999 step=1 tabindex=2 name='cno' maxlength=6 size=6 value='<?php echo $cNoInput;?>' placeholder='000000' class='' readonly>
+							<input id=EditCustomer_cno type='number' min=10000 max=999999 step=1 tabindex=2 name='cno' maxlength=6 size=6 value='<?php echo $cNoInput;?>' placeholder='000000' class='' readonly>
 						</td>
 					</tr>
 					<tr>
@@ -3673,6 +3794,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $mysqli;
 		global $userFullName;
 		global $pageSubTitle;
+		global $config_subnetsEnabled;
 		
 		$pageSubTitle = "";
 		
@@ -3823,7 +3945,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
 			if(!$deviceInfo->coloDevice)
 			{
-				echo  "<b>Asset:</b> ".MakeHTMLSafe($asset)."<BR>\n";
+				echo  "<b>Asset:</b> ".CustomFunctions::CreateInternalInventoryLink($asset)."<BR>\n";
 				echo "<b>Serial:</b> ".MakeHTMLSafe($serial)."<BR>\n";
 			}
 			echo "</td>\n";
@@ -3924,9 +4046,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 									Status:$statusDescrip<BR>
 									$connectionText<BR>
 									MAC:".MakeHTMLSafe($mac)." <BR>
-									Speed:".MakeHTMLSafe($speed)." <BR>
-									VLAN(s):$vlan <BR>
-									Tech:$tech <BR>
+									Speed:".MakeHTMLSafe($speed)." <BR>\n";
+									
+									if($config_subnetsEnabled)
+										$popupText .= "VLAN(s):$vlan <BR>\n";
+									
+									$popupText .= "Tech:$tech <BR>
 									Notes:".MakeHTMLSafe($note);
 								
 								if(CustomFunctions::UserHasDevPermission())
@@ -4091,36 +4216,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 		{
-			//location search for locations to append to badge visit info - this is outdated and not used any more anyways
-			//TODO delete this since its not needed anymore though this information might still be usefull in the future
-			$locQuery = "SELECT s.name AS site, r.name AS room, l.name 
-			FROM dcim_device AS d 
-				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid 
-				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.hno=? AND d.type IN ('C','F','H') AND d.status='A'";
-			
-			if (!($stmt = $mysqli->prepare($locQuery)))
-			{
-				//TODO handle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-				return -1;
-			}
-			$stmt->bind_Param('s', $input);
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationName);
-			$locCount = $stmt->num_rows;
-			
-			$customerLocations = "";
-			if($locCount>0)
-			{
-				$locationArray = array();
-				while ($stmt->fetch())
-					$locationArray[] = FormatLocation($site, $room, $locationName);
-				$customerLocations  = implode(" & ",$locationArray);
-			}
-			
 			//select empty as customer to keep return results to match search query
 			$query = "SELECT c.name AS customer, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
 			FROM dcim_badge AS b 
@@ -4172,16 +4267,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "<tr class='$rowClass'>";
 				if($search == true)
-				{
 					echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
-				}
-				else 
-				{
-					//visit info for clipboard - time will be appended in javascript function
-					$visitDescription = " - ".MakeHTMLSafe($customerLocations)." - H$hNo - ".MakeHTMLSafe($customer)." - ".MakeHTMLSafe($name)." - Badge";
-					echo "<td class='data-table-cell' ondblclick='CopyBadgeToClipboard(\"$visitDescription\")'>".MakeHTMLSafe($name)."</td>\n";
-				}
+				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($badgeNo)."</td>\n";
 				echo "<td class='data-table-cell'>".BadgeStatus($status)."</td>\n";
 				echo "<td class='data-table-cell'>$issue</td>\n";
@@ -4401,7 +4488,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ?
+					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR d.asset LIKE ? OR d.serial LIKE ? OR d.model LIKE ?
 				UNION
 					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
@@ -4415,7 +4502,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('sssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('ssssssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
@@ -4451,16 +4538,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			// add button to add new Device
 			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'F', 'Full', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device"));
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","Model","Serial","Asset","Note"));
 			else
-				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4485,9 +4572,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($search)
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-				if(!$search)
+				if($search)
 				{
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($serial)."</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>";
+					echo "<td class='data-table-cell'>$visibleNotes</td>";
+				}
+				else
+				{//!search
 					echo "<td class='data-table-cell'>$unit</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
 					echo "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
@@ -4539,9 +4634,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$hnoInput = "654321";
 		$nameInput = "654321-1";
 		$statusInput = "A";
-		$typeInput = "F";
-		$locationInput = 12;
-		$sizeInput = "Full";
+		$typeInput = "S";
+		$locationInput = 1;
+		$sizeInput = "1U";
 		$unitInput = "0";
 		$assetInput = "asset";
 		$serialInput = "serial";
@@ -4599,13 +4694,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Type:</td>
 						<td align='left'>
 							<select id=EditDevice_type onchange='EditDeviceTypeChanged(true)' name="type" tabindex=2>
+								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Physical</option>
 								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
 								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
-								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Switch</option>
 							</select>
 							Size:
-							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='5x7, Full, 2U, Half' class=''>
+							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='2U, Full, 5x7, Half' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -4631,7 +4726,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
 							<select id=EditDevice_model name="model" tabindex=7>
-								<option value='Unknown'>Unknown</option>
 							<?php 
 							//This should be a list of all switch (or other non colo device) models
 							foreach($deviceModels as $model)
@@ -4906,6 +5000,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
 		
+		$result = "";
+		
 		$showEmpty = true;///this was a test feature to hide empty locations
 		
 		//lookup site/room name for headers
@@ -4917,7 +5013,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if (!($stmt = $mysqli->prepare($query)))
 		{
 			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
 		$stmt->bind_Param('i', $roomID);
@@ -4937,19 +5033,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
 					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member,
-					(SELECT COUNT(*) FROM dcim_device d1 WHERE d1.locationid=l.locationid AND d1.status='A') AS count
+					COUNT(d.locationid) AS count
 				FROM dcim_location AS l
 					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer c ON c.hno = d.hno
 					LEFT JOIN dcim_room r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site s ON r.siteid=s.siteid
 				WHERE r.roomid=?
+				GROUP BY l.locationid
 				ORDER BY r.name, l.name";
 			
-			if (!($stmt = $mysqli->prepare($query))) 
+			if (!($stmt = $mysqli->prepare($query)))
 			{
 				//TODO handle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			
 			$stmt->bind_Param('s', $roomID);
@@ -4959,19 +5056,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
-			echo "<span class='tableTitle'>$searchTitle ($count)</span>\n";
+			$result .= "<span class='tableTitle'>$searchTitle ($count)</span>\n";
 			//add location button
 			if(CustomFunctions::UserHasLocationPermission())
 			{
 				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
 				$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
-				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Add New</button><?php
+				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Add New</button>";
 			}
-			echo "<BR>";
+			$result .= "<BR>";
 			
 			if($count>0)
 			{//show results
-				echo CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				$result .= CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -4990,22 +5087,27 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
-					echo "<tr class='$rowClass'>";
+					$result .= "<tr class='$rowClass'>";
 					if(!$additionalDevice)
 					{
-						echo "<td class='data-table-cell' rowspan='$deviceCount'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-						echo "<td class='data-table-cell' rowspan='$deviceCount'>".MakeHTMLSafe($size)."</td>";
+						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					}
 					
 					if(strlen($customer) > 0)
-						echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+						$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					else 
-						echo "<td class='data-table-cell'>Empty</td>";
-					echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+						$result .= "<td class='data-table-cell'>Empty</td>";
+					if($deviceCount==0)
+						$result .= "<td class='data-table-cell'></td>";
+					else if($deviceCount==1)
+						$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					else
+						$result .= "<td class='data-table-cell'>$deviceCount Devices</td>";
 					
 					if(!$additionalDevice)
 					{//on spanned location record
-						echo "<td class='data-table-cell' rowspan='$deviceCount'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
@@ -5015,25 +5117,26 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
 							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-							?><td class='data-table-cell-button editButtons_hidden' rowspan='<?php echo $deviceCount;?>'><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit</button></td>
-										<?php 
+							$result .= "<td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Edit</button></td>";
 							
-							echo CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, $deviceCount);
+							$result .= CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, 1);
 						}
 					}
-					echo "</tr>";
+					$result .= "</tr>";
 				}
-				echo "</table>";
+				$result .= "</table>";
 			}
 			else 
 			{
-				echo "No Locations or devices found in $roomFullName.<BR>\n";
+				$result .= "No Locations or devices found in $roomFullName.<BR>\n";
 			}
 		}//sucsessfull lookup
 		else
 		{
-			echo "Room($roomID) not found.<BR>\n";
+			$result .= "Room($roomID) not found.<BR>\n";
 		}
+		
+		echo $result;
 		
 		if(CustomFunctions::UserHasLocationPermission())
 			EditLocationForm();
@@ -5125,16 +5228,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 				else
 					$percentLoad = "";
-					
+				
+				$visibleVolts = FormatVolts($volts);
 				$visibleCircuit = $circuit;
 				if($volts==208)
 					$visibleCircuit = Format208CircuitNumber($circuit);
+				else if($volts==308)
+					$visibleCircuit = Format3Phase208CircuitNumber($circuit);
 					
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
-				echo "<td class='data-table-cell'>$volts</td>";
+				echo "<td class='data-table-cell'>$visibleVolts</td>";
 				echo "<td class='data-table-cell'>$amps</td>";
 				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
 				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
@@ -5207,6 +5313,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<select id=EditCircuit_volts name="volts" tabindex=3>
 								<option value='120'>120v</option>
 								<option value='208'>208v</option>
+								<option value='308'>208v3p</option>
 							</select>
 							Amps:
 							<select id=EditCircuit_amps name="amps" tabindex=4>
@@ -5381,7 +5488,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
-		$result .= "<span class='tableTitle'>$siteFullName Rooms</span>\n";
+		$result = "<span class='tableTitle'>$siteFullName Rooms</span>\n";
 		//Add button
 		/*if(UserHasWritePermission())
 		{
@@ -5594,6 +5701,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	{
 		global $mysqli;
 		global $deviceModels;
+		global $config_subnetsEnabled;
 		
 		//edit/Add Connection form
 		//-default values - never seen
@@ -5692,6 +5800,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							<input id='EditConnection_patches' type='text' tabindex=5 size=50 name='patches' value='<?php echo $patchesInput;?>' placeholder='10.01/4 - G/13 - 10.24/1' class=''>
 						</td>
 					</tr>
+					<?php if($config_subnetsEnabled){?>
 					<tr id='EditConnection_updateportsrow'>
 						<td align='right' width=1>Port Changes:</td>
 						<td align='left' colspan='2'>
@@ -5701,6 +5810,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							</select>
 						</td>
 					</tr>
+					<?php }?>
 					<tr>
 						<td colspan='1' align='left'>
 							<button id='EditConnection_deletebutton' type="button" onclick="DeleteConnection()" tabindex=8>Delete</button>
@@ -5723,6 +5833,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListDevicePorts($deviceKeyInput, $deviceFullName, $onChassisPage=false)
 	{
 		global $mysqli;
+		global $config_subnetsEnabled;
 		
 		
 		if($onChassisPage)
@@ -5813,7 +5924,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$tableWithAllData = "";
 			$tableWithActiveData = "";
 
-			$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
+			if($config_subnetsEnabled)
+				$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","VLANs","Note"),true,UserHasWritePermission(),UserHasWritePermission());
+			else 
+				$tableHeader = CreateDataTableHeader(array("Device","Port&#x25B2;","MAC","Connected Device","Port","Speed","Status","Note"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			$tableWithAllData = $tableHeader;
 			$tableWithActiveData = $tableHeader;
@@ -5851,7 +5965,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if(strlen($switchFullName) > 0)
 					$switchDisplayName = "<a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a> (<a href='./?host=$switchHNo'>$switchCust</a> - <a href='./?locationid=$switchLocationID'>$switchLocationFullName</a>)";
 				else
+				{
 					$switchDisplayName = "";
+					$switchPortFullName = "";
+				}
 				
 				//table values
 				if($onChassisPage)
@@ -5871,7 +5988,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$record .= "<td class='data-table-cell'>$switchPortFullName</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($speed)."</td>";
 				$record .= "<td class='data-table-cell'>".DevicePortStatus($status)."</td>";
-				$record .= "<td class='data-table-cell'>$vlan</td>";
+				if($config_subnetsEnabled)
+					$record .= "<td class='data-table-cell'>$vlan</td>";
 				$record .= "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
 				$record .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				
@@ -5929,6 +6047,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListActiveCustomerDeviceConnections($hNo)
 	{
 		global $mysqli;
+		global $config_subnetsEnabled;
 		$formAction = "./?host=$hNo";
 		
 		$query = "SELECT 
@@ -5983,7 +6102,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			if($config_subnetsEnabled)
+				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			else
+				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+			
 			
 			//list result data
 			$lastDevicePortID = -1;
@@ -6028,7 +6151,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo $childCells;
 				echo $parentCells;
 				
-				echo "<td class='data-table-cell'>$vlan</td>";
+				if($config_subnetsEnabled)
+					echo "<td class='data-table-cell'>$vlan</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
 				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 				
@@ -6065,8 +6189,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function PowerAuditPanel($pa_panel)
 	{
-		
-		//This really should be using a panelID from a panel table but that not currently necisarry
+		//TODO This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
 		global $pageSubTitle;
 		
@@ -6145,8 +6268,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
 				$numberOfCircuitsPerPanel = 42;
 				$tableCircuitNo = 0;
-				$prevWas208Left = false;
-				$prevWas208Right = false;
+				$leftSpan = 1;
+				$rightSpan = 1;
 				while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 				{
 					//odd circutis are on the left 
@@ -6181,16 +6304,27 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($hasData)
 					{
 						$rowSpan="";
+						$displayVolts = FormatVolts($volts);
 						$displayCircuit = $circuit;
 						if($volts==208)//208 volt circuits take up double
 						{
 							if($left)
-								$prevWas208Left = true;
+								$leftSpan = 2;
 							else
-								$prevWas208Right = true;
+								$rightSpan = 2;
 							$cellClass .= " powerAuditCellDouble";
 							$rowSpan = " rowspan=2";
 							$displayCircuit = Format208CircuitNumber($circuit);
+						}
+						else if($volts==308)//208 3 phase circuits take up tripple
+						{
+							if($left)
+								$leftSpan = 3;
+							else
+								$rightSpan = 3;
+							$cellClass .= " powerAuditCellTripple";
+							$rowSpan = " rowspan=3";
+							$displayCircuit = Format3Phase208CircuitNumber($circuit);
 						}
 						
 						echo "<td $rowSpan class='$cellClass'>\n";
@@ -6200,7 +6334,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "	</tr></table><table width=100%><tr>\n";
 						//echo "	$fullLocationName ($percentLoad%) ";
 						echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
-						echo "	<td align=right>".$volts."V-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
+						echo "	<td align=right>".$displayVolts."-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 						$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 						$checked = ($status==="A") ? " checked" : "";
@@ -6214,10 +6348,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}
 					else 
 					{
-						if($left && $prevWas208Left)
-							$prevWas208Left = false;
-						else if(!$left && $prevWas208Right)
-							$prevWas208Right = false;
+						if($left && $leftSpan>1)
+							$leftSpan--;
+						else if(!$left && $rightSpan>1)
+							$rightSpan--;
 						else
 							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
 					}
@@ -6484,6 +6618,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
+		$errorMessage[] = "CreatePanel disabled untill suport for 208v3p.";
+		/*
 		//for error reporting
 		$action = "CreatePanel()";
 		
@@ -6653,7 +6789,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}
 				}
 			}
-		}
+		}*/
 	}
 	
 	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
@@ -6879,7 +7015,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		
-		if(!$renderingWithinParent)$result .= "</a>\n";
+		if($renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
 		return $result;
