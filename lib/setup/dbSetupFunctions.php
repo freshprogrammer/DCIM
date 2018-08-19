@@ -317,6 +317,15 @@
 		}
 	}
 	
+	function RestoreDemoCreds()
+	{
+		global $resultMessage;
+		global $errorMessage;
+		global $debugMessage;
+		
+		$errorMessage[] = "RestoreDemoCreds() - Stub - did nothing";
+	}
+	
 	function GenRandomCompanyName()
 	{
 		$companyNameNouns = array();
