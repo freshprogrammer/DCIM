@@ -3942,7 +3942,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			//asset serial and notes
 			echo "<table width=100%>\n";
-			echo "<tr><td valign=top width=105 class='customerDetails'>\n";
+			echo "<tr><td valign=top width=150 class='customerDetails'>\n";
 			if(!$deviceInfo->coloDevice)
 			{
 				echo  "<b>Asset:</b> ".CustomFunctions::CreateInternalInventoryLink($asset)."<BR>\n";
