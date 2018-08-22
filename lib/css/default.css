@@ -263,7 +263,7 @@ a:hover, a:active {
 }
 
 a.internalLink {
-	padding-left: 20px;
+	/* padding-left: 20px; */
 	display: inline;
 }
 
