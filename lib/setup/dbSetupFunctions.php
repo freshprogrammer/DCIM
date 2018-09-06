@@ -111,7 +111,24 @@
 		if($executePart1)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 1 - safe prep";
-
+			
+			/*
+			update user file
+			- update password hard field to 60 chars
+			- Add siteid field
+			update device
+			- add altname
+			- add order field - reversed for racks vs cabinets
+			
+			rename dcim_power to dcim_powercircuit
+			rename dcim_powerloc to dcim_powercircuitloc
+			Add dcim_powerups
+			 - upsid, name, volts, amps, note
+			Add dcim_powerpanel
+			 - panelid, name, volts, amps, xpos, ypos, width, depth, orientation, note, upsid, roomid
+			 
+			 */
+			
 			/*
 			//add new files to room, site and location tables for site layout values
 			$cmdm = "ALTER TABLE  `dcim_room`

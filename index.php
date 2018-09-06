@@ -20,7 +20,7 @@
 	
 	if($redirectAroundFormResubmitWarning)
 	{
-		//read session message vars and cleaf session vars
+		//read session message vars and clear session vars
 		if(isset($_SESSION['resultMessage'])){
 			$resultMessage = $_SESSION['resultMessage']; 
 			unset($_SESSION['resultMessage']);
