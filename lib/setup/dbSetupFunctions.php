@@ -69,7 +69,7 @@
 		//assumes all changes happen at once - so if 1 is valid they all must be
 		if($executePart1)
 		{
-			if(DoesFieldExist("dcim_room","xpos") && DoesFieldExist("dcim_room","layer"))//this may warn/error if xpos has already been added but wont break anything the rest will still function
+			if(DoesFieldExist("dcim_device","altname") && DoesFieldExist("dcim_user","siteid"))//this may warn/error if field has already been added but wont break anything the rest will still function
 				return -1;//already up to date
 			else
 				return 1;// good to update
@@ -94,92 +94,226 @@
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
 	function RunDBUpdate_Update($executePart1, $executePart2)
 	{
-		//updates in sync with v1.1.6
+		//updates in sync with v1.3 - DB v3
 		//paramaters should be mutually exclusive, so only 1 is true at any time
 		//$executePart1 = true;//safe db additions
 		//$executePart2 = false; //unsafe db removals that will only work after code has been updated
 		
-		//Part 1 cmds should be run as phase one as an opertunity to update code acordingly
+		//Part 1 cmds should be run as phase one as an opportunity to update code acordingly
 		//after code is updated Part 2 can be run to finalize the data removing old rows and such
 		
 		global $resultMessage;
 		global $debugMessage;
 		
 		$debugMessage[]= "RunDBUpdate_Update1()-Start";
-
+		
 		// Part 1 unsafe changes ///////////////////////////////////
 		if($executePart1)
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 1 - safe prep";
+			$reportsucsess = false;
 			
-			/*
-			update user file
-			- update password hard field to 60 chars
-			- Add siteid field
-			update device
-			- add altname
-			- add order field - reversed for racks vs cabinets
+			//create config table
+			$cmdm = "CREATE TABLE  `dcim_config` (
+					`configid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`appname` VARCHAR( 200 ) NOT NULL DEFAULT  'DCIM Demo',
+					`pagetitle` VARCHAR( 200 ) NOT NULL DEFAULT  'DCIM',
+					`versionnote` VARCHAR( 200 ) NOT NULL DEFAULT  'note',
+					`cookiedurration` INT( 3 ) NOT NULL DEFAULT  '36',
+					`cookiedurrationipad` INT( 3 ) NOT NULL DEFAULT  '2',
+					`badgesEnabled` VARCHAR( 1 ) NOT NULL DEFAULT  'T',
+					`subnetsEnabled` VARCHAR( 1 ) NOT NULL DEFAULT  'T',
+					`qaenabled` VARCHAR( 1 ) NOT NULL DEFAULT  'T',
+					`demoenvironment` VARCHAR( 1 ) NOT NULL DEFAULT  'F',
+					`dbversion` VARCHAR( 10 ) NOT NULL DEFAULT  '1'
+					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
+			ExecuteThis("UP3_M-1",$cmdm,$reportsucsess);
 			
-			rename dcim_power to dcim_powercircuit
-			rename dcim_powerloc to dcim_powercircuitloc
-			Add dcim_powerups
-			 - upsid, name, volts, amps, note
-			Add dcim_powerpanel
-			 - panelid, name, volts, amps, xpos, ypos, width, depth, orientation, note, upsid, roomid
-			 
-			 */
+			//insert config data
+			$cmdm = "INSERT INTO  `dcim_config` (
+					`configid` ,
+					`appname` ,
+					`pagetitle` ,
+					`versionnote` ,
+					`cookiedurration` ,
+					`cookiedurrationipad` ,
+					`badgesEnabled` ,
+					`subnetsEnabled` ,
+					`qaenabled` ,
+					`demoenvironment` ,
+					`dbversion`)
+					VALUES (NULL ,  'DCIM Demo',  'DCIM',  'note',  '36',  '2',  'T',  'T',  'T',  'F',  '3')";
+			ExecuteThis("UP3_M-2",$cmdm,$reportsucsess);
 			
-			/*
-			//add new files to room, site and location tables for site layout values
-			$cmdm = "ALTER TABLE  `dcim_room`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `custaccess` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth`";
-			$cmdl = "ALTER TABLE  `dcimlog_room`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `custaccess` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth`";
-			ExecuteThis("UP1_1M",$cmdm);
-			ExecuteThis("UP1_1L",$cmdl);
+			//update dcim_user file
+			//- update password hash field to 60 chars
+			//- Add siteid field
+			$cmdm = "ALTER TABLE    `dcim_user` ADD  `siteid` INT( 8 ) NOT NULL AFTER  `userid`,
+					CHANGE  `pass`  `pass` VARCHAR( 60 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+					ADD INDEX  `siteid` (  `siteid` )";
+			ExecuteThis("UP3_M-3",$cmdm,$reportsucsess);
 			
-			$cmdm = "ALTER TABLE  `dcim_site`
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ;";
-			$cmdl = "ALTER TABLE  `dcimlog_site`
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `fullname` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ;";
-			ExecuteThis("UP1_2M",$cmdm);
-			ExecuteThis("UP1_2L",$cmdl);
+			//update dcim_device file
+			//- Add altname field
+			$cmdm = "ALTER TABLE  `dcim_device` ADD  `altname` VARCHAR( 64 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `name`";
+			$cmdl = "ALTER TABLE  `dcimlog_device` ADD  `altname` VARCHAR( 64 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `name`";
+			ExecuteThis("UP3_M-4",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-4",$cmdl,$reportsucsess);
 			
-			$cmdm = "ALTER TABLE  `dcim_location`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `name` ,
-					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `visible`";
-			$cmdl = "ALTER TABLE  `dcimlog_location`
-					ADD  `xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `status` ,
-					ADD  `ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `xpos` ,
-					ADD  `width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `ypos` ,
-					ADD  `depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0' AFTER  `width` ,
-					ADD  `orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N' AFTER  `depth` ,
-					ADD  `altname` VARCHAR( 50 ) NOT NULL DEFAULT  '' AFTER  `name` ,
-					ADD  `note` TEXT NOT NULL DEFAULT '' AFTER  `visible`";
-			ExecuteThis("UP1_3M",$cmdm);
-			ExecuteThis("UP1_3L",$cmdl);
+			//update location
+			//- add keyno field (20c)
+			//- add allocation field (1c) - empty, internal, managed, colo
+			//- add order field (1c) (t/f) - reversed for racks vs cabinets
+			$cmdm = "ALTER TABLE  `dcim_location`    ADD  `keyno` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `orientation` ,
+					ADD  `allocation` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'E' AFTER  `keyno` ,
+					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'S' AFTER  `allocation`";
+			$cmdl = "ALTER TABLE  `dcimlog_location` ADD  `keyno` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `orientation` ,
+					ADD  `allocation` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'E' AFTER  `keyno` ,
+					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'S' AFTER  `allocation`";
+			ExecuteThis("UP3_M-5",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-5",$cmdl,$reportsucsess);
 			
-			//added later so its seperate
-			$cmdm = "ALTER TABLE `dcim_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
-			$cmdl = "ALTER TABLE `dcimlog_room` ADD `layer` TINYINT( 1 ) NOT NULL DEFAULT '0' AFTER `orientation`";
-			ExecuteThis("UP1_4M",$cmdm);
-			ExecuteThis("UP1_4L",$cmdl);
-			*/
+			////start power changes
+			
+			//Add dcim_powerpanel
+			// - panelid, upsid, name, amps, circuits, roomid, xpos, ypos, width, depth, orientation, note
+			$cmdm = "CREATE TABLE  `dcim_powerpanel` (
+						`powerpanelid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+						`powerupsid` INT( 8 ) NOT NULL ,
+						`name` VARCHAR( 50 ) NOT NULL ,
+						`amps` INT( 4 ) NOT NULL ,
+						`circuits` INT( 3 ) NOT NULL DEFAULT  '0',
+						`roomid` INT( 8 ) NOT NULL ,
+						`xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N',
+						`note` TEXT NOT NULL ,
+						`edituser` INT( 8 ) NOT NULL ,
+						`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+						`qadate` DATETIME NOT NULL ,
+						INDEX (  `powerupsid` ),
+						INDEX (  `roomid` ),
+						INDEX (  `qauser` )
+						) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
+			$cmdl = "CREATE TABLE  `dcimlog_powerpanel` (
+						`powerpanellogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+						`logtype` VARCHAR( 1 ) NOT NULL DEFAULT 'I',
+						`powerpanelid` INT( 8 ) NOT NULL ,
+						`powerupsid` INT( 8 ) NOT NULL ,
+						`name` VARCHAR( 50 ) NOT NULL ,
+						`amps` INT( 4 ) NOT NULL ,
+						`circuits` INT( 3 ) NOT NULL DEFAULT  '0',
+						`roomid` INT( 8 ) NOT NULL ,
+						`xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`depth` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
+						`orientation` VARCHAR( 1 ) NOT NULL DEFAULT  'N',
+						`note` TEXT NOT NULL ,
+						`edituser` INT( 8 ) NOT NULL ,
+						`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+						`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+						`qadate` DATETIME NOT NULL ,
+						INDEX (  `powerpanelid` ),
+						INDEX (  `powerupsid` ),
+						INDEX (  `roomid` ),
+						INDEX (  `qauser` )
+						) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
+			ExecuteThis("UP3_M-6",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-6",$cmdl,$reportsucsess);
+			
+			//Add dcim_powerups
+			//- upsid, name, volts, amps, note
+			$cmdm = "CREATE TABLE  `dcim_powerups` (
+					`powerupsid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`name` VARCHAR( 32 ) NOT NULL ,
+					`volts` INT( 5 ) NOT NULL ,
+					`amps` INT( 5 ) NOT NULL ,
+					`note` TEXT NOT NULL ,
+					`edituse` INT( 8 ) NOT NULL ,
+					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+					`qadate` DATETIME NOT NULL
+					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
+			$cmdl = "CREATE TABLE  `dcimlog_powerups` (
+					`powerupsid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`name` VARCHAR( 32 ) NOT NULL ,
+					`volts` INT( 5 ) NOT NULL ,
+					`amps` INT( 5 ) NOT NULL ,
+					`note` TEXT NOT NULL ,
+					`edituse` INT( 8 ) NOT NULL ,
+					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
+					`qadate` DATETIME NOT NULL
+					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
+			ExecuteThis("UP3_M-7",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-7",$cmdl,$reportsucsess);
+			
+			//rename dcim_power to dcim_powercircuit
+			$cmdm = "RENAME TABLE  `dcim_power`    TO  `dcim_powercircuit`";
+			$cmdl = "RENAME TABLE  `dcimlog_power` TO  `dcimlog_powercircuit`";
+			ExecuteThis("UP3_M-8",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-8",$cmdl,$reportsucsess);
+			
+			//rename dcim_powerloc to dcim_powercircuitloc
+			$cmdm = "RENAME TABLE  `dcim_powerloc`    TO  `dcim_powercircuitloc`";
+			$cmdl = "RENAME TABLE  `dcimlog_powerloc` TO  `dcimlog_powercircuitloc`";
+			ExecuteThis("UP3_M-9",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-9",$cmdl,$reportsucsess);
+			
+			//rename powerid to powercircuitid in dcim_powercircuit
+			//removed 'unsigned' - for some reason this was the only field that was tagged as such
+			//add field powerpanelid
+			$cmdm = "ALTER TABLE  `dcim_powercircuit`    CHANGE  `powerid`  `powercircuitid` SMALLINT( 8 ) NOT NULL AUTO_INCREMENT,
+					ADD  `powerpanelid` INT( 8 ) NOT NULL AFTER  `powercircuitid`,
+					CHANGE  `circuit`  `circuit` TINYINT( 3 ) NOT NULL";
+			$cmdl = "ALTER TABLE  `dcimlog_powercircuit` CHANGE  `powerid`  `powercircuitid` SMALLINT( 8 ) NOT NULL,
+					ADD  `powerpanelid` INT( 8 ) NOT NULL AFTER  `powercircuitid`,
+					CHANGE  `circuit`  `circuit` TINYINT( 3 ) NOT NULL";
+			ExecuteThis("UP3_M-10",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-10",$cmdl,$reportsucsess);
+			
+			//add indexes for new fields
+			$cmdm = "ALTER TABLE  `dcim_powercircuit`    ADD INDEX (  `powerpanelid` )";
+			$cmdl = "ALTER TABLE  `dcimlog_powercircuit` ADD INDEX (  `powerpanelid` )";
+			ExecuteThis("UP3_M-11",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-11",$cmdl,$reportsucsess);
+			
+			//rename powerid to powercircuitid in dcim_powercircuitloc - just renaming the fields so we dont need to recreate the indexes
+			$cmdm = "ALTER TABLE  `dcim_powercircuitloc`    CHANGE  `powerlocid`  `powercircuitlocid` INT( 8 ) NOT NULL AUTO_INCREMENT ,
+					CHANGE  `powerid`  `powercircuitid` INT( 8 ) NOT NULL DEFAULT  '0'";
+			$cmdl = "ALTER TABLE  `dcimlog_powercircuitloc` CHANGE  `powerlocid`  `powercircuitlocid` INT( 8 ) NOT NULL ,
+					CHANGE  `powerid`  `powercircuitid` INT( 8 ) NOT NULL DEFAULT  '0'";
+			ExecuteThis("UP3_M-12",$cmdm,$reportsucsess);
+			ExecuteThis("UP3_L-12",$cmdl,$reportsucsess);
+			
+			
+			$pullPanelRecsFromOldPowerCircuits = true;
+			if($pullPanelRecsFromOldPowerCircuits)
+			{
+				//assumes valid legacy panel data
+				//create parent records for panels
+				
+				$cmd = "INSERT INTO dcim_powerpanel (name,powerupsid,amps,circuits,roomid,note)
+					SELECT DISTINCT panel, 0,125,42,-1,'Automated'
+					FROM dcim_powercircuit";
+				ExecuteThis("UP3_panelcreation-1",$cmd,$reportsucsess);
+				
+				$cmd = "UPDATE dcim_powercircuit AS pc, dcim_powerpanel AS pp 
+					SET pc.powerpanelid=pp.powerpanelid
+					WHERE pc.panel=pp.name";
+				ExecuteThis("UP3_panelcreation-2",$cmd,$reportsucsess);
+				
+				$cmd = "ALTER TABLE  `dcim_powercircuit` DROP  `panel`";
+				ExecuteThis("UP3_panelcreation-3",$cmd,$reportsucsess);
+				
+				//clean up  powerpanel logs
+				ExecuteThis("UP3_panelcreation-4","INSERT INTO dcimlog_powerpanel			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1",$reportsucsess);
+			}
+			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
 		
@@ -256,11 +390,11 @@
 
 		foreach($mainTables as $table)
 		{
-			ExecuteThis("D0","Drop TABLE $table");
+			ExecuteThis("D0","Drop TABLE IF EXISTS $table");
 		}
 		foreach($logTables as $table)
 		{
-			ExecuteThis("D0","Drop TABLE $table");
+			ExecuteThis("D0","Drop TABLE IF EXISTS $table");
 		} 
 		
 		$resultMessage[]= "DropAllTables()-Sucsessfully Dropped all tables";

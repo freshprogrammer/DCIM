@@ -241,7 +241,7 @@ function ConfirmIntent()
 				
 				$dbStatus = TestDBReadiness($dbScriptID);
 				if($dbStatus==1)
-					RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
+					RunDBUpdate_Update($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
 				else if($dbStatus==0)
 					$errorMessage[]="Database failed readiness check. Update Aborted";
 				else if($dbStatus==-1)
@@ -259,9 +259,9 @@ function ConfirmIntent()
 				if($dbStatus==1)
 				{
 					echo "<BR>Processing Update Part 1...";
-					RunDBUpdate_Update1(true,false);
+					RunDBUpdate_Update(true,false);
 					echo "<BR>Processing Update Part 2...";
-					RunDBUpdate_Update1(false,true);
+					RunDBUpdate_Update(false,true);
 				}
 				else if($dbStatus==0)
 					$errorMessage[]="Database failed readiness check. Update Aborted";
