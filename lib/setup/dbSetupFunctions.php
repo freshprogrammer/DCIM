@@ -233,7 +233,7 @@
 					`volts` INT( 5 ) NOT NULL ,
 					`amps` INT( 5 ) NOT NULL ,
 					`note` TEXT NOT NULL ,
-					`edituse` INT( 8 ) NOT NULL ,
+					`edituser` INT( 8 ) NOT NULL ,
 					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
 					`qadate` DATETIME NOT NULL
@@ -244,7 +244,7 @@
 					`volts` INT( 5 ) NOT NULL ,
 					`amps` INT( 5 ) NOT NULL ,
 					`note` TEXT NOT NULL ,
-					`edituse` INT( 8 ) NOT NULL ,
+					`edituser` INT( 8 ) NOT NULL ,
 					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
 					`qadate` DATETIME NOT NULL
