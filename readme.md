@@ -7,7 +7,7 @@ Web interface for tracking and maintaining data on customers, devices, networkin
 ![Switch view](/documentation/screenshots/SwitchView.jpg "Switch view")
 
 
-## Database Details
+## Database Details DBv3
 [DB Documentation](/documentation/database_structure.md)
 ![DCIM DC Visual Diagram](/documentation/dcim_db_visual.jpg)
 

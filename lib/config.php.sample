@@ -1,5 +1,7 @@
 <?php 
 	//--configuration data
+	$dbVersion = 3;//this must match the state and value in the DB (dcim_config.dbversion)
+	
 	//Name of this web site - show at top of page near logo
 	$appName = "DCIM Name";
 	//Prefix appended to the title of each page
@@ -16,7 +18,7 @@
 	$config_badgesEnabled = true;
 	//if false hides subnets & vlans from customer page and device page (including switch overlay) and audits page
 	$config_subnetsEnabled = true;
-
+	
 	//DB connect
 	$db_host = "localhost";
 	$database = "dcimdb";
