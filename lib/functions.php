@@ -5147,125 +5147,128 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	function ListPowerCircuits($locationPage, $key)
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$formAction = "./?host=$key";
 		
 		if($locationPage)
 		{
-			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate
 			FROM dcim_location AS l
-				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
-				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
+				INNER JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
+				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE l.locationid=?
-			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			GROUP BY pp.powerpanelid, pc.circuit
+			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
 		else
-		{
-			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate, p.qauser, p.qadate
+		{//customer page - based on hno in device table
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
-				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
+				INNER JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
+				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE d.hno=? AND d.status='A'
-			GROUP BY p.panel, p.circuit
-			ORDER BY p.status, r.name, l.name, ABS(p.panel),panel, ABS(p.circuit)";
+			GROUP BY pp.powerpanelid, pc.circuit
+			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
 		
 		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
 		//TODO This should also check the device status is active and or show/filter that here	
 		
-		if (!($stmt = $mysqli->prepare($query))) 
+
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
 		{
-			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		
-		$stmt->bind_Param('s', $key);
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-	
-		echo "<span class='tableTitle'>Power Circuits</span>\n";
-		//Add button
-		if($locationPage && CustomFunctions::UserHasCircuitPermission())
-		{
-			?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
-			<?php 
-		}
-		echo "<BR>";
-			
-		if($count>0)
-		{
-			echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch())
-			{
-				$fullLocationName = FormatLocation($site, $room, $location);
-			
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				if($amps>0)
-				{
-					$percentLoad = round(100*$load/$amps,2);
-					
-					if($percentLoad>80)
-						$percentLoad = " (<font color=red>$percentLoad%</font>)";
-					else if($load==0)
-						$percentLoad = "";
-					else
-						$percentLoad = " ($percentLoad%)";
-				}
-				else
-					$percentLoad = "";
-				
-				$visibleVolts = FormatVolts($volts);
-				$visibleCircuit = $circuit;
-				if($volts==208)
-					$visibleCircuit = Format208CircuitNumber($circuit);
-				else if($volts==308)
-					$visibleCircuit = Format3Phase208CircuitNumber($circuit);
-					
-				echo "<tr class='$rowClass'>";
-				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-				echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
-				echo "<td class='data-table-cell'>$visibleVolts</td>";
-				echo "<td class='data-table-cell'>$amps</td>";
-				echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
-				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-				if(CustomFunctions::UserHasCircuitPermission())
-				{
-					//edit button
-					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
-					
-					$jsSafePanel = MakeJSSafeParam($panel);
-					$jsSafeCircuit = MakeJSSafeParam($circuit);
-					$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
-					?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
-					<?php 
-					echo "</td>\n";
-					
-					echo CreateQACell("dcim_power", $powerID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
-				}
-				echo "</tr>";
-			}
-			echo "</table>";
+			$errorMessage[]= "Prepare failed: ListPowerCircuits() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "SQL error locating power circuit records<BR>";
 		}
 		else
 		{
-			echo "No relevant power records found.<BR>\n";
+			$stmt->store_result();
+			$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerID, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
+			$count = $stmt->num_rows;
+			
+			echo "<span class='tableTitle'>Power Circuits</span>\n";
+			//Add button
+			if($locationPage && CustomFunctions::UserHasCircuitPermission())
+			{
+				?><button class='editButtons_hidden' onclick="EditCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
+				<?php 
+			}
+			echo "<BR>";
+				
+			if($count>0)
+			{
+				echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$fullLocationName = FormatLocation($site, $room, $location);
+				
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					if($amps>0)
+					{
+						$percentLoad = round(100*$load/$amps,2);
+						
+						if($percentLoad>80)
+							$percentLoad = " (<font color=red>$percentLoad%</font>)";
+						else if($load==0)
+							$percentLoad = "";
+						else
+							$percentLoad = " ($percentLoad%)";
+					}
+					else
+						$percentLoad = "";
+					
+					$visibleVolts = FormatVolts($volts);
+					$visibleCircuit = $circuit;
+					if($volts==208)
+						$visibleCircuit = Format208CircuitNumber($circuit);
+					else if($volts==308)
+						$visibleCircuit = Format3Phase208CircuitNumber($circuit);
+						
+					echo "<tr class='$rowClass'>";
+					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
+					echo "<td class='data-table-cell'>$visibleVolts</td>";
+					echo "<td class='data-table-cell'>$amps</td>";
+					echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
+					echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					if(CustomFunctions::UserHasCircuitPermission())
+					{
+						//edit button
+						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
+						
+						$jsSafePanel = MakeJSSafeParam($panel);
+						$jsSafeCircuit = MakeJSSafeParam($circuit);
+						$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
+						?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
+						<?php 
+						echo "</td>\n";
+						
+						echo CreateQACell("dcim_power", $powerID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+					}
+					echo "</tr>";
+				}
+				echo "</table>";
+			}
+			else
+			{
+				echo "No relevant power records found.<BR>\n";
+			}
 		}
 		
 		if(CustomFunctions::UserHasCircuitPermission())
@@ -6194,15 +6197,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 		
 		//lookup site room and circuit info for headers
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, p.panel
-			FROM dcim_power AS p
-				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
-				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, pp.name
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE p.panel=?
-			GROUP BY r.roomid, p.panel, p.circuit
-			ORDER BY p.circuit
+			WHERE pp.name=?
+			GROUP BY r.roomid, pp.powerpanelid, pc.circuit
+			ORDER BY pc.circuit
 			LIMIT 1";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -6231,17 +6235,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<div class='panel-body'>\n\n";
 			
 			//select power data
-			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, LEFT(c.name,25) AS cust, p.powerid, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, p.edituser, p.editdate
-				FROM dcim_power AS p
-					LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
-					LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+			$query = "SELECT s.siteid, s.name, r.roomid, r.name, l.locationid, l.name AS loc, LEFT(c.name,25) AS cust, pc.powercircuitid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate
+				FROM dcim_powercircuit AS pc
+					LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+					LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE p.panel=?
-				GROUP BY r.roomid, p.panel, p.circuit
-				ORDER BY p.circuit";
+				WHERE pp.name=?
+				GROUP BY r.roomid, pp.name, pc.circuit
+				ORDER BY pc.circuit";
 			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
@@ -6419,7 +6424,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//$input = str_replace(" ","",$input);
 			$input = "%".$input."%";
 			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
-			$filter = "p.panel LIKE ?";
+			$filter = "pp.name LIKE ?";
 		}
 		else
 		{
@@ -6429,27 +6434,28 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$filter = "-1=?";
 		}
 		
-		$query = "SELECT s.siteid, s.name,r.roomid, r.name, p.panel
-			FROM dcim_power AS p
-				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
-				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
+		$query = "SELECT s.siteid, s.name,r.roomid, r.name, pp.name, pp.powerpanelid
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE $filter
-			GROUP BY p.panel
-			ORDER BY s.name, p.panel";
+			GROUP BY pc.powerpanelid
+			ORDER BY s.name, pc.powerpanelid";
 		
 		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input) || !$stmt->execute())
 		{
-			$errorMessage[]= "Prepare failed: PowerAuditPanelList() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$errorMessage[]= "Prepare failed: ListPowerPanels() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			$result .= "SQL error locating power panels";
 		}
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$site,$roomID,$room, $panel);
+			$stmt->bind_result($siteID,$site,$roomID,$room, $panel, $panelid);
 			$count = $stmt->num_rows;
 			
 			if($count>0)
