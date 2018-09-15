@@ -247,8 +247,10 @@
 		else if($table=="dcim_portconnection")		$descrip='Port Connection';
 		else if($table=="dcim_location")			$descrip='Location';
 		else if($table=="dcim_portvlan")			$descrip='Port VLAN';
-		else if($table=="dcim_power")				$descrip='Power Circuit';
-		else if($table=="dcim_powerloc")			$descrip='Power Location';
+		else if($table=="dcim_powerpanel")			$descrip='Power Panel';
+		else if($table=="dcim_powerups")			$descrip='Power UPS';
+		else if($table=="dcim_powercircuit")		$descrip='Power Circuit';
+		else if($table=="dcim_powercircuitloc")		$descrip='Power Circuit Location';
 		else if($table=="dcim_room")				$descrip='Room';
 		else if($table=="dcim_site")				$descrip='Site';
 		else if($table=="dcim_user")				$descrip='User';
@@ -260,8 +262,10 @@
 		else if($table=="dcimlog_portconnection")	$descrip='Port Connection Log';
 		else if($table=="dcimlog_location")			$descrip='Location Log';
 		else if($table=="dcimlog_portvlan")			$descrip='Port VLAN Log';
-		else if($table=="dcimlog_power")			$descrip='Power Circuit Log';
-		else if($table=="dcimlog_powerloc")			$descrip='Power Location Log';
+		else if($table=="dcimlog_powerpanel")		$descrip='Power Panel Log';
+		else if($table=="dcimlog_powerups")			$descrip='Power UPS Log';
+		else if($table=="dcimlog_powercircuit")		$descrip='Power Circuit Log';
+		else if($table=="dcimlog_powercircuitloc")	$descrip='Power Circuit Location Log';
 		else if($table=="dcimlog_room")				$descrip='Room Log';
 		else if($table=="dcimlog_site")				$descrip='Site Log';
 		else if($table=="dcimlog_vlan")				$descrip='Subnet Log';
@@ -270,7 +274,7 @@
 	}
 	
 	function GetKeyField($table)
-	{
+	{//ignores config table that has no real key
 		if($table=="dcim_badge")					$keyFieldName='badgeid';
 		else if($table=="dcim_customer")			$keyFieldName='hno';
 		else if($table=="dcim_device")				$keyFieldName='deviceid';
@@ -278,12 +282,15 @@
 		else if($table=="dcim_portconnection")		$keyFieldName='portconnectionid';
 		else if($table=="dcim_location")			$keyFieldName='locationid';
 		else if($table=="dcim_portvlan")			$keyFieldName='portvlanid';
-		else if($table=="dcim_power")				$keyFieldName='powerid';
-		else if($table=="dcim_powerloc")			$keyFieldName='powerlocid';
+		else if($table=="dcim_powerpanel")			$keyFieldName='powerpanelid';
+		else if($table=="dcim_powerups")			$keyFieldName='powerupsid';
+		else if($table=="dcim_powercircuit")		$keyFieldName='powercircuitid';
+		else if($table=="dcim_powercircuitloc")		$keyFieldName='powercircuitlocid';
 		else if($table=="dcim_room")				$keyFieldName='roomid';
 		else if($table=="dcim_site")				$keyFieldName='siteid';
 		else if($table=="dcim_user")				$keyFieldName='userid';
 		else if($table=="dcim_vlan")				$keyFieldName='vlanid';
+		//logs
 		else if($table=="dcimlog_badge")			$keyFieldName='badgelogid';
 		else if($table=="dcimlog_customer")			$keyFieldName='customerlogid';
 		else if($table=="dcimlog_device")			$keyFieldName='devicelogid';
@@ -291,8 +298,10 @@
 		else if($table=="dcimlog_portconnection")	$keyFieldName='portconnectionlogid';
 		else if($table=="dcimlog_location")			$keyFieldName='locationlogid';
 		else if($table=="dcimlog_portvlan")			$keyFieldName='portvlanlogid';
-		else if($table=="dcimlog_power")			$keyFieldName='powerlogid';
-		else if($table=="dcimlog_powerloc")			$keyFieldName='powerloclogid';
+		else if($table=="dcimlog_powerpanel")		$keyFieldName='powerpanellogid';
+		else if($table=="dcimlog_powerups")			$keyFieldName='powerupslogid';
+		else if($table=="dcimlog_powercircuit")		$keyFieldName='powercircuitlogid';
+		else if($table=="dcimlog_powercircuitloc")	$keyFieldName='powercircuitloclogid';
 		else if($table=="dcimlog_room")				$keyFieldName='roomlogid';
 		else if($table=="dcimlog_site")				$keyFieldName='sitelogid';
 		else if($table=="dcimlog_vlan")				$keyFieldName='vlanlogid';
@@ -321,8 +330,10 @@
 		else if($table=="dcim_portconnection")	$logTable='dcimlog_portconnection';
 		else if($table=="dcim_location")		$logTable='dcimlog_location';
 		else if($table=="dcim_portvlan")		$logTable='dcimlog_portvlan';
-		else if($table=="dcim_power")			$logTable='dcimlog_power';
-		else if($table=="dcim_powerloc")		$logTable='dcimlog_powerloc';
+		else if($table=="dcim_powerpanel")		$logTable='dcimlog_powerpanel';
+		else if($table=="dcim_powerups")		$logTable='dcimlog_powerups';
+		else if($table=="dcim_powercircuit")	$logTable='dcimlog_powercircuit';
+		else if($table=="dcim_powercircuitloc")	$logTable='dcimlog_powercircuitloc';
 		else if($table=="dcim_room")			$logTable='dcimlog_room';
 		else if($table=="dcim_site")			$logTable='dcimlog_site';
 		else if($table=="dcim_vlan")			$logTable='dcimlog_vlan';

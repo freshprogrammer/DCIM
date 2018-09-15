@@ -79,16 +79,17 @@
 		$result = array();
 		
 		//this is grouped by circuit
-		$query = "SELECT s.name AS site,r.name AS room,l.name AS location,p.panel,p.circuit,c.name AS cust, c.hno, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
+		$query = "SELECT s.name AS site,r.name AS room,l.name AS location,pp.name,pc.circuit,c.name AS cust, c.hno, pc.load, (pc.load/pc.amps*100) AS percent,pc.amps, pc.volts, pc.status, pc.editdate
 			FROM dcim_location AS l
-				INNER JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
-				INNER JOIN dcim_power AS p ON pl.powerid=p.powerid
+				INNER JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
+				INNER JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
+				INNER JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				INNER JOIN dcim_room AS r ON r.roomid=l.roomid 
 				INNER JOIN dcim_site AS s ON s.siteid=r.siteid AND s.siteid=$siteID
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			GROUP BY l.locationid,p.powerid
-			ORDER BY s.name, r.name,l.name,p.panel,p.circuit";
+			GROUP BY l.locationid,pc.powercircuitid
+			ORDER BY s.name, r.name,l.name,pp.name,pc.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -158,14 +159,17 @@
 		
 		$result = array();
 		
+		//TODO bugged - there is no gurantee that the panel hasn't been renamed or something since then - it is link by id but the name could be confusing to any end user that wont know better
 		//this is grouped by circuit
+		//specificly not looking in the panel logs - want to use the most recent panel name
 		$query = "SELECT cur.* FROM (
-				SELECT p.powerid, p.panel,p.circuit, p.load, (p.load/p.amps*100) AS percent,p.amps, p.volts, p.status, p.editdate
-					FROM dcimlog_power AS p
-						WHERE DATE(p.editdate)<='$date'
-					ORDER BY p.panel,p.circuit,p.editdate DESC
+				SELECT pc.powercircuitid, pp.name AS panel,pc.circuit, pc.load, (pc.load/pc.amps*100) AS percent,pc.amps, pc.volts, pc.status, pc.editdate
+					FROM dcimlog_powercircuit AS pc
+						LEFT JOIN dcim_powerpanel AS pp ON pc.powerpanelid=pp.powerpanelid
+					WHERE DATE(pc.editdate)<='$date'
+					ORDER BY pp.name,pc.circuit,pc.editdate DESC
 				) AS cur
-			GROUP BY cur.powerid
+			GROUP BY cur.powercircuitid
 			ORDER BY panel,circuit,editdate DESC";
 		
 		if (!($stmt = $mysqli->prepare($query)))
