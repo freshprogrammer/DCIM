@@ -307,8 +307,11 @@
 				//create parent records for panels
 				
 				$cmd = "INSERT INTO dcim_powerpanel (name,powerupsid,amps,circuits,roomid,note)
-					SELECT DISTINCT panel, 0,125,42,-1,'Automated'
-					FROM dcim_powercircuit";
+					SELECT DISTINCT pc.panel, 0,125,42,r.roomid,'Automated'
+						FROM dcim_powercircuit AS pc
+						LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+						LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
+						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid";
 				ExecuteThis("UP3_panelcreation-1",$cmd,$reportsucsess);
 				
 				$cmdm = "UPDATE dcim_powercircuit AS pc, dcim_powerpanel AS pp 
@@ -325,10 +328,39 @@
 				$cmdl = "ALTER TABLE `dcimlog_powercircuit` DROP `panel`";
 				ExecuteThis("UP3_panelcreation-m-3",$cmdm,$reportsucsess);
 				ExecuteThis("UP3_panelcreation-l-3",$cmdl,$reportsucsess);
-				
-				//clean up  powerpanel logs
-				ExecuteThis("UP3_panelcreation-4","INSERT INTO dcimlog_powerpanel			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1",$reportsucsess);
 			}
+			
+			$createDemoPowerUPSs = true;
+			if($createDemoPowerUPSs)
+			{
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,name,volts,amps,note) VALUES (1,'UPS-1',240,500,'Demo UPS-1')";
+				ExecuteThis("UP3_upscreation-1",$cmd,$reportsucsess);
+				
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,name,volts,amps,note) VALUES (2,'UPS-2',240,500,'Demo UPS-2')";
+				ExecuteThis("UP3_upscreation-2",$cmd,$reportsucsess);
+				
+				ExecuteThis("UP3_upscreation-3","INSERT INTO dcimlog_powerups			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerups		AS cur WHERE 1=1",$reportsucsess);
+				
+				//set all panels in these rooms to UPS-2
+				$cmd = "UPDATE dcim_powerups AS pu, dcim_room AS r, dcim_powerpanel AS pp
+					SET pp.powerupsid=2
+					WHERE FIND_IN_SET(r.roomid,'4,5,7,10,12,13') 
+						AND r.roomid=pp.roomid";
+				ExecuteThis("UP3_upscreation-4",$cmd,$reportsucsess);
+				
+				//set all other panels to UPS-1
+				$cmd = "UPDATE dcim_powerpanel AS pp
+					SET pp.powerupsid=1
+					WHERE pp.powerupsid!=2";
+				ExecuteThis("UP3_upscreation-5",$cmd,$reportsucsess);
+			}
+			
+			if($pullPanelRecsFromOldPowerCircuits || $createDemoPowerUPSs)
+			{
+				//clean up  powerpanel logs
+				ExecuteThis("UP3_panel-logs","INSERT INTO dcimlog_powerpanel			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1",$reportsucsess);
+			}
+			
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
@@ -369,8 +401,10 @@
 		ExecuteThis("L2","INSERT INTO dcimlog_location			SELECT NULL,'I' AS logtype,cur.* FROM dcim_location			AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_portconnection	SELECT NULL,'I' AS logtype,cur.* FROM dcim_portconnection	AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_portvlan			SELECT NULL,'I' AS logtype,cur.* FROM dcim_portvlan			AS cur WHERE 1=1");
-		ExecuteThis("L2","INSERT INTO dcimlog_power				SELECT NULL,'I' AS logtype,cur.* FROM dcim_power			AS cur WHERE 1=1");
-		ExecuteThis("L2","INSERT INTO dcimlog_powerloc			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerloc			AS cur WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_powercircuit		SELECT NULL,'I' AS logtype,cur.* FROM dcim_powercircuit		AS cur WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_powercircuitloc	SELECT NULL,'I' AS logtype,cur.* FROM dcim_powercircuitloc	AS cur WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_powerpanel		SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1");
+		ExecuteThis("L2","INSERT INTO dcimlog_powerups			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerups			AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_room				SELECT NULL,'I' AS logtype,cur.* FROM dcim_room				AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_site				SELECT NULL,'I' AS logtype,cur.* FROM dcim_site				AS cur WHERE 1=1");
 		ExecuteThis("L2","INSERT INTO dcimlog_vlan				SELECT NULL,'I' AS logtype,cur.* FROM dcim_vlan				AS cur WHERE 1=1");
@@ -388,8 +422,10 @@
 		ExecuteThis("Q1","UPDATE dcim_location			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_portconnection	SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_portvlan			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
-		ExecuteThis("Q1","UPDATE dcim_power				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
-		ExecuteThis("Q1","UPDATE dcim_powerloc			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_powercircuit		SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_powercircuitloc	SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_powerpanel		SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
+		ExecuteThis("Q1","UPDATE dcim_powerups			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_room				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_site				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_vlan				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
