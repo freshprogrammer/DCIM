@@ -9,12 +9,15 @@
 	$mainTables[]="dcim_location";
 	$mainTables[]="dcim_portconnection";
 	$mainTables[]="dcim_portvlan";
-	$mainTables[]="dcim_power";
-	$mainTables[]="dcim_powerloc";
+	$mainTables[]="dcim_powercircuit";
+	$mainTables[]="dcim_powercircuitloc";
+	$mainTables[]="dcim_powerpanel";
+	$mainTables[]="dcim_powerups";
 	$mainTables[]="dcim_room";
 	$mainTables[]="dcim_site";
 	$mainTables[]="dcim_vlan";
 	$mainTables[]="dcim_user";
+	$mainTables[]="dcim_config";
 
 	$logTables = array();
 	$logTables[]="dcimlog_badge";
@@ -24,8 +27,10 @@
 	$logTables[]="dcimlog_location";
 	$logTables[]="dcimlog_portconnection";
 	$logTables[]="dcimlog_portvlan";
-	$logTables[]="dcimlog_power";
-	$logTables[]="dcimlog_powerloc";
+	$logTables[]="dcimlog_powercircuit";
+	$logTables[]="dcimlog_powercircuitloc";
+	$logTables[]="dcimlog_powerpanel";
+	$logTables[]="dcimlog_powerups";
 	$logTables[]="dcimlog_room";
 	$logTables[]="dcimlog_site";
 	$logTables[]="dcimlog_vlan";
@@ -239,7 +244,9 @@
 					`qadate` DATETIME NOT NULL
 					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
 			$cmdl = "CREATE TABLE  `dcimlog_powerups` (
-					`powerupsid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`powerupslogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`logtype` VARCHAR( 1 ) NOT NULL DEFAULT 'I',
+					`powerupsid` INT( 8 ) NOT NULL ,
 					`name` VARCHAR( 32 ) NOT NULL ,
 					`volts` INT( 5 ) NOT NULL ,
 					`amps` INT( 5 ) NOT NULL ,
@@ -270,7 +277,8 @@
 			$cmdm = "ALTER TABLE  `dcim_powercircuit`    CHANGE  `powerid`  `powercircuitid` SMALLINT( 8 ) NOT NULL AUTO_INCREMENT,
 					ADD  `powerpanelid` INT( 8 ) NOT NULL AFTER  `powercircuitid`,
 					CHANGE  `circuit`  `circuit` TINYINT( 3 ) NOT NULL";
-			$cmdl = "ALTER TABLE  `dcimlog_powercircuit` CHANGE  `powerid`  `powercircuitid` SMALLINT( 8 ) NOT NULL,
+			$cmdl = "ALTER TABLE  `dcimlog_powercircuit` CHANGE  `powerlogid`  `powercircuitlogid` SMALLINT( 8 ) NOT NULL AUTO_INCREMENT,
+					CHANGE  `powerid`  `powercircuitid` SMALLINT( 8 ) NOT NULL,
 					ADD  `powerpanelid` INT( 8 ) NOT NULL AFTER  `powercircuitid`,
 					CHANGE  `circuit`  `circuit` TINYINT( 3 ) NOT NULL";
 			ExecuteThis("UP3_M-10",$cmdm,$reportsucsess);
@@ -285,7 +293,8 @@
 			//rename powerid to powercircuitid in dcim_powercircuitloc - just renaming the fields so we dont need to recreate the indexes
 			$cmdm = "ALTER TABLE  `dcim_powercircuitloc`    CHANGE  `powerlocid`  `powercircuitlocid` INT( 8 ) NOT NULL AUTO_INCREMENT ,
 					CHANGE  `powerid`  `powercircuitid` INT( 8 ) NOT NULL DEFAULT  '0'";
-			$cmdl = "ALTER TABLE  `dcimlog_powercircuitloc` CHANGE  `powerlocid`  `powercircuitlocid` INT( 8 ) NOT NULL ,
+			$cmdl = "ALTER TABLE  `dcimlog_powercircuitloc` CHANGE  `powerloclogid`  `powercircuitloclogid` INT( 8 ) NOT NULL AUTO_INCREMENT,
+					CHANGE  `powerlocid`  `powercircuitlocid` INT( 8 ) NOT NULL ,
 					CHANGE  `powerid`  `powercircuitid` INT( 8 ) NOT NULL DEFAULT  '0'";
 			ExecuteThis("UP3_M-12",$cmdm,$reportsucsess);
 			ExecuteThis("UP3_L-12",$cmdl,$reportsucsess);
@@ -302,13 +311,20 @@
 					FROM dcim_powercircuit";
 				ExecuteThis("UP3_panelcreation-1",$cmd,$reportsucsess);
 				
-				$cmd = "UPDATE dcim_powercircuit AS pc, dcim_powerpanel AS pp 
+				$cmdm = "UPDATE dcim_powercircuit AS pc, dcim_powerpanel AS pp 
 					SET pc.powerpanelid=pp.powerpanelid
 					WHERE pc.panel=pp.name";
-				ExecuteThis("UP3_panelcreation-2",$cmd,$reportsucsess);
+				//puposely referencing dcim_powerpanel and not dcimlog powerpanel - logs dont exist
+				$cmdl = "UPDATE dcimlog_powercircuit AS pc, dcim_powerpanel AS pp 
+					SET pc.powerpanelid=pp.powerpanelid
+					WHERE pc.panel=pp.name";
+				ExecuteThis("UP3_panelcreation-m-2",$cmdm,$reportsucsess);
+				ExecuteThis("UP3_panelcreation-l-2",$cmdl,$reportsucsess);
 				
-				$cmd = "ALTER TABLE  `dcim_powercircuit` DROP  `panel`";
-				ExecuteThis("UP3_panelcreation-3",$cmd,$reportsucsess);
+				$cmdm = "ALTER TABLE `dcim_powercircuit` DROP `panel`";
+				$cmdl = "ALTER TABLE `dcimlog_powercircuit` DROP `panel`";
+				ExecuteThis("UP3_panelcreation-m-3",$cmdm,$reportsucsess);
+				ExecuteThis("UP3_panelcreation-l-3",$cmdl,$reportsucsess);
 				
 				//clean up  powerpanel logs
 				ExecuteThis("UP3_panelcreation-4","INSERT INTO dcimlog_powerpanel			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1",$reportsucsess);
