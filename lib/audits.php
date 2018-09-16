@@ -81,8 +81,8 @@
 			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
-			$output = "";
-			$recCount = CountDBRecords($output);
+			$recCount = 0;
+			$output = CreateTableRowCountTable($recCount);
 			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
 
 			$output = "";

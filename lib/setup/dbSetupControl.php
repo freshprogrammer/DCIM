@@ -162,6 +162,7 @@ function ConfirmIntent()
 	//show db structure documentation on page for reffereance
 	echo "<BR>";
 	echo "Description of the live DB<BR>";
+	echo CreateTableRowCountTable();
 	echo DescribeDBInTables();
 	
 	//END PAGE - Begin local Functions - All actual processing functions are in the refferenced file
