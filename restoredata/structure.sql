@@ -2,12 +2,19 @@
 -- version 2.11.11.3
 -- http://www.phpmyadmin.net
 --
--- Generation Time: Apr 22, 2016 at 05:15 AM
--- Server version: 5.5.33
--- PHP Version: 5.3.4
+-- Host: 45.40.164.51
+-- Generation Time: Sep 16, 2018 at 04:22 AM
+-- Server version: 5.5.51
+-- PHP Version: 5.1.6
+--
+-- DCIM DBv3
+--
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
+--
+-- Database: `freshdcim`
+--
 
 -- --------------------------------------------------------
 
@@ -76,6 +83,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_device` (
   `hno` int(8) NOT NULL,
   `locationid` int(8) NOT NULL,
   `name` varchar(64) NOT NULL,
+  `altname` varchar(64) NOT NULL,
   `member` int(2) NOT NULL DEFAULT '0',
   `note` text NOT NULL,
   `unit` int(3) NOT NULL,
@@ -145,6 +153,9 @@ CREATE TABLE IF NOT EXISTS `dcimlog_location` (
   `width` decimal(6,2) NOT NULL DEFAULT '0.00',
   `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
   `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `keyno` varchar(20) NOT NULL,
+  `allocation` varchar(1) NOT NULL DEFAULT 'E',
+  `order` varchar(1) NOT NULL DEFAULT 'S',
   `visible` char(1) NOT NULL DEFAULT '',
   `note` text NOT NULL,
   `edituser` int(8) NOT NULL DEFAULT '0',
@@ -210,16 +221,16 @@ CREATE TABLE IF NOT EXISTS `dcimlog_portvlan` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `dcimlog_power`
+-- Table structure for table `dcimlog_powercircuit`
 --
 
-DROP TABLE IF EXISTS `dcimlog_power`;
-CREATE TABLE IF NOT EXISTS `dcimlog_power` (
-  `powerlogid` int(8) NOT NULL AUTO_INCREMENT,
+DROP TABLE IF EXISTS `dcimlog_powercircuit`;
+CREATE TABLE IF NOT EXISTS `dcimlog_powercircuit` (
+  `powercircuitlogid` smallint(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
-  `powerid` int(8) NOT NULL,
-  `panel` varchar(8) NOT NULL,
-  `circuit` tinyint(2) NOT NULL,
+  `powercircuitid` smallint(8) NOT NULL,
+  `powerpanelid` int(8) NOT NULL,
+  `circuit` tinyint(3) NOT NULL,
   `volts` smallint(3) NOT NULL DEFAULT '120',
   `amps` tinyint(3) NOT NULL DEFAULT '20',
   `status` varchar(1) NOT NULL,
@@ -228,33 +239,89 @@ CREATE TABLE IF NOT EXISTS `dcimlog_power` (
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerlogid`),
+  PRIMARY KEY (`powercircuitlogid`),
   KEY `qauser` (`qauser`),
-  KEY `powerid` (`powerid`)
+  KEY `powerid` (`powercircuitid`),
+  KEY `powerpanelid` (`powerpanelid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `dcimlog_powerloc`
+-- Table structure for table `dcimlog_powercircuitloc`
 --
 
-DROP TABLE IF EXISTS `dcimlog_powerloc`;
-CREATE TABLE IF NOT EXISTS `dcimlog_powerloc` (
-  `powerloclogid` int(8) NOT NULL AUTO_INCREMENT,
+DROP TABLE IF EXISTS `dcimlog_powercircuitloc`;
+CREATE TABLE IF NOT EXISTS `dcimlog_powercircuitloc` (
+  `powercircuitloclogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` char(1) NOT NULL DEFAULT 'I',
-  `powerlocid` int(8) NOT NULL,
-  `powerid` int(8) NOT NULL DEFAULT '0',
+  `powercircuitlocid` int(8) NOT NULL,
+  `powercircuitid` int(8) NOT NULL DEFAULT '0',
   `locationid` int(8) NOT NULL DEFAULT '0',
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerloclogid`),
+  PRIMARY KEY (`powercircuitloclogid`),
   KEY `locationid` (`locationid`),
-  KEY `powerid` (`powerid`),
+  KEY `powerid` (`powercircuitid`),
   KEY `qauser` (`qauser`),
-  KEY `powerlocid` (`powerlocid`)
+  KEY `powerlocid` (`powercircuitlocid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dcimlog_powerpanel`
+--
+
+DROP TABLE IF EXISTS `dcimlog_powerpanel`;
+CREATE TABLE IF NOT EXISTS `dcimlog_powerpanel` (
+  `powerpanellogid` int(8) NOT NULL AUTO_INCREMENT,
+  `logtype` varchar(1) NOT NULL DEFAULT 'I',
+  `powerpanelid` int(8) NOT NULL,
+  `powerupsid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `amps` int(4) NOT NULL,
+  `circuits` int(3) NOT NULL DEFAULT '0',
+  `roomid` int(8) NOT NULL,
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `note` text NOT NULL,
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`powerpanellogid`),
+  KEY `powerpanelid` (`powerpanelid`),
+  KEY `powerupsid` (`powerupsid`),
+  KEY `roomid` (`roomid`),
+  KEY `qauser` (`qauser`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dcimlog_powerups`
+--
+
+DROP TABLE IF EXISTS `dcimlog_powerups`;
+CREATE TABLE IF NOT EXISTS `dcimlog_powerups` (
+  `powerupslogid` int(8) NOT NULL AUTO_INCREMENT,
+  `logtype` varchar(1) NOT NULL DEFAULT 'I',
+  `powerupsid` int(8) NOT NULL,
+  `name` varchar(32) NOT NULL,
+  `volts` int(5) NOT NULL,
+  `amps` int(5) NOT NULL,
+  `note` text NOT NULL,
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`powerupslogid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -368,6 +435,28 @@ CREATE TABLE IF NOT EXISTS `dcim_badge` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `dcim_config`
+--
+
+DROP TABLE IF EXISTS `dcim_config`;
+CREATE TABLE IF NOT EXISTS `dcim_config` (
+  `configid` int(8) NOT NULL AUTO_INCREMENT,
+  `appname` varchar(200) NOT NULL DEFAULT 'DCIM Demo',
+  `pagetitle` varchar(200) NOT NULL DEFAULT 'DCIM',
+  `versionnote` varchar(200) NOT NULL DEFAULT 'note',
+  `cookiedurration` int(3) NOT NULL DEFAULT '36',
+  `cookiedurrationipad` int(3) NOT NULL DEFAULT '2',
+  `badgesEnabled` varchar(1) NOT NULL DEFAULT 'T',
+  `subnetsEnabled` varchar(1) NOT NULL DEFAULT 'T',
+  `qaenabled` varchar(1) NOT NULL DEFAULT 'T',
+  `demoenvironment` varchar(1) NOT NULL DEFAULT 'F',
+  `dbversion` varchar(10) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`configid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `dcim_customer`
 --
 
@@ -398,6 +487,7 @@ CREATE TABLE IF NOT EXISTS `dcim_device` (
   `hno` int(8) NOT NULL,
   `locationid` int(8) NOT NULL,
   `name` varchar(64) NOT NULL,
+  `altname` varchar(64) NOT NULL,
   `member` int(2) NOT NULL DEFAULT '0',
   `note` text NOT NULL,
   `unit` int(3) NOT NULL,
@@ -461,6 +551,9 @@ CREATE TABLE IF NOT EXISTS `dcim_location` (
   `width` decimal(6,2) NOT NULL DEFAULT '0.00',
   `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
   `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `keyno` varchar(20) NOT NULL,
+  `allocation` varchar(1) NOT NULL DEFAULT 'E',
+  `order` varchar(1) NOT NULL DEFAULT 'S',
   `visible` char(1) NOT NULL DEFAULT '',
   `note` text NOT NULL,
   `edituser` int(8) NOT NULL DEFAULT '0',
@@ -519,14 +612,14 @@ CREATE TABLE IF NOT EXISTS `dcim_portvlan` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `dcim_power`
+-- Table structure for table `dcim_powercircuit`
 --
 
-DROP TABLE IF EXISTS `dcim_power`;
-CREATE TABLE IF NOT EXISTS `dcim_power` (
-  `powerid` smallint(8) unsigned NOT NULL AUTO_INCREMENT,
-  `panel` varchar(8) NOT NULL,
-  `circuit` tinyint(2) NOT NULL,
+DROP TABLE IF EXISTS `dcim_powercircuit`;
+CREATE TABLE IF NOT EXISTS `dcim_powercircuit` (
+  `powercircuitid` smallint(8) NOT NULL AUTO_INCREMENT,
+  `powerpanelid` int(8) NOT NULL,
+  `circuit` tinyint(3) NOT NULL,
   `volts` smallint(3) NOT NULL DEFAULT '120',
   `amps` tinyint(3) NOT NULL DEFAULT '20',
   `status` varchar(1) NOT NULL,
@@ -535,29 +628,80 @@ CREATE TABLE IF NOT EXISTS `dcim_power` (
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerid`),
+  PRIMARY KEY (`powercircuitid`),
+  KEY `qauser` (`qauser`),
+  KEY `powerpanelid` (`powerpanelid`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dcim_powercircuitloc`
+--
+
+DROP TABLE IF EXISTS `dcim_powercircuitloc`;
+CREATE TABLE IF NOT EXISTS `dcim_powercircuitloc` (
+  `powercircuitlocid` int(8) NOT NULL AUTO_INCREMENT,
+  `powercircuitid` int(8) NOT NULL DEFAULT '0',
+  `locationid` int(8) NOT NULL DEFAULT '0',
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`powercircuitlocid`),
+  KEY `locationid` (`locationid`),
+  KEY `powerid` (`powercircuitid`),
   KEY `qauser` (`qauser`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `dcim_powerloc`
+-- Table structure for table `dcim_powerpanel`
 --
 
-DROP TABLE IF EXISTS `dcim_powerloc`;
-CREATE TABLE IF NOT EXISTS `dcim_powerloc` (
-  `powerlocid` int(8) NOT NULL AUTO_INCREMENT,
-  `powerid` int(8) NOT NULL DEFAULT '0',
-  `locationid` int(8) NOT NULL DEFAULT '0',
+DROP TABLE IF EXISTS `dcim_powerpanel`;
+CREATE TABLE IF NOT EXISTS `dcim_powerpanel` (
+  `powerpanelid` int(8) NOT NULL AUTO_INCREMENT,
+  `powerupsid` int(8) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `amps` int(4) NOT NULL,
+  `circuits` int(3) NOT NULL DEFAULT '0',
+  `roomid` int(8) NOT NULL,
+  `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `width` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `depth` decimal(6,2) NOT NULL DEFAULT '0.00',
+  `orientation` varchar(1) NOT NULL DEFAULT 'N',
+  `note` text NOT NULL,
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerlocid`),
-  KEY `locationid` (`locationid`),
-  KEY `powerid` (`powerid`),
+  PRIMARY KEY (`powerpanelid`),
+  KEY `powerupsid` (`powerupsid`),
+  KEY `roomid` (`roomid`),
   KEY `qauser` (`qauser`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `dcim_powerups`
+--
+
+DROP TABLE IF EXISTS `dcim_powerups`;
+CREATE TABLE IF NOT EXISTS `dcim_powerups` (
+  `powerupsid` int(8) NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  `volts` int(5) NOT NULL,
+  `amps` int(5) NOT NULL,
+  `note` text NOT NULL,
+  `edituser` int(8) NOT NULL,
+  `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `qauser` int(8) NOT NULL DEFAULT '-1',
+  `qadate` datetime NOT NULL,
+  PRIMARY KEY (`powerupsid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -606,7 +750,7 @@ CREATE TABLE IF NOT EXISTS `dcim_site` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`siteid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -617,9 +761,10 @@ CREATE TABLE IF NOT EXISTS `dcim_site` (
 DROP TABLE IF EXISTS `dcim_user`;
 CREATE TABLE IF NOT EXISTS `dcim_user` (
   `userid` int(8) NOT NULL AUTO_INCREMENT,
+  `siteid` int(8) NOT NULL,
   `username` varchar(64) NOT NULL,
   `name` varchar(64) NOT NULL,
-  `pass` varchar(32) NOT NULL,
+  `pass` varchar(60) NOT NULL,
   `email` varchar(128) NOT NULL,
   `initials` varchar(4) NOT NULL,
   `note` text NOT NULL,
@@ -629,7 +774,8 @@ CREATE TABLE IF NOT EXISTS `dcim_user` (
   `edituser` int(8) NOT NULL,
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`userid`),
-  KEY `username` (`username`)
+  KEY `username` (`username`),
+  KEY `siteid` (`siteid`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
