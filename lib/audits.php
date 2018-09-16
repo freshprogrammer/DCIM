@@ -113,12 +113,14 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load FROM dcim_power AS p 
-				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
-				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE p.status='D' AND p.load !=0
+			WHERE pc.status='D' AND pc.load !=0
 			ORDER BY 1,2,3";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -177,17 +179,18 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, p.edituser, p.editdate, p.qauser, p.qadate
-			FROM dcim_power AS p 
-				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
-				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, (pc.load/pc.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, pc.edituser, pc.editdate, pc.qauser, pc.qadate
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status ='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE (p.load/p.amps*100) > $threshold
-			GROUP BY p.powerid, c.hno
-			ORDER BY s.name, r.name, p.panel, p.circuit";
+			WHERE (pc.load/pc.amps*100) > $threshold
+			GROUP BY pc.powercircuitid, c.hno
+			ORDER BY s.name, r.name, pp.name, pc.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -951,11 +954,12 @@
 		$reportTitle = "Power records without any linking location record";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT p.powerid, p.panel, p.circuit
-			FROM dcim_power AS p
-				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
-			WHERE pl.powerid IS NULL
-			ORDER BY p.panel, p.circuit";
+		$query = "SELECT pc.powercircuitid, pp.name, pc.circuit
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+			WHERE pcl.powercircuitid IS NULL
+			ORDER BY pp.name, pc.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -1008,11 +1012,11 @@
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT pl.powerlocid, pl.powerid, pl.locationid, p.powerid, l.locationid
-			FROM dcim_powerloc AS pl
-				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
-				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-			WHERE l.locationid IS NULL OR p.powerid IS NULL
+		$query = "SELECT pcl.powercircuitlocid, pcl.powercircuitid, pcl.locationid, pc.powercircuitid, l.locationid
+			FROM dcim_powercircuitloc AS pcl
+				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
+				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
+			WHERE l.locationid IS NULL OR pc.powercircuitid IS NULL
 			ORDER BY 1";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -1127,9 +1131,9 @@
 		$reportTitle = "Active location with no power";
 		$reportNote = "Location with active device(s) but not linked to power";
 		
-		$query = "SELECT l.locationid, s.name, r.name, l.name, l.roomid, r.roomid, COUNT(d.locationid) AS devicecount, COUNT(pl.locationid) AS powercount
+		$query = "SELECT l.locationid, s.name, r.name, l.name, l.roomid, r.roomid, COUNT(d.locationid) AS devicecount, COUNT(pcl.locationid) AS powercount
 			FROM dcim_location AS l
-				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
@@ -1192,18 +1196,20 @@
 		
 		$query = "SELECT cur.* FROM 
 					(
-						SELECT 'site' AS `table`, s.siteid AS id, sl.siteid AS l_id, sl.logtype FROM dcim_site AS s LEFT JOIN dcimlog_site AS sl ON s.siteid = sl.siteid AND sl.logtype='I'
-						UNION SELECT 'badge', b.badgeid, bl.badgeid, bl.logtype FROM dcim_badge AS b LEFT JOIN dcimlog_badge AS bl ON b.badgeid = bl.badgeid AND bl.logtype='I' 
-						UNION SELECT 'customer', c.hno, cl.hno, cl.logtype FROM dcim_customer AS c LEFT JOIN dcimlog_customer AS cl ON c.hno = cl.hno AND cl.logtype='I' 
-						UNION SELECT 'device', d.deviceid, dl.deviceid, dl.logtype FROM dcim_device AS d LEFT JOIN dcimlog_device AS dl ON d.deviceid = dl.deviceid AND dl.logtype='I' 
-						UNION SELECT 'deviceport', dp.deviceportid, dpl.deviceportid, dpl.logtype FROM dcim_deviceport AS dp LEFT JOIN dcimlog_deviceport AS dpl ON dp.deviceportid = dpl.deviceportid AND dpl.logtype='I' 
-						UNION SELECT 'location', l.locationid, ll.locationid, ll.logtype FROM dcim_location AS l LEFT JOIN dcimlog_location AS ll ON l.locationid = ll.locationid AND ll.logtype='I' 
-						UNION SELECT 'portconnection', pc.portconnectionid, pcl.portconnectionid, pcl.logtype FROM dcim_portconnection AS pc LEFT JOIN dcimlog_portconnection AS pcl ON pc.portconnectionid = pcl.portconnectionid AND pcl.logtype='I' 
-						UNION SELECT 'portvlan', pv.portvlanid, pvl.portvlanid, pvl.logtype FROM dcim_portvlan AS pv LEFT JOIN dcimlog_portvlan AS pvl ON pv.portvlanid = pvl.portvlanid AND pvl.logtype='I' 
-						UNION SELECT 'power', p.powerid, pl.powerid, pl.logtype FROM dcim_power AS p LEFT JOIN dcimlog_power AS pl ON p.powerid = pl.powerid AND pl.logtype='I' 
-						UNION SELECT 'powerloc', pl.powerlocid, pll.powerlocid, pll.logtype FROM dcim_powerloc AS pl LEFT JOIN dcimlog_powerloc AS pll ON pl.powerlocid = pll.powerlocid AND pll.logtype='I' 
-						UNION SELECT 'room', r.roomid, rl.roomid, rl.logtype FROM dcim_room AS r LEFT JOIN dcimlog_room AS rl ON r.roomid = rl.roomid AND rl.logtype='I' 
-						UNION SELECT 'vlan', v.vlanid, vl.vlanid, vl.logtype FROM dcim_vlan AS v LEFT JOIN dcimlog_vlan AS vl ON v.vlanid = vl.vlanid AND vl.logtype='I'
+	SELECT 'site' AS `table`, s.siteid AS id, sl.siteid AS l_id, sl.logtype FROM dcim_site AS s LEFT JOIN dcimlog_site AS sl ON s.siteid = sl.siteid AND sl.logtype='I'
+	UNION SELECT 'badge', b.badgeid, bl.badgeid, bl.logtype FROM dcim_badge AS b LEFT JOIN dcimlog_badge AS bl ON b.badgeid = bl.badgeid AND bl.logtype='I' 
+	UNION SELECT 'customer', c.hno, cl.hno, cl.logtype FROM dcim_customer AS c LEFT JOIN dcimlog_customer AS cl ON c.hno = cl.hno AND cl.logtype='I' 
+	UNION SELECT 'device', d.deviceid, dl.deviceid, dl.logtype FROM dcim_device AS d LEFT JOIN dcimlog_device AS dl ON d.deviceid = dl.deviceid AND dl.logtype='I' 
+	UNION SELECT 'deviceport', dp.deviceportid, dpl.deviceportid, dpl.logtype FROM dcim_deviceport AS dp LEFT JOIN dcimlog_deviceport AS dpl ON dp.deviceportid = dpl.deviceportid AND dpl.logtype='I' 
+	UNION SELECT 'location', l.locationid, ll.locationid, ll.logtype FROM dcim_location AS l LEFT JOIN dcimlog_location AS ll ON l.locationid = ll.locationid AND ll.logtype='I' 
+	UNION SELECT 'portconnection', pc.portconnectionid, pcl.portconnectionid, pcl.logtype FROM dcim_portconnection AS pc LEFT JOIN dcimlog_portconnection AS pcl ON pc.portconnectionid = pcl.portconnectionid AND pcl.logtype='I' 
+	UNION SELECT 'portvlan', pv.portvlanid, pvl.portvlanid, pvl.logtype FROM dcim_portvlan AS pv LEFT JOIN dcimlog_portvlan AS pvl ON pv.portvlanid = pvl.portvlanid AND pvl.logtype='I' 
+	UNION SELECT 'powercircuit', pc.powercircuitid, pcl.powercircuitid, pcl.logtype FROM dcim_powercircuit AS pc LEFT JOIN dcimlog_powercircuit AS pcl ON pc.powercircuitid = pcl.powercircuitid AND pcl.logtype='I' 
+	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid, pcll.powercircuitlocid, pcll.logtype FROM dcim_powercircuitloc AS pcl LEFT JOIN dcimlog_powercircuitloc AS pcll ON pcl.powercircuitlocid = pcll.powercircuitlocid AND pcll.logtype='I' 
+	UNION SELECT 'powerpanel', pp.powerpanelid, ppl.powerpanelid, ppl.logtype FROM dcim_powerpanel AS pp LEFT JOIN dcimlog_powerpanel AS ppl ON pp.powerpanelid = ppl.powerpanelid AND ppl.logtype='I' 
+	UNION SELECT 'powerups', pu.powerupsid, pul.powerupsid, pul.logtype FROM dcim_powerups AS pu LEFT JOIN dcimlog_powerups AS pul ON pu.powerupsid = pul.powerupsid AND pul.logtype='I' 
+	UNION SELECT 'room', r.roomid, rl.roomid, rl.logtype FROM dcim_room AS r LEFT JOIN dcimlog_room AS rl ON r.roomid = rl.roomid AND rl.logtype='I' 
+	UNION SELECT 'vlan', v.vlanid, vl.vlanid, vl.logtype FROM dcim_vlan AS v LEFT JOIN dcimlog_vlan AS vl ON v.vlanid = vl.vlanid AND vl.logtype='I'
 					) AS cur
 					WHERE cur.l_id IS NULL
 					ORDER BY 1, 2";
