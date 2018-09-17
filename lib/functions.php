@@ -784,12 +784,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//if edit/delete then validate powerID, otherwise a new one will be generated on insert
 			if($valid)$valid = ValidGenericID($powerID, "Power ID");
 		}
-		if($valid)$valid = ValidPowerPanel($panel);
-		if($valid)$valid = ValidPowerCircuit($circuit);
-		if($valid)$valid = ValidPowerVolts($volts);
-		if($valid)$valid = ValidPowerAmps($amps);
-		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load, $amps);
+		if($valid)$valid = ValidPowerPanelName($panel);
+		if($valid)$valid = ValidPowerCircuitNo($circuit);
+		if($valid)$valid = ValidPowerCircuitVolts($volts);
+		if($valid)$valid = ValidPowerCircuitAmps($amps);
+		if($valid)$valid = ValidPowerCircuitStatus($status);
+		if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
 		
 		//DB CHECKS
 		//check for location in table
@@ -2720,7 +2720,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}//prepare didn't fail
 		}
 		
-		if($valid)$valid = ValidPassword($newpas1);
+		if($valid)$valid = ValidUserPassword($newpas1);
 		if($valid)
 		{
 			$valid = strcmp($newpas1,$newpas2)==0;
@@ -6642,11 +6642,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$totalAffectedCount = 0;
 		$valid = true;
 		
-		if($valid)$valid = ValidPowerPanel($panel);
-		if($valid)$valid = ValidPowerVolts($volts);
-		if($valid)$valid = ValidPowerAmps($amps);
-		if($valid)$valid = ValidPowerStatus($status);
-		if($valid)$valid = ValidPowerLoad($load, $amps);
+		if($valid)$valid = ValidPowerPanelName($panel);
+		if($valid)$valid = ValidPowerCircuitVolts($volts);
+		if($valid)$valid = ValidPowerCircuitAmps($amps);
+		if($valid)$valid = ValidPowerCircuitStatus($status);
+		if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
 		
 		//check for location in table
 		if($valid)$valid = ValidLocation($locationID,true);

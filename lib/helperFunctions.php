@@ -848,6 +848,22 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else return "Unknown";
 	}
 	
+	function LocationAllocation($allocation)
+	{
+		if($allocation === "E") return "Empty";
+		else if($allocation === "C") return "Colo";
+		else if($allocation === "I") return "Internal";
+		else if($allocation === "M") return "Managed";
+		else return "Unknown";
+	}
+	
+	function LocationOrder($order)
+	{
+		if($order === "N") return "Normal";
+		else if($order === "R") return "Reversed";
+		else return "Unknown";
+	}
+	
 	function LocationVisible($visible)
 	{
 		if($visible === "T") return "Visible";
@@ -1511,6 +1527,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidNumber($input,$fieldName,1,8);//Db structure set to 8 chars for all ID fields
 	}
 	
+	function ValidXYCoordinate($input,$fieldName)
+	{
+		return ValidNumber($input,$fieldName,1,8,-9999.99,9999.99);
+	}
+	
 	function ValidBadgeID($input)
 	{
 		return ValidNumber($input,"BadgeID",1);
@@ -1534,6 +1555,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function ValidDeviceName($input)
 	{
 		return ValidString($input,"Device Name",3);
+	}
+	
+	function ValidDeviceAltName($input)
+	{
+		return ValidString($input,"Device Alt Name",3);
 	}
 	
 	function ValidDeviceUnit($input)
@@ -1623,7 +1649,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPassword($input)
+	function ValidUserPassword($input)
 	{
 		global $errorMessage;
 		$minLen=8;
@@ -1689,7 +1715,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPowerPanel($input)
+	function ValidPowerPanelName($input)
 	{
 		/*global $errorMessage;
 		//this should matcht the JS
@@ -1699,35 +1725,76 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$errorMessage[] = "Invalid Panel.";
 			return false;
 		}*/
-		return ValidString($input,"Panel Name",1,8);
+		return ValidString($input,"Power Panel Name",1,50);
 	}
 	
-	function ValidPowerCircuit($input)
+	function ValidPowerPanelAmps($input)
+	{
+		return ValidNumber($input,"Power Panel Amps",1,3,0,400);
+	}
+	
+	function ValidPowerPanelCircuits($input)
+	{
+		return ValidNumber($input,"Power Panel Circuits",1,3,2,126);
+	}
+	
+	function ValidPowerPanelOrientation($input)
+	{
+		$validFlags = array('N','S','E','W');
+		return ValidFlag($input,"Power panel orientation",$validFlags);
+	}
+	
+	function ValidPowerPanelXPos($input)
+	{
+		return ValidXYCoordinate($input,"Power panel left possition");
+	}
+	
+	function ValidPowerPanelYPos($input)
+	{
+		return ValidXYCoordinate($input,"Power panel foreward possition");
+	}
+	
+	function ValidPowerPanelWidth($input)
+	{
+		return ValidNumber($input,"Power panel width",1,1,0,6);
+	}
+	
+	function ValidPowerPanelDepth($input)
+	{
+		return ValidNumber($input,"Power panel depth",1,1,0,6);
+	}
+	
+	function ValidPowerPanelNote($input)
+	{
+		return true;
+	}
+	
+	function ValidPowerCircuitNo($input)
 	{
 		return ValidNumber($input,"Power Circuit",1,2,0,50);
 	}
 	
-	function ValidPowerVolts($input)
+	function ValidPowerCircuitVolts($input)
 	{
 		$validFlags = array('120','208','308');
-		return ValidFlag($input,"Power Volts",$validFlags);
+		return ValidFlag($input,"Power Circuit Volts",$validFlags);
 	}
 	
-	function ValidPowerAmps($input)
+	function ValidPowerCircuitAmps($input)
 	{
 		$validFlags = array('20','30','40','50','100');
-		return ValidFlag($input,"Power Amps",$validFlags);
+		return ValidFlag($input,"Power Circuit Amps",$validFlags);
 	}
 	
-	function ValidPowerStatus($input)
+	function ValidPowerCircuitStatus($input)
 	{
 		$validFlags = array('A','D');
-		return ValidFlag($input,"Power Status",$validFlags);
+		return ValidFlag($input,"Power Circuit Status",$validFlags);
 	}
 	
-	function ValidPowerLoad($input, $amps)
+	function ValidPowerCircuitLoad($input, $amps)
 	{
-		return ValidNumber($input,"Power Load",1,0,0,$amps);
+		return ValidNumber($input,"Power Circuit Load",1,0,0,$amps);
 	}
 	
 	function ValidSubnet($input)
@@ -1818,6 +1885,23 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidNumber($input,"Location units",0,2,0,50);
 	}
 	
+	function ValidLocationKeyno($input)
+	{
+		return ValidString($input,"Location alt name",0,20);
+	}
+	
+	function ValidLocationAllocation($input)
+	{
+		$validFlags = array('E','C','I','M');
+		return ValidFlag($input,"Location Allocation",$validFlags);
+	}
+	
+	function ValidLocationOrder($input)
+	{
+		$validFlags = array('N','R');
+		return ValidFlag($input,"Location Order",$validFlags);
+	}
+	
 	function ValidLocationOrientation($input)
 	{
 		$validFlags = array('N','S','E','W');
@@ -1826,12 +1910,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidLocationXPos($input)
 	{
-		return ValidNumber($input,"Location left possition",1,8,-9999.99,9999.99);
+		return ValidXYCoordinate($input,"Location left possition");
 	}
 	
 	function ValidLocationYPos($input)
 	{
-		return ValidNumber($input,"Location foreward possition",1,8,-9999.99,9999.99);
+		return ValidXYCoordinate($input,"Location foreward possition");
 	}
 	
 	function ValidLocationWidth($input)
