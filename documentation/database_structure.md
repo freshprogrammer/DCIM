@@ -181,6 +181,7 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |powerupsid|int(8)|NO|PRI|*NULL*|auto_increment|
+|siteid|int(8)|NO||*NULL*||
 |name|varchar(32)|NO||*NULL*||
 |volts|int(5)|NO||*NULL*||
 |amps|int(5)|NO||*NULL*||
@@ -442,6 +443,7 @@
 |powerupslogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|varchar(1)|NO||I||
 |powerupsid|int(8)|NO||*NULL*||
+|siteid|int(8)|NO||*NULL*||
 |name|varchar(32)|NO||*NULL*||
 |volts|int(5)|NO||*NULL*||
 |amps|int(5)|NO||*NULL*||

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 45.40.164.51
--- Generation Time: Sep 16, 2018 at 04:22 AM
+-- Generation Time: Sep 17, 2018 at 03:58 AM
 -- Server version: 5.5.51
 -- PHP Version: 5.1.6
 --
@@ -313,6 +313,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powerups` (
   `powerupslogid` int(8) NOT NULL AUTO_INCREMENT,
   `logtype` varchar(1) NOT NULL DEFAULT 'I',
   `powerupsid` int(8) NOT NULL,
+  `siteid` int(8) NOT NULL,
   `name` varchar(32) NOT NULL,
   `volts` int(5) NOT NULL,
   `amps` int(5) NOT NULL,
@@ -693,6 +694,7 @@ CREATE TABLE IF NOT EXISTS `dcim_powerpanel` (
 DROP TABLE IF EXISTS `dcim_powerups`;
 CREATE TABLE IF NOT EXISTS `dcim_powerups` (
   `powerupsid` int(8) NOT NULL AUTO_INCREMENT,
+  `siteid` int(8) NOT NULL,
   `name` varchar(32) NOT NULL,
   `volts` int(5) NOT NULL,
   `amps` int(5) NOT NULL,

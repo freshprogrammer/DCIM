@@ -234,6 +234,7 @@
 			//- upsid, name, volts, amps, note
 			$cmdm = "CREATE TABLE  `dcim_powerups` (
 					`powerupsid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+					`siteid` INT( 8 ) NOT NULL ,
 					`name` VARCHAR( 32 ) NOT NULL ,
 					`volts` INT( 5 ) NOT NULL ,
 					`amps` INT( 5 ) NOT NULL ,
@@ -247,6 +248,7 @@
 					`powerupslogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 					`logtype` VARCHAR( 1 ) NOT NULL DEFAULT 'I',
 					`powerupsid` INT( 8 ) NOT NULL ,
+					`siteid` INT( 8 ) NOT NULL ,
 					`name` VARCHAR( 32 ) NOT NULL ,
 					`volts` INT( 5 ) NOT NULL ,
 					`amps` INT( 5 ) NOT NULL ,
@@ -305,7 +307,6 @@
 			{
 				//assumes valid legacy panel data
 				//create parent records for panels
-				
 				$cmd = "INSERT INTO dcim_powerpanel (name,powerupsid,amps,circuits,roomid,note)
 					SELECT DISTINCT pc.panel, 0,125,42,r.roomid,'Automated'
 						FROM dcim_powercircuit AS pc
@@ -333,10 +334,10 @@
 			$createDemoPowerUPSs = true;
 			if($createDemoPowerUPSs)
 			{
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,name,volts,amps,note) VALUES (1,'UPS-1',240,500,'Demo UPS-1')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',240,500,'Automated')";
 				ExecuteThis("UP3_upscreation-1",$cmd,$reportsucsess);
 				
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,name,volts,amps,note) VALUES (2,'UPS-2',240,500,'Demo UPS-2')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (2,0,'UPS-2',240,500,'Automated')";
 				ExecuteThis("UP3_upscreation-2",$cmd,$reportsucsess);
 				
 				ExecuteThis("UP3_upscreation-3","INSERT INTO dcimlog_powerups			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerups		AS cur WHERE 1=1",$reportsucsess);
