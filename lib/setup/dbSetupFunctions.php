@@ -99,6 +99,11 @@
 	//this shoould mainly be for deletions and changes with db additions being done live and with code adjustments changing to to system gradualy over time.
 	function RunDBUpdate_Update($executePart1, $executePart2)
 	{
+		global $resultMessage;
+		global $debugMessage;
+		global $mainTables;
+		global $logTables;
+		
 		//updates in sync with v1.3 - DB v3
 		//paramaters should be mutually exclusive, so only 1 is true at any time
 		//$executePart1 = true;//safe db additions
@@ -107,9 +112,6 @@
 		//Part 1 cmds should be run as phase one as an opportunity to update code acordingly
 		//after code is updated Part 2 can be run to finalize the data removing old rows and such
 		
-		global $resultMessage;
-		global $debugMessage;
-		
 		$debugMessage[]= "RunDBUpdate_Update1()-Start";
 		
 		// Part 1 unsafe changes ///////////////////////////////////
@@ -117,6 +119,8 @@
 		{
 			$debugMessage[]= "RunDBUpdate_Update1()-Part 1 - safe prep";
 			$reportsucsess = false;
+			
+			
 			
 			//create config table
 			$cmdm = "CREATE TABLE  `dcim_config` (
@@ -168,13 +172,13 @@
 			//update location
 			//- add keyno field (20c)
 			//- add allocation field (1c) - empty, internal, managed, colo
-			//- add order field (1c) (t/f) - reversed for racks vs cabinets
+			//- add order field (1c) (t/f) - reversed for cabinets vs racks
 			$cmdm = "ALTER TABLE  `dcim_location`    ADD  `keyno` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `orientation` ,
 					ADD  `allocation` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'E' AFTER  `keyno` ,
-					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'S' AFTER  `allocation`";
+					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'R' AFTER  `allocation`";
 			$cmdl = "ALTER TABLE  `dcimlog_location` ADD  `keyno` VARCHAR( 20 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER  `orientation` ,
 					ADD  `allocation` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'E' AFTER  `keyno` ,
-					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'S' AFTER  `allocation`";
+					ADD  `order` VARCHAR( 1 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT  'R' AFTER  `allocation`";
 			ExecuteThis("UP3_M-5",$cmdm,$reportsucsess);
 			ExecuteThis("UP3_L-5",$cmdl,$reportsucsess);
 			
@@ -185,10 +189,10 @@
 			$cmdm = "CREATE TABLE  `dcim_powerpanel` (
 						`powerpanelid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 						`powerupsid` INT( 8 ) NOT NULL ,
+						`roomid` INT( 8 ) NOT NULL ,
 						`name` VARCHAR( 50 ) NOT NULL ,
 						`amps` INT( 4 ) NOT NULL ,
 						`circuits` INT( 3 ) NOT NULL DEFAULT  '0',
-						`roomid` INT( 8 ) NOT NULL ,
 						`xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
 						`ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
 						`width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
@@ -208,10 +212,10 @@
 						`logtype` VARCHAR( 1 ) NOT NULL DEFAULT 'I',
 						`powerpanelid` INT( 8 ) NOT NULL ,
 						`powerupsid` INT( 8 ) NOT NULL ,
+						`roomid` INT( 8 ) NOT NULL ,
 						`name` VARCHAR( 50 ) NOT NULL ,
 						`amps` INT( 4 ) NOT NULL ,
 						`circuits` INT( 3 ) NOT NULL DEFAULT  '0',
-						`roomid` INT( 8 ) NOT NULL ,
 						`xpos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
 						`ypos` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
 						`width` DECIMAL( 6, 2 ) NOT NULL DEFAULT  '0.0',
@@ -242,7 +246,9 @@
 					`edituser` INT( 8 ) NOT NULL ,
 					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
-					`qadate` DATETIME NOT NULL
+					`qadate` DATETIME NOT NULL,
+					INDEX (  `siteid` ),
+					INDEX (  `qauser` )
 					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
 			$cmdl = "CREATE TABLE  `dcimlog_powerups` (
 					`powerupslogid` INT( 8 ) NOT NULL AUTO_INCREMENT PRIMARY KEY ,
@@ -256,7 +262,10 @@
 					`edituser` INT( 8 ) NOT NULL ,
 					`editdate` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 					`qauser` INT( 8 ) NOT NULL DEFAULT  '-1',
-					`qadate` DATETIME NOT NULL
+					`qadate` DATETIME NOT NULL,
+					INDEX (  `powerupsid` ),
+					INDEX (  `siteid` ),
+					INDEX (  `qauser` )
 					) ENGINE = MYISAM CHARACTER SET utf8 COLLATE utf8_general_ci";
 			ExecuteThis("UP3_M-7",$cmdm,$reportsucsess);
 			ExecuteThis("UP3_L-7",$cmdl,$reportsucsess);
@@ -362,6 +371,24 @@
 				ExecuteThis("UP3_panel-logs","INSERT INTO dcimlog_powerpanel			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerpanel		AS cur WHERE 1=1",$reportsucsess);
 			}
 			
+			//update indexes
+			ExecuteThis("UP3_updateIndexes_01","ALTER TABLE    `dcim_room` ADD INDEX (`qauser`)",$reportsucsess);
+			ExecuteThis("UP3_updateIndexes_02","ALTER TABLE `dcimlog_room` ADD INDEX (`qauser`)",$reportsucsess);
+			ExecuteThis("UP3_updateIndexes_03","ALTER TABLE    `dcim_customer` ADD INDEX (`cno`)",$reportsucsess);
+			ExecuteThis("UP3_updateIndexes_04","ALTER TABLE `dcimlog_customer` ADD INDEX (`cno`)",$reportsucsess);
+			ExecuteThis("UP3_updateIndexes_05","ALTER TABLE    `dcim_device` ADD INDEX (`locationid`), ADD INDEX (`name`), ADD INDEX (`altname`)",$reportsucsess);
+			ExecuteThis("UP3_updateIndexes_06","ALTER TABLE `dcimlog_device` ADD INDEX (`locationid`), ADD INDEX (`name`), ADD INDEX (`altname`)",$reportsucsess);
+			
+			//update engine
+			ExecuteThis("UP3_UpdateEngine_0","SET default_storage_engine=INNODB;",$reportsucsess);
+			foreach($mainTables as $table)
+			{
+				ExecuteThis("UP3_UpdateEngine_$table","ALTER TABLE  `$table` ENGINE=INNODB");
+			}
+			foreach($logTables as $table)
+			{
+				ExecuteThis("UP3_UpdateEngine_$table","ALTER TABLE  `$table` ENGINE=INNODB");
+			}
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
 		}
@@ -440,7 +467,7 @@
 		global $resultMessage;
 		global $mainTables;
 		global $logTables;
-
+		
 		foreach($mainTables as $table)
 		{
 			ExecuteThis("D0","Drop TABLE IF EXISTS $table");
@@ -448,8 +475,7 @@
 		foreach($logTables as $table)
 		{
 			ExecuteThis("D0","Drop TABLE IF EXISTS $table");
-		} 
-		
+		}
 		$resultMessage[]= "DropAllTables()-Sucsessfully Dropped all tables";
 	}
 	
@@ -460,7 +486,7 @@
 		global $resultMessage;
 		global $mainTables;
 		global $logTables;
-
+		
 		if($wipeMainTables)
 		{
 			foreach($mainTables as $table)
@@ -475,7 +501,6 @@
 				ExecuteThis("D1","TRUNCATE TABLE $table");
 			}
 		}
-		
 		$resultMessage[]= "TruncateTables($mainTables,$logTables)-Sucsessfully truncated tables";
 	}
 	

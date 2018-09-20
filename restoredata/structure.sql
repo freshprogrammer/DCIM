@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 45.40.164.51
--- Generation Time: Sep 17, 2018 at 03:58 AM
+-- Generation Time: Sep 20, 2018 at 12:40 AM
 -- Server version: 5.5.51
 -- PHP Version: 5.1.6
 --
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_badge` (
   KEY `badgeno` (`badgeno`),
   KEY `qauser` (`qauser`),
   KEY `badgeid` (`badgeid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -66,8 +66,9 @@ CREATE TABLE IF NOT EXISTS `dcimlog_customer` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`customerlogid`),
   KEY `qauser` (`qauser`),
-  KEY `hno` (`hno`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `hno` (`hno`),
+  KEY `cno` (`cno`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -100,8 +101,11 @@ CREATE TABLE IF NOT EXISTS `dcimlog_device` (
   PRIMARY KEY (`devicelogid`),
   KEY `hno` (`hno`,`locationid`,`type`),
   KEY `qauser` (`qauser`),
-  KEY `deviceid` (`deviceid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `deviceid` (`deviceid`),
+  KEY `locationid` (`locationid`),
+  KEY `name` (`name`),
+  KEY `altname` (`altname`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -130,7 +134,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_deviceport` (
   KEY `deviceid` (`deviceid`),
   KEY `qauser` (`qauser`),
   KEY `deviceportid` (`deviceportid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -167,7 +171,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_location` (
   KEY `qauser` (`qauser`),
   KEY `locationid` (`locationid`),
   KEY `roomid` (`roomid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -192,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_portconnection` (
   KEY `port2id` (`parentportid`),
   KEY `qauser` (`qauser`),
   KEY `portconnectionid` (`portconnectionid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -216,7 +220,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_portvlan` (
   KEY `vlan` (`vlan`),
   KEY `qauser` (`qauser`),
   KEY `portvlanid` (`portvlanid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -243,7 +247,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powercircuit` (
   KEY `qauser` (`qauser`),
   KEY `powerid` (`powercircuitid`),
   KEY `powerpanelid` (`powerpanelid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -267,7 +271,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powercircuitloc` (
   KEY `powerid` (`powercircuitid`),
   KEY `qauser` (`qauser`),
   KEY `powerlocid` (`powercircuitlocid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -281,10 +285,10 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powerpanel` (
   `logtype` varchar(1) NOT NULL DEFAULT 'I',
   `powerpanelid` int(8) NOT NULL,
   `powerupsid` int(8) NOT NULL,
+  `roomid` int(8) NOT NULL,
   `name` varchar(50) NOT NULL,
   `amps` int(4) NOT NULL,
   `circuits` int(3) NOT NULL DEFAULT '0',
-  `roomid` int(8) NOT NULL,
   `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
   `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
   `width` decimal(6,2) NOT NULL DEFAULT '0.00',
@@ -300,7 +304,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powerpanel` (
   KEY `powerupsid` (`powerupsid`),
   KEY `roomid` (`roomid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -322,8 +326,11 @@ CREATE TABLE IF NOT EXISTS `dcimlog_powerups` (
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerupslogid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`powerupslogid`),
+  KEY `powerupsid` (`powerupsid`),
+  KEY `siteid` (`siteid`),
+  KEY `qauser` (`qauser`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -352,8 +359,9 @@ CREATE TABLE IF NOT EXISTS `dcimlog_room` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`roomlogid`),
   KEY `roomid` (`roomid`),
-  KEY `siteid` (`siteid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `siteid` (`siteid`),
+  KEY `qauser` (`qauser`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -377,7 +385,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_site` (
   PRIMARY KEY (`sitelogid`),
   KEY `qauser` (`qauser`),
   KEY `siteid` (`siteid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -405,7 +413,7 @@ CREATE TABLE IF NOT EXISTS `dcimlog_vlan` (
   KEY `vlan` (`vlan`),
   KEY `qauser` (`qauser`),
   KEY `vlanid` (`vlanid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -431,7 +439,7 @@ CREATE TABLE IF NOT EXISTS `dcim_badge` (
   KEY `hno` (`hno`),
   KEY `badgeno` (`badgeno`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -453,7 +461,7 @@ CREATE TABLE IF NOT EXISTS `dcim_config` (
   `demoenvironment` varchar(1) NOT NULL DEFAULT 'F',
   `dbversion` varchar(10) NOT NULL DEFAULT '1',
   PRIMARY KEY (`configid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -473,8 +481,9 @@ CREATE TABLE IF NOT EXISTS `dcim_customer` (
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`hno`),
-  KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `qauser` (`qauser`),
+  KEY `cno` (`cno`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -504,8 +513,11 @@ CREATE TABLE IF NOT EXISTS `dcim_device` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`deviceid`),
   KEY `hno` (`hno`,`locationid`,`type`),
-  KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `qauser` (`qauser`),
+  KEY `locationid` (`locationid`),
+  KEY `name` (`name`),
+  KEY `altname` (`altname`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -531,7 +543,7 @@ CREATE TABLE IF NOT EXISTS `dcim_deviceport` (
   PRIMARY KEY (`deviceportid`),
   KEY `deviceid` (`deviceid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -565,7 +577,7 @@ CREATE TABLE IF NOT EXISTS `dcim_location` (
   KEY `site_colo_name` (`name`),
   KEY `qauser` (`qauser`),
   KEY `roomid` (`roomid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -587,7 +599,7 @@ CREATE TABLE IF NOT EXISTS `dcim_portconnection` (
   KEY `port1id` (`childportid`),
   KEY `port2id` (`parentportid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -608,7 +620,7 @@ CREATE TABLE IF NOT EXISTS `dcim_portvlan` (
   KEY `deviceportid` (`deviceportid`),
   KEY `vlan` (`vlan`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -632,7 +644,7 @@ CREATE TABLE IF NOT EXISTS `dcim_powercircuit` (
   PRIMARY KEY (`powercircuitid`),
   KEY `qauser` (`qauser`),
   KEY `powerpanelid` (`powerpanelid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -653,7 +665,7 @@ CREATE TABLE IF NOT EXISTS `dcim_powercircuitloc` (
   KEY `locationid` (`locationid`),
   KEY `powerid` (`powercircuitid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -665,10 +677,10 @@ DROP TABLE IF EXISTS `dcim_powerpanel`;
 CREATE TABLE IF NOT EXISTS `dcim_powerpanel` (
   `powerpanelid` int(8) NOT NULL AUTO_INCREMENT,
   `powerupsid` int(8) NOT NULL,
+  `roomid` int(8) NOT NULL,
   `name` varchar(50) NOT NULL,
   `amps` int(4) NOT NULL,
   `circuits` int(3) NOT NULL DEFAULT '0',
-  `roomid` int(8) NOT NULL,
   `xpos` decimal(6,2) NOT NULL DEFAULT '0.00',
   `ypos` decimal(6,2) NOT NULL DEFAULT '0.00',
   `width` decimal(6,2) NOT NULL DEFAULT '0.00',
@@ -683,7 +695,7 @@ CREATE TABLE IF NOT EXISTS `dcim_powerpanel` (
   KEY `powerupsid` (`powerupsid`),
   KEY `roomid` (`roomid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -703,8 +715,10 @@ CREATE TABLE IF NOT EXISTS `dcim_powerups` (
   `editdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
-  PRIMARY KEY (`powerupsid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`powerupsid`),
+  KEY `siteid` (`siteid`),
+  KEY `qauser` (`qauser`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -730,8 +744,9 @@ CREATE TABLE IF NOT EXISTS `dcim_room` (
   `qauser` int(8) NOT NULL DEFAULT '-1',
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`roomid`),
-  KEY `siteid` (`siteid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  KEY `siteid` (`siteid`),
+  KEY `qauser` (`qauser`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -752,7 +767,7 @@ CREATE TABLE IF NOT EXISTS `dcim_site` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`siteid`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -778,7 +793,7 @@ CREATE TABLE IF NOT EXISTS `dcim_user` (
   PRIMARY KEY (`userid`),
   KEY `username` (`username`),
   KEY `siteid` (`siteid`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -803,4 +818,4 @@ CREATE TABLE IF NOT EXISTS `dcim_vlan` (
   PRIMARY KEY (`vlanid`),
   KEY `vlan` (`vlan`),
   KEY `qauser` (`qauser`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
