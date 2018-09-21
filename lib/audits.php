@@ -252,7 +252,7 @@
 		$reportTitle = "VLAN Linked to Disabled Port";
 		$reportNote = "These are VLANs linked to ports marked disabled.";
 		
-		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
+		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
 				FROM dcim_portvlan AS pv
 					 LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
 					 LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
@@ -266,7 +266,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $type, $status, $note, $vlan);
+		$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $type, $status, $note, $vlan);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -284,7 +284,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -372,7 +372,7 @@
 		$reportTitle = "Colos with patch 0";
 		$reportNote= "These are impossible connections left over from old system.";
 		
-		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.altname, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -390,7 +390,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName,$deviceAltName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -408,7 +408,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 			
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 					
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -439,7 +439,7 @@
 		$reportTitle = "Devices Missing assets";
 		$reportNote= "These are active physical devices that do not have assets.";
 		
-		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -456,7 +456,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -475,7 +475,7 @@
 				else $rowClass = "dataRowTwo";
 			
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
-				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
@@ -512,7 +512,7 @@
 		$reportTitle = "Devices with duplicate assets";
 		$reportNote= "These are active physical devices that have identical assets.";
 		
-		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM (SELECT d.deviceid, d.name, d.asset, COUNT(d.asset) AS count
 					FROM dcim_device AS d
 					WHERE d.status='A' AND d.asset<>''
@@ -533,7 +533,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -552,7 +552,7 @@
 				else $rowClass = "dataRowTwo";
 			
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
-				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
@@ -713,7 +713,7 @@
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s) or in Unknown.";
 		
-		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
+		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -728,7 +728,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID, $linkedLocationID,$locationName);
+		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $locationID, $linkedLocationID,$locationName);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -745,7 +745,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
@@ -776,7 +776,7 @@
 		$reportTitle = "Device Ports Without Devices or Customers";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
+		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -791,7 +791,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName, $member, $model, $pic, $port, $type);
+		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $type);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -808,7 +808,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -895,7 +895,7 @@
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
 		
-		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
+		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.altname, d.model, d.member
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 			WHERE c.status='I' AND NOT d.status='I'
@@ -909,7 +909,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($cust, $hno, $deviceID, $deviceName, $model, $member);
+		$stmt->bind_result($cust, $hno, $deviceID, $deviceName,$deviceAltName, $model, $member);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -927,7 +927,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";

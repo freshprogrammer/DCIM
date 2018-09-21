@@ -1713,7 +1713,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//validate parent ID
 				$valid = false;
 				$passedDBChecks = false;
-				$query = "SELECT deviceid,hno,name,model,member FROM dcim_device WHERE deviceid=?";
+				$query = "SELECT deviceid,hno,name,altname,model,member FROM dcim_device WHERE deviceid=?";
 				
 				if (!($stmt = $mysqli->prepare($query)))
 				{
@@ -1735,9 +1735,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else
 					{
 						//found parent device - pull down necisary details from it
-						$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceModel, $deviceMember);
+						$stmt->bind_result($deviceID, $hNo, $deviceName,$deviceAltName, $deviceModel, $deviceMember);
 						$stmt->fetch();
-						$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+						$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember,$deviceAltName, true);
 					}
 				}
 				$valid = $passedDBChecks;
@@ -2970,7 +2970,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//list devices at this location - cant use notml list function because this list is ordered by unit for displaying devices in the cab as they actualy are
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
 					c.hno, c.name AS cust,
-					d.deviceid, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+					d.deviceid, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 				FROM dcim_device AS d
 					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -2989,7 +2989,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			
@@ -3036,7 +3036,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
-					$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+					$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 
 					$unitSize=1;
 					if($size[strlen($size)-1]=="U" && $status=="A")
@@ -3806,7 +3806,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<div class='panel-body'>\n\n";
 		
 		//get device info
-		$query = "SELECT d.deviceid, d.hno, d.name, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
 			FROM dcim_device AS d
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -3826,7 +3826,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('i', $input);		
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $hNo, $deviceName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceAltName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
 			$deviceCount = $stmt->num_rows;
 		}
 		
@@ -3842,8 +3842,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$deviceInfo = GetDeviceFromModelName($model);
 			
-			$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
-			$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member, true);
+			$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
+			$deviceFullNameShort = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 			$pageSubTitle = "Device: ".MakeHTMLSafe($deviceFullName);
 			$fullLocationName = FormatLocation($siteName, $room, $locationName);
 			
@@ -4484,15 +4484,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR d.asset LIKE ? OR d.serial LIKE ? OR d.model LIKE ?
+					WHERE d.name LIKE ? OR d.altname LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR d.asset LIKE ? OR d.serial LIKE ? OR d.model LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -4504,13 +4504,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('ssssssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('sssssssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
 		{
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -4530,7 +4530,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		
@@ -4547,9 +4547,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","Model","Serial","Asset","Note"));
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","AltName","Model","Serial","Asset","Note"));
 			else
-				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4566,7 +4566,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
-				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				echo "<tr class='$rowClass'>";
@@ -4576,6 +4576,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				if($search)
 				{
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($deviceAltName)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($serial)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>";
@@ -4584,6 +4585,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else
 				{//!search
 					echo "<td class='data-table-cell'>$unit</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($deviceAltName)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 					echo "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
@@ -5034,7 +5036,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$deviceJoin = "INNER";
 			
 			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
-					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.model, d.member,
+					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.altname AS devicealtname, d.model, d.member,
 					COUNT(d.locationid) AS count
 				FROM dcim_location AS l
 					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
@@ -5055,7 +5057,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName, $deviceModel, $deviceMember, $deviceCount);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
 			$result .= "<span class='tableTitle'>$searchTitle ($count)</span>\n";
@@ -5085,7 +5087,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$lastLocID = $locationID;
 					
 					$fullLocationName = FormatLocation($site, $room, $location);
-					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, true);
+					$deviceFullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember,$deviceAltName, true);
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
@@ -5571,7 +5573,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//UNION all connected chilren
 		//UNION all connected parents
 		//then looking up those port ids to get a list of all switch ports connected to or belonging to this customer 
-		$query = "SELECT d.deviceid, d.model, d.name, d.member, dp.deviceportid, dp.pic, dp.port, dp.type 
+		$query = "SELECT d.deviceid, d.model, d.name, d.altname, d.member, dp.deviceportid, dp.pic, dp.port, dp.type 
 			FROM(
 				SELECT dp.deviceportid AS portid
 					FROM dcim_device d
@@ -5609,10 +5611,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->bind_Param('sss', $hNo, $hNo, $hNo);
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $model, $deviceName, $member, $devicePortID, $pic, $port, $type);
+			$stmt->bind_result($deviceID, $model, $deviceName,$deviceAltName, $member, $devicePortID, $pic, $port, $type);
 			while ($stmt->fetch()) 
 			{
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$portOptions .= "<option value=$devicePortID>".MakeHTMLSafe($deviceFullName." ".$portFullName)."</option>\n";
@@ -5714,7 +5716,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$patchesInput = "patches input";
 		
 		//build list of devices combo options
-		$query = "SELECT d.deviceid, d.hno, d.name, d.model, d.member
+		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.model, d.member
 			FROM dcim_device AS d
 			ORDER BY /*d.type='S' DESC,*/ d.name, d.member";
 			
@@ -5726,7 +5728,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $deviceHNo, $deviceName, $deviceModel, $deviceMember);
+		$stmt->bind_result($deviceID, $deviceHNo, $deviceName,$deviceAltName, $deviceModel, $deviceMember);
 		$count = $stmt->num_rows;
 		
 		$childDeviceOptions = "";
@@ -5740,7 +5742,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$short = true;
 			while ($stmt->fetch()) 
 			{
-				$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $short);
+				$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember,$deviceAltName, $short);
 				if($hNo==$deviceHNo)
 				{
 					$customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
@@ -5849,8 +5851,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//group concat by port to combine vlans
 		$query = "SELECT
-				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,r.name,l.name,
+				dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.mac,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.altname AS saltname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,l.locationid, site.name,r.name,l.name,
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
@@ -5882,8 +5884,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchRoom,$switchLocationName, 
+		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $deviceAltName, $member, $model, $pic, $port, $mac, 
+						   $switchID, $switchPortID, $switchName, $switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, $switchLocationID,$switchSite,$switchRoom,$switchLocationName, 
 						   $hNo, $type, $speed, $note, $status, $switchHNo, $switchCust, $editUserID, $editDate, $qaUserID, $qaDate, $vlan);
 		$portCount = $stmt->num_rows;
 		
@@ -5960,8 +5962,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$activeRecordHead = "<tr class='$activeRowClass'>";
 				}
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
+				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
 				$switchLocationFullName = FormatLocation($switchSite,$switchRoom,$switchLocationName);
 				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
@@ -6056,8 +6058,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$formAction = "./?host=$hNo";
 		
 		$query = "SELECT 
-				dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.mac,
-				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
+				dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.mac,
+				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.altname AS saltname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
 				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, pc.patches, pc.relationship, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans,
 				l.locationid, l.name, sl.locationid, sl.name
@@ -6090,8 +6092,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$stmt->bind_Param('s', $hNo);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName, $switchMember, $switchModel, $switchPic, $switchPort, 
+		$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, 
+						   $switchID, $switchPortID, $switchName,$switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, 
 						   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
 							$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
 		$count = $stmt->num_rows;
@@ -6128,8 +6130,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
-				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
+				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
 
 				$devicePortTitle = "";
 				$switchPortTitle = "";
@@ -6956,7 +6958,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						//full device name type,size, sorted by cust, devicename
 						
 						//look up each location  & customer here
-						$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, d.model, d.member
+						$query2 = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, d.altname AS devicealtname, d.model, d.member
 							FROM dcim_location AS l
 								LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 								LEFT JOIN dcim_customer AS c ON d.hno = c.hno
@@ -6970,7 +6972,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						else
 						{
 							$stmt2->store_result();
-							$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $model, $member);
+							$stmt2->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName,$deviceAltName, $model, $member);
 							
 							$lastCustomerID = PHP_INT_MAX;
 							while($stmt2->fetch())
@@ -6978,7 +6980,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								$newLocation = ($lastLocationID!=$locationID);
 								$newCustomer = ($lastCustomerID!=$hNo || $newLocation);
 								$fullLocationName = FormatLocation($site, $room, $name);
-								$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+								$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 
 								if(!$firstDevice)
 									$popupText .= "<BR>";

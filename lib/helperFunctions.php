@@ -604,17 +604,22 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $device;
 	}
 	
-	function GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $short)
+	function GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $altName, $short)
 	{
 		$deviceInfo = GetDeviceFromModelName($deviceModel);
 		
-		$deviceFullName = $deviceName;
+		if(strLen($altName)>0)
+		{
+			$altName = " ($altName)";
+		}
+		
+		$deviceFullName = $deviceName.$altName;
 		if($deviceInfo!=null && $deviceInfo->partOfChasis)
 		{
 			if($short)
-				$deviceFullName = $deviceName." M#".$deviceMember;
+				$deviceFullName = $deviceName.$altName." M#".$deviceMember;
 			else
-				$deviceFullName = $deviceName." Member #".$deviceMember;
+				$deviceFullName = $deviceName.$altName." Member #".$deviceMember;
 		}
 		return $deviceFullName;
 	}
