@@ -2813,7 +2813,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//
 		//
 		
-		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullName, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, r.fullName, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.keyno, l.allocation, l.order, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -2828,7 +2828,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $locationID, $location, $altName, $type, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $locationID, $location, $altName, $type, $units, $orientation, $keyno, $allocation, $order, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
 		$locationFound = $stmt->num_rows==1;
 		
 		if($locationFound)
@@ -2903,10 +2903,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo $units;
 			echo "</td>\n";
-			
 			echo "</tr>\n";
-			echo "<tr>\n";
 
+			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Type:</b>";
 			echo "</td>\n";
@@ -2927,6 +2926,30 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 			echo "</td>\n";
+			echo "</tr>\n";
+
+			echo "<tr>\n";
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Key#:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo MakeHTMLSafe($keyno);
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Allocation:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationAllocation($allocation);
+			echo "</td>\n";
+			
+			echo "<td align=right class='customerDetails'>\n";
+			echo "<b>Order:</b>";
+			echo "</td>\n";
+			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo LocationOrder($order);
+			echo "</td>\n";
+			echo "</tr>\n";
 
 			//device notes
 			echo "<tr>\n";
@@ -2954,7 +2977,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationFound)
 		{
-			$descendingUnits = $type!="R";
+			$descendingUnits = $order=="R";
 			$unitStart = $units+1;//start decending 42
 			$unitLimit = 1;//stop decending at 1
 			$sqlOrder = "DESC";
@@ -2964,6 +2987,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$unitLimit = $units;
 				$sqlOrder = "";
 			}
+			//ignore empty units on cages
 			$showEmptyUnits = $type!="C";
 			
 			echo "<div class='panel'>\n";
