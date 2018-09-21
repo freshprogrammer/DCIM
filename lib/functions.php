@@ -1995,6 +1995,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$deviceID = GetInput("deviceid");
 		$hNo = GetInput("hno");
 		$deviceName = GetInput("devicename");
+		$deviceAltName = GetInput("devicealtname");
 		$type = GetInput("type");
 		$size = GetInput("size");
 		$locationID = GetInput("locationid");
@@ -2009,6 +2010,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$add && $valid)$valid = ValidGenericID($deviceID,"Device ID");
 		if($valid)$valid = ValidHNo($hNo);
 		if($valid)$valid = ValidDeviceName($deviceName);
+		if($valid)$valid = ValidDeviceAltName($deviceAltName);
 		if($valid)$valid = ValidDeviceType($type);
 		if($valid)$valid = ValidDeviceSize($size);
 		//location tested bellow
@@ -2092,15 +2094,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				$query = "INSERT INTO dcim_device
-					(hno, locationid, name, member, note, unit, type, size, status, asset, serial, model, edituser, editdate) 
-					VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+					(hno, locationid, name, altname, member, note, unit, type, size, status, asset, serial, model, edituser, editdate) 
+					VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 				
 				//TODO handle errors better
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Insert Prepare failed: ($action -2) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
-				{//					   hlnmnutssasmu
-					$stmt->bind_Param('iisisissssssi', $hNo, $locationID, $deviceName, $member, $notes, $unit, $type, $size, $status, $asset, $serial, $model, $userID);
+				{//					   hlnamnutssasmu
+					$stmt->bind_Param('iissisissssssi', $hNo, $locationID, $deviceName, $deviceAltName, $member, $notes, $unit, $type, $size, $status, $asset, $serial, $model, $userID);
 					
 					if (!$stmt->execute())//execute 
 						//failed (errorNo-error)
@@ -2165,6 +2167,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				$query = "UPDATE dcim_device SET
 						locationid = ?,unit = ?, 
+						altname = ?, 
 						status = ?, 
 						asset = ?,
 						serial = ?,
@@ -2174,8 +2177,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
-				{//					   lusasnd
-					$stmt->bind_Param('iissssi', $locationID, $unit, $status, $asset, $serial, $notes, $deviceID);
+				{//					   luasasnd
+					$stmt->bind_Param('iisssssi', $locationID, $unit, $deviceAltName, $status, $asset, $serial, $notes, $deviceID);
 					
 					if (!$stmt->execute())//execute 
 						//failed (errorNo-error)
@@ -3871,12 +3874,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				$jsSafeDeviceFullName = MakeJSSafeParam($deviceFullName);
 				$jsSafeDeviceName = MakeJSSafeParam($deviceName);
+				$jsSafeAltName = MakeJSSafeParam($deviceAltName);
 				$jsSafeNotes = MakeJSSafeParam($notes);
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
-				//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeAltName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
 			}
 			//editMode button
 			if(UserHasWritePermission())
@@ -4539,8 +4543,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new Device
-			//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -4599,12 +4603,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					echo "<td class='data-table-cell-button editButtons_hidden'>";
 					$jsSafeFullName = MakeJSSafeParam($deviceFullName);
 					$jsSafeName = MakeJSSafeParam($name);
+					$jsSafeAltName = MakeJSSafeParam($deviceAltName);
 					$jsSafeNotes = MakeJSSafeParam($notes);
 					$jsSafeSize = MakeJSSafeParam($size);
 					$jsSafeAsset = MakeJSSafeParam($asset);
 					$jsSafeSerial = MakeJSSafeParam($serial);
-					//EditDevice(add, deviceID, hNo, name, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
+					//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
 					
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
@@ -4637,6 +4642,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$actionText = "Addy";
 		$hnoInput = "654321";
 		$nameInput = "654321-1";
+		$altNameInput = "DBWeb01";
 		$statusInput = "A";
 		$typeInput = "S";
 		$locationInput = 1;
@@ -4695,32 +4701,38 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
+						<td align='right' width=1>Device&nbsp;AltName:</td>
+						<td align='left'>
+							<input id=EditDevice_altname type='text' tabindex=2 size=15 name='devicealtname' value='<?php echo $altNameInput;?>' placeholder='WebDB01' class='' >
+						</td>
+					</tr>
+					<tr>
 						<td align='right' width=1>Type:</td>
 						<td align='left'>
-							<select id=EditDevice_type onchange='EditDeviceTypeChanged(true)' name="type" tabindex=2>
+							<select id=EditDevice_type onchange='EditDeviceTypeChanged(true)' name="type" tabindex=3>
 								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Physical</option>
 								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
 								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
 							</select>
 							Size:
-							<input id=EditDevice_size type='text' tabindex=3 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='2U, Full, 5x7, Half' class=''>
+							<input id=EditDevice_size type='text' tabindex=4 size=6 name='size' value='<?php echo $sizeInput;?>' placeholder='2U, Full, 5x7, Half' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan=1 align=right>Location:</td>
 						<td align='left'>
-							<select id=EditDevice_location name="locationid" tabindex=4>
+							<select id=EditDevice_location name="locationid" tabindex=5>
 								<?php echo $locationOptions; ?>
 							</select>
 							Unit:
-							<input id=EditDevice_unit type='text' tabindex=5 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
+							<input id=EditDevice_unit type='text' tabindex=6 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan=1 align=right>Status:</td>
 						<td align='left'>
-							<select id=EditDevice_status name="status" tabindex=6>
+							<select id=EditDevice_status name="status" tabindex=7>
 								<option value="A" <?php if($statusInput==="A") echo "Selected"; ?>>Active</option>
 								<option value="I" <?php if($statusInput==="I") echo "Selected"; ?>>Inactive</option>
 							</select>
@@ -4729,7 +4741,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr id='EditDevice_interalFields_row1'>
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
-							<select id=EditDevice_model name="model" tabindex=7>
+							<select id=EditDevice_model name="model" tabindex=8>
 							<?php 
 							//This should be a list of all switch (or other non colo device) models
 							foreach($deviceModels as $model)
@@ -4743,7 +4755,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							?>
 							</select>
 							Member:
-							<select id=EditDevice_member name="member" tabindex=8>
+							<select id=EditDevice_member name="member" tabindex=9>
 							<?php 
 							for ($member = 0; $member <= 9; $member++) {
 								echo "<option value='$member'>$member</option>\n";
@@ -4754,25 +4766,25 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr id='EditDevice_interalFields_row2'>
 						<td align='right' width=1>Asset:</td>
 						<td align='left'>
-							<input id=EditDevice_asset type='text' tabindex=9 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
+							<input id=EditDevice_asset type='text' tabindex=10 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
 						</td>
 					</tr>
 					<tr id='EditDevice_interalFields_row3'>
 						<td align='right' width=1>Serial:</td>
 						<td align='left'>
-							<input id=EditDevice_serial type='text' tabindex=10 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
+							<input id=EditDevice_serial type='text' tabindex=11 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditDevice_notes type='text' tabindex=11 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
+							<input id=EditDevice_notes type='text' tabindex=12 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan='2' align='right'>
-							<button type="button" onclick="HideAllEditForms()" tabindex=13>Cancel</button>
-							<input type="submit" value="Save" tabindex=12>
+							<button type="button" onclick="HideAllEditForms()" tabindex=14>Cancel</button>
+							<input type="submit" value="Save" tabindex=13>
 						</td>
 					</tr>
 				</table>

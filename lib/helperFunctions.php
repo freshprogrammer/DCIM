@@ -1564,7 +1564,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidDeviceAltName($input)
 	{
-		return ValidString($input,"Device Alt Name",3);
+		return ValidString($input,"Device Alt Name",0,64);
 	}
 	
 	function ValidDeviceUnit($input)
