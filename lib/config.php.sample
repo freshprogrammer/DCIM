@@ -19,6 +19,9 @@
 	//if false hides subnets & vlans from customer page and device page (including switch overlay) and audits page
 	$config_subnetsEnabled = true;
 	
+	//salt for user passwords
+	$userPasswordSalt = "DCIM_PasSalt-shouldBeUsingPassword_Hash()";
+	
 	//DB connect
 	$db_host = "localhost";
 	$database = "dcimdb";

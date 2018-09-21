@@ -758,11 +758,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if(isset($_COOKIE["dcim_password"]))
 		{
 			$password = $_COOKIE["dcim_password"];
-			if($password=="f23c9a5dca7aef19a3db264c5c21a2f8")//md5 of default password "Pa55word"
+			if($password=="805f22790497dae93be21fbc69549509")//md5 of default password "Pa55word"+salt
 				return true;
-			else if($password=="7c6a180b36896a0a8c02787eeafb0e4c")//md5 of default password "password1"
+			else if($password=="cfdc03556bbbc4d474fc535c58798b95")//md5 of default password "password1"+salt
 				return true;
-			else if($password=="b62a565853f37fb1ec1efc287bfcebf9")//md5 of default password "testPass"
+			else if($password=="d280a422f43b4b704334a4012c4b0f46")//md5 of default password "testPass"+salt
 				return true;
 		}
 		return $result;

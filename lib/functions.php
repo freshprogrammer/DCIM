@@ -8,6 +8,7 @@
 		global $userID;
 		global $resultMessage;
 		global $errorMessage;
+		global $userPasswordSalt;
 		
 		//check cookie
 		if(isset($_COOKIE["dcim_user"]))
@@ -21,8 +22,8 @@
 			//no cookies -check for fresh login form info
 			$user = GetInput("logInUserName");
 			$password = GetInput("logInPassword");
-			
-			$password = md5($password);
+			//should change to password_hash($pass,PASSWORD_BCRYPT) & password_verify($pass,$hash)
+			$password = md5($password.$userPasswordSalt);
 		}
 		
 		//Validate User Authentication against DB - always
@@ -2651,6 +2652,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
+		global $userPasswordSalt;
 		
 		$totalAffectedCount = 0;
 		$valid = true;
@@ -2692,7 +2694,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					$stmt->fetch();
 					
-					$oldPasInput = md5($oldPasInput);
+					$oldPasInput = md5($oldPasInput.$userPasswordSalt);
 					$pasToTest = "";
 					if($validateAdminPas)
 					{
@@ -2731,7 +2733,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($valid)//push new password to DB
 		{
-			$newFinalPas = md5($newpas1);
+			$newFinalPas = md5($newpas1.$userPasswordSalt);
 			$query = "UPDATE dcim_user SET pass=?
 				WHERE userid=? LIMIT 1 ";
 				
@@ -3377,7 +3379,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		
 /////////////////user details
-		$maxPasswordLength = 15;//totly arbitraty, MD5 conversion so len doesnt really matter
+		$maxPasswordLength = 15;//totly arbitrary, MD5 conversion so len doesnt really matter
 		
 		//top panel - cust info / form / search fail 
 		echo "<div class='panel'>\n";

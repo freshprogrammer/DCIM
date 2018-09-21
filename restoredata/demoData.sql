@@ -8374,10 +8374,10 @@ INSERT INTO `dcim_site` VALUES(0, 'DEMO1', 'Demo DC #1', 171.71, 143.44, 0, '201
 -- Dumping data for table `dcim_user`
 --
 
-INSERT INTO `dcim_user` VALUES(0, 0, 'Admin', 'Administrator', '259aa8e4f3ee0811eee51dc7ba2c1bb2', 'dcrafts@hosting.com', 'AM', 'the1AdminPass', '9', 0, '2018-09-19 07:24:33', 0, '2016-04-22 00:00:00');
-INSERT INTO `dcim_user` VALUES(13, 0, 'writer', 'Test Writer', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TW', 'Test Write Access  testPass', '8', 0, '2016-01-02 06:17:06', 0, '2016-04-22 00:00:00');
-INSERT INTO `dcim_user` VALUES(14, 0, 'reader', 'Test Reader', 'b62a565853f37fb1ec1efc287bfcebf9', '', 'TR', 'Test Read Access', '1', 0, '2016-01-02 06:18:39', 0, '2016-04-22 00:00:00');
-INSERT INTO `dcim_user` VALUES(15, 0, 'blocked', 'Test Blocked', 'f23c9a5dca7aef19a3db264c5c21a2f8', '', 'TB', 'Test with no access', '0', 0, '2014-07-21 00:41:24', 0, '2016-04-22 00:00:00');
+INSERT INTO `dcim_user` VALUES(0, 0, 'Admin', 'Administrator', '973012e8bea45a61b6538239e3de145d', 'dcim@freshprogramming.com', 'AM', 'the1AdminPass', '9', 0, '2018-09-19 07:24:33', 0, '2016-04-22 00:00:00');
+INSERT INTO `dcim_user` VALUES(13, 0, 'writer', 'Test Writer', 'd280a422f43b4b704334a4012c4b0f46', '', 'TW', 'Test Write Access  testPass', '8', 0, '2016-01-02 06:17:06', 0, '2016-04-22 00:00:00');
+INSERT INTO `dcim_user` VALUES(14, 0, 'reader', 'Test Reader', 'd280a422f43b4b704334a4012c4b0f46', '', 'TR', 'Test Read Access', '1', 0, '2016-01-02 06:18:39', 0, '2016-04-22 00:00:00');
+INSERT INTO `dcim_user` VALUES(15, 0, 'blocked', 'Test Blocked', 'cfb50a3e928aa308917fad97a1d84cc9', '', 'TB', 'Test with no access blocked123', '0', 0, '2014-07-21 00:41:24', 0, '2016-04-22 00:00:00');
 
 --
 -- Dumping data for table `dcim_vlan`
