@@ -21,6 +21,10 @@
 		{
 			return UserHasWritePermission();
 		}
+		public static function UserHasPanelPermission()
+		{
+			return UserHasAdminPermission();
+		}
 		public static function UserHasLocationPermission()
 		{
 			return UserHasAdminPermission();
@@ -131,7 +135,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
 			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
 			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
-			$searchPlaceHolders[] = "10K+ line club";
+			$searchPlaceHolders[] = "15K+ line club";
 			$searchPlaceHolders[] = "$dbRecs+ DB Records";
 			$searchPlaceHolders[] = "$dbRecs Records and counting";
 				

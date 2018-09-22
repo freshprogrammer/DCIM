@@ -4919,6 +4919,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
+		global $errorMessage;
 		
 		$query = "SELECT s.siteid, s.name AS site, s.fullname, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
 			FROM dcim_room AS r
@@ -5323,7 +5324,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 					echo "<tr class='$rowClass'>";
 					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-					echo "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_roomid=$roomID&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+					echo "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
 					echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
 					echo "<td class='data-table-cell'>$visibleVolts</td>";
 					echo "<td class='data-table-cell'>$amps</td>";
@@ -6273,7 +6274,180 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function PowerAuditPanel($pa_panel)
+	function ShowPowerPanelPage($powerPanelID)
+	{
+		global $mysqli;
+		global $pageSubTitle;
+		global $errorMessage;
+		
+		$query = "SELECT pp.powerpanelid, pp.roomid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.edituser, pp.editdate, pp.qauser, pp.qadate, 
+					COUNT(pc.powercircuitid) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pu.powerupsid
+				FROM dcim_powerpanel AS pp
+					LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
+					LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
+					LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+					LEFT JOIN dcim_powerups AS pu ON pu.powerupsid=pp.powerupsid
+				WHERE pp.powerpanelid=?
+				GROUP BY pp.powerpanelid";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
+			$errorMessage[]= "ShowPowerPanelPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($powerPanelID, $roomID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $editUserID, $editDate, $qaUserID, $qaDate, $linkedCircuits, $load, $roomName, $roomFullName, $siteName,$siteFullName, $siteID, $upsName, $upsID);
+			$panelFound = $stmt->num_rows==1;
+			
+			if($panelFound)
+			{
+				$stmt->fetch();
+				$fullPanelName = trim("$siteName $panelName");
+				$pageSubTitle = "$fullPanelName";
+				
+				if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+				}
+				
+				$pos = FormatSizeInFeet($xPos,$yPos);
+				$size = FormatSizeInFeet($width,$depth);
+				
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>$fullPanelName</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				
+				echo "<table width=100%><tr>\n";
+				echo "<td align='left'>\n";
+				echo "<span class='customerName'>$panelName</span>\n";
+				echo "</td>\n";
+				
+				echo "<td align='right'>\n";
+				//edit Locationbutton - not visible till in edit mode
+				/*if(CustomFunctions::UserHasPanelPermission())
+					{
+					$jsSafeName = MakeJSSafeParam($location);
+					$jsSafeAltName = MakeJSSafeParam($altName);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+						
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+					<?php
+					}*/
+				//editMode button
+				if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasCircuitPermission())
+				{
+					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				}
+				echo "</td>\n";
+				echo "</tr>\n";
+				echo "</table>\n";
+	
+				//details//details
+				echo "<table>\n";
+				echo "<tr>\n";
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Site:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $siteFullName;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>UPS:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $upsName;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Circuits:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$linkedCircuits / $circuits";
+				echo "</td>\n";
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Room:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $roomFullName;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Position:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$pos";
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Load:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$load / $amps (".($load/$amps*100)."%)";
+				echo "</td>\n";
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Orientation:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Size:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$size";
+				echo "</td>\n";
+				
+				echo "</tr></table>\n";
+			}
+			else
+			{
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>Panel</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				echo "Power Panel ID#$powerPanelID not found.<BR>\n";
+			}
+		}
+		
+		if(CustomFunctions::UserHasPanelPermission())
+		{
+			//EditPowerPanelForm();
+		}
+		
+		echo "</div>\n";
+		echo "</div>\n\n";
+		
+		if($panelFound)
+		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>$fullPanelName Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			ListPowerCircuits(true,2);//temp test code
+				
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasCircuitPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			}
+		}//panel found*/
+		//return $count;
+	}
+	
+	function ShowPowerPanelAuditPage($powerPanelID)
 	{
 		//TODO This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
@@ -6287,7 +6461,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE pp.name=?
+			WHERE pp.powerpanelid=?
 			GROUP BY r.roomid, pp.powerpanelid, pc.circuit
 			ORDER BY pc.circuit
 			LIMIT 1";
@@ -6298,7 +6472,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('s' ,$pa_panel);
+		$stmt->bind_Param('s' ,$powerPanelID);
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
@@ -6327,7 +6501,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE pp.name=?
+				WHERE pp.powerpanelid=?
 				GROUP BY r.roomid, pp.name, pc.circuit
 				ORDER BY pc.circuit";
 			
@@ -6337,7 +6511,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
 			
-			$stmt->bind_Param('s', $pa_panel);
+			$stmt->bind_Param('s', $powerPanelID);
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $cust, $powerID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate);
@@ -6459,15 +6633,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}//sucsessfull lookup
 		else//panel/room combo not found
 		{
-			$pageSubTitle = "Power Audit - Panel:$pa_panel not found";
+			$pageSubTitle = "Power Audit - Panel ($powerPanelID) not found";
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>\n";
-			echo "Circuits for Panel:$pa_panel\n";
+			echo "Circuits for Panel: ($powerPanelID)\n";
 			echo "</div>\n";
 		
 			echo "<div class='panel-body'>\n\n";
-			echo "No power circuits found for Panel:$pa_panel<BR>\n";
+			echo "Panel ($powerPanelID) not found<BR>\n";
 		}	
 		echo "</div>\n";
 		echo "</div>\n";
@@ -6512,19 +6686,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			if($input!=-1)
-				$filter = "r.roomid=?";
+				$filter = "l.roomid=?";
 			else
 				$filter = "-1=?";
 		}
 		
-		$query = "SELECT s.siteid, s.name,r.roomid, r.name, pp.name, pp.powerpanelid
-			FROM dcim_powercircuit AS pc
-				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pp.name, pp.powerpanelid
+			FROM dcim_location AS l
+				LEFT JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
+				LEFT JOIN dcim_powercircuit AS pc ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
-				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
-				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_room AS r ON pp.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE $filter
+			WHERE $filter AND s.siteid IS NOT NULL
 			GROUP BY pc.powerpanelid
 			ORDER BY s.name, pc.powerpanelid";
 		
@@ -6538,7 +6712,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$site,$roomID,$room, $panel, $panelid);
+			$stmt->bind_result($siteID,$site,$roomID,$room, $panel, $powerPanelID);
 			$count = $stmt->num_rows;
 			
 			if($count>0)
@@ -6556,7 +6730,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
-					$result .= "<td class='data-table-cell'><a href='./?page=PowerAudit&pa_panel=$panel'>".MakeHTMLSafe($panel)."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
 					$result .= "</tr>";
 				}

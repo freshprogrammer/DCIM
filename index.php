@@ -52,13 +52,13 @@
 	
 	$search = GetInput("search");
 	$page = GetInput("page");
-	$pa_roomID = GetInput("pa_roomid");
-	$pa_panel = GetInput("pa_panel");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
 	$deviceIDInput = GetInput("deviceid");
 	$locationIDInput = GetInput("locationid");
 	$userIDInput = GetInput("userid");
+	$powerPanelIDInput = GetInput("powerpanelid");
+	$powerUPSIDInput = GetInput("powerupsid");
 	$loc = GetInput("loc");
 	$roomID = GetInput("roomid");
 	$loginbtn = GetInput("loginbtn");
@@ -266,16 +266,18 @@
 			ShowLocationPage($locationIDInput);
 		else if(strlen($userIDInput) > 0)
 			ShowUsersPage($userIDInput);
-		else if(strlen($page) > 0)
+		else if(strlen($powerPanelIDInput) > 0)
 		{
 			if($page==="PowerAudit")
-			{
-				if(strlen($pa_panel) > 0)
-					PowerAuditPanel($pa_panel);
-				else
-					PowerAuditPanelList();
-			}
-			else if($page==="Audits")
+				ShowPowerPanelAuditPage($powerPanelIDInput);
+			else 
+				ShowPowerPanelPage($powerPanelIDInput);
+		}
+		else if(strlen($powerUPSInput) > 0)
+			ShowPowerUPSPage($powerUPSInput);
+		else if(strlen($page) > 0)
+		{
+			if($page==="Audits")
 			{
 				require_once 'audits.php';
 				echo BuildAuditsPage();
