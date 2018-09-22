@@ -1177,10 +1177,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							FROM dcim_device AS d 
 							WHERE d.locationid=?
 					UNION
-						SELECT pl.locationid, 'P' as recType, pl.powerid, CONCAT(p.panel,' CRK#',p.circuit)
-							FROM dcim_powerloc AS pl
-							LEFT JOIN dcim_power AS p ON p.powerid=pl.powerid
-							WHERE pl.locationid=?";
+						SELECT pcl.locationid, 'P' as recType, pcl.powercircuitid, CONCAT(pp.name,' CRK#',pc.circuit)
+							FROM dcim_powercircuitloc AS pcl
+							LEFT JOIN dcim_powercircuit AS pc ON pc.powercircuitid=pcl.powercircuitid
+							LEFT JOIN dcim_powerpanel AS pp ON pc.powerpanelid=pp.powerpanelid
+							WHERE pcl.locationid=?";
 			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $locationID,$locationID) || !$stmt->execute())
 				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
@@ -5274,7 +5275,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerID, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerCircuitID, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			echo "<span class='tableTitle'>Power Circuits</span>\n";
@@ -5336,12 +5337,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						
 						$jsSafePanel = MakeJSSafeParam($panel);
 						$jsSafeCircuit = MakeJSSafeParam($circuit);
-						$params = "false,$powerID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
+						$params = "false,$powerCircuitID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
 						?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
 						<?php 
 						echo "</td>\n";
 						
-						echo CreateQACell("dcim_power", $powerID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+						echo CreateQACell("dcim_powercircuit", $powerCircuitID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 					}
 					echo "</tr>";
 				}

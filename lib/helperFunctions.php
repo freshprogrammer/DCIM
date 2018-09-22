@@ -1427,26 +1427,26 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $results;
 	}
 	
-	function ValidPowerRecord(&$powerID, $shouldExist=true, $reportErrors=true)
+	function ValidPowerCircuitRecord(&$powerCircuitID, $shouldExist=true, $reportErrors=true)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		if(!ValidGenericID($powerID,"Power ID"))
+		if(!ValidGenericID($powerCircuitID,"Power Circuit ID"))
 			return false;
 		
-		$query = "SELECT powerid 
-			FROM dcim_power
-			WHERE powerid=?";
+		$query = "SELECT powercircuitid 
+			FROM dcim_powercircuit 
+			WHERE powercircuitid=?";
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
 			//TODO handle Errors better
 			if($reportErrors)
-				$errorMessage[] = "ValidPowerRecord($powerID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+				$errorMessage[] = "ValidPowerRecord($powerCircuitID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
-		$stmt->bind_Param('i', $powerID);
+		$stmt->bind_Param('i', $powerCircuitID);
 		
 		$stmt->execute();
 		$stmt->store_result();
@@ -1455,7 +1455,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if($count==1)
 		{
 			//update input locationid
-			$stmt->bind_result($powerID);
+			$stmt->bind_result($powerCircuitID);
 			$stmt->fetch();
 			
 			if($shouldExist)
@@ -1463,14 +1463,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			else
 			{
 				if($reportErrors)
-					$errorMessage[] = "Power record already exists - ValidPowerRecord($powerID,$shouldExist).";
+					$errorMessage[] = "Power circuit record already exists - ValidPowerRecord($powerCircuitID,$shouldExist).";
 				return false;
 			}
 		}
 		if($count==2)
 		{
 			if($reportErrors)
-				$errorMessage[] = "Multiple Power records found in ValidPowerRecord($powerID,$shouldExist). Contact Admin.";
+				$errorMessage[] = "Multiple Power circuit records found in ValidPowerRecord($powerCircuitID,$shouldExist). Contact Admin.";
 			return false;
 		}
 		else
@@ -1478,7 +1478,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			if($shouldExist)
 			{
 				if($reportErrors)
-					$errorMessage[] = "Power record not found - ValidPowerRecord($powerID,$shouldExist).";
+					$errorMessage[] = "Power record circuit not found - ValidPowerRecord($powerCircuitID,$shouldExist).";
 				return false;
 			}
 			else
