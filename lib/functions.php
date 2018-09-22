@@ -4843,6 +4843,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
+		global $errorMessage;
 		
 		$query = "SELECT s.siteid, s.name AS site, s.fullname, r.roomid, r.name, r.fullname, r.custaccess, r.orientation, r.xpos, r.ypos, r.width, r.depth, s.width, s.depth, r.edituser, r.editdate, r.qauser, r.qadate
 			FROM dcim_room AS r
