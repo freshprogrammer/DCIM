@@ -1082,6 +1082,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$type = GetInput("type");
 			$units = GetInput("units");
 			$orientation = GetInput("orientation");
+			$keyno = GetInput("keyno");
+			$allocation = GetInput("allocation");
+			$order = GetInput("order");
 			$xPos = GetInput("xpos");
 			$yPos = GetInput("ypos");
 			$width = GetInput("width");
@@ -1096,6 +1099,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($valid)$valid = ValidLocationType($type);
 			if($valid)$valid = ValidLocationUnits($units);
 			if($valid)$valid = ValidLocationOrientation($orientation);
+			if($valid)$valid = ValidLocationKeyno($keyno);
+			if($valid)$valid = ValidLocationAllocation($allocation);
+			if($valid)$valid = ValidLocationOrder($order);
 			if($valid)$valid = ValidLocationXPos($xPos);
 			if($valid)$valid = ValidLocationYPos($yPos);
 			if($valid)$valid = ValidLocationWidth($width);
@@ -1197,11 +1203,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($add)
 			{
 				$query = "INSERT INTO dcim_location
-					(roomid,name,altname,type,units,xpos,ypos,width,depth,orientation,visible,note,edituser,editdate)
-					VALUES(?,?,?,?,?,?,?,?,?,?,'T',?,?,CURRENT_TIMESTAMP)";
-				//                                                             rnatuxywdonu
-				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes,$userID))
-					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error;
+					(roomid,name,altname,type,units,xpos,ypos,width,depth,orientation,keyno,allocation,`order`,visible,note,edituser,editdate)
+					VALUES(?,  ?,      ?,   ?,    ?,   ?,   ?,    ?,    ?,          ?,    ?,         ?,      ?,    'T',   ?,?,CURRENT_TIMESTAMP)";
+				//                                                             rnatuxywdokaonu
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddsssssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$keyno,$allocation,$order,$notes,$userID))
+					$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
 				{
 					if (!$stmt->execute())
@@ -1242,13 +1248,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else
 			{
-				$query = "UPDATE dcim_location
-					SET roomid=?,name=?,altname=?,type=?,units=?,xpos=?,ypos=?,width=?,depth=?,orientation=?,note=?
+				$query = "UPDATE dcim_location AS l
+					SET roomid=?,name=?,altname=?,type=?,units=?,xpos=?,ypos=?,width=?,depth=?,orientation=?,keyno=?,allocation=?,l.order=?,note=?
 					WHERE locationid=?
 					LIMIT 1";
-				//                                                             rnatuxywdonk
-				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$notes, $locationID))
-					$errorMessage[] = "Process Location Update Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				//                                                             rnatuxywdokaonk
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddsssssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$keyno,$allocation,$order,$notes, $locationID))
+					$errorMessage[] = "Process Location Update Prepare failed: ($action-5) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				else
 				{
 					if (!$stmt->execute())//execute
@@ -2856,8 +2862,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$jsSafeName = MakeJSSafeParam($location);
 				$jsSafeAltName = MakeJSSafeParam($altName);
 				$jsSafeNote = MakeJSSafeParam($note);
-				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+				$jsSafeKeyno = MakeJSSafeParam($keyno);
+				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
+				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', '$jsSafeKeyno', '$allocation', '$order', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 
 				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 				<?php 
@@ -3158,9 +3165,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
 				if($addLocation)//populate and make visible
 				{
+					/* dont think this page is accessable - and JS is outdated
 					$pageSubTitle = "Add Location";
 					echo "<script type='text/javascript'>EditLocation(true,'','','','','A');</script>\n";
 					$focusSearch = false;
+					
+					*/
 				}
 				else 
 				{
@@ -3259,31 +3269,50 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Misc</option>
 								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Rack</option>
 							</select>
-							Units:<input id=EditLocation_units type='number' tabindex=5 size=6 name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+							Allocation:
+							<select id=EditLocation_allocation name="allocation" tabindex=5>
+								<option value="E" <?php if($typeInput==="E") echo "Selected"; ?>>Empty</option>
+								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Colo</option>
+								<option value="I" <?php if($typeInput==="I") echo "Selected"; ?>>Internal</option>
+								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Managed</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Units:</td>
+						<td align='left'>
+							<input id=EditLocation_units type='number' tabindex=6 size=6 name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+							Order:
+							<div class='inputToolTipContainer'>
+								<select id=EditLocation_order onchange='' name="order" tabindex=7>
+									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
+									<option value="R" <?php if($orientationInput==="R") echo "Selected"; ?>>Reversed</option>
+								</select>
+							<span class=inputTooltip>Numbered top to bottom or reversed.</span></div>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Orientation:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<select id=EditLocation_orientation onchange='' name="orientation" tabindex=6>
+								<select id=EditLocation_orientation onchange='' name="orientation" tabindex=8>
 									<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
 									<option value="E" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
 									<option value="S" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
 									<option value="W" <?php if($orientationInput==="W") echo "Selected"; ?>>Left</option>
 								</select>
-							<span class=inputTooltip>When looing at location in room, relative orientation to room.</span></div>
+							<span class=inputTooltip>When looking at location in room, relative orientation to room.</span></div>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Left:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_xpos type='number' tabindex=7 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_xpos type='number' tabindex=9 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from left room edge to back left corner of location in feet (negative for distance from right wall)</span></div>
 							Foreward:
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_ypos type='number' tabindex=8 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_ypos type='number' tabindex=10 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from far room edge to back left corner of location in feet (negative for distance from close wall)</span></div>
 						</td>
 					</tr>
@@ -3291,18 +3320,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<td align='right' width=1>Width:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_width type='number' tabindex=11 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>In feet</span></div>
 							Depth:
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_depth type='number' tabindex=12 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>In feet</span></div>
+						</td>
+					</tr>
+					<tr>
+						<td align='right' width=1>Key#:</td>
+						<td align='left'>
+							<input id=EditLocation_keyno type='text' tabindex=13 size=18 name='keyno' value='<?php echo $keyno;?>' placeholder="master" class='' >
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditLocation_note type='text' tabindex=11 size=50 name='notes' value='<?php echo $noteInput;?>' placeholder='Notes' class=''>
+							<input id=EditLocation_note type='text' tabindex=14 size=50 name='notes' value='<?php echo $noteInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -3313,8 +3348,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 										<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
 									</td>
 									<td align='right'>
-										<button type='button' onclick='HideAllEditForms()' tabindex=13>Cancel</button>
-										<input type='submit' value='Save' tabindex=12>
+										<button type='button' onclick='HideAllEditForms()' tabindex=16>Cancel</button>
+										<input type='submit' value='Save' tabindex=15>
 									</td>
 								</tr>
 							</table>
@@ -5071,7 +5106,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if(!$showEmpty)
 				$deviceJoin = "INNER";
 			
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
+			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.keyno, l.allocation, l.order, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
 					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.altname AS devicealtname, d.model, d.member,
 					COUNT(d.locationid) AS count
 				FROM dcim_location AS l
@@ -5093,22 +5128,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $deviceCount);
+			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $keyno, $allocation, $order, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
 			$result .= "<span class='tableTitle'>$searchTitle ($count)</span>\n";
 			//add location button
 			if(CustomFunctions::UserHasLocationPermission())
 			{
-				//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-				$params = "true, -1, $roomID, '', '', '', 0, 'N', 0, 0, 0, 0, ''";
+				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
+				$params = "true, -1, $roomID, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3, ''";
 				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Add New</button>";
 			}
 			$result .= "<BR>";
 			
 			if($count>0)
 			{//show results
-				$result .= CreateDataTableHeader(array("Location","Size","Customer","Device"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				$result .= CreateDataTableHeader(array("Location","Size","Units","Customer","Device","Allocation","Key#","Notes"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -5131,7 +5166,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if(!$additionalDevice)
 					{
 						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+						$result .= "<td class='data-table-cell'>$size</td>";
+						$result .= "<td class='data-table-cell'>$units ($order)</td>";
 					}
 					
 					if(strlen($customer) > 0)
@@ -5147,6 +5183,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					if(!$additionalDevice)
 					{//on spanned location record
+						$result .= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>";
+						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($keyno)."</td>";
+						$displayNote = Truncate($note);
+						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($displayNote)."</td>";
 						$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 						
 						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
@@ -5154,8 +5194,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$jsSafeName = MakeJSSafeParam($location);
 							$jsSafeAltName = MakeJSSafeParam($altName);
 							$jsSafeNote = MakeJSSafeParam($note);
-							//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+							$jsSafeKeyno = MakeJSSafeParam($keyno);
+							//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
+							
+							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', '$jsSafeKeyno', '$allocation', '$order', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
 							$result .= "<td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Edit</button></td>";
 							
