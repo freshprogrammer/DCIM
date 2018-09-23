@@ -209,6 +209,11 @@
 			$redirectPage = ProcessCircuitAction($action);
 			$tookAction = true;
 		}
+		else if($action==="PowerPanel_Add" || $action==="PowerPanel_Edit" || $action==="PowerPanel_Delete")
+		{
+			$redirectPage = ProcessPowerPanelAction($action);
+			$tookAction = true;
+		}
 		else if($action==="Location_Add" || $action==="Location_Edit" || $action==="Location_Delete")
 		{
 			$redirectPage = ProcessLocationAction($action);
@@ -588,7 +593,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($valid)$valid = ValidBadgeName($name);
 			if($valid)$valid = ValidBadgeIssue($issue);
 			if($valid)$valid = ValidBadgeStatus($status);
-
+			
 			//make sure customer exists
 			if($valid)$valid = ValidRecord("hno","Hosting #",$hNo,"dcim_customer",true);
 		}
@@ -1052,6 +1057,228 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+	}
+	
+	function ProcessPowerPanelAction($action)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$valid = true;
+		$totalAffectedCount = 0;
+		$redirectPage = "";
+		
+		if(!CustomFunctions::UserHasPanelPermission())
+		{
+			$valid = false;
+			$errorMessage[] = "Your do not have permission to edit power panels. Please contact your administrator.";
+		}
+		else
+		{
+			$add = $action==="PowerPanel_Add";
+			$delete = $action==="PowerPanel_Delete";
+			
+			$powerPanelID = GetInput("powerpanelid");
+			$roomID = GetInput("roomid");
+			$upsID = GetInput("upsid");
+			$name = trim(GetInput("name"));
+			$amps = GetInput("amps");
+			$circuits = GetInput("circuits");
+			$orientation = GetInput("orientation");
+			$xPos = GetInput("xpos");
+			$yPos = GetInput("ypos");
+			$width = GetInput("width");
+			$depth = GetInput("depth");
+			$notes = trim(GetInput("notes"));
+		}
+		
+		if(!$delete)
+		{
+			if($valid)$valid = ValidPowerPanelName($name);
+			if($valid)$valid = ValidPowerPanelAmps($amps);
+			if($valid)$valid = ValidPowerPanelCircuits($circuits);
+			if($valid)$valid = ValidPowerPanelOrientation($orientation);
+			if($valid)$valid = ValidPowerPanelXPos($xPos);
+			if($valid)$valid = ValidPowerPanelYPos($yPos);
+			if($valid)$valid = ValidPowerPanelWidth($width);
+			if($valid)$valid = ValidPowerPanelDepth($depth);
+			if($valid)$valid = ValidNotes($notes);
+		}
+		
+		//validate parent records exist
+		if(!$add)
+			if($valid)$valid = ValidRecord("powerpanelid","Power Panel ID",$powerPanelID,"dcim_powerpanel",true);
+		if($valid)$valid = ValidRecord("roomid","Room ID",$roomID,"dcim_room",true);
+		if($valid)$valid = ValidRecord("powerupsid","UPS ID",$upsID,"dcim_powerups",true);
+		
+		$errorMessage[]="Power Panel Processing - Disabled - End Tests - valid here = $valid";
+		return $redirectPage;
+		
+		//validate room id and look up parent dimentions
+		if(!$delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT r.roomid, r.width, r.depth
+						FROM dcim_room AS r
+						WHERE r.roomid=?;";
+				
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==1;
+				
+				if($passedDBChecks)
+				{//flip xpos to interior of room if negative
+					$stmt->bind_result($roomID, $parentWidth, $parentDepth);
+					$stmt->fetch();
+					if($xPos<0)
+						$xPos = $parentWidth+$xPos;
+					if($yPos<0)
+						$yPos = $parentDepth+$yPos;
+				}
+				else
+					$errorMessage[] = "Error: Room ID#$roomID not found.";
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//validate that this is not a duplicate name within this room
+		if(!$delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT l.locationid, l.name, l.altname FROM dcim_location AS l WHERE l.roomid=? AND locationid!=? AND (l.name=? OR l.altname=?);";
+				
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iiss', $roomID,$locationID,$name,$name) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$stmt->bind_result($foundDeviceID, $foundName, $foundAltName);
+					$stmt->fetch();
+					if(strlen($foundAltName)>0)
+						$foundAltName = " ('".MakeHTMLSafe($foundAltName)."')";
+					$errorMessage[] = "Error: Existing location named '".MakeHTMLSafe($foundName)."'$foundAltName found, ID:$foundDeviceID.";
+				}
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//validate This is a lone location record with no power or devices linked to it so it can be deleted
+		if($delete && $valid)
+		{
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			$query = "SELECT d.locationid, 'D' as recType, d.deviceid, d.name
+							FROM dcim_device AS d 
+							WHERE d.locationid=?
+					UNION
+						SELECT pcl.locationid, 'P' as recType, pcl.powercircuitid, CONCAT(pp.name,' CRK#',pc.circuit)
+							FROM dcim_powercircuitloc AS pcl
+							LEFT JOIN dcim_powercircuit AS pc ON pc.powercircuitid=pcl.powercircuitid
+							LEFT JOIN dcim_powerpanel AS pp ON pc.powerpanelid=pp.powerpanelid
+							WHERE pcl.locationid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $locationID,$locationID) || !$stmt->execute())
+				$errorMessage[] = "ProcessLocationAction() Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$passedDBChecks = $stmt->num_rows==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$errorMessage[] = "Error: Cannot delete this location because there are ".($stmt->num_rows)." power/device records linked to it.";
+				}
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		//do actions
+		if($valid)
+		{
+			if($add)
+			{
+				$query = "INSERT INTO dcim_location
+					(roomid,name,altname,type,units,xpos,ypos,width,depth,orientation,keyno,allocation,`order`,visible,note,edituser,editdate)
+					VALUES(?,  ?,      ?,   ?,    ?,   ?,   ?,    ?,    ?,          ?,    ?,         ?,      ?,    'T',   ?,?,CURRENT_TIMESTAMP)";
+				//                                                             rnatuxywdokaonu
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddsssssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$keyno,$allocation,$order,$notes,$userID))
+					$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					if (!$stmt->execute())
+						$errorMessage[] = "Failed to execute location add (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully added location '".$name."' to Room#$roomID.";
+							LogDBChange("dcim_location",-1,"I","roomid=$roomID AND name='$name'");
+						}
+						else
+							$errorMessage[] = "Success, but affected $affectedCount rows.";
+					}
+				}
+			}
+			else if($delete)
+			{
+				$query = "DELETE FROM dcim_location WHERE locationid=? LIMIT 1";
+				
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $locationID) || !$stmt->execute())
+					$errorMessage[] = "Process Location Delete Prepare failed: ($action-4) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$affectedCount = $stmt->affected_rows;
+					$totalAffectedCount += $affectedCount;
+					if($affectedCount==1)
+					{
+						$resultMessage[] = "Successfully Deleted Location#$locationID '".$name."' to Room#$roomID..";
+						LogDBChange("dcim_location",$locationID,"D");
+						$redirectPage = "./?roomid=$roomID";
+					}
+					else
+						$errorMessage[] = "Success, but affected $affectedCount rows.";
+				}
+			}
+			else
+			{
+				$query = "UPDATE dcim_location AS l
+					SET roomid=?,name=?,altname=?,type=?,units=?,xpos=?,ypos=?,width=?,depth=?,orientation=?,keyno=?,allocation=?,l.order=?,note=?
+					WHERE locationid=?
+					LIMIT 1";
+				//                                                             rnatuxywdokaonk
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssiddddsssssi', $roomID,$name,$altName,$type,$units,$xPos,$yPos,$width,$depth,$orientation,$keyno,$allocation,$order,$notes, $locationID))
+					$errorMessage[] = "Process Location Update Prepare failed: ($action-5) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				else
+				{
+					if (!$stmt->execute())//execute
+						$errorMessage[] = "Failed to execute location edit (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully edited location '".$name."' to Room#$roomID.. $totalAffectedCount records updated.";
+							UpdateRecordEditUser("dcim_location","locationid",$locationID);//do this seperate to distinquish actual record changes from identical updates
+							LogDBChange("dcim_location",$locationID,"U");
+						}
+						else
+							$resultMessage[] = "Success, but affected $affectedCount rows.";
+					}
+				}
+			}
+		}
+		return $redirectPage;
 	}
 	
 	function ProcessLocationAction($action)
@@ -6550,6 +6777,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$stmt->store_result();
 			$stmt->bind_result($siteID, $siteName, $upsID, $upsName);
 			$upsOptions = "";
+			//None Option
+			$selected = (-1==$upsIDInput ? "Selected" : "");
+			$upsOptions .= "<option value='-1' $selected>None</option>\n";
 			while ($stmt->fetch())
 			{
 				$selected = ($upsID==$upsIDInput ? "Selected" : "");

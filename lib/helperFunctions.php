@@ -1033,15 +1033,15 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function ValidNumber($input, $fieldName, $minLen, $maxLen=0, $minVal=-1, $maxVal=-1)
 	{
 		global $errorMessage;
-		$input = (int)$input;
+		//$input = (int)$input;
 		if(strlen($input) < $minLen)
 		{
-			$errorMessage[] = $fieldName." length cannot be less than ".$minLen.".";
+			$errorMessage[] = $fieldName."('$input') length(".strlen($input).") cannot be less than ".$minLen.".";
 			return false;
 		}
 		else if($maxLen >0 && strlen($input) > $maxLen)
 		{
-			$errorMessage[] = $fieldName." length cannot be greater than ".$maxLen.".";
+			$errorMessage[] = $fieldName."('$input') length(".strlen($input).") cannot be greater than ".$maxLen.".";
 			return false;
 		}
 		else if(!is_numeric($input))
@@ -1363,7 +1363,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			
 			if(!$multiplesOK || !$shouldExist)
 			{
-				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key).";
+				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key). Contact Admin";
 				return false;
 			}
 			else 
@@ -1435,58 +1435,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $mysqli;
 		global $errorMessage;
 		
-		if(!ValidGenericID($powerCircuitID,"Power Circuit ID"))
-			return false;
-		
-		$query = "SELECT powercircuitid 
-			FROM dcim_powercircuit 
-			WHERE powercircuitid=?";
-				
-		if (!($stmt = $mysqli->prepare($query))) 
-		{
-			//TODO handle Errors better
-			if($reportErrors)
-				$errorMessage[] = "ValidPowerRecord($powerCircuitID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			return false;
-		}
-		$stmt->bind_Param('i', $powerCircuitID);
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$count = $stmt->num_rows;
-	
-		if($count==1)
-		{
-			//update input locationid
-			$stmt->bind_result($powerCircuitID);
-			$stmt->fetch();
-			
-			if($shouldExist)
-				return true;
-			else
-			{
-				if($reportErrors)
-					$errorMessage[] = "Power circuit record already exists - ValidPowerRecord($powerCircuitID,$shouldExist).";
-				return false;
-			}
-		}
-		if($count==2)
-		{
-			if($reportErrors)
-				$errorMessage[] = "Multiple Power circuit records found in ValidPowerRecord($powerCircuitID,$shouldExist). Contact Admin.";
-			return false;
-		}
-		else
-		{
-			if($shouldExist)
-			{
-				if($reportErrors)
-					$errorMessage[] = "Power record circuit not found - ValidPowerRecord($powerCircuitID,$shouldExist).";
-				return false;
-			}
-			else
-				return true;
-		}
+		$errorMessage[]="ValidPowerCircuitRecord() has been Deprecated() should use ValidRecord() instead";
+		return false;
 	}
 	
 	function ValidDate($input, $fieldName)
@@ -1743,7 +1693,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerPanelCircuits($input)
 	{
-		return ValidNumber($input,"Power Panel Circuits",1,3,2,126);
+		return ValidNumber($input,"Power Panel Circuits",1,3,1,126);
 	}
 	
 	function ValidPowerPanelOrientation($input)
@@ -1764,12 +1714,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerPanelWidth($input)
 	{
-		return ValidNumber($input,"Power panel width",1,1,0,6);
+		return ValidNumber($input,"Power panel width",1,5,0,6);
 	}
 	
 	function ValidPowerPanelDepth($input)
 	{
-		return ValidNumber($input,"Power panel depth",1,1,0,6);
+		return ValidNumber($input,"Power panel depth",1,5,0,6);
 	}
 	
 	function ValidPowerPanelNote($input)
