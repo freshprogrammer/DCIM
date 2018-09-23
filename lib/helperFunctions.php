@@ -312,11 +312,14 @@
 	function GetRecordPageKey($table)
 	{
 		//TODO cust is really the only odd ball, i should probably just change it to hno
-		if($table=="dcim_customer")		$pageKey='host';
-		else if($table=="dcim_device")	$pageKey='deviceid';
-		else if($table=="dcim_location")$pageKey='locationid';
-		else if($table=="dcim_room")	$pageKey='roomid';
-		else if($table=="dcim_user")	$pageKey='userid';
+		if($table=="dcim_customer")			$pageKey='host';
+		else if($table=="dcim_device")		$pageKey='deviceid';
+		else if($table=="dcim_location")	$pageKey='locationid';
+		else if($table=="dcim_room")		$pageKey='roomid';
+		else if($table=="dcim_user")		$pageKey='userid';
+		else if($table=="dcim_powerpanel")	$pageKey='powerpanelid';
+		else if($table=="dcim_powerups")	$pageKey='powerupsid';
+		else if($table=="dcim_site")		$pageKey='siteid';
 		else $pageKey = null;
 		return $pageKey;
 	}
@@ -575,13 +578,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function FormatSimpleMessage($msg, $severity)
 	{
-		if ($severity==3)
+		if ($severity==3)//bad
 			$result = "<table margin=><tr><td bgcolor=red class='simpleMessageCell'>$msg</td></tr></table>";
-		else if ($severity==2)
+		else if ($severity==2)//warning
 			$result = "<table margin=><tr><td bgcolor=orange class='simpleMessageCell'>$msg</td></tr></table>";
-		else if ($severity==1)
+		else if ($severity==1)//good
 			$result = "<table margin=><tr><td bgcolor=lime class='simpleMessageCell'>$msg</td></tr></table>";
-		else
+		else//unknown
 			$result = "<table margin=><tr><td bgcolor=pink class='simpleMessageCell'>$msg</td></tr></table>";
 			
 		return $result;

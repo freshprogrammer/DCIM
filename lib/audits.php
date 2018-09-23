@@ -995,7 +995,7 @@
 			$longResult.= "</table>\n";
 		
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Circuits",3);
+			$shortResult.= FormatSimpleMessage("$count Circuits",2);
 		}
 		else
 		{
@@ -1194,22 +1194,21 @@
 		$reportTitle = "Data Records missing data history";
 		$reportNote= "These are records that managed to exist without proper insert log records to match.";
 		
-		$query = "SELECT cur.* FROM 
-					(
-	SELECT 'site' AS `table`, s.siteid AS id, sl.siteid AS l_id, sl.logtype FROM dcim_site AS s LEFT JOIN dcimlog_site AS sl ON s.siteid = sl.siteid AND sl.logtype='I'
-	UNION SELECT 'badge', b.badgeid, bl.badgeid, bl.logtype FROM dcim_badge AS b LEFT JOIN dcimlog_badge AS bl ON b.badgeid = bl.badgeid AND bl.logtype='I' 
-	UNION SELECT 'customer', c.hno, cl.hno, cl.logtype FROM dcim_customer AS c LEFT JOIN dcimlog_customer AS cl ON c.hno = cl.hno AND cl.logtype='I' 
-	UNION SELECT 'device', d.deviceid, dl.deviceid, dl.logtype FROM dcim_device AS d LEFT JOIN dcimlog_device AS dl ON d.deviceid = dl.deviceid AND dl.logtype='I' 
-	UNION SELECT 'deviceport', dp.deviceportid, dpl.deviceportid, dpl.logtype FROM dcim_deviceport AS dp LEFT JOIN dcimlog_deviceport AS dpl ON dp.deviceportid = dpl.deviceportid AND dpl.logtype='I' 
-	UNION SELECT 'location', l.locationid, ll.locationid, ll.logtype FROM dcim_location AS l LEFT JOIN dcimlog_location AS ll ON l.locationid = ll.locationid AND ll.logtype='I' 
-	UNION SELECT 'portconnection', pc.portconnectionid, pcl.portconnectionid, pcl.logtype FROM dcim_portconnection AS pc LEFT JOIN dcimlog_portconnection AS pcl ON pc.portconnectionid = pcl.portconnectionid AND pcl.logtype='I' 
-	UNION SELECT 'portvlan', pv.portvlanid, pvl.portvlanid, pvl.logtype FROM dcim_portvlan AS pv LEFT JOIN dcimlog_portvlan AS pvl ON pv.portvlanid = pvl.portvlanid AND pvl.logtype='I' 
-	UNION SELECT 'powercircuit', pc.powercircuitid, pcl.powercircuitid, pcl.logtype FROM dcim_powercircuit AS pc LEFT JOIN dcimlog_powercircuit AS pcl ON pc.powercircuitid = pcl.powercircuitid AND pcl.logtype='I' 
-	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid, pcll.powercircuitlocid, pcll.logtype FROM dcim_powercircuitloc AS pcl LEFT JOIN dcimlog_powercircuitloc AS pcll ON pcl.powercircuitlocid = pcll.powercircuitlocid AND pcll.logtype='I' 
-	UNION SELECT 'powerpanel', pp.powerpanelid, ppl.powerpanelid, ppl.logtype FROM dcim_powerpanel AS pp LEFT JOIN dcimlog_powerpanel AS ppl ON pp.powerpanelid = ppl.powerpanelid AND ppl.logtype='I' 
-	UNION SELECT 'powerups', pu.powerupsid, pul.powerupsid, pul.logtype FROM dcim_powerups AS pu LEFT JOIN dcimlog_powerups AS pul ON pu.powerupsid = pul.powerupsid AND pul.logtype='I' 
-	UNION SELECT 'room', r.roomid, rl.roomid, rl.logtype FROM dcim_room AS r LEFT JOIN dcimlog_room AS rl ON r.roomid = rl.roomid AND rl.logtype='I' 
-	UNION SELECT 'vlan', v.vlanid, vl.vlanid, vl.logtype FROM dcim_vlan AS v LEFT JOIN dcimlog_vlan AS vl ON v.vlanid = vl.vlanid AND vl.logtype='I'
+		$query = "SELECT cur.* FROM (
+		  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype   FROM dcim_site AS s				LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
+	UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype   FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
+	UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype   FROM dcim_customer AS c			LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
+	UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype   FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
+	UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype  FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
+	UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype   FROM dcim_location AS l			LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
+	UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype  FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
+	UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype  FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
+	UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype  FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
+	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
+	UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype  FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
+	UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype  FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
+	UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype   FROM dcim_room AS r				LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
+	UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype   FROM dcim_vlan AS v				LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
 					) AS cur
 					WHERE cur.l_id IS NULL
 					ORDER BY 1, 2";
@@ -1222,7 +1221,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($table, $id, $logID, $logType);
+		$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1230,7 +1229,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Table","ID"));
+			$longResult.= CreateDataTableHeader(array("Table","ID","Parent Table","Parent ID",));
 			
 			//list result data
 			$oddRow = false;
@@ -1246,10 +1245,19 @@
 				if($pageKey!=null)
 					$idDisplay = "<a href='./?$pageKey=$id'>$id</a>";
 				$tableDescription = GetTableRecordDescription($table);
+
+				$parentTable = "dcim_".$parentTable;
+				$parentPageKey = GetRecordPageKey($parentTable);
+				$parentIDDisplay = $parentID;
+				if($parentPageKey!=null)
+					$parentIDDisplay = "<a href='./?$parentPageKey=$parentID'>$parentID</a>";
+				$parentTableDescription = GetTableRecordDescription($parentTable);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>$tableDescription</td>\n";
 				$longResult.= "<td class='data-table-cell'>$idDisplay</td>\n";
+				$longResult.= "<td class='data-table-cell'>$parentTableDescription</td>\n";
+				$longResult.= "<td class='data-table-cell'>$parentIDDisplay</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
