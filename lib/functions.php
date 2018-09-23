@@ -2866,7 +2866,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$jsSafeKeyno = MakeJSSafeParam($keyno);
 				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
 				$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', '$jsSafeKeyno', '$allocation', '$order', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
-
+				
 				?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 				<?php 
 			}
@@ -2897,7 +2897,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 			echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
 			echo "</td>\n";
-
+			
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Position:</b>";
 			echo "</td>\n";
@@ -2912,7 +2912,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo $units;
 			echo "</td>\n";
 			echo "</tr>\n";
-
+			
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Type:</b>";
@@ -2935,7 +2935,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 			echo "</td>\n";
 			echo "</tr>\n";
-
+			
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails'>\n";
 			echo "<b>Key#:</b>";
@@ -2958,8 +2958,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo LocationOrder($order);
 			echo "</td>\n";
 			echo "</tr>\n";
-
-			//device notes
+			
 			echo "<tr>\n";
 			echo "<td align=right class='customerDetails' valign='top'>\n";
 			echo "<b>Notes:</b>";
@@ -6310,7 +6309,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $pageSubTitle;
 		global $errorMessage;
 		
-		$query = "SELECT pp.powerpanelid, pp.roomid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.edituser, pp.editdate, pp.qauser, pp.qadate, 
+		$query = "SELECT pp.powerpanelid, pp.roomid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate, 
 					COUNT(pc.powercircuitid) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pu.powerupsid
 				FROM dcim_powerpanel AS pp
 					LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
@@ -6325,7 +6324,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($powerPanelID, $roomID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $editUserID, $editDate, $qaUserID, $qaDate, $linkedCircuits, $load, $roomName, $roomFullName, $siteName,$siteFullName, $siteID, $upsName, $upsID);
+			$stmt->bind_result($powerPanelID, $roomID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $linkedCircuits, $load, $roomName, $roomFullName, $siteName,$siteFullName, $siteID, $upsName, $upsID);
 			$panelFound = $stmt->num_rows==1;
 			
 			if($panelFound)
@@ -6353,19 +6352,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				echo "<td align='right'>\n";
 				//edit Locationbutton - not visible till in edit mode
-				/*if(CustomFunctions::UserHasPanelPermission())
-					{
-					$jsSafeName = MakeJSSafeParam($location);
-					$jsSafeAltName = MakeJSSafeParam($altName);
+				echo "<button type='button' class='editButtons_hidden' onClick='parent.location=\"./?powerpanelid=$powerPanelID&page=PowerAudit\"'>Audit Panel</button>\n";
+				if(CustomFunctions::UserHasPanelPermission())
+				{
+					$jsSafeSiteName = MakeJSSafeParam($siteName);
+					$jsSafeName = MakeJSSafeParam($panelName);
 					$jsSafeNote = MakeJSSafeParam($note);
-					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
-					$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
+					$params = "false, $powerPanelID, $roomID, $upsID, '$jsSafeSiteName', '$jsSafeName', '$amps', '$circuits', '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+					?><button type='button' class='editButtons_hidden' onclick="EditPowerPanel(<?php echo $params;?>);">Edit Panel</button>
 					<?php
-					}*/
-
-				echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?powerpanelid=$powerPanelID&page=PowerAudit\"'>Audit Panel</button>\n";
+				}
 				//editMode button
 				if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasCircuitPermission())
 				{
@@ -6374,7 +6372,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</td>\n";
 				echo "</tr>\n";
 				echo "</table>\n";
-	
+				
 				//details//details
 				echo "<table>\n";
 				echo "<tr>\n";
@@ -6439,6 +6437,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
 				echo "$size";
 				echo "</td>\n";
+				echo "</tr>\n";
+				
+				echo "<tr>\n";
+				echo "<td align=right class='customerDetails' valign='top'>\n";
+				echo "<b>Notes:</b>";
+				echo "</td>\n";
+				echo "<td valign=top align=left colspan='5'>\n";
+				echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($note)."</textarea>";
+				echo "</td>\n";
 				
 				echo "</tr></table>\n";
 			}
@@ -6453,7 +6460,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if(CustomFunctions::UserHasPanelPermission())
 		{
-			//EditPowerPanelForm();
+			EditPowerPanelForm($siteID);
 		}
 		
 		echo "</div>\n";
@@ -6477,6 +6484,184 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}//panel found*/
 		//return $count;
+	}
+	
+	function EditPowerPanelForm($siteID)
+	{
+		global $errorMessage;
+		global $mysqli;
+		
+		//-default values - never seen
+		$action = "";
+		$actionText = "Addy";
+		$roomIDInput = 2;
+		$upsIDInput = 2;
+		$nameInput = "panel";
+		$ampsInput = 6;
+		$circuitsInput = 43;
+		$xPosInput = 211.11;
+		$yPosInput = 311.11;
+		$orientationInput = "E";
+		$widthInput = 411.11;
+		$depthInput = 511.11;
+		$noteInput = "notes input";
+
+		//build room combo options
+		$roomOptions = "";
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
+		FROM dcim_room AS r
+		LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+		WHERE r.siteid=$siteID
+		ORDER BY s.name, r.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditPowerPanelForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
+			$roomOptions = "";
+			while ($stmt->fetch())
+			{
+				$fullRoomName = "$site $roomFullName";
+				$selected = ($roomID==$roomIDInput ? "Selected" : "");
+				$roomOptions .= "<option value='$roomID' $selected>$fullRoomName</option>\n";
+			}
+		}
+		
+		//build ups combo options
+		$upsOptions = "";
+		$query = "SELECT pu.siteid, s.name AS site, pu.powerupsid, pu.name
+		FROM dcim_powerups AS pu
+			LEFT JOIN dcim_site AS s ON s.siteid=pu.siteid
+		WHERE pu.siteid=$siteID
+		ORDER BY pu.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditPowerPanelForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $upsID, $upsName);
+			$upsOptions = "";
+			while ($stmt->fetch())
+			{
+				$selected = ($upsID==$upsIDInput ? "Selected" : "");
+				$upsOptions .= "<option value='$upsID' $selected>$siteName $upsName</option>\n";
+			}
+		}
+		
+		?>
+			<div id='EditPowerPanelMsg' class='hidden'></div>
+			<div id='EditPowerPanelEntry' class='hidden'>
+			<BR>
+			<table><tr><td>
+			<form action="<?php echo $action;?>" method='post' id='EditPowerPanelForm' onsubmit='return SavePowerPanel()' class=''>
+				<fieldset>
+					<legend id=EditPowerPanelEntryLegend><b><?php echo $actionText;?> Power Panel</b></legend>
+					<table>
+						<tr>
+							<td colspan=1 align=right>Room:</td>
+							<td align='left'>
+								<select id=EditPowerPanel_roomid name="roomid" tabindex=1>
+									<?php echo $roomOptions; ?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Name:</td>
+							<td align='left'>
+								<input id=EditPowerPanel_name type='text' tabindex=2 size=18 name='name' value='<?php echo $nameInput;?>' placeholder="UPS-12" class='' >
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Amps:</td>
+							<td align='left'>
+								<input id=EditPowerPanel_amps type='number' tabindex=3 size=6 name='amps' min='0' max='500' step='25' value='<?php echo $ampsInput;?>' placeholder='200' class=''>
+								Circuits:
+								<input id=EditPowerPanel_circuits type='number' tabindex=4 size=6 name='circuits' min='1' max='150' step='1' value='<?php echo $circuitsInput;?>' placeholder='42' class=''>
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Orientation:</td>
+							<td align='left'>
+								<div class='inputToolTipContainer'>
+									<select id=EditPowerPanel_orientation onchange='' name="orientation" tabindex=5>
+										<option value="N" <?php if($orientationInput==="N") echo "Selected"; ?>>Normal</option>
+										<option value="E" <?php if($orientationInput==="E") echo "Selected"; ?>>Right</option>
+										<option value="S" <?php if($orientationInput==="S") echo "Selected"; ?>>Backwards</option>
+										<option value="W" <?php if($orientationInput==="W") echo "Selected"; ?>>Left</option>
+									</select>
+								<span class=inputTooltip>When looking at panel in room, relative orientation to room.</span></div>
+							</td>
+						</tr>
+						<tr>
+							<td colspan=1 align=right>UPS:</td>
+							<td align='left'>
+								<select id=EditPowerPanel_upsid name="upsid" tabindex=6>
+									<?php echo $upsOptions; ?>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Left:</td>
+							<td align='left'>
+								<div class='inputToolTipContainer'>
+									<input id=EditPowerPanel_xpos type='number' tabindex=7 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+								<span class=inputTooltip>Distance from left room edge to back left corner of panel in feet (negative for distance from right wall)</span></div>
+								Foreward:
+								<div class='inputToolTipContainer'>
+									<input id=EditPowerPanel_ypos type='number' tabindex=8 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+								<span class=inputTooltip>Distance from far room edge to back left corner of panel in feet (negative for distance from close wall)</span></div>
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Width:</td>
+							<td align='left'>
+								<div class='inputToolTipContainer'>
+									<input id=EditPowerPanel_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+								<span class=inputTooltip>In feet</span></div>
+								Depth:
+								<div class='inputToolTipContainer'>
+									<input id=EditPowerPanel_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+								<span class=inputTooltip>In feet</span></div>
+							</td>
+						</tr>
+						<tr>
+							<td align='right' width=1>Notes:</td>
+							<td align='left'>
+								<input id=EditPowerPanel_note type='text' tabindex=11 size=50 name='notes' value='<?php echo $noteInput;?>' placeholder='Notes' class=''>
+							</td>
+						</tr>
+						<tr>
+							<td colspan='2'>
+								<table style='width:100%;'>
+									<tr>
+										<td align=left>
+											<?php //<button id='EditPowerPanel_deletebtn' type='button' onclick='DeletePanel(//not created)' tabindex=12>Delete</button> ?>
+										</td>
+										<td align='right'>
+											<button type='button' onclick='HideAllEditForms()' tabindex=14>Cancel</button>
+											<input type='submit' value='Save' tabindex=13>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+					<input id=EditPowerPanel_powerpanelid type='hidden' name='powerpanelid' value=-1>
+					<input id=EditPowerPanel_action type='hidden' name='action' value='null'>
+					<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
+				</fieldset>
+			</form>
+		</td></tr></table></div>
+		<?php
 	}
 	
 	function ShowPowerPanelAuditPage($powerPanelID)
