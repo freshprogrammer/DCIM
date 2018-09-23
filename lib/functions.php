@@ -3155,7 +3155,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "<BR>\n";
 			
 			//list circuits
-			ListPowerCircuits(true,$locationID);
+			ListPowerCircuits("L",$locationID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -3770,7 +3770,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			
 			//Power Circuits of devices
-			$powerCircuitsCount = ListPowerCircuits(false,$hNo);
+			$powerCircuitsCount = ListPowerCircuits("C",$hNo);
 			
 			//end search (or customer details) panel and panel body
 		}
@@ -5228,16 +5228,21 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListPowerCircuits($locationPage, $key)
+	function ListPowerCircuits($page, $key)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$formAction = "./?host=$key";
 		
+		$locationPage = $page=="L";
+		$custPage = $page=="C";
+		$panelPage = $page=="P";
+		
 		if($locationPage)
 		{
-			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, 
+					1 AS cnt
 			FROM dcim_location AS l
 				INNER JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
@@ -5248,9 +5253,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			GROUP BY pp.powerpanelid, pc.circuit
 			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
-		else
+		else if($custPage)
 		{//customer page - based on hno in device table
-			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, 
+					1 AS cnt
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				INNER JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
@@ -5262,12 +5268,22 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			GROUP BY pp.powerpanelid, pc.circuit
 			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
-		
+		else if($panelPage)
+		{//customer page - based on hno in device table
+			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
+				(SELECT COUNT(powercircuitid) FROM dcim_powercircuitloc AS cur WHERE cur.powercircuitid=pcl.powercircuitid) AS cnt
+			FROM dcim_powerpanel AS pp 
+				LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
+				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE pp.powerpanelid=?
+			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit";
+		}
 		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
 		//TODO This should also check the device status is active and or show/filter that here	
-		
-
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
 		{
 			$errorMessage[]= "Prepare failed: ListPowerCircuits() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
@@ -5276,7 +5292,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerCircuitID, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($siteID,$site,$roomID,$room,$locationID, $location, $powerCircuitID, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate,$circuitLocCount);
 			$count = $stmt->num_rows;
 			
 			echo "<span class='tableTitle'>Power Circuits</span>\n";
@@ -5287,13 +5303,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				<?php 
 			}
 			echo "<BR>";
-				
+			
 			if($count>0)
 			{
-				echo CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Status","Load"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
+				echo CreateDataTableHeader(array("Panel","Circuit","Volts","Amps","Status","Load","Location"),true,CustomFunctions::UserHasCircuitPermission(),CustomFunctions::UserHasCircuitPermission());
 				
 				//list result data
 				$oddRow = false;
+				$lastCircuitID = -1;
 				while ($stmt->fetch())
 				{
 					$fullLocationName = FormatLocation($site, $room, $location);
@@ -5321,30 +5338,43 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$visibleCircuit = Format208CircuitNumber($circuit);
 					else if($volts==308)
 						$visibleCircuit = Format3Phase208CircuitNumber($circuit);
-						
+					
+					$noLocation = $circuitLocCount==0;
+					if($noLocation)$circuitLocCount = 1;
+					
 					echo "<tr class='$rowClass'>";
-					echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
-					echo "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($visibleCircuit)."</td>";
-					echo "<td class='data-table-cell'>$visibleVolts</td>";
-					echo "<td class='data-table-cell'>$amps</td>";
-					echo "<td class='data-table-cell'>".PowerStatus($status)."</td>";
-					echo "<td class='data-table-cell'>".$load."A$percentLoad</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-					if(CustomFunctions::UserHasCircuitPermission())
+					if($powerCircuitID!=$lastCircuitID)
 					{
-						//edit button
-						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
-						
-						$jsSafePanel = MakeJSSafeParam($panel);
-						$jsSafeCircuit = MakeJSSafeParam($circuit);
-						$params = "false,$powerCircuitID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
-						?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
-						<?php 
-						echo "</td>\n";
-						
-						echo CreateQACell("dcim_powercircuit", $powerCircuitID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".MakeHTMLSafe($visibleCircuit)."</td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$amps</td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".PowerStatus($status)."</td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".$load."A$percentLoad</td>";
 					}
+					if($noLocation)
+						echo "<td class='data-table-cell'></td>";//not linked to any location
+					else
+						echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					if($powerCircuitID!=$lastCircuitID)
+					{
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+						if(CustomFunctions::UserHasCircuitPermission())
+						{
+							//edit button
+							echo "<td class='data-table-cell-button editButtons_hidden' rowspan='$circuitLocCount'>\n";
+							
+							$jsSafePanel = MakeJSSafeParam($panel);
+							$jsSafeCircuit = MakeJSSafeParam($circuit);
+							$params = "false,$powerCircuitID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
+							?><button onclick="EditCircuit(<?php echo $params;?>)">Edit</button>
+							<?php 
+							echo "</td>\n";
+							
+							echo CreateQACell("dcim_powercircuit", $powerCircuitID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate,true,$circuitLocCount);
+						}
+					}
+					$lastCircuitID = $powerCircuitID;
 					echo "</tr>";
 				}
 				echo "</table>";
@@ -5364,7 +5394,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else 
 			{
-				//cant add power from hree so location is irrelevant
+				//cant add power from here so location is irrelevant
 				EditCircuitForm($formAction, -1, $locationPage);
 			}
 		}
@@ -6313,7 +6343,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$size = FormatSizeInFeet($width,$depth);
 				
 				echo "<div class='panel'>\n";
-				echo "<div class='panel-header'>$fullPanelName</div>\n";
+				echo "<div class='panel-header'>Power Panel: $fullPanelName</div>\n";
 				echo "<div class='panel-body'>\n\n";
 				
 				echo "<table width=100%><tr>\n";
@@ -6334,6 +6364,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
 					<?php
 					}*/
+
+				echo "<button type='button' style='display:inline;' onClick='parent.location=\"./?powerpanelid=$powerPanelID&page=PowerAudit\"'>Audit Panel</button>\n";
 				//editMode button
 				if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasCircuitPermission())
 				{
@@ -6357,7 +6389,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<b>UPS:</b>";
 				echo "</td>\n";
 				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo $upsName;
+				echo "<a href='./?powerupsid=$upsID'>$upsName</a>";
 				echo "</td>\n";
 				
 				echo "<td align=right class='customerDetails'>\n";
@@ -6374,7 +6406,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<b>Room:</b>";
 				echo "</td>\n";
 				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo $roomFullName;
+				echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
 				echo "</td>\n";
 				
 				echo "<td align=right class='customerDetails'>\n";
@@ -6430,10 +6462,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($panelFound)
 		{
 			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>$fullPanelName Details</div>\n";
+			echo "<div class='panel-header'>Power Panel Details: $fullPanelName</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
-			ListPowerCircuits(true,2);//temp test code
+			ListPowerCircuits("P",$powerPanelID);//temp test code
 				
 			echo "</div>\n";
 			echo "</div>\n";
@@ -6595,7 +6627,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
 						echo "	</tr></table><table width=100%><tr>\n";
 						//echo "	$fullLocationName ($percentLoad%) ";
-						echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a></b>&nbsp;&nbsp;</td>\n";
+						if($locationID==null)
+							echo "	<td>No Location</td>\n";
+						else
+							echo "	<td><a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?locationid=$locationID\");'>".MakeHTMLSafe($fullLocationName)."</a>&nbsp;&nbsp;</td>\n";
 						echo "	<td align=right>".$displayVolts."-".$amps."A-<b>".PowerOnOff($status)."</b>\n";
 						$statusFieldID = "PowerAuditPanel_Circuit".$circuit."_status";
 						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
@@ -6615,7 +6650,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						else if(!$left && $rightSpan>1)
 							$rightSpan--;
 						else
-							echo "<td class='$cellClass powerAuditCellEmpty'>".MakeHTMLSafe($panel)." / ".MakeHTMLSafe($tableCircuitNo)." - EMPTY</td>\n";
+							echo "<td class='$cellClass powerAuditCellEmpty'><b>".MakeHTMLSafe($panel)." CKT ".MakeHTMLSafe($tableCircuitNo)."</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EMPTY</td>\n";
 					}
 					
 					if(!$left)
