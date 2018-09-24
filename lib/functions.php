@@ -7177,7 +7177,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$count = $stmt->num_rows;
 			
 			//on room page - add location button
-			if($input!=-1 && CustomFunctions::UserHasPanelPermission())
+			if(!$search && $input!=-1 && CustomFunctions::UserHasPanelPermission())
 			{
 				//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
 				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 200, 42, 'N', 0, 0, 1.21, 0.35, ''";
@@ -7234,7 +7234,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo $result;
 		
 		//on room page
-		if($input!=-1 && CustomFunctions::UserHasPanelPermission())
+		if(!$search && $input!=-1 && CustomFunctions::UserHasPanelPermission())
 			EditPowerPanelForm($input);
 		
 		return $count;
