@@ -732,7 +732,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function TestForSingleCustomerMatch($input)
 	{
 		global $mysqli;
-		
+		/* this is dissabled for #232
 		$query = "SELECT hno, cno, name, note, status, edituser 
 			FROM dcim_customer 
 			WHERE CONCAT('H',hno) LIKE ? OR CONCAT('C',cno) LIKE ? OR name LIKE ? OR note LIKE ?";
@@ -756,7 +756,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$stmt->fetch();
 			return $hNo;
 		}
-		else
+		else*/
 			return false;
 	}
 	
