@@ -5286,7 +5286,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 			ListRoomLocationsAndDevices($roomID);
 			echo "<BR>";
-			echo ListPowerPanels(false, $roomID);
+			ListPowerPanels(false, $roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -5862,7 +5862,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$result .= "<tr class='$rowClass'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
-				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomFullName)."</a></td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomFullName)."</td>";
 				$result .= "<td class='data-table-cell'>".$custAccess."</td>";
 				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				/*if(UserHasWritePermission())
@@ -6685,6 +6685,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</td>\n";
 				
 				echo "</tr></table>\n";
+				
+				if(CustomFunctions::UserHasPanelPermission())
+				{
+					EditPowerPanelForm($roomID);
+				}
 			}
 			else
 			{
@@ -6693,15 +6698,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<div class='panel-body'>\n\n";
 				echo "Power Panel ID#$powerPanelID not found.<BR>\n";
 			}
+			echo "</div>\n";
+			echo "</div>\n\n";
 		}
-		
-		if(CustomFunctions::UserHasPanelPermission())
-		{
-			EditPowerPanelForm($siteID);
-		}
-		
-		echo "</div>\n";
-		echo "</div>\n\n";
 		
 		if($panelFound)
 		{
@@ -6723,7 +6722,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//return $count;
 	}
 	
-	function EditPowerPanelForm($siteID)
+	function EditPowerPanelForm($roomID)
 	{
 		global $errorMessage;
 		global $mysqli;
@@ -6745,11 +6744,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 		//build room combo options
 		$roomOptions = "";
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
-		FROM dcim_room AS r
-		LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-		WHERE r.siteid=$siteID
-		ORDER BY s.name, r.name";
+		$query = "SELECT s.siteid, s.name, r2.roomid, r2.name, r2.fullname
+			FROM dcim_room AS r1
+				LEFT JOIN dcim_site AS s ON s.siteid=r1.siteid
+				LEFT JOIN dcim_room AS r2 ON r2.siteid=s.siteid
+			WHERE r1.roomid = $roomID
+			ORDER BY s.name, r2.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -6772,9 +6772,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//build ups combo options
 		$upsOptions = "";
 		$query = "SELECT pu.siteid, s.name AS site, pu.powerupsid, pu.name
-		FROM dcim_powerups AS pu
-			LEFT JOIN dcim_site AS s ON s.siteid=pu.siteid
-		WHERE pu.siteid=$siteID
+		FROM dcim_room AS r
+			LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+			LEFT JOIN dcim_powerups AS pu ON pu.siteid=s.siteid
+		WHERE r.roomid=$roomID
 		ORDER BY pu.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -7124,11 +7125,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		$result.= "<div class='panel-body'>\n\n";
 		
-		$result.= ListPowerPanels(false);
-		
-		$result.= "</div>\n";
-		$result.= "</div>\n";
 		echo $result;
+		
+		ListPowerPanels(false);//broken maybe with panel edit form 
+		
+		echo "</div>\n</div>\n";
 	}
 	
 	function ListPowerPanels($search, $input=-1)
@@ -7149,39 +7150,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			if($input!=-1)
-				$filter = "l.roomid=?";
+				$filter = "pp.roomid=?";
 			else
 				$filter = "-1=?";
 		}
 		
-		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pp.name, pp.powerpanelid
-			FROM dcim_location AS l
-				LEFT JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
-				LEFT JOIN dcim_powercircuit AS pc ON pc.powercircuitid=pcl.powercircuitid
-				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
-				LEFT JOIN dcim_room AS r ON pp.roomid=r.roomid
+		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pu.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
+			FROM  dcim_room AS r
+				LEFT JOIN dcim_powerpanel AS pp ON pp.roomid=r.roomid
+				LEFT JOIN dcim_powerups AS pu ON pu.powerupsid=pp.powerupsid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE $filter AND s.siteid IS NOT NULL
-			GROUP BY pc.powerpanelid
-			ORDER BY s.name, pc.powerpanelid";
+			ORDER BY s.name, pp.name";
 		
-		$result = "<span class='tableTitle'>Power Panels</span><BR>\n";
+		$result = "<span class='tableTitle'>Power Panels</span>\n";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input) || !$stmt->execute())
 		{
 			$errorMessage[]= "Prepare failed: ListPowerPanels() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-			$result .= "SQL error locating power panels";
+			$result .= "<BR>SQL error locating power panels";
 		}
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$site,$roomID,$room, $panel, $powerPanelID);
+			$stmt->bind_result($siteID,$siteName,$roomID,$room, $upsID, $upsName, $powerPanelID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
+			
+			//on room page - add location button
+			if($input!=-1 && CustomFunctions::UserHasPanelPermission())
+			{
+				//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
+				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 200, 42, 'N', 0, 0, 1.21, 0.35, ''";
+				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditPowerPanel($params);\">Add New</button>";
+			}
+			$result .= "<BR>";
 			
 			if($count>0)
 			{
 				//show results
-				$result .= CreateDataTableHeader(array("Site","Panel","Room"));
+				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Note"),true,true,true);
 					
 				//list result data
 				$oddRow = false;
@@ -7192,17 +7199,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else $rowClass = "dataRowTwo";
 			
 					$result .= "<tr class='$rowClass'>";
-					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>";
-					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+					if($upsID!=-1)
+						$result .= "<td class='data-table-cell'><a href='./?powerupsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
+					else
+						$result .= "<td class='data-table-cell'></td>";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe(Truncate($note))."</td>";
+
+					$result .= "<td class='data-table-cell' rowspan='$circuitLocCount'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					if(CustomFunctions::UserHasPanelPermission())
+					{
+						//edit button
+						$result .= "<td class='data-table-cell-button editButtons_hidden' rowspan='$circuitLocCount'>\n";
+						
+						$jsSafeSiteName = MakeJSSafeParam($siteName);
+						$jsSafeName = MakeJSSafeParam($panelName);
+						$jsSafeNote = MakeJSSafeParam($note);
+						//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
+						$params = "false, $powerPanelID, $roomID, $upsID, '$jsSafeSiteName', '$jsSafeName', '$amps', '$circuits', '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+						$result .= "<button onclick=\"EditPowerPanel($params)\">Edit</button>";
+						$result .= "</td>\n";
+						$result .= CreateQACell("dcim_powercircuit", $powerCircuitID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate,true,$circuitLocCount);
+					}
 					$result .= "</tr>";
 				}
 				$result .= "</table>";
 			}
 			else
-				$result .= "No Power panel data found<BR>";
+				$result .= "No Power panel data found<BR>";//TODO should say where they aren't found 
 		}
-		return $result;
+		
+		echo $result;
+		
+		//on room page
+		if($input!=-1 && CustomFunctions::UserHasPanelPermission())
+			EditPowerPanelForm($input);
+		
+		return $count;
 	}
 	
 	function ChangeHNo($old, $new, $renameDevices)

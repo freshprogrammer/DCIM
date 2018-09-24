@@ -318,7 +318,7 @@
 					echo "<BR>\n";
 					
 					//search for panels
-					echo ListPowerPanels(true, $search);
+					ListPowerPanels(true, $search);
 					
 					echo "</div>\n";
 					echo "</div>\n";
