@@ -7312,12 +7312,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$filter = "pu.siteid=?";
 		}
 		
-		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pu.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
+		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pu.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, SUM(pc.load), pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
 			FROM  dcim_room AS r
+				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.roomid=r.roomid
 				LEFT JOIN dcim_powerups AS pu ON pu.powerupsid=pp.powerupsid
-				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
 			WHERE $filter AND s.siteid IS NOT NULL
+			GROUP BY pp.powerpanelid
 			ORDER BY s.name, pp.name";
 		
 		$result = "<span class='tableTitle'>Power Panels</span>\n";
@@ -7330,7 +7332,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($siteID,$siteName,$roomID,$room, $upsID, $upsName, $powerPanelID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($siteID,$siteName,$roomID,$room, $upsID, $upsName, $powerPanelID, $panelName, $amps, $load, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			//on room page - add location button
@@ -7345,7 +7347,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($count>0)
 			{
 				//show results
-				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Note"),true,true,true);
+				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Load","Note"),true,true,true);
 					
 				//list result data
 				$oddRow = false;
@@ -7354,7 +7356,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
-			
+					
+					$percentLoad = ($load/$amps*100);
+					if($percentLoad>75) $percentLoad = "<font color=red>$percentLoad</font>";
+					$displayLoad = $load."A (".$percentLoad."%)";
+					
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</td>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
@@ -7363,6 +7369,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$result .= "<td class='data-table-cell'><a href='./?powerupsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
 					else
 						$result .= "<td class='data-table-cell'></td>";
+					$result .= "<td class='data-table-cell'>".$amps."A</td>";
+					$result .= "<td class='data-table-cell'>$displayLoad</td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe(Truncate($note))."</td>";
 
 					$result .= "<td class='data-table-cell' rowspan='$circuitLocCount'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
