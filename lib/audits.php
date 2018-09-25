@@ -83,6 +83,7 @@
 			
 			$recCount = 0;
 			$output = CreateTableRowCountTable($recCount);
+			$result .= "<a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/database_structure.md' target='_blank'>DB Documentation on GitHub</a><BR/>";
 			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
 
 			$output = "";
