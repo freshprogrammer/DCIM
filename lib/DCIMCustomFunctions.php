@@ -25,6 +25,10 @@
 		{
 			return UserHasAdminPermission();
 		}
+		public static function UserHasUPSPermission()
+		{
+			return UserHasAdminPermission();
+		}
 		public static function UserHasLocationPermission()
 		{
 			return UserHasAdminPermission();

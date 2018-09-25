@@ -5286,7 +5286,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 
 			ListRoomLocationsAndDevices($roomID);
 			echo "<BR>";
-			ListPowerPanels(false, $roomID);
+			ListPowerPanels("R", $roomID);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -6585,7 +6585,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</td>\n";
 				
 				echo "<td align='right'>\n";
-				//edit Locationbutton - not visible till in edit mode
+				//edit panel button - not visible till in edit mode
 				echo "<button type='button' class='editButtons_hidden' onClick='parent.location=\"./?powerpanelid=$powerPanelID&page=PowerAudit\"'>Audit Panel</button>\n";
 				if(CustomFunctions::UserHasPanelPermission())
 				{
@@ -7112,6 +7112,150 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ShowPowerUPSPage($powerUpsID)
+	{
+		global $mysqli;
+		global $pageSubTitle;
+		global $errorMessage;
+		
+		$query = "SELECT s.siteid, s.name, s.fullname, pu.powerupsid, pu.name, pu.volts, pu.amps, SUM(pc.load) AS `load`, pu.note, pu.edituser, pu.editdate, pu.qauser, pu.qadate
+			FROM dcim_powerups pu
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerupsid=pu.powerupsid
+				LEFT JOIN dcim_powercircuit AS pc ON pc.powerpanelid=pp.powerpanelid
+				LEFT JOIN dcim_site AS s on s.siteid=pu.siteid
+			WHERE pu.powerupsid=?
+			GROUP BY pu.powerupsid";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerUpsID) || !$stmt->execute())
+			$errorMessage[]= "ShowPowerUPSPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $siteFullName, $powerUpsID, $upsName, $volts, $amps, $load, $note, $editUserID, $editDate, $qaUserID, $qaDate);
+			$upsFound = $stmt->num_rows==1;
+			
+			if($upsFound)
+			{
+				$stmt->fetch();
+				$fullUpsName = trim("$siteName $upsName");
+				$fullUpsName = MakeHTMLSafe($fullUpsName);
+				$displayUpsName = MakeHTMLSafe($upsName);
+				
+				$pageSubTitle = "$fullUpsName";
+				
+				if(CustomFunctions::UserHasUPSPermission() || CustomFunctions::UserHasPanelPermission())
+				{
+					echo "<script src='lib/js/customerEditScripts.js'></script>\n";
+				}
+				
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>UPS: $fullUpsName</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				
+				echo "<table width=100%><tr>\n";
+				echo "<td align='left'>\n";
+				echo "<span class='customerName'>$displayUpsName</span>\n";
+				echo "</td>\n";
+				
+				echo "<td align='right'>\n";
+				//edit UPS button - not visible till in edit mode
+				/*
+				echo "<button type='button' class='editButtons_hidden' onClick='parent.location=\"./?powerpanelid=$powerPanelID&page=PowerAudit\"'>Audit Panel</button>\n";
+				if(CustomFunctions::UserHasPanelPermission())
+				{
+					$jsSafeSiteName = MakeJSSafeParam($siteName);
+					$jsSafeName = MakeJSSafeParam($panelName);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
+					$params = "false, $powerPanelID, $roomID, $upsID, '$jsSafeSiteName', '$jsSafeName', '$amps', '$circuits', '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+						
+					?><button type='button' class='editButtons_hidden' onclick="EditPowerPanel(<?php echo $params;?>);">Edit Panel</button>
+					<?php
+				}*/
+				//editMode button
+				if(CustomFunctions::UserHasUPSPermission() || CustomFunctions::UserHasPanelPermission())
+				{
+					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				}
+				echo "</td>\n";
+				echo "</tr>\n";
+				echo "</table>\n";
+				
+				//details//details
+				echo "<table>\n";
+				echo "<tr>\n";
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Site:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<a href='./?siteid=$siteID'>$siteFullName</a>";
+				echo "</td>\n";
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Volts:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo $volts;
+				echo "</td>\n";
+				
+				echo "<td align=right class='customerDetails'>\n";
+				echo "<b>Load:</b>";
+				echo "</td>\n";
+				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "$load / $amps (".($load/$amps*100)."%)";
+				echo "</td>\n";
+				
+				echo "</tr>\n";
+				echo "<tr>\n";
+				
+				echo "<td align=right class='customerDetails' valign='top'>\n";
+				echo "<b>Notes:</b>";
+				echo "</td>\n";
+				echo "<td valign=top align=left colspan='5'>\n";
+				echo "<textarea rows=3 cols=95 readonly placeholder=''>".MakeHTMLSafe($note)."</textarea>";
+				echo "</td>\n";
+				
+				echo "</tr></table>\n";
+				
+				if(CustomFunctions::UserHasUPSPermission())
+				{
+					//EditPowerUPSForm($roomID);//doesnt exist
+				}
+			}
+			else
+			{
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>UPS</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				echo "Power UPS ID#$powerUpsID not found.<BR>\n";
+			}
+			echo "</div>\n";
+			echo "</div>\n\n";
+		}
+		
+		if($upsFound)
+		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Power UPS Details: $fullUpsName</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			ListPowerPanels("U",$powerUpsID);
+				
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(CustomFunctions::UserHasUPSPermission() || CustomFunctions::UserHasPanelPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			}
+		}//ups found*/
+		//return $count;
+	}
+	
 	function PowerAuditPanelList()
 	{
 		global $pageSubTitle;
@@ -7127,19 +7271,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		echo $result;
 		
-		ListPowerPanels(false);//broken maybe with panel edit form 
+		$siteID = 0;//broken maybe with panel edit form
+		ListPowerPanels("S",$siteID); 
 		
 		echo "</div>\n</div>\n";
 	}
 	
-	function ListPowerPanels($search, $input=-1)
+	function ListPowerPanels($page, $input=-1)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$filter = "";
-		if($search)
-		{
+		
+		$addEnabled = false;
+		$editEnabled = false;
+		
+		if($page=="?")
+		{//search
 			//replace '-' and ' ' to '' and compare to search
 			//$input = str_replace("-","",$input);
 			//$input = str_replace(" ","",$input);
@@ -7147,12 +7296,20 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
 			$filter = "pp.name LIKE ?";
 		}
-		else
-		{
-			if($input!=-1)
-				$filter = "pp.roomid=?";
-			else
-				$filter = "-1=?";
+		else if($page=="R")
+		{//room page
+			$filter = "pp.roomid=?";
+			$addEnabled = true;
+			$editEnabled = true;
+		}
+		else if($page=="U")
+		{//UPS page
+			$filter = "pu.powerupsid=?";
+			$editEnabled = true;
+		}
+		else if($page=="S")
+		{//Site page - actualy power audit panel list
+			$filter = "pu.siteid=?";
 		}
 		
 		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pu.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
@@ -7177,7 +7334,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$count = $stmt->num_rows;
 			
 			//on room page - add location button
-			if(!$search && $input!=-1 && CustomFunctions::UserHasPanelPermission())
+			if($addEnabled && CustomFunctions::UserHasPanelPermission())
 			{
 				//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
 				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 200, 42, 'N', 0, 0, 1.21, 0.35, ''";
@@ -7233,8 +7390,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		echo $result;
 		
-		//on room page
-		if(!$search && $input!=-1 && CustomFunctions::UserHasPanelPermission())
+		if($editEnabled && CustomFunctions::UserHasPanelPermission())
 			EditPowerPanelForm($input);
 		
 		return $count;

@@ -273,8 +273,8 @@
 			else 
 				ShowPowerPanelPage($powerPanelIDInput);
 		}
-		else if(strlen($powerUPSInput) > 0)
-			ShowPowerUPSPage($powerUPSInput);
+		else if(strlen($powerUPSIDInput) > 0)
+			ShowPowerUPSPage($powerUPSIDInput);
 		else if(strlen($page) > 0)
 		{
 			if($page==="Audits")
@@ -318,7 +318,7 @@
 					echo "<BR>\n";
 					
 					//search for panels
-					ListPowerPanels(true, $search);
+					ListPowerPanels("?", $search);
 					
 					echo "</div>\n";
 					echo "</div>\n";
