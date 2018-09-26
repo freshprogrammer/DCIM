@@ -5618,19 +5618,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
-					if($amps>0)
-					{
-						$percentLoad = round(100*$load/$amps,2);
-						
-						if($percentLoad>80)
-							$percentLoad = " (<font color=red>$percentLoad%</font>)";
-						else if($load==0)
-							$percentLoad = "";
-						else
-							$percentLoad = " ($percentLoad%)";
-					}
-					else
-						$percentLoad = "";
 					
 					$visibleVolts = FormatVolts($volts);
 					$visibleCircuit = $circuit;
@@ -5650,7 +5637,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$amps</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".PowerStatus($status)."</td>";
-						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".$load."A$percentLoad</td>";
+						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".$load."A ".FormatPowerUtilization($load, $amps)."</td>";
 					}
 					if($noLocation)
 						echo "<td class='data-table-cell'></td>";//not linked to any location
@@ -6727,7 +6714,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<b>Load:</b>";
 				echo "</td>\n";
 				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo "$load / $amps (".($load/$amps*100)."%)";
+				echo "$load / $amps ".FormatPowerUtilization($load, $amps);
 				echo "</td>\n";
 				
 				echo "</tr>\n";
@@ -7080,14 +7067,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					$tabIndex = $left ? $circuit : $circuit+$numberOfCircuitsPerPanel;
 					$fullLocationName = FormatLocation($site, $room, $location, false);
-					if($amps>0)
-					{
-						$percentLoad = round(100*$load/$amps,2);
-						if($percentLoad>80)
-							$percentLoad = "<font color=red>$percentLoad</font>";
-					}
-					else
-						$percentLoad = "?";
 					
 					if($left)
 					{//start a new row
@@ -7277,7 +7256,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<b>Load:</b>";
 				echo "</td>\n";
 				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo "$load / $amps (".($load/$amps*100)."%)";
+				echo "$load / $amps ".FormatPowerUtilization($load, $amps);
 				echo "</td>\n";
 				
 				echo "</tr>\n";
@@ -7311,7 +7290,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($upsFound)
 		{
 			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>Power UPS Details: $fullUpsName</div>\n";
+			echo "<div class='panel-header'>UPS Details: $fullUpsName</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
 			ListPowerPanels("U",$powerUpsID);
@@ -7420,7 +7399,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($count>0)
 			{
 				//show results
-				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Load","Note"),true,true,true);
+				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Utilization","Note"),true,true,true);
 					
 				//list result data
 				$oddRow = false;
@@ -7429,10 +7408,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
-					
-					if($amps!=0) $percentLoad = ($load/$amps*100); else $percentLoad = 0;
-					if($percentLoad>75) $percentLoad = "<font color=red>$percentLoad</font>";
-					$displayLoad = $load."A (".$percentLoad."%)";
 					
 					$result .= "<tr class='$rowClass'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</td>";
@@ -7443,7 +7418,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					else
 						$result .= "<td class='data-table-cell'></td>";
 					$result .= "<td class='data-table-cell'>".$amps."A</td>";
-					$result .= "<td class='data-table-cell'>$displayLoad</td>";
+					$result .= "<td class='data-table-cell'>".FormatPowerUtilization($load, $amps)."</td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe(Truncate($note))."</td>";
 
 					$result .= "<td class='data-table-cell' rowspan='$circuitLocCount'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";

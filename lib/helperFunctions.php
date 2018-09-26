@@ -724,6 +724,24 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $circuit."/".((int)$circuit+2);
 	}
 	
+	function FormatPowerUtilization($load,$amps, $limit=80)
+	{
+		if($amps>0)
+		{
+			$utilization = round(100*$load/$amps,2);
+				
+			if($utilization>=$limit)
+				$utilization = " (<font color=red>$utilization%</font>)";
+			else if($load==0)
+				$utilization = "";
+			else
+				$utilization = " ($utilization%)";
+		}
+		else
+			$utilization = "";
+		return $utilization;
+	}
+	
 	function Format3Phase208CircuitNumber($circuit)
 	{
 		return $circuit."/".((int)$circuit+2)."/".((int)$circuit+4);
