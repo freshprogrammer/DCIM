@@ -5166,6 +5166,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				$stmt->fetch();
 				$fullRoomName = FormatLocation($site, $fullName, "");
+				$fullRoomName = MakeHTMLSafe($fullRoomName);
+				$safeRoomName = MakeHTMLSafe($name);
 				$pageSubTitle = "$fullRoomName";
 				
 				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
@@ -5180,9 +5182,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<div class='panel-header'>$fullRoomName</div>\n";
 				echo "<div class='panel-body'>\n\n";
 				
+				
 				echo "<table width=100%><tr>\n";
 				echo "<td align='left'>\n";
-				echo "<span class='customerName'>$fullName</span>\n";
+				echo "<span class='customerName'>$fullRoomName - ($safeRoomName)</span>\n";
 				echo "</td>\n";
 				
 				echo "<td align='right'>\n";
@@ -5206,56 +5209,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</td>\n";
 				echo "</tr>\n";
 				echo "</table>\n";
-				
-				//details//details
-				echo "<table>\n";
-				echo "<tr>\n";
-				echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Site:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo $siteFullName;
-				echo "</td>\n";
-				
-				echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Position:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo "$pos";
-				echo "</td>\n";
-				
-				/*echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Units:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo $units;
-				echo "</td>\n";*/
-				
-				echo "</tr>\n";
-				echo "<tr>\n";
-				
-				echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Cust Access:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo RoomCustAccess($custAccess);
-				echo "</td>\n";
-				
-				echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Size:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo "$size";
-				echo "</td>\n";
-				
-				echo "<td align=right class='customerDetails'>\n";
-				echo "<b>Orientation:</b>";
-				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
-				echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
-				echo "</td>\n";
-				
-				echo "</tr></table>\n";
 				
 				//render room - ignore 0 width or height rooms
 				if($width>0 && $depth>0)
