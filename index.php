@@ -59,8 +59,8 @@
 	$userIDInput = GetInput("userid");
 	$powerPanelIDInput = GetInput("powerpanelid");
 	$powerUPSIDInput = GetInput("powerupsid");
-	$loc = GetInput("loc");
-	$roomID = GetInput("roomid");
+	$roomIDInput = GetInput("roomid");
+	$siteIDInput = GetInput("siteid");
 	$loginbtn = GetInput("loginbtn");
 	$searchbtn = GetInput("searchbtn");
 	
@@ -255,9 +255,11 @@
 		echo "<!--  PAGE BODY-->\n";
 		
 		if(strlen($host) > 0)
-			ShowCustomerPage($host);//build customer page
-		else if(strlen($roomID) > 0)
-			ShowRoomPage($roomID);
+			ShowCustomerPage($host);
+		else if(strlen($roomIDInput) > 0)
+			ShowRoomPage($roomIDInput);
+		else if(strlen($siteIDInput) > 0)
+			ShowSitePage($siteIDInput);
 		else if(strlen($deviceIDInput) > 0)
 			ShowDevicePage($deviceIDInput);
 		else if(strlen($chassisnameInput) > 0)

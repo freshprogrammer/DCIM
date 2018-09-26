@@ -5141,6 +5141,125 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ShowSitePage($siteID)
+	{
+		global $mysqli;
+		global $pageSubTitle;
+		global $focusSearch;
+		global $errorMessage;
+		
+		$query = "SELECT s.siteid, s.name AS site, s.fullname, s.width, s.depth, s.edituser, s.editdate, s.qauser, s.qadate
+			FROM dcim_site AS s
+			WHERE s.siteid=?";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute()) 
+			$errorMessage[]= "ShowSitePage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $siteFullName, $width, $depth, $editUserID, $editDate, $qaUserID, $qaDate);
+			$siteFound = $stmt->num_rows==1;
+			
+			if($siteFound)
+			{
+				$stmt->fetch();
+				$safeSiteName = MakeHTMLSafe($siteName);
+				$safeSiteFullName = MakeHTMLSafe($siteFullName);
+				$pageSubTitle = "$safeSiteFullName";
+				
+				if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
+				{
+					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+				}
+				
+				$size = FormatSizeInFeet($width,$depth);
+				
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>$safeSiteFullName</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				
+				
+				echo "<table width=100%><tr>\n";
+				echo "<td align='left'>\n";
+				echo "<span class='customerName'>$safeSiteFullName - ($safeSiteName)</span>\n";
+				echo "</td>\n";
+				
+				echo "<td align='right'>\n";
+				//edit site button - not visible till in edit mode
+				/*if(CustomFunctions::UserHasLocationPermission())
+				{
+					$jsSafeName = MakeJSSafeParam($location);
+					$jsSafeAltName = MakeJSSafeParam($altName);
+					$jsSafeNote = MakeJSSafeParam($note);
+					//add, locationID, roomID, name, altName, type, units, orientation, x, y, width, depth, note)
+					$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$type', $units, '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
+					
+					?><button type='button' class='editButtons_hidden' onclick="EditLocation(<?php echo $params;?>);">Edit Location</button>
+					<?php
+				}*/
+				//editMode button
+				if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
+				{
+					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+				}
+				echo "</td>\n";
+				echo "</tr>\n";
+				echo "</table>\n";
+				
+				//render room - ignore 0 width or height rooms
+				if($width>0 && $depth>0)
+				{
+					$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
+					$result = "<style>\n";
+					$result .= "#siteContainer$siteID {\n";
+					$result .= "	padding-bottom:$depthToWidthRatio%;\n";
+					$result .= "}\n";
+					$result .= "</style>\n";
+					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
+					$result .= CreateSiteLayout($siteID, $safeSiteName, $safeSiteFullName, $width, $depth);//this should be a lookup of all sites...
+					$result .= "</div>\n";
+					echo $result;
+				}
+			}
+			else
+			{
+				echo "<div class='panel'>\n";
+				echo "<div class='panel-header'>Site</div>\n";
+				echo "<div class='panel-body'>\n\n";
+				echo "Site ID#$siteID not found.<BR>\n";
+			}
+		}
+		
+		if(UserHasWritePermission())
+		{
+			//EditSiteForm();
+		}
+		
+		echo "</div>\n";
+		echo "</div>\n\n";
+		
+		if($siteFound)
+		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>$safeSiteFullName Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+
+			echo ListSiteRooms($siteID,$siteFullName);
+			echo "<BR>";
+			ListPowerPanels("S", $siteID);
+			
+			echo "</div>\n";
+			echo "</div>\n";
+			
+			if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
+			{
+				//initialize page JS
+				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			}
+		}//site found
+		//return $count;
+	}
+	
 	function ShowRoomPage($roomID)
 	{
 		global $mysqli;
@@ -7119,10 +7238,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$jsSafeSiteName = MakeJSSafeParam($siteName);
 					$jsSafeName = MakeJSSafeParam($panelName);
 					$jsSafeNote = MakeJSSafeParam($note);
-					//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
+					//function EditPowerUPS(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
 					$params = "false, $powerPanelID, $roomID, $upsID, '$jsSafeSiteName', '$jsSafeName', '$amps', '$circuits', '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
-					?><button type='button' class='editButtons_hidden' onclick="EditPowerPanel(<?php echo $params;?>);">Edit Panel</button>
+					?><button type='button' class='editButtons_hidden' onclick="EditPowerUPS(<?php echo $params;?>);">Edit Panel</button>
 					<?php
 				}*/
 				//editMode button
@@ -7262,16 +7381,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else if($page=="S")
 		{//Site page - actualy power audit panel list
-			$filter = "pu.siteid=?";
+			$filter = "s.siteid=?";
+			$editEnabled = true;
 		}
 		
-		$query = "SELECT s.siteid, s.name, pp.roomid, r.name, pu.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, SUM(pc.load), pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, pp.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, SUM(pc.load), pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
 			FROM  dcim_room AS r
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.roomid=r.roomid
 				LEFT JOIN dcim_powerups AS pu ON pu.powerupsid=pp.powerupsid
 				LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
-			WHERE $filter AND s.siteid IS NOT NULL
+			WHERE $filter AND pp.powerpanelid IS NOT NULL
 			GROUP BY pp.powerpanelid
 			ORDER BY s.name, pp.name";
 		
@@ -7310,7 +7430,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
 					
-					$percentLoad = ($load/$amps*100);
+					if($amps!=0) $percentLoad = ($load/$amps*100); else $percentLoad = 0;
 					if($percentLoad>75) $percentLoad = "<font color=red>$percentLoad</font>";
 					$displayLoad = $load."A (".$percentLoad."%)";
 					

@@ -45,6 +45,10 @@
 		{
 			return UserHasAdminPermission();
 		}
+		public static function UserHasSitePermission()
+		{
+			return UserHasAdminPermission();
+		}
 		
 		public static function IsThisHNoInternal($hNo)
 		{
