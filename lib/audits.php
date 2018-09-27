@@ -970,14 +970,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerID, $panel, $circuit);
+		$stmt->bind_result($powerCircuitID, $panel, $circuit);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerID","Panel","Circuit"));
+			$longResult.= CreateDataTableHeader(array("PowerCircuitID","Panel","Circuit"));
 				
 			//list result data
 			$oddRow = false;
@@ -988,7 +988,7 @@
 				else $rowClass = "dataRowTwo";
 				
 				$longResult.= "<tr class='$rowClass'>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>\n";
 				$longResult.= "</tr>\n";
@@ -1028,14 +1028,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerLocID, $powerID, $locationID,$linkedPowerID, $linkedLocationID);
+		$stmt->bind_result($powerLocID, $powerCircuitID, $locationID,$linkedPowerCicuitID, $linkedLocationID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerID","LocationID","LinkedPowerID","LinkedLocationID"));
+			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerCircuitID","LocationID","LinkedPowerCircuitID","LinkedLocationID"));
 				
 			//list result data
 			$oddRow = false;
@@ -1047,9 +1047,9 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedLocationID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}

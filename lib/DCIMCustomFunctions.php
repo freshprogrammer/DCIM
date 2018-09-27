@@ -17,7 +17,7 @@
 		{
 			return UserHasWritePermission();
 		}
-		public static function UserHasCircuitPermission()
+		public static function UserHasPowerCircuitPermission()
 		{
 			return UserHasWritePermission();
 		}
