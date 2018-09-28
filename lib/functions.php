@@ -766,18 +766,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
+		global $debugMessage;
+		$debugMessage[]="ProcessPowerCircuitAction($action)";
 		
 		$add = $action==="PowerCircuit_Add";
 		$delete = $action==="PowerCircuit_Delete";
 		
-		$powerCircuitID = GetInput("powerCircuitID");
-		$panel = GetInput("panel");
+		$powerCircuitID = GetInput("powercircuitid");
+		$powerPanelID = GetInput("powerpanelid");
+		$locationID = GetInput("locationid");
 		$circuit= GetInput("circuit");
 		$volts = GetInput("volts");
 		$amps = GetInput("amps");
 		$status = GetInput("status");
 		$load = GetInput("load");
-		$locationID = GetInput("locationid");
+		
+		$debugMessage[]="ProcessPowerCircuitAction() IDs ($powerCircuitID,$powerPanelID,$locationID)";
+		$debugMessage[]="ProcessPowerCircuitAction() data2 ($circuit,$volts,$amps)";
+		$debugMessage[]="ProcessPowerCircuitAction() data3 ($status,$load)";
 		
 		if(!isset($status) || strlen($status)==0)
 			$status = "D";
@@ -785,12 +791,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$totalAffectedCount = 0;
 		$valid = true;
 		
-		if(!$add)
-		{
-			//if edit/delete then validate powerCircuitID, otherwise a new one will be generated on insert
-			if($valid)$valid = ValidGenericID($powerCircuitID, "Power Circuit ID");
-		}
-		if($valid)$valid = ValidPowerPanelName($panel);
 		if($valid)$valid = ValidPowerCircuitNo($circuit);
 		if($valid)$valid = ValidPowerCircuitVolts($volts);
 		if($valid)$valid = ValidPowerCircuitAmps($amps);
@@ -798,11 +798,39 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
 		
 		//DB CHECKS
-		//check for location in table
-		if($add && $valid)$valid = ValidLocation($locationID,true);
+		//check valid IDs in tables 
+		if($valid)$valid = ValidRecord("powerpanelid","Power Panel ID",$powerPanelID,"dcim_powerpanel",true);
+		if($valid && $locationID!=-1)$valid = ValidRecord("locationid","Location ID",$locationID,"dcim_location",true);
 		
-		//should find on edit/delete
-		if(!$add && $valid)$valid = ValidPowerRecord($powerCircuitID,true);
+		if(!$add && $valid)
+		{//make sure this record exists and lookup old info for comparison
+			$valid = false;
+			$query = "SELECT pc.powercircuitid, IF(pcl.locationid IS NULL, -1, pcl.locationid) AS locationid, pc.circuit, pc.volts, pc.amps, pc.load, pc. status
+				FROM dcim_powercircuit AS pc
+					LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
+				WHERE pc.powercircuitid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
+			{
+				$errorMessage[] = "Prepare 1 failed: ProcessPowerCircuitAction($action) (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else 
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				
+				if($count==1)
+				{
+					$valid=true;
+					$stmt->bind_result($powerCircuitID, $oldLocationID,$oldCircuit, $oldVolts, $oldAmps, $oldLoad, $oldStatus);
+					$stmt->fetch();
+				}
+				else if($count==0)
+					$errorMessage[] = "";
+				else
+					$errorMessage[] = "Found more than 1 circuit with ID#$powerCircuitID";
+			}
+		}
 		
 		//check for existing panel circuit combo
 		if($add && $valid)
@@ -814,46 +842,54 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$isTrippleCircuit = (int)$volts == 308; 
 			$filter = "";
 			if($isDoubleCircuit)
-				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
+				$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=?)";
 			else if($isTrippleCircuit)
-				$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
+				$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
 			else
-				$filter = "csr.panel=? AND csr.circuit=?";
+				$filter = "csr.powerpanelid=? AND csr.circuit=?";
 			
-			$query = "SELECT * FROM (
-								SELECT powercircuitid,panel,circuit,volts,amps
-								FROM dcim_power
-							UNION 
-								SELECT powercircuitid,panel,IF(volts=208 OR volts=308,circuit+2,NULL) AS cir,volts,amps
-								FROM dcim_power HAVING NOT(cir IS NULL)
-							UNION 
-								SELECT powercircuitid,panel,IF(volts=308,circuit+4,NULL) AS cir,volts,amps
-								FROM dcim_power HAVING NOT(cir IS NULL)
+			$query = "SELECT pp.name, csr.* FROM (
+					SELECT powerpanelid,powercircuitid,circuit,volts,amps, '' AS reserved
+						FROM dcim_powercircuit
+					UNION 
+						SELECT powerpanelid,powercircuitid,IF(volts=208 OR volts=308,circuit+2,NULL) AS cir,volts,amps, 'T'
+						FROM dcim_powercircuit HAVING NOT(cir IS NULL)
+					UNION 
+						SELECT powerpanelid,powercircuitid,IF(volts=308,circuit+4,NULL) AS cir,volts,amps, 'T'
+						FROM dcim_powercircuit HAVING NOT(cir IS NULL)
 						) AS csr
-					WHERE $filter";
+					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=csr.powerpanelid
+				WHERE $filter
+				ORDER BY circuit";
 		
 			if (!($stmt = $mysqli->prepare($query)))
-				$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+				$errorMessage[] = "ProcessPowerCircuitAction() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
 			{
+				$failed = false;
 				if($isDoubleCircuit)
 				{
 					$secondCircuit = 2+(int)$circuit;
-					$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
+					$failed = !$stmt->bind_Param('iss', $powerPanelID, $circuit, $secondCircuit);
+					if($failed)
+						$errorMessage[] = "ProcessPowerCircuitAction() Bind 2b2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				}
 				else if($isTrippleCircuit)
 				{
 					$secondCircuit = 2+(int)$circuit;
 					$thirdCircuit = 4+(int)$circuit;
-					$stmt->bind_Param('ssss', $panel, $circuit, $secondCircuit,$thirdCircuit);
+					$failed = !$stmt->bind_Param('isss', $powerPanelID, $circuit, $secondCircuit,$thirdCircuit);
+					if($failed)
+						$errorMessage[] = "ProcessPowerCircuitAction() Bind 2b3 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				}
 				else 
 				{
-					$stmt->bind_Param('ss', $panel, $circuit);
+					$failed = !$stmt->bind_Param('is', $powerPanelID, $circuit);
+					if($failed)
+						$errorMessage[] = "ProcessPowerCircuitAction() Bind 2b1 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				}	
-				if (!$stmt->execute())//execute 
-					//failed (errorNo-error)
-					$errorMessage[] = "Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
+				if (!$failed && !$stmt->execute())//execute
+					$errorMessage[] = "ProcessPowerCircuitAction() Execute 2c failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				else
 				{
 					$stmt->store_result();
@@ -863,14 +899,24 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$passedDBChecks = true;
 					else
 					{
-						$stmt->bind_result($k, $p, $c, $v, $a);
+						$stmt->bind_result($ppName, $ppID,$k, $c, $v, $a, $r);
 						$stmt->fetch();
 						
-						$errorMessage[] = "Existing panel Circuit conflict found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
+						$errorMessage[] = "Existing panel Circuit conflict found (Power Panel:$ppName(#$ppID), Circuit#$c) ID#$k. Cannot create duplicate.";
 					}
 				}
 			}
 			$valid=$passedDBChecks;
+		}
+		
+		if($add)
+		{
+			//continue
+		}
+		else
+		{
+			$errorMessage[]="ProcessPowerCircuitAction() disabled";
+			return;
 		}
 		
 		//push to DB
@@ -878,87 +924,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			if($add)
 			{
-				$query = "INSERT INTO dcim_power
-					(panel,circuit,volts,amps,status,`load`,edituser,editdate) 
-					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-					
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
-				else
-				{//					   pcvaslu
-					$stmt->bind_Param('ssssssi', $panel, $circuit, $volts, $amps, $status, $load, $userID);
-					
-					if (!$stmt->execute())//execute 
-						//failed (errorNo-error)
-						$errorMessage[] = "Failed to execute power circuit add (" . $stmt->errno . "-" . $stmt->error . ").";
-					else 
-					{
-						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
-						if($affectedCount==1)
-						{
-							LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
-							$resultMessage[] = "Successfully added power circuit (Panel:".$panel." Circuit#".$circuit.").";
-						}
-						else
-							$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
-						
-						//look up inserted id
-						$query = "SELECT powercircuitid FROM dcim_power WHERE panel=? AND circuit=?";
-						
-						if (!($stmt = $mysqli->prepare($query)))
-							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-						else 
-						{
-							$stmt->bind_Param('ss', $panel, $circuit);
-							$stmt->execute();
-							$stmt->store_result();
-							$count = $stmt->num_rows;
-						
-							if($count==1)
-							{
-								//update input locationid
-								$stmt->bind_result($powerCircuitID);
-								$stmt->fetch();
-								//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerCircuitID - dbID#$dbPowerCircuitID. - search for ($panel, $circuit)";
-								
-								//sucsessfull Insert - insert circuit-location link record
-								$query = "INSERT INTO dcim_powerloc
-									(powerCircuitID,locationid,edituser,editdate) 
-									VALUES(?,?,?,CURRENT_TIMESTAMP)";
-									
-								if (!($stmt = $mysqli->prepare($query)))
-									$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-								else
-								{//					   plu
-									$stmt->bind_Param('iii', $powerCircuitID, $locationID, $userID);
-									
-									if (!$stmt->execute())//execute 
-										//failed (errorNo-error)
-										$errorMessage[] = "Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
-									else 
-									{
-										$affectedCount = $stmt->affected_rows;
-										$totalAffectedCount += $affectedCount;
-										
-										if($affectedCount==1)
-										{
-											LogDBChange("dcim_powerloc",-1,"I","powercircuitid=$powerCircuitID AND locationid=$locationID");
-											$resultMessage[] = "Successfully added power circuit location link (powercircuitid:".$powerCircuitID.",locationID:".$locationID.").";
-										}
-										else
-											$errorMessage[] = "Power circuit location link added successfully, but affected $affectedCount rows.";
-									}
-								}
-								$resultMessage[] = "$totalAffectedCount total records created.";
-							}
-							else 
-							{
-								$errorMessage[] = "Failed to locate inserted record. Power (if created) is not linked to Location.";
-							}
-						}
-					}	
+				$totalAffectedCount += ProcessPowerCircuitAdd($powerPanelID, $circuit, $volts, $amps, $status, $load, $locationID);
+				
+				if($volts==308)
+				{//add additional records for 208v3p power - should have already been validated
+					$totalAffectedCount += ProcessPowerCircuitAdd($powerPanelID, $circuit+2, $volts, $amps, $status, $load, $locationID);
+					$totalAffectedCount += ProcessPowerCircuitAdd($powerPanelID, $circuit+4, $volts, $amps, $status, $load, $locationID);
 				}
+				$resultMessage[] = "$totalAffectedCount total records created.";
 			}
 			else if($delete)
 			{
@@ -1057,6 +1030,89 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				}
 			}
 		}
+	}
+	
+	function ProcessPowerCircuitAdd($powerPanelID, $circuit, $volts, $amps, $status, $load, $locationID)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$totalAffectedCount = 0;
+		
+		$query = "INSERT INTO dcim_powercircuit
+					(powerpanelid,circuit,volts,amps,status,`load`,edituser,editdate)
+					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
+		
+		//															   pcvaslu
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssssi', $powerPanelID, $circuit, $volts, $amps, $status, $load, $userID) || !$stmt->execute())
+			$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$affectedCount = $stmt->affected_rows;
+			$totalAffectedCount += $affectedCount;
+			if($affectedCount==1)
+			{
+				LogDBChange("dcim_powercircuit",-1,"I","powerpanelid='$powerPanelID' AND circuit='$circuit'");
+				$resultMessage[] = "Successfully added power circuit (Panel#:".$powerPanelID." Circuit#".$circuit.").";
+			}
+			else
+				$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
+				
+				//look up inserted id
+			$query = "SELECT pc.powercircuitid, pp.name
+				FROM dcim_powercircuit AS pc
+					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				WHERE pc.powerpanelid=? AND pc.circuit=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('is', $powerPanelID, $circuit) || !$stmt->execute())
+				$errorMessage[] = "Prepare failed: ($action-4) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				if($count==1)
+				{
+					$stmt->bind_result($powerCircuitID, $powerPanelName);
+					$stmt->fetch();
+					//update result message with the more usefull panel name
+					array_pop($resultMessage);
+					$resultMessage[]= "Successfully added power circuit (Panel:".$powerPanelName." Circuit#".$circuit.").";
+				}
+				
+				if($count==1 && $locationID!=-1)
+				{//create power circuit loc record
+					//sucsessfull Insert - insert circuit-location link record
+					$query = "INSERT INTO dcim_powercircuitloc
+					(powercircuitid,locationid,edituser,editdate)
+					VALUES(?,?,?,CURRENT_TIMESTAMP)";
+					
+					//															   plu
+					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iii', $powerCircuitID, $locationID, $userID) || !$stmt->execute())
+						$errorMessage[] = "Prepare failed: ($action-5) (" . $mysqli->errno . ") " . $mysqli->error;
+						else
+						{
+							$affectedCount = $stmt->affected_rows;
+							$totalAffectedCount += $affectedCount;
+							
+							if($affectedCount==1)
+							{
+								LogDBChange("dcim_powercircuitloc",-1,"I","powercircuitid=$powerCircuitID AND locationid=$locationID");
+								$resultMessage[] = "Successfully added power circuit location link (powerCircuitID:".$powerCircuitID.",locationID:".$locationID.").";
+							}
+							else
+								$errorMessage[] = "Power circuit location link added successfully, but affected $affectedCount rows.";
+						}
+				}
+				else
+				{
+					if($count!=1)//only report error if circuit was not found, otherwist locationwas deleberately skipped
+						$errorMessage[] = "Failed to locate inserted record. Power (if created) is not linked to Location. PowerID:$powerPanelID Circuit:$circuit";
+				}
+			}
+		}
+		return $totalAffectedCount;
 	}
 	
 	function ProcessPowerPanelAction($action)
@@ -5659,7 +5715,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							//function EditPowerCircuit(add, powerCircuitID, locationID, panelID, panelName, circuit, volts, amps, status, load)
 							$jsSafePanel = MakeJSSafeParam($panel);
 							$jsSafeCircuit = MakeJSSafeParam($circuit);
-							$params = "false,$powerCircuitID, $locationID, $powerPanelID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
+							$jsSafelocationID = ($noLocation ? -1 : $locationID);
+							$params = "false,$powerCircuitID, $jsSafelocationID, $powerPanelID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
 							?><button onclick="EditPowerCircuit(<?php echo $params;?>)">Edit</button>
 							<?php 
 							echo "</td>\n";
