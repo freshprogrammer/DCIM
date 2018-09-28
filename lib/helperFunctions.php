@@ -1332,23 +1332,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$query = "SELECT $keyField, $pullField FROM $table WHERE $keyField=?";
 		else
 			$query = "SELECT $keyField FROM $table WHERE $keyField=?";
-				
-		if (!($stmt = $mysqli->prepare($query))) 
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute()) 
 		{
-			//TODO handle Errors better
 			$errorMessage[] = "Prepare failed: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
 		
-		$stmt->bind_Param('s', $key);
-		
-		if (!$stmt->execute())//execute 
-		{
-			//TODO handle Errors better
-			//failed (errorNo-error)
-			$errorMessage[] = "Failed to execute: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $stmt->errno . "-" . $stmt->error . ").";
-			return false;
-		}
 		$stmt->store_result();
 		$count = $stmt->num_rows;
 	
