@@ -5684,8 +5684,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$visibleCircuit = $circuit;
 					if($volts==208)
 						$visibleCircuit = Format208CircuitNumber($circuit);
-					else if($volts==308)
-						$visibleCircuit = Format3Phase208CircuitNumber($circuit);
 					
 					$noLocation = $circuitLocCount==0;
 					if($noLocation)$circuitLocCount = 1;
@@ -7208,16 +7206,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							$cellClass .= " powerAuditCellDouble";
 							$rowSpan = " rowspan=2";
 							$displayCircuit = Format208CircuitNumber($circuit);
-						}
-						else if($volts==308)//208 3 phase circuits take up tripple
-						{
-							if($left)
-								$leftSpan = 3;
-							else
-								$rightSpan = 3;
-							$cellClass .= " powerAuditCellTripple";
-							$rowSpan = " rowspan=3";
-							$displayCircuit = Format3Phase208CircuitNumber($circuit);
 						}
 						
 						echo "<td $rowSpan class='$cellClass'>\n";

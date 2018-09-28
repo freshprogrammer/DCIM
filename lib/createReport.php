@@ -120,15 +120,8 @@
 					$cust = (strlen($cust)>0)?$cust:"N/A";
 				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
 				
-				if($volts==208)
-					$circuit = "=\"".$circuit."/".($circuit+2)."\"";
-				else if($volts==308)
-					$circuit = "=\"".$circuit."/".($circuit+2)."/".($circuit+4)."\"";
-				
-				if($volts==308)
-					$volts = "208v3p";
-				else
-					$volts = $volts."v";
+				if($volts==208)$circuit = "=\"".Format208CircuitNumber($circuit)."\"";
+				$volts=FormatVolts($volts);
 				
 				if($skipLinesBetweenLocationsAndOnlyFirstCustName)
 				{
@@ -195,14 +188,8 @@
 			{
 				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
 				
-				if($volts==208)
-					$circuit = "=\"".$circuit."/".($circuit+2)."\"";
-				else if($volts==308)
-				{
-					$circuit = "=\"".$circuit."/".($circuit+2)."/".($circuit+4)."\"";
-					$volts = 208;
-				}
-				
+				if($volts==208)$circuit = "=\"".Format208CircuitNumber($circuit)."\"";
+				$volts=FormatVolts($volts);
 				$result[] = array($panel,$circuit,$load,substr($percent,0,5)."%",$amps,$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
 			}
 		}

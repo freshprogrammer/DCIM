@@ -742,11 +742,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $utilization;
 	}
 	
-	function Format3Phase208CircuitNumber($circuit)
-	{
-		return $circuit."/".((int)$circuit+2)."/".((int)$circuit+4);
-	}
-	
 	function TestForSingleCustomerMatch($input)
 	{
 		global $mysqli;
