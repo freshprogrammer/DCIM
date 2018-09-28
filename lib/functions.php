@@ -5528,12 +5528,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
-	function ListPowerCircuits($page, $key)
+	function ListPowerCircuits($page, $pageLookupID)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		$formAction = "./?host=$key";
 		
 		$locationPage = $page=="L";
 		$custPage = $page=="C";
@@ -5541,6 +5540,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($locationPage)
 		{
+			$formAction = "./?locationid=$pageLookupID";
 			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, 
 					1 AS cnt
 			FROM dcim_location AS l
@@ -5549,12 +5549,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE l.locationid=?
+			WHERE l.locationid=? AND pc.powercircuitid IS NOT NULL
 			GROUP BY pp.powerpanelid, pc.circuit
 			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
 		else if($custPage)
 		{//customer page - based on hno in device table
+			$formAction = "./?host=$pageLookupID";
 			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, 
 					1 AS cnt
 			FROM dcim_device AS d
@@ -5564,12 +5565,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.hno=? AND d.status='A'
+			WHERE d.hno=? AND d.status='A' AND pc.powercircuitid IS NOT NULL
 			GROUP BY pp.powerpanelid, pc.circuit
 			ORDER BY pc.status, r.name, l.name, ABS(pp.name),pp.name, ABS(pc.circuit)";
 		}
 		else if($panelPage)
 		{//customer page - based on hno in device table
+			$formAction = "./?powerpanelid=$pageLookupID";
 			$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name, l.locationid, l.name AS location, pc.powercircuitid, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
 				(SELECT COUNT(powercircuitid) FROM dcim_powercircuitloc AS cur WHERE cur.powercircuitid=pcl.powercircuitid) AS cnt
 			FROM dcim_powerpanel AS pp 
@@ -5578,13 +5580,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE pp.powerpanelid=?
+			WHERE pp.powerpanelid=? AND pc.powercircuitid IS NOT NULL
 			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit";
 		}
 		
+		$pagePanelID = -1;
+		
 		//TODO this should also distinguish colo power vs other device power that they dont actualy pay for - only realy applies to customers with non colo devices
 		//TODO This should also check the device status is active and or show/filter that here	
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $pageLookupID) || !$stmt->execute())
 		{
 			$errorMessage[]= "Prepare failed: ListPowerCircuits() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			echo "SQL error locating power circuit records<BR>";
@@ -5597,10 +5601,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			
 			echo "<span class='tableTitle'>Power Circuits</span>\n";
 			//Add button
-			if($locationPage && CustomFunctions::UserHasPowerCircuitPermission())
+			if($panelPage && CustomFunctions::UserHasPowerCircuitPermission())
 			{
-				?><button class='editButtons_hidden' onclick="EditPowerCircuit(true,-1, '', '', 120, 20, 'D', 0)">Add New</button>
-				<?php 
+				//function EditPowerCircuit(add, powerCircuitID, locationID, panelID, panelName, circuit, volts, amps, status, load)
+				echo "<button class='editButtons_hidden' onclick=\"EditPowerCircuit(true,-1, -1, $pageLookupID, 'pnlName', 1, 120, 20, 'D', 0)\">Add New</button>\n";
 			}
 			echo "<BR>";
 			
@@ -5613,6 +5617,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$lastCircuitID = -1;
 				while ($stmt->fetch())
 				{
+					$pagePanelID = $powerPanelID;//for edit form - any one will be fine - just needs to be a panel in the correct site 
 					$fullLocationName = FormatLocation($site, $room, $location);
 				
 					$oddRow = !$oddRow;
@@ -5651,9 +5656,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							//edit button
 							echo "<td class='data-table-cell-button editButtons_hidden' rowspan='$circuitLocCount'>\n";
 							
+							//function EditPowerCircuit(add, powerCircuitID, locationID, panelID, panelName, circuit, volts, amps, status, load)
 							$jsSafePanel = MakeJSSafeParam($panel);
 							$jsSafeCircuit = MakeJSSafeParam($circuit);
-							$params = "false,$powerCircuitID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
+							$params = "false,$powerCircuitID, $locationID, $powerPanelID, '$jsSafePanel', '$jsSafeCircuit', $volts, $amps, '$status', $load";
 							?><button onclick="EditPowerCircuit(<?php echo $params;?>)">Edit</button>
 							<?php 
 							echo "</td>\n";
@@ -5674,23 +5680,70 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if(CustomFunctions::UserHasPowerCircuitPermission())
 		{
-			if($locationPage)
-			{
-				$action = "./?locationid=$key";
-				EditPowerCircuitForm($action, $key, $locationPage);
-			}
-			else 
-			{
-				//cant add power from here so location is irrelevant
-				EditPowerCircuitForm($formAction, -1, $locationPage);
-			}
+			if($panelPage) $pagePanelID = $pageLookupID;
+			EditPowerCircuitForm($formAction, $pagePanelID, $page);
 		}
 		return $count;
 	}
 	
-	function EditPowerCircuitForm($action, $locationID=-1, $locationPage)
+	function EditPowerCircuitForm($action, $powerPanelIDInput, $page)
 	{
 		global $mysqli;
+		global $errorMessage;
+		
+		$deleteEnabled = $page=="L" || $page=="P";
+		
+		//build Location combo options
+		$query = "SELECT s.siteid, s.name, r2.roomid, r2.name, r2.fullname, l.locationid, l.name
+			FROM dcim_powerpanel AS pp
+				LEFT JOIN dcim_room AS r1 ON r1.roomid=pp.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r1.siteid
+				LEFT JOIN dcim_room AS r2 ON r2.siteid=s.siteid
+				LEFT JOIN dcim_location AS l ON l.roomid=r2.roomid
+			WHERE pp.powerpanelid=? AND l.locationid IS NOT NULL
+			ORDER BY s.name, r2.name, l.name";
+		
+		$locationOptions = "<option value='-5' Selected>SQL Error</option>\n";
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelIDInput) || !$stmt->execute())
+			$errorMessage[] = "EditPowerCircuitForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $roomID, $roomName, $roomFullName, $locationID, $locationName);
+			$locationOptions = "";
+			$locationOptions.= "<option value='-1'>None</option>\n";
+			while ($stmt->fetch())
+			{
+				$fullLocationName = MakeHTMLSafe("$roomName $locationName");
+				$locationOptions.= "<option value='$locationID'>$fullLocationName</option>\n";
+			}
+		}
+		
+		//build Panel combo options
+		$query = "SELECT s.siteid, s.name, pp2.powerpanelid, pp2.name
+			FROM dcim_powerpanel AS pp1
+				LEFT JOIN dcim_room AS r1 ON r1.roomid=pp1.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r1.siteid
+				LEFT JOIN dcim_room AS r2 ON r2.siteid=s.siteid
+				LEFT JOIN dcim_powerpanel AS pp2 ON pp2.roomid=r2.roomid
+			WHERE pp1.powerpanelid=? AND pp2.powerpanelid IS NOT NULL
+			ORDER BY s.name, pp2.name";
+		
+		$panelOptions = "<option value='-5' Selected>SQL Error</option>\n";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelIDInput) || !$stmt->execute())
+			$errorMessage[] = "EditPowerCircuitForm() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $panelID, $panelName);
+			$panelOptions= "";
+			while ($stmt->fetch())
+			{
+				$fullPanelName = MakeHTMLSafe($panelName);
+				$panelOptions.= "<option value='$panelID'>$panelName</option>\n";
+			}
+		}
 		
 		//edit/Add Power Circuit form
 		?>
@@ -5705,22 +5758,32 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right'>Panel:</td>
 						<td>
-							<input id='EditPowerCircuit_panel' type='text' tabindex=1 size=7 name='panel' value='' placeholder='4-1, 12' class=''>
+							<select id=EditPowerCircuit_powerpanelid name="powerpanelid" tabindex=1>
+								<?php echo $panelOptions; ?>
+							</select>
 							Circuit:
 							<div class='inputToolTipContainer'><input id='EditPowerCircuit_circuit' type='number' tabindex=2 size=5 name='circuit' value='' placeholder='1' step=1 min=1 max=50>
 							<span class=inputTooltip>If 208v this must be the lesser circuit</span></div>
 						</td>
 					</tr>
 					<tr>
+						<td align='right'>Location:</td>
+						<td>
+							<select id=EditPowerCircuit_locationid name="locationid" tabindex=3>
+								<?php echo $locationOptions; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
 						<td align='right' width=1>Volts:</td>
 						<td align='left'>
-							<select id=EditPowerCircuit_volts name="volts" tabindex=3>
+							<select id=EditPowerCircuit_volts name="volts" tabindex=4>
 								<option value='120'>120v</option>
 								<option value='208'>208v</option>
 								<option value='308'>208v3p</option>
 							</select>
 							Amps:
-							<select id=EditPowerCircuit_amps name="amps" tabindex=4>
+							<select id=EditPowerCircuit_amps name="amps" tabindex=5>
 								<option value='20'>20A</option>
 								<option value='30'>30A</option>
 								<option value='40'>40A</option>
@@ -5730,28 +5793,27 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						</td>
 					</tr>
 					<tr>
-						<td align='right' valign='top'>Active</td>
+						<td align='right'>Active</td>
 						<td width=1 align='left'>
-							<input id=EditPowerCircuit_status type='checkbox' tabindex=5 name='status' value='A' onclick='EditPowerCircuit_StatusClicked()' class=''>
+							<input id=EditPowerCircuit_status type='checkbox' tabindex=6 name='status' value='A' onclick='EditPowerCircuit_StatusClicked()' class=''>
 							Load:
-							<input id=EditPowerCircuit_load type='number' tabindex=6 name='load' size=5 placeholder='2.04' min=0 max=100 step=0.01 onchange='EditPowerCircuit_LoadChanged()' class=''>
+							<input id=EditPowerCircuit_load type='number' tabindex=7 name='load' size=5 placeholder='2.04' min=0 max=100 step=0.01 onchange='EditPowerCircuit_LoadChanged()' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
-								<?php if($locationPage)echo "<button id='EditPowerCircuit_deletebutton' type='button' onclick='DeletePowerCircuit()' tabindex=9>Delete</button>";?>
+								<?php if($deleteEnabled)echo "<button id='EditPowerCircuit_deletebutton' type='button' onclick='DeletePowerCircuit()' tabindex=10>Delete</button>";?>
 							</td>
 							<td align='right'>
-								<button type="button" onclick="HideAllEditForms()" tabindex=8>Cancel</button>
-								<input type="submit" value="Save" tabindex=7>
+								<button type="button" onclick="HideAllEditForms()" tabindex=9>Cancel</button>
+								<input type="submit" value="Save" tabindex=8>
 							</td>
 						</tr></table></td>
 					</tr>
 				</table>
 				<input id=EditPowerCircuit_powercircuitid type='hidden' name='powercircuitid' value='-2'>
 				<input id=EditPowerCircuit_action type='hidden' name='action' value='null'>
-				<input id=EditPowerCircuit_locationid type='hidden' name='locationid' value='<?php echo $locationID; ?>'>
 				<input type="hidden" name="page_instance_id" value="<?php echo end($_SESSION['page_instance_ids']); ?>"/>
 			</fieldset>
 		</form>
@@ -6883,7 +6945,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						<tr>
 							<td align='right' width=1>Amps:</td>
 							<td align='left'>
-								<input id=EditPowerPanel_amps type='number' tabindex=3 size=6 name='amps' min='0' max='500' step='1' value='<?php echo $ampsInput;?>' placeholder='200' class=''>
+								<input id=EditPowerPanel_amps type='number' tabindex=3 size=6 name='amps' min='0' max='500' step='1' value='<?php echo $ampsInput;?>' placeholder='225' class=''>
 								Circuits:
 								<input id=EditPowerPanel_circuits type='number' tabindex=4 size=6 name='circuits' min='1' max='150' step='1' value='<?php echo $circuitsInput;?>' placeholder='42' class=''>
 							</td>
@@ -7391,7 +7453,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($addEnabled && CustomFunctions::UserHasPanelPermission())
 			{
 				//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
-				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 200, 42, 'N', 0, 0, 1.21, 0.35, ''";
+				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 225, 42, 'N', 0, 0, 1.21, 0.35, ''";
 				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditPowerPanel($params);\">Add New</button>";
 			}
 			$result .= "<BR>";
@@ -7517,7 +7579,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$errorMessage[] = "Prepare failed: ChangeHNo($new,$old)-2b (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
-			{//					nno
+			{//						nno
 				$stmt1->bind_Param('iii', $new,$new,$old);
 				if (!$stmt1->execute())//execute
 				{
@@ -7591,178 +7653,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
-		$errorMessage[] = "CreatePanel disabled untill suport for 208v3p.";
-		/*
-		//for error reporting
-		$action = "CreatePanel()";
-		
-		//default generic values
-		$volts = 120;
-		$amps = 20;
-		$load = 0;
-
-		$circuit= GetInput("circuit");
-		
-		if(!isset($status) || strlen($status)==0)
-			$status = "D";
-		
-		$totalAffectedCount = 0;
-		$valid = true;
-		
-		if($valid)$valid = ValidPowerPanelName($panel);
-		if($valid)$valid = ValidPowerCircuitVolts($volts);
-		if($valid)$valid = ValidPowerCircuitAmps($amps);
-		if($valid)$valid = ValidPowerCircuitStatus($status);
-		if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
-		
-		//check for location in table
-		if($valid)$valid = ValidLocation($locationID,true);
-		
-		
-		
-		for($circuit=1; $circuit<=$circuitCount; $circuit++)
-		{
-			if($valid)
-			{
-				//check for existing panel circuit combo
-				$valid = false;
-				$passedDBChecks = false;
-				//this could be optomised by filtering inner selects by panel and/or range of circuit
-				$isDoubleCircuit = (int)$volts == 208;
-				$filter = "";
-				if(!$isDoubleCircuit)
-					$filter = "csr.panel=? AND csr.circuit=?";
-				else
-					$filter = "csr.panel=? AND (csr.circuit=? OR csr.circuit=?)";
-				
-				$query = "SELECT * FROM (
-						SELECT powerid,panel,circuit,volts,amps
-							FROM dcim_power
-							UNION
-						SELECT powerid,panel,IF(volts=208,circuit+2,NULL) AS cir,volts,amps
-							FROM dcim_power HAVING NOT(cir IS NULL)
-						) AS csr
-					WHERE $filter";
-				
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "Prepare 0 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-				else
-				{
-					if(!$isDoubleCircuit)
-						$stmt->bind_Param('ss', $panel, $circuit);
-					else
-					{
-						$secondCircuit = 2+(int)$circuit;
-						$stmt->bind_Param('sss', $panel, $circuit, $secondCircuit);
-					}
-					if (!$stmt->execute())//execute
-						//failed (errorNo-error)
-						$errorMessage[] = "CreatePanel() Failed to execute power circuit locate verification (" . $stmt->errno . "-" . $stmt->error . ").";
-					else
-					{
-						$stmt->store_result();
-						$count = $stmt->num_rows;
-							
-						if($count==0)
-							$passedDBChecks = true;
-						else
-						{
-							$stmt->bind_result($k, $p, $c, $v, $a);
-							$stmt->fetch();
-							
-							$errorMessage[] = "CreatePanel() Existing panel Circuit found (Panel:$p, Circuit#$c) ID#$k. Cannot create duplicate.";
-						}
-					}
-				}
-				$valid=$passedDBChecks;
-			}
-			
-			//push each circuit to DB
-			if($valid)
-			{
-				$query = "INSERT INTO dcim_power
-					(panel,circuit,volts,amps,status,`load`,edituser,editdate)
-					VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-				
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
-				else
-				{//					   pcvaslu
-					$stmt->bind_Param('ssssssi', $panel, $circuit, $volts, $amps, $status, $load, $userID);
-					
-					if (!$stmt->execute())//execute
-						//failed (errorNo-error)
-						$errorMessage[] = "CreatePanel() Failed to execute power circuit add (" . $stmt->errno . "-" . $stmt->error . ").";
-					else
-					{
-						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
-						if($affectedCount==1)
-						{
-							LogDBChange("dcim_power",-1,"I","panel='$panel' AND circuit='$circuit'");
-							$resultMessage[] = "Successfully added power circuit (Panel:".$panel." Circuit#".$circuit.").";
-						}
-						else
-							$errorMessage[] = "Power circuit added successfully, but affected $affectedCount rows.";
-						
-						//look up inserted id
-						$query = "SELECT powerid FROM dcim_power WHERE panel=? AND circuit=?";
-						
-						if (!($stmt = $mysqli->prepare($query)))
-							$errorMessage[] = "Prepare failed: ($action-2) (" . $mysqli->errno . ") " . $mysqli->error;
-						else
-						{
-							$stmt->bind_Param('ss', $panel, $circuit);
-							$stmt->execute();
-							$stmt->store_result();
-							$count = $stmt->num_rows;
-							
-							if($count==1)
-							{
-								//update input locationid
-								$stmt->bind_result($powerID);
-								$stmt->fetch();
-								//$resultMessage[] = "Sucsessfully found inserted power record ID#$powerID - dbID#$dbPowerID. - search for ($panel, $circuit)";
-								
-								//sucsessfull Insert - insert circuit-location link record
-								$query = "INSERT INTO dcim_powerloc
-									(powerid,locationid,edituser,editdate)
-									VALUES(?,?,?,CURRENT_TIMESTAMP)";
-									
-								if (!($stmt = $mysqli->prepare($query)))
-									$errorMessage[] = "Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
-								else
-								{//					   plu
-									$stmt->bind_Param('iii', $powerID, $locationID, $userID);
-									
-									if (!$stmt->execute())//execute
-										//failed (errorNo-error)
-										$errorMessage[] = "CreatePanel() Failed to execute power circuit location link add (" . $stmt->errno . "-" . $stmt->error . ").";
-									else
-									{
-										$affectedCount = $stmt->affected_rows;
-										$totalAffectedCount += $affectedCount;
-										
-										if($affectedCount==1)
-										{
-											LogDBChange("dcim_powerloc",-1,"I","powerid=$powerID AND locationid=$locationID");
-											$resultMessage[] = "Successfully added power circuit location link (powerID:".$powerID.",locationID:".$locationID.").";
-										}
-										else
-											$errorMessage[] = "CreatePanel() Power circuit location link added successfully, but affected $affectedCount rows.";
-									}
-								}
-								$resultMessage[] = "$totalAffectedCount total records created.";
-							}
-							else
-							{
-								$errorMessage[] = "CreatePanel() Failed to locate inserted record. Power (if created) is not linked to Location.";
-							}
-						}
-					}
-				}
-			}
-		}*/
+		$errorMessage[] = "CreatePanel disabled after switching to DBv3.";
 	}
 	
 	function CreateSiteLayout($siteID, $name, $fullName, $siteWidth, $siteDepth)
