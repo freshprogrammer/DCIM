@@ -1,4 +1,4 @@
-## DCIM Database
+## DCIM Database v3
 ![DCIM DC Visual Diagram](/documentation/dcim_db_visual.jpg)
 
 #### Describe dcim_badge
@@ -17,11 +17,26 @@
 |qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
+#### Describe dcim_config
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|configid|int(8)|NO|PRI|*NULL*|auto_increment|
+|appname|varchar(200)|NO||DCIM Demo||
+|pagetitle|varchar(200)|NO||DCIM||
+|versionnote|varchar(200)|NO||note||
+|cookiedurration|int(3)|NO||36||
+|cookiedurrationipad|int(3)|NO||2||
+|badgesEnabled|varchar(1)|NO||T||
+|subnetsEnabled|varchar(1)|NO||T||
+|qaenabled|varchar(1)|NO||T||
+|demoenvironment|varchar(1)|NO||F||
+|dbversion|varchar(10)|NO||1||
+
 #### Describe dcim_customer
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |hno|int(8)|NO|PRI|*NULL*|auto_increment|
-|cno|int(8)|NO||*NULL*||
+|cno|int(8)|NO|MUL|*NULL*||
 |name|varchar(128)|NO||*NULL*||
 |note|text|NO||*NULL*||
 |status|varchar(1)|NO||*NULL*||
@@ -35,8 +50,9 @@
 |---|---|---|---|---|---|
 |deviceid|int(8)|NO|PRI|*NULL*|auto_increment|
 |hno|int(8)|NO|MUL|*NULL*||
-|locationid|int(8)|NO||*NULL*||
-|name|varchar(64)|NO||*NULL*||
+|locationid|int(8)|NO|MUL|*NULL*||
+|name|varchar(64)|NO|MUL|*NULL*||
+|altname|varchar(64)|NO|MUL|*NULL*||
 |member|int(2)|NO||0||
 |note|text|NO||*NULL*||
 |unit|int(3)|NO||*NULL*||
@@ -82,6 +98,9 @@
 |width|decimal(6,2)|NO||0.00||
 |depth|decimal(6,2)|NO||0.00||
 |orientation|varchar(1)|NO||N||
+|keyno|varchar(20)|NO||*NULL*||
+|allocation|varchar(1)|NO||E||
+|order|varchar(1)|NO||S||
 |visible|char(1)|NO||||
 |note|text|NO||*NULL*||
 |edituser|int(8)|NO||0||
@@ -112,12 +131,12 @@
 |qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
-#### Describe dcim_power
+#### Describe dcim_powercircuit
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
-|powerid|smallint(8) unsigned|NO|PRI|*NULL*|auto_increment|
-|panel|varchar(8)|NO||*NULL*||
-|circuit|tinyint(2)|NO||*NULL*||
+|powercircuitid|smallint(8)|NO|PRI|*NULL*|auto_increment|
+|powerpanelid|int(8)|NO|MUL|*NULL*||
+|circuit|tinyint(3)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
 |amps|tinyint(3)|NO||20||
 |status|varchar(1)|NO||*NULL*||
@@ -127,12 +146,46 @@
 |qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
-#### Describe dcim_powerloc
+#### Describe dcim_powercircuitloc
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
-|powerlocid|int(8)|NO|PRI|*NULL*|auto_increment|
-|powerid|int(8)|NO|MUL|0||
+|powercircuitlocid|int(8)|NO|PRI|*NULL*|auto_increment|
+|powercircuitid|int(8)|NO|MUL|0||
 |locationid|int(8)|NO|MUL|0||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcim_powerpanel
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|powerpanelid|int(8)|NO|PRI|*NULL*|auto_increment|
+|powerupsid|int(8)|NO|MUL|*NULL*||
+|roomid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO||*NULL*||
+|amps|int(4)|NO||*NULL*||
+|circuits|int(3)|NO||0||
+|xpos|decimal(6,2)|NO||0.00||
+|ypos|decimal(6,2)|NO||0.00||
+|width|decimal(6,2)|NO||0.00||
+|depth|decimal(6,2)|NO||0.00||
+|orientation|varchar(1)|NO||N||
+|note|text|NO||*NULL*||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcim_powerups
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|powerupsid|int(8)|NO|PRI|*NULL*|auto_increment|
+|siteid|int(8)|NO|MUL|*NULL*||
+|name|varchar(32)|NO||*NULL*||
+|volts|int(5)|NO||*NULL*||
+|amps|int(5)|NO||*NULL*||
+|note|text|NO||*NULL*||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
@@ -154,7 +207,7 @@
 |layer|tinyint(1)|NO||0||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
-|qauser|int(8)|NO||-1||
+|qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
 #### Describe dcim_site
@@ -174,9 +227,10 @@
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
 |userid|int(8)|NO|PRI|*NULL*|auto_increment|
+|siteid|int(8)|NO|MUL|*NULL*||
 |username|varchar(64)|NO|MUL|*NULL*||
 |name|varchar(64)|NO||*NULL*||
-|pass|varchar(32)|NO||*NULL*||
+|pass|varchar(60)|NO||*NULL*||
 |email|varchar(128)|NO||*NULL*||
 |initials|varchar(4)|NO||*NULL*||
 |note|text|NO||*NULL*||
@@ -226,7 +280,7 @@
 |customerlogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
 |hno|int(8)|NO|MUL|*NULL*||
-|cno|int(8)|NO||*NULL*||
+|cno|int(8)|NO|MUL|*NULL*||
 |name|varchar(128)|NO||*NULL*||
 |note|text|NO||*NULL*||
 |status|varchar(1)|NO||*NULL*||
@@ -242,8 +296,9 @@
 |logtype|char(1)|NO||I||
 |deviceid|int(8)|NO|MUL|*NULL*||
 |hno|int(8)|NO|MUL|*NULL*||
-|locationid|int(8)|NO||*NULL*||
-|name|varchar(64)|NO||*NULL*||
+|locationid|int(8)|NO|MUL|*NULL*||
+|name|varchar(64)|NO|MUL|*NULL*||
+|altname|varchar(64)|NO|MUL|*NULL*||
 |member|int(2)|NO||0||
 |note|text|NO||*NULL*||
 |unit|int(3)|NO||*NULL*||
@@ -293,6 +348,9 @@
 |width|decimal(6,2)|NO||0.00||
 |depth|decimal(6,2)|NO||0.00||
 |orientation|varchar(1)|NO||N||
+|keyno|varchar(20)|NO||*NULL*||
+|allocation|varchar(1)|NO||E||
+|order|varchar(1)|NO||S||
 |visible|char(1)|NO||||
 |note|text|NO||*NULL*||
 |edituser|int(8)|NO||0||
@@ -327,14 +385,14 @@
 |qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
-#### Describe dcimlog_power
+#### Describe dcimlog_powercircuit
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
-|powerlogid|int(8)|NO|PRI|*NULL*|auto_increment|
+|powercircuitlogid|smallint(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
-|powerid|int(8)|NO|MUL|*NULL*||
-|panel|varchar(8)|NO||*NULL*||
-|circuit|tinyint(2)|NO||*NULL*||
+|powercircuitid|smallint(8)|NO|MUL|*NULL*||
+|powerpanelid|int(8)|NO|MUL|*NULL*||
+|circuit|tinyint(3)|NO||*NULL*||
 |volts|smallint(3)|NO||120||
 |amps|tinyint(3)|NO||20||
 |status|varchar(1)|NO||*NULL*||
@@ -344,14 +402,52 @@
 |qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
-#### Describe dcimlog_powerloc
+#### Describe dcimlog_powercircuitloc
 |Field|Type|Null|Key|Default|Extra|
 |---|---|---|---|---|---|
-|powerloclogid|int(8)|NO|PRI|*NULL*|auto_increment|
+|powercircuitloclogid|int(8)|NO|PRI|*NULL*|auto_increment|
 |logtype|char(1)|NO||I||
-|powerlocid|int(8)|NO|MUL|*NULL*||
-|powerid|int(8)|NO|MUL|0||
+|powercircuitlocid|int(8)|NO|MUL|*NULL*||
+|powercircuitid|int(8)|NO|MUL|0||
 |locationid|int(8)|NO|MUL|0||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcimlog_powerpanel
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|powerpanellogid|int(8)|NO|PRI|*NULL*|auto_increment|
+|logtype|varchar(1)|NO||I||
+|powerpanelid|int(8)|NO|MUL|*NULL*||
+|powerupsid|int(8)|NO|MUL|*NULL*||
+|roomid|int(8)|NO|MUL|*NULL*||
+|name|varchar(50)|NO||*NULL*||
+|amps|int(4)|NO||*NULL*||
+|circuits|int(3)|NO||0||
+|xpos|decimal(6,2)|NO||0.00||
+|ypos|decimal(6,2)|NO||0.00||
+|width|decimal(6,2)|NO||0.00||
+|depth|decimal(6,2)|NO||0.00||
+|orientation|varchar(1)|NO||N||
+|note|text|NO||*NULL*||
+|edituser|int(8)|NO||*NULL*||
+|editdate|timestamp|NO||CURRENT_TIMESTAMP||
+|qauser|int(8)|NO|MUL|-1||
+|qadate|datetime|NO||*NULL*||
+
+#### Describe dcimlog_powerups
+|Field|Type|Null|Key|Default|Extra|
+|---|---|---|---|---|---|
+|powerupslogid|int(8)|NO|PRI|*NULL*|auto_increment|
+|logtype|varchar(1)|NO||I||
+|powerupsid|int(8)|NO|MUL|*NULL*||
+|siteid|int(8)|NO|MUL|*NULL*||
+|name|varchar(32)|NO||*NULL*||
+|volts|int(5)|NO||*NULL*||
+|amps|int(5)|NO||*NULL*||
+|note|text|NO||*NULL*||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
 |qauser|int(8)|NO|MUL|-1||
@@ -375,7 +471,7 @@
 |layer|tinyint(1)|NO||0||
 |edituser|int(8)|NO||*NULL*||
 |editdate|timestamp|NO||CURRENT_TIMESTAMP||
-|qauser|int(8)|NO||-1||
+|qauser|int(8)|NO|MUL|-1||
 |qadate|datetime|NO||*NULL*||
 
 #### Describe dcimlog_site

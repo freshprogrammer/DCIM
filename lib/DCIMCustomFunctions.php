@@ -17,9 +17,17 @@
 		{
 			return UserHasWritePermission();
 		}
-		public static function UserHasCircuitPermission()
+		public static function UserHasPowerCircuitPermission()
 		{
 			return UserHasWritePermission();
+		}
+		public static function UserHasPanelPermission()
+		{
+			return UserHasAdminPermission();
+		}
+		public static function UserHasUPSPermission()
+		{
+			return UserHasAdminPermission();
 		}
 		public static function UserHasLocationPermission()
 		{
@@ -34,6 +42,10 @@
 			return UserHasWritePermission();
 		}
 		public static function UserHasRoomPermission()
+		{
+			return UserHasAdminPermission();
+		}
+		public static function UserHasSitePermission()
 		{
 			return UserHasAdminPermission();
 		}
@@ -131,7 +143,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
 			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
 			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
-			$searchPlaceHolders[] = "10K+ line club";
+			$searchPlaceHolders[] = "15K+ line club";
 			$searchPlaceHolders[] = "$dbRecs+ DB Records";
 			$searchPlaceHolders[] = "$dbRecs Records and counting";
 				
@@ -159,6 +171,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		
 		public static function CreateNavigationQuickLinks()
 		{
+			//TODO this should be customised to each user based on siteid
 			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
@@ -183,46 +196,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
 			
-			$result .= "<div class=\"panel\">\n";
-			$result .= "<div class=\"panel-header\">\n";
-			$result .= "$appName\n";
-			$result .= "</div>\n";
-			
-			$result .= "<div class=\"panel-body\">\n\n";
-			
-			//select site(s) from table for rendering each one
-			$query = "SELECT siteid, name, fullname, width, depth
-					FROM dcim_site
-					WHERE width > 0 AND depth > 0";
-			
-			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
-			{
-				$errorMessage[]= "CreateHomePageContent() SQL Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			}
-			else
-			{
-				$stmt->store_result();
-				$stmt->bind_result($siteID, $name , $fullName, $width, $depth);
-				
-				while($stmt->fetch())
-				{
-					$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
-					$result .= "<style>\n";
-					$result .= "#siteContainer$siteID {\n";
-					$result .= "	padding-bottom:$depthToWidthRatio%;\n";
-					$result .= "}\n";
-					$result .= "</style>\n";
-					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
-					$result .= CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
-					$result .= "</div>\n";
-					
-					$result .= "<BR>\n";
-					$result .= ListSiteRooms($siteID, $fullName);
-				}
-			}
-			
-			$result .= "</div>\n";//end panel
-			$result .= "</div>\n";
+			$result .= ShowSitePage(0);//TODO should look up users home page
 			return $result;
 		}
 		
@@ -309,6 +283,18 @@ From there you can easily save it with an appropriate name and store it.<BR>
 				$result .= "<div class='siteBackground' id='site".$siteID."_NOC'></div>\n";
 				$result .= "<div class='siteBackground' id='site".$siteID."_StairsWall'></div>\n";
 			}//siteID 0 custom layout
+			else if($siteID==1)
+			{//default site layout
+				$result = "<style>\n";
+				$result .= "#site".$siteID." {\n";
+				$result .= "}\n";
+				$result .= "#site".$siteID."_Label {\n";//label possitioning
+				$result .= "	left: 15%;\n";
+				$result .= "}\n";
+				$result .= "</style>\n";
+				
+				$result .= "<div class='siteBackground' id='site".$siteID."'></div>\n";
+			}
 			else
 			{//default site layout
 				$result = "<style>\n";
@@ -328,6 +314,14 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		{//creates custom html and style for specific rooms - returned with ref passes variables roomCustomHTML and roomCustomStyle
 			$borderThickness = CustomFunctions::$roomBorderThickness;
 			$roomTypeClass = RoomAccesClass($custAccess);
+			
+			if(false)
+			{//show room true area for working on new layouts
+				//test room border
+				$roomCustomStyle .= "#room".$roomID."_TestAll {\n";
+				$roomCustomStyle .= "	border-style: hidden;\n background:#ffc0cb80;}\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_TestAll'></div>\n";//last because of overlap
+			}
 			
 			//custom layouts
 			if($roomID==1)
@@ -555,6 +549,141 @@ From there you can easily save it with an appropriate name and store it.<BR>
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightBottom'></div>\n";
 				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";//last because of overlap
 				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==20)
+			{//Area1
+				//    -112-
+				//  -----------
+				//  |       __| d1
+				//  |     __|   d2
+				//  |   __|
+				//  |  _|
+				//  |__|
+				//   w1 w2
+				$roomWidth = 112;
+				$col1Width = 32;
+				$col2Width = 34;
+				$col3Width = 3;
+				$col4Width = 19;
+				$col5Width = 24;
+				
+				$roomDepth = 75;
+				$row1Depth = 25;
+				$row2Depth = 8;
+				$row3Depth = 7;
+				$row4Depth = 3;
+				$row5Depth = 32;
+				
+				$col0x = 0;//just to keep the code clean
+				$col1x = 100*($col1Width)/$roomWidth;//x pos of col 2 (col0 is at 0)
+				$col2x = 100*($col1Width+$col2Width)/$roomWidth;
+				$col3x = 100*($col1Width+$col2Width+$col3Width)/$roomWidth;
+				$col4x = 100*($col1Width+$col2Width+$col3Width+$col4Width)/$roomWidth;
+				
+				$row0y = 0;//just to keep the code clean
+				$row1y = 100*($row1Depth)/$roomDepth;//y pos of col 2 (col0 is at 0)
+				$row2y = 100*($row1Depth+$row2Depth)/$roomDepth;
+				$row3y = 100*($row1Depth+$row2Depth+$row3Depth)/$roomDepth;
+				$row4y = 100*($row1Depth+$row2Depth+$row3Depth+$row4Depth)/$roomDepth;
+				
+				// width and depth percentages
+				$col1W = 100*$col1Width/$roomWidth;
+				$col2W = 100*$col2Width/$roomWidth;
+				$col3W = 100*$col3Width/$roomWidth;
+				$col4W = 100*$col4Width/$roomWidth;
+				$col5W = 100*$col5Width/$roomWidth;
+				
+				$row1D = 100*$row1Depth/$roomDepth;
+				$row2D = 100*$row2Depth/$roomDepth;
+				$row3D = 100*$row3Depth/$roomDepth;
+				$row4D = 100*$row4Depth/$roomDepth;
+				$row5D = 100*$row5Depth/$roomDepth;
+				
+				//top cells
+				$roomCustomStyle .= "#room".$roomID."_LeftTop {\n";
+				$roomCustomStyle .= "	left: $col0x%;\n     top: $row0y%;\n";
+				$roomCustomStyle .= "	width: $col1W%;\n height: ".($row1D+$row2D+$row3D+$row4D)."%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden hidden solid;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_LeftRightTop {\n";
+				$roomCustomStyle .= "	left: $col1x%;\n     top: $row0y%;\n";
+				$roomCustomStyle .= "	width: $col2W%;\n height: ".($row1D+$row2D+$row3D)."%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidTop {\n";
+				$roomCustomStyle .= "	left: $col2x%;\n     top: $row0y%;\n";
+				$roomCustomStyle .= "	width: $col3W%;\n height: ".($row1D+$row2D)."%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightLeftTop {\n";
+				$roomCustomStyle .= "	left: $col3x%;\n     top: $row0y%;\n";
+				$roomCustomStyle .= "	width: $col4W%;\n height: $row1D%;\n";
+				$roomCustomStyle .= "	border-style: solid hidden hidden hidden;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightTop {\n";
+				$roomCustomStyle .= "	left: calc($col4x% - ".$borderThickness."px);\n     top: $row0y%;\n";
+				$roomCustomStyle .= "	width: calc($col5W% + ".$borderThickness."px);\n height: $row1D%;\n";
+				$roomCustomStyle .= "	border-style: solid solid solid hidden;\n}\n";
+				//bottom cells - offset by border size so the borders match better
+				$roomCustomStyle .= "#room".$roomID."_LeftBottom {\n";
+				$roomCustomStyle .= "	left: $col0x%;\n     top: calc($row4y% - ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	width: $col1W%;\n height: calc($row5D% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	border-style: hidden solid solid solid;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_LeftRightBottom {\n";
+				$roomCustomStyle .= "	left: $col1x%;\n     top: $row3y%;\n";
+				$roomCustomStyle .= "	width: $col2W%;\n height: $row4D%;\n";
+				$roomCustomStyle .= "	border-style: hidden solid solid hidden;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_MidBottom {\n";
+				$roomCustomStyle .= "	left: calc($col2x% - ".$borderThickness."px);\n     top: calc($row2y% - ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	width: calc($col3W% + ".$borderThickness."px);\n height: calc($row3D% + ".$borderThickness."px);\n";
+				$roomCustomStyle .= "	border-style: hidden solid solid hidden;\n}\n";
+				$roomCustomStyle .= "#room".$roomID."_RightLeftBottom {\n";
+				$roomCustomStyle .= "	left: $col3x%;\n     top: $row1y%;\n";
+				$roomCustomStyle .= "	width: $col4W%;\n height: $row2D%;\n";
+				$roomCustomStyle .= "	border-style: hidden solid solid hidden;\n}\n";
+				
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftRightTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightLeftTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightTop'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_LeftRightBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_MidBottom'></div>\n";
+				$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_RightLeftBottom'></div>\n";
+				
+				$roomCustomHTML .= "<span class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==21)
+			{//area2 2
+				$cornerWidthInset = 100*32/150;//percent inset corner
+				$cornerDepthInset = 100*(-5)/54;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==27)
+			{//LOU area3
+				$cornerWidthInset = 100*(-18)/55;//percent inset corner
+				$cornerDepthInset = 100*(-35)/66;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==28)
+			{//NWK DC2
+				$cornerWidthInset = 100*(44)/83;//percent inset corner
+				$cornerDepthInset = 100*(-24)/89;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==29)
+			{//NWK DC3
+				$cornerWidthInset = 100*(-10)/41;//percent inset corner
+				$cornerDepthInset = 100*(-9)/95;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==36)
+			{//SFO colo4
+				$cornerWidthInset = 100*(-10)/81;//percent inset corner
+				$cornerDepthInset = 100*(16)/61;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
 			}
 		}//end CreateRoomCustomLayout()
 	}// end DCIMCustomFunctions class

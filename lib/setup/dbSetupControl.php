@@ -23,8 +23,8 @@
 	$SCRIPTID_BUILD_DB_WITH_DEMO_DATA = 3;
 	$SCRIPTID_RESET_DEMO_CREDS = 4;
 	//updates
-	$SCRIPTID_DB_UPDATE_1_1 = 11;
-	$SCRIPTID_DB_UPDATE_1_2 = 12;
+	$SCRIPTID_DB_UPDATEv3_1 = 11;
+	$SCRIPTID_DB_UPDATEv3_2 = 12;
 	//batches
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	//simple procedures
@@ -34,8 +34,8 @@
 	
 	//scripts that can be run on live (non demo) environment
 	$liveEnvironmentScripts = array();
-	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_1;
-	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATE_1_2;
+	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_1;
+	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_2;
 	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
 	
 	$resultMessage = array();
@@ -57,7 +57,7 @@ function ConfirmIntent()
 {
 	var selectValue = document.getElementById('scriptidselect').value;
 	//only prompt on values that do things. - Could algo give custom messges here
-	if(<?php echo "selectValue==$SCRIPTID_BUILD_DATABASE || selectValue==$SCRIPTID_CREATE_DEMO_DATA || selectValue==$SCRIPTID_BUILD_DB_WITH_DEMO_DATA || selectValue==$SCRIPTID_DB_UPDATE_1_1 || selectValue==$SCRIPTID_DB_UPDATE_1_2 || selectValue==$SCRIPTID_CREATE_POPULATE_UPDATE"; ?>)
+	if(<?php echo "selectValue==$SCRIPTID_BUILD_DATABASE || selectValue==$SCRIPTID_CREATE_DEMO_DATA || selectValue==$SCRIPTID_BUILD_DB_WITH_DEMO_DATA || selectValue==$SCRIPTID_DB_UPDATEv3_1 || selectValue==$SCRIPTID_DB_UPDATEv3_2 || selectValue==$SCRIPTID_CREATE_POPULATE_UPDATE"; ?>)
 	{
 		var confirmed = false;
 		var confirm = prompt("Are you sure you want to run this script that will masively change the DB? Enter 'YES' to confirm.", "");
@@ -90,8 +90,8 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
 		<option value='$SCRIPTID_RESET_DEMO_CREDS'			>Reset Demo Credentials</option>
 		<option value='0'									>-</option>
-		<option value='$SCRIPTID_DB_UPDATE_1_1'				>Update database with latest update (part 1)</option>
-		<option value='$SCRIPTID_DB_UPDATE_1_2'				>Update database with latest update (part 2)</option>
+		<option value='$SCRIPTID_DB_UPDATEv3_1'				>Update database to DBv3 (part 1)</option>
+		<option value='$SCRIPTID_DB_UPDATEv3_2'				>Update database to DBv3 (part 2)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 		<option value='0'									>-</option>
@@ -162,6 +162,7 @@ function ConfirmIntent()
 	//show db structure documentation on page for reffereance
 	echo "<BR>";
 	echo "Description of the live DB<BR>";
+	echo CreateTableRowCountTable();
 	echo DescribeDBInTables();
 	
 	//END PAGE - Begin local Functions - All actual processing functions are in the refferenced file
@@ -171,16 +172,16 @@ function ConfirmIntent()
 	//returns -1 if DB is already updated
 	function TestDBReadiness($dbScriptID)
 	{
-		global $SCRIPTID_DB_UPDATE_1_1;
-		global $SCRIPTID_DB_UPDATE_1_2;
+		global $SCRIPTID_DB_UPDATEv3_1;
+		global $SCRIPTID_DB_UPDATEv3_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		
-		if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1 || $dbScriptID==$SCRIPTID_DB_UPDATE_1_2 || $dbScriptID==$SCRIPTID_CREATE_POPULATE_UPDATE)
+		if($dbScriptID==$SCRIPTID_DB_UPDATEv3_1 || $dbScriptID==$SCRIPTID_DB_UPDATEv3_2 || $dbScriptID==$SCRIPTID_CREATE_POPULATE_UPDATE)
 		{
-			if($dbScriptID==$SCRIPTID_DB_UPDATE_1_1)
+			if($dbScriptID==$SCRIPTID_DB_UPDATEv3_1)
 				return IsDatabaseUpToDate_Update1(true,false);
-			else if($dbScriptID==$SCRIPTID_DB_UPDATE_1_2)
-				return IsDatabaseUpToDate_Update1(false,true);
+			else if($dbScriptID==$SCRIPTID_DB_UPDATEv3_2)
+					return IsDatabaseUpToDate_Update1(false,true);
 			else if($dbScriptID==$SCRIPTID_CREATE_POPULATE_UPDATE)
 				return IsDatabaseUpToDate_Update1(true,true);
 		}
@@ -202,8 +203,8 @@ function ConfirmIntent()
 		global $SCRIPTID_CREATE_DEMO_DATA;
 		global $SCRIPTID_BUILD_DB_WITH_DEMO_DATA;
 		global $SCRIPTID_RESET_DEMO_CREDS;
-		global $SCRIPTID_DB_UPDATE_1_1;
-		global $SCRIPTID_DB_UPDATE_1_2;
+		global $SCRIPTID_DB_UPDATEv3_1;
+		global $SCRIPTID_DB_UPDATEv3_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
 		global $SCRIPTID_QA_ALL_RECORDS;
@@ -235,17 +236,17 @@ function ConfirmIntent()
 				RestoreDemoCreds();
 				echo "<BR>Done";
 				break;
-			case $SCRIPTID_DB_UPDATE_1_1:
-			case $SCRIPTID_DB_UPDATE_1_2:
-				echo "Processing Update...";
+			case $SCRIPTID_DB_UPDATEv3_1:
+			case $SCRIPTID_DB_UPDATEv3_2:
+				echo "processing DBv3 Update...";
 				
 				$dbStatus = TestDBReadiness($dbScriptID);
 				if($dbStatus==1)
-					RunDBUpdate_Update1($dbScriptID==$SCRIPTID_DB_UPDATE_1_1,$dbScriptID==$SCRIPTID_DB_UPDATE_1_2);
-				else if($dbStatus==0)
+					RunDBUpdate_Update($dbScriptID==$SCRIPTID_DB_UPDATEv3_1,$dbScriptID==$SCRIPTID_DB_UPDATEv3_2);
+				else if(dbStatus==0)
 					$errorMessage[]="Database failed readiness check. Update Aborted";
 				else if($dbStatus==-1)
-					$errorMessage[]="Database Has already been updated. Update Aborted.";
+					$errorMessage[]="Database Has already been updated tp DBv3. Update Aborted.";
 				
 				echo "<BR>Done";
 				break;
@@ -258,10 +259,10 @@ function ConfirmIntent()
 				$dbStatus = TestDBReadiness($dbScriptID);
 				if($dbStatus==1)
 				{
-					echo "<BR>Processing Update Part 1...";
-					RunDBUpdate_Update1(true,false);
-					echo "<BR>Processing Update Part 2...";
-					RunDBUpdate_Update1(false,true);
+					echo "<BR>Processing Update (DBv3) Part 1...";
+					RunDBUpdate_Update(true,false);
+					echo "<BR>Processing Update (DBv3) Part 2...";
+					RunDBUpdate_Update(false,true);
 				}
 				else if($dbStatus==0)
 					$errorMessage[]="Database failed readiness check. Update Aborted";

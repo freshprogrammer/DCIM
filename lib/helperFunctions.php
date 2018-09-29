@@ -190,7 +190,7 @@
 		$deviceModels[] = new DeviceModel("Alert Logic"					, 1, 1,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("Cisco ASA 5505"				, 0, 8,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("Cisco ASA 5510"				, 0, 3,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Cisco Catalyst 3550"			, 1,48,false,false,false, true,16, true);//cisco
+		$deviceModels[] = new DeviceModel("Cisco Catalyst 3550"			, 1,48,false,false,false, true,16, true);
 		$deviceModels[] = new DeviceModel("Cisco WS-X6348"				, 1,48,false,false, true, true,12, true);
 		$deviceModels[] = new DeviceModel("Cisco WS-X6K-SUP2-2GE"		, 1, 2,false, true, true,false, 1,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge 1550"			, 1, 2,false,true,false,false, 1,false);
@@ -229,7 +229,7 @@
 		$deviceModels[] = new DeviceModel("Juniper SRX220"				, 0, 2,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("Juniper SRX650"				, 0, 2,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);//duplicate
 		$deviceModels[] = new DeviceModel("Juniper SSG5"				, 0, 2,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("SuperMicro 6026T"			, 1, 2,false,true,false,false, 1,false);
 		$deviceModels[] = new DeviceModel("SuperMicro 6027R"			, 1, 2,false,true,false,false, 1,false);
@@ -247,8 +247,10 @@
 		else if($table=="dcim_portconnection")		$descrip='Port Connection';
 		else if($table=="dcim_location")			$descrip='Location';
 		else if($table=="dcim_portvlan")			$descrip='Port VLAN';
-		else if($table=="dcim_power")				$descrip='Power Circuit';
-		else if($table=="dcim_powerloc")			$descrip='Power Location';
+		else if($table=="dcim_powerpanel")			$descrip='Power Panel';
+		else if($table=="dcim_powerups")			$descrip='Power UPS';
+		else if($table=="dcim_powercircuit")		$descrip='Power Circuit';
+		else if($table=="dcim_powercircuitloc")		$descrip='Power Circuit Location';
 		else if($table=="dcim_room")				$descrip='Room';
 		else if($table=="dcim_site")				$descrip='Site';
 		else if($table=="dcim_user")				$descrip='User';
@@ -260,8 +262,10 @@
 		else if($table=="dcimlog_portconnection")	$descrip='Port Connection Log';
 		else if($table=="dcimlog_location")			$descrip='Location Log';
 		else if($table=="dcimlog_portvlan")			$descrip='Port VLAN Log';
-		else if($table=="dcimlog_power")			$descrip='Power Circuit Log';
-		else if($table=="dcimlog_powerloc")			$descrip='Power Location Log';
+		else if($table=="dcimlog_powerpanel")		$descrip='Power Panel Log';
+		else if($table=="dcimlog_powerups")			$descrip='Power UPS Log';
+		else if($table=="dcimlog_powercircuit")		$descrip='Power Circuit Log';
+		else if($table=="dcimlog_powercircuitloc")	$descrip='Power Circuit Location Log';
 		else if($table=="dcimlog_room")				$descrip='Room Log';
 		else if($table=="dcimlog_site")				$descrip='Site Log';
 		else if($table=="dcimlog_vlan")				$descrip='Subnet Log';
@@ -270,7 +274,7 @@
 	}
 	
 	function GetKeyField($table)
-	{
+	{//ignores config table that has no real key
 		if($table=="dcim_badge")					$keyFieldName='badgeid';
 		else if($table=="dcim_customer")			$keyFieldName='hno';
 		else if($table=="dcim_device")				$keyFieldName='deviceid';
@@ -278,12 +282,15 @@
 		else if($table=="dcim_portconnection")		$keyFieldName='portconnectionid';
 		else if($table=="dcim_location")			$keyFieldName='locationid';
 		else if($table=="dcim_portvlan")			$keyFieldName='portvlanid';
-		else if($table=="dcim_power")				$keyFieldName='powerid';
-		else if($table=="dcim_powerloc")			$keyFieldName='powerlocid';
+		else if($table=="dcim_powerpanel")			$keyFieldName='powerpanelid';
+		else if($table=="dcim_powerups")			$keyFieldName='powerupsid';
+		else if($table=="dcim_powercircuit")		$keyFieldName='powercircuitid';
+		else if($table=="dcim_powercircuitloc")		$keyFieldName='powercircuitlocid';
 		else if($table=="dcim_room")				$keyFieldName='roomid';
 		else if($table=="dcim_site")				$keyFieldName='siteid';
 		else if($table=="dcim_user")				$keyFieldName='userid';
 		else if($table=="dcim_vlan")				$keyFieldName='vlanid';
+		//logs
 		else if($table=="dcimlog_badge")			$keyFieldName='badgelogid';
 		else if($table=="dcimlog_customer")			$keyFieldName='customerlogid';
 		else if($table=="dcimlog_device")			$keyFieldName='devicelogid';
@@ -291,8 +298,10 @@
 		else if($table=="dcimlog_portconnection")	$keyFieldName='portconnectionlogid';
 		else if($table=="dcimlog_location")			$keyFieldName='locationlogid';
 		else if($table=="dcimlog_portvlan")			$keyFieldName='portvlanlogid';
-		else if($table=="dcimlog_power")			$keyFieldName='powerlogid';
-		else if($table=="dcimlog_powerloc")			$keyFieldName='powerloclogid';
+		else if($table=="dcimlog_powerpanel")		$keyFieldName='powerpanellogid';
+		else if($table=="dcimlog_powerups")			$keyFieldName='powerupslogid';
+		else if($table=="dcimlog_powercircuit")		$keyFieldName='powercircuitlogid';
+		else if($table=="dcimlog_powercircuitloc")	$keyFieldName='powercircuitloclogid';
 		else if($table=="dcimlog_room")				$keyFieldName='roomlogid';
 		else if($table=="dcimlog_site")				$keyFieldName='sitelogid';
 		else if($table=="dcimlog_vlan")				$keyFieldName='vlanlogid';
@@ -303,11 +312,14 @@
 	function GetRecordPageKey($table)
 	{
 		//TODO cust is really the only odd ball, i should probably just change it to hno
-		if($table=="dcim_customer")		$pageKey='host';
-		else if($table=="dcim_device")	$pageKey='deviceid';
-		else if($table=="dcim_location")$pageKey='locationid';
-		else if($table=="dcim_room")	$pageKey='roomid';
-		else if($table=="dcim_user")	$pageKey='userid';
+		if($table=="dcim_customer")			$pageKey='host';
+		else if($table=="dcim_device")		$pageKey='deviceid';
+		else if($table=="dcim_location")	$pageKey='locationid';
+		else if($table=="dcim_room")		$pageKey='roomid';
+		else if($table=="dcim_user")		$pageKey='userid';
+		else if($table=="dcim_powerpanel")	$pageKey='powerpanelid';
+		else if($table=="dcim_powerups")	$pageKey='powerupsid';
+		else if($table=="dcim_site")		$pageKey='siteid';
 		else $pageKey = null;
 		return $pageKey;
 	}
@@ -321,8 +333,10 @@
 		else if($table=="dcim_portconnection")	$logTable='dcimlog_portconnection';
 		else if($table=="dcim_location")		$logTable='dcimlog_location';
 		else if($table=="dcim_portvlan")		$logTable='dcimlog_portvlan';
-		else if($table=="dcim_power")			$logTable='dcimlog_power';
-		else if($table=="dcim_powerloc")		$logTable='dcimlog_powerloc';
+		else if($table=="dcim_powerpanel")		$logTable='dcimlog_powerpanel';
+		else if($table=="dcim_powerups")		$logTable='dcimlog_powerups';
+		else if($table=="dcim_powercircuit")	$logTable='dcimlog_powercircuit';
+		else if($table=="dcim_powercircuitloc")	$logTable='dcimlog_powercircuitloc';
 		else if($table=="dcim_room")			$logTable='dcimlog_room';
 		else if($table=="dcim_site")			$logTable='dcimlog_site';
 		else if($table=="dcim_vlan")			$logTable='dcimlog_vlan';
@@ -564,13 +578,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function FormatSimpleMessage($msg, $severity)
 	{
-		if ($severity==3)
+		if ($severity==3)//bad
 			$result = "<table margin=><tr><td bgcolor=red class='simpleMessageCell'>$msg</td></tr></table>";
-		else if ($severity==2)
+		else if ($severity==2)//warning
 			$result = "<table margin=><tr><td bgcolor=orange class='simpleMessageCell'>$msg</td></tr></table>";
-		else if ($severity==1)
+		else if ($severity==1)//good
 			$result = "<table margin=><tr><td bgcolor=lime class='simpleMessageCell'>$msg</td></tr></table>";
-		else
+		else//unknown
 			$result = "<table margin=><tr><td bgcolor=pink class='simpleMessageCell'>$msg</td></tr></table>";
 			
 		return $result;
@@ -593,17 +607,22 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $device;
 	}
 	
-	function GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $short)
+	function GetDeviceFullName($deviceName, $deviceModel, $deviceMember, $altName, $short)
 	{
 		$deviceInfo = GetDeviceFromModelName($deviceModel);
 		
-		$deviceFullName = $deviceName;
+		if(strLen($altName)>0)
+		{
+			$altName = " ($altName)";
+		}
+		
+		$deviceFullName = $deviceName.$altName;
 		if($deviceInfo!=null && $deviceInfo->partOfChasis)
 		{
 			if($short)
-				$deviceFullName = $deviceName." M#".$deviceMember;
+				$deviceFullName = $deviceName.$altName." M#".$deviceMember;
 			else
-				$deviceFullName = $deviceName." Member #".$deviceMember;
+				$deviceFullName = $deviceName.$altName." Member #".$deviceMember;
 		}
 		return $deviceFullName;
 	}
@@ -705,15 +724,28 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $circuit."/".((int)$circuit+2);
 	}
 	
-	function Format3Phase208CircuitNumber($circuit)
+	function FormatPowerUtilization($load,$amps, $limit=80)
 	{
-		return $circuit."/".((int)$circuit+2)."/".((int)$circuit+4);
+		if($amps>0)
+		{
+			$utilization = round(100*$load/$amps,2);
+				
+			if($utilization>=$limit)
+				$utilization = " (<font color=red>$utilization%</font>)";
+			else if($load==0)
+				$utilization = "";
+			else
+				$utilization = " ($utilization%)";
+		}
+		else
+			$utilization = "";
+		return $utilization;
 	}
 	
 	function TestForSingleCustomerMatch($input)
 	{
 		global $mysqli;
-		
+		/* this is dissabled for #232
 		$query = "SELECT hno, cno, name, note, status, edituser 
 			FROM dcim_customer 
 			WHERE CONCAT('H',hno) LIKE ? OR CONCAT('C',cno) LIKE ? OR name LIKE ? OR note LIKE ?";
@@ -737,7 +769,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$stmt->fetch();
 			return $hNo;
 		}
-		else
+		else*/
 			return false;
 	}
 	
@@ -747,11 +779,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if(isset($_COOKIE["dcim_password"]))
 		{
 			$password = $_COOKIE["dcim_password"];
-			if($password=="f23c9a5dca7aef19a3db264c5c21a2f8")//md5 of default password "Pa55word"
+			if($password=="805f22790497dae93be21fbc69549509")//md5 of default password "Pa55word"+salt
 				return true;
-			else if($password=="7c6a180b36896a0a8c02787eeafb0e4c")//md5 of default password "password1"
+			else if($password=="cfdc03556bbbc4d474fc535c58798b95")//md5 of default password "password1"+salt
 				return true;
-			else if($password=="b62a565853f37fb1ec1efc287bfcebf9")//md5 of default password "testPass"
+			else if($password=="d280a422f43b4b704334a4012c4b0f46")//md5 of default password "testPass"+salt
 				return true;
 		}
 		return $result;
@@ -834,6 +866,22 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($type === "H") return "Half Cab";
 		else if($type === "M") return "Misc";
 		else if($type === "R") return "Rack";
+		else return "Unknown";
+	}
+	
+	function LocationAllocation($allocation)
+	{
+		if($allocation === "E") return "Empty";
+		else if($allocation === "C") return "Colo";
+		else if($allocation === "I") return "Internal";
+		else if($allocation === "M") return "Managed";
+		else return "Unknown";
+	}
+	
+	function LocationOrder($order)
+	{
+		if($order === "N") return "Normal";
+		else if($order === "R") return "Reversed";
 		else return "Unknown";
 	}
 	
@@ -998,15 +1046,15 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function ValidNumber($input, $fieldName, $minLen, $maxLen=0, $minVal=-1, $maxVal=-1)
 	{
 		global $errorMessage;
-		$input = (int)$input;
+		//$input = (int)$input;
 		if(strlen($input) < $minLen)
 		{
-			$errorMessage[] = $fieldName." length cannot be less than ".$minLen.".";
+			$errorMessage[] = $fieldName."('$input') length(".strlen($input).") cannot be less than ".$minLen.".";
 			return false;
 		}
 		else if($maxLen >0 && strlen($input) > $maxLen)
 		{
-			$errorMessage[] = $fieldName." length cannot be greater than ".$maxLen.".";
+			$errorMessage[] = $fieldName."('$input') length(".strlen($input).") cannot be greater than ".$maxLen.".";
 			return false;
 		}
 		else if(!is_numeric($input))
@@ -1279,23 +1327,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$query = "SELECT $keyField, $pullField FROM $table WHERE $keyField=?";
 		else
 			$query = "SELECT $keyField FROM $table WHERE $keyField=?";
-				
-		if (!($stmt = $mysqli->prepare($query))) 
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute()) 
 		{
-			//TODO handle Errors better
 			$errorMessage[] = "Prepare failed: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $mysqli->errno . ") " . $mysqli->error;
 			return false;
 		}
 		
-		$stmt->bind_Param('s', $key);
-		
-		if (!$stmt->execute())//execute 
-		{
-			//TODO handle Errors better
-			//failed (errorNo-error)
-			$errorMessage[] = "Failed to execute: ValidRecord($keyField,$keyName,$key,$table,$shouldExist) (" . $stmt->errno . "-" . $stmt->error . ").";
-			return false;
-		}
 		$stmt->store_result();
 		$count = $stmt->num_rows;
 	
@@ -1328,7 +1366,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			
 			if(!$multiplesOK || !$shouldExist)
 			{
-				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key).";
+				if($reportErrors)$errorMessage[] = "Multiple ".$keyName."s found (ID:$key). Contact Admin";
 				return false;
 			}
 			else 
@@ -1395,63 +1433,13 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $results;
 	}
 	
-	function ValidPowerRecord(&$powerID, $shouldExist=true, $reportErrors=true)
+	function ValidPowerCircuitRecord(&$powerCircuitID, $shouldExist=true, $reportErrors=true)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		if(!ValidGenericID($powerID,"Power ID"))
-			return false;
-		
-		$query = "SELECT powerid 
-			FROM dcim_power
-			WHERE powerid=?";
-				
-		if (!($stmt = $mysqli->prepare($query))) 
-		{
-			//TODO handle Errors better
-			if($reportErrors)
-				$errorMessage[] = "ValidPowerRecord($powerID,$shouldExist): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			return false;
-		}
-		$stmt->bind_Param('i', $powerID);
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$count = $stmt->num_rows;
-	
-		if($count==1)
-		{
-			//update input locationid
-			$stmt->bind_result($powerID);
-			$stmt->fetch();
-			
-			if($shouldExist)
-				return true;
-			else
-			{
-				if($reportErrors)
-					$errorMessage[] = "Power record already exists - ValidPowerRecord($powerID,$shouldExist).";
-				return false;
-			}
-		}
-		if($count==2)
-		{
-			if($reportErrors)
-				$errorMessage[] = "Multiple Power records found in ValidPowerRecord($powerID,$shouldExist). Contact Admin.";
-			return false;
-		}
-		else
-		{
-			if($shouldExist)
-			{
-				if($reportErrors)
-					$errorMessage[] = "Power record not found - ValidPowerRecord($powerID,$shouldExist).";
-				return false;
-			}
-			else
-				return true;
-		}
+		$errorMessage[]="ValidPowerCircuitRecord() has been Deprecated() should use ValidRecord() instead";
+		return false;
 	}
 	
 	function ValidDate($input, $fieldName)
@@ -1500,6 +1488,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidNumber($input,$fieldName,1,8);//Db structure set to 8 chars for all ID fields
 	}
 	
+	function ValidXYCoordinate($input,$fieldName)
+	{
+		return ValidNumber($input,$fieldName,1,8,-9999.99,9999.99);
+	}
+	
 	function ValidBadgeID($input)
 	{
 		return ValidNumber($input,"BadgeID",1);
@@ -1523,6 +1516,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function ValidDeviceName($input)
 	{
 		return ValidString($input,"Device Name",3);
+	}
+	
+	function ValidDeviceAltName($input)
+	{
+		return ValidString($input,"Device Alt Name",0,64);
 	}
 	
 	function ValidDeviceUnit($input)
@@ -1612,7 +1610,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPassword($input)
+	function ValidUserPassword($input)
 	{
 		global $errorMessage;
 		$minLen=8;
@@ -1678,7 +1676,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPowerPanel($input)
+	function ValidPowerPanelName($input)
 	{
 		/*global $errorMessage;
 		//this should matcht the JS
@@ -1688,35 +1686,76 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$errorMessage[] = "Invalid Panel.";
 			return false;
 		}*/
-		return ValidString($input,"Panel Name",1,8);
+		return ValidString($input,"Power Panel Name",1,50);
 	}
 	
-	function ValidPowerCircuit($input)
+	function ValidPowerPanelAmps($input)
+	{
+		return ValidNumber($input,"Power Panel Amps",1,3,0,400);
+	}
+	
+	function ValidPowerPanelCircuits($input)
+	{
+		return ValidNumber($input,"Power Panel Circuits",1,3,1,126);
+	}
+	
+	function ValidPowerPanelOrientation($input)
+	{
+		$validFlags = array('N','S','E','W');
+		return ValidFlag($input,"Power panel orientation",$validFlags);
+	}
+	
+	function ValidPowerPanelXPos($input)
+	{
+		return ValidXYCoordinate($input,"Power panel left possition");
+	}
+	
+	function ValidPowerPanelYPos($input)
+	{
+		return ValidXYCoordinate($input,"Power panel foreward possition");
+	}
+	
+	function ValidPowerPanelWidth($input)
+	{
+		return ValidNumber($input,"Power panel width",1,5,0,6);
+	}
+	
+	function ValidPowerPanelDepth($input)
+	{
+		return ValidNumber($input,"Power panel depth",1,5,0,6);
+	}
+	
+	function ValidPowerPanelNote($input)
+	{
+		return true;
+	}
+	
+	function ValidPowerCircuitNo($input)
 	{
 		return ValidNumber($input,"Power Circuit",1,2,0,50);
 	}
 	
-	function ValidPowerVolts($input)
+	function ValidPowerCircuitVolts($input)
 	{
 		$validFlags = array('120','208','308');
-		return ValidFlag($input,"Power Volts",$validFlags);
+		return ValidFlag($input,"Power Circuit Volts",$validFlags);
 	}
 	
-	function ValidPowerAmps($input)
+	function ValidPowerCircuitAmps($input)
 	{
 		$validFlags = array('20','30','40','50','100');
-		return ValidFlag($input,"Power Amps",$validFlags);
+		return ValidFlag($input,"Power Circuit Amps",$validFlags);
 	}
 	
-	function ValidPowerStatus($input)
+	function ValidPowerCircuitStatus($input)
 	{
 		$validFlags = array('A','D');
-		return ValidFlag($input,"Power Status",$validFlags);
+		return ValidFlag($input,"Power Circuit Status",$validFlags);
 	}
 	
-	function ValidPowerLoad($input, $amps)
+	function ValidPowerCircuitLoad($input, $amps)
 	{
-		return ValidNumber($input,"Power Load",1,0,0,$amps);
+		return ValidNumber($input,"Power Circuit Load",1,0,0,$amps);
 	}
 	
 	function ValidSubnet($input)
@@ -1807,6 +1846,23 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return ValidNumber($input,"Location units",0,2,0,50);
 	}
 	
+	function ValidLocationKeyno($input)
+	{
+		return ValidString($input,"Location alt name",0,20);
+	}
+	
+	function ValidLocationAllocation($input)
+	{
+		$validFlags = array('E','C','I','M');
+		return ValidFlag($input,"Location Allocation",$validFlags);
+	}
+	
+	function ValidLocationOrder($input)
+	{
+		$validFlags = array('N','R');
+		return ValidFlag($input,"Location Order",$validFlags);
+	}
+	
 	function ValidLocationOrientation($input)
 	{
 		$validFlags = array('N','S','E','W');
@@ -1815,12 +1871,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidLocationXPos($input)
 	{
-		return ValidNumber($input,"Location left possition",1,8,-9999.99,9999.99);
+		return ValidXYCoordinate($input,"Location left possition");
 	}
 	
 	function ValidLocationYPos($input)
 	{
-		return ValidNumber($input,"Location foreward possition",1,8,-9999.99,9999.99);
+		return ValidXYCoordinate($input,"Location foreward possition");
 	}
 	
 	function ValidLocationWidth($input)

@@ -81,8 +81,9 @@
 			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
-			$output = "";
-			$recCount = CountDBRecords($output);
+			$recCount = 0;
+			$output = CreateTableRowCountTable($recCount);
+			$result .= "<a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/database_structure.md' target='_blank'>DB Documentation on GitHub</a><BR/>";
 			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
 
 			$output = "";
@@ -113,12 +114,14 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load FROM dcim_power AS p 
-				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
-				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE p.status='D' AND p.load !=0
+			WHERE pc.status='D' AND pc.load !=0
 			ORDER BY 1,2,3";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -177,17 +180,18 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, p.panel, p.circuit, p.volts, p.amps, p.status, p.load, (p.load/p.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, p.edituser, p.editdate, p.qauser, p.qadate
-			FROM dcim_power AS p 
-				LEFT JOIN dcim_powerloc AS pl ON pl.powerid=p.powerid
-				LEFT JOIN dcim_location AS l ON l.locationid=pl.locationid
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, (pc.load/pc.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, pc.edituser, pc.editdate, pc.qauser, pc.qadate
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status ='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE (p.load/p.amps*100) > $threshold
-			GROUP BY p.powerid, c.hno
-			ORDER BY s.name, r.name, p.panel, p.circuit";
+			WHERE (pc.load/pc.amps*100) > $threshold
+			GROUP BY pc.powercircuitid, c.hno
+			ORDER BY s.name, r.name, pp.name, pc.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -249,7 +253,7 @@
 		$reportTitle = "VLAN Linked to Disabled Port";
 		$reportNote = "These are VLANs linked to ports marked disabled.";
 		
-		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
+		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
 				FROM dcim_portvlan AS pv
 					 LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
 					 LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
@@ -263,7 +267,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $devicePortID, $deviceName, $member, $model, $pic, $port, $type, $status, $note, $vlan);
+		$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $type, $status, $note, $vlan);
 		$count = $stmt->num_rows;
 	
 		$shortResult = "";
@@ -281,7 +285,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -369,7 +373,7 @@
 		$reportTitle = "Colos with patch 0";
 		$reportNote= "These are impossible connections left over from old system.";
 		
-		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
+		$query = "SELECT c.name AS cust, c.hno, s.name AS site, l.locationid, r.name AS room, l.name AS loc, d.deviceid, d.name, d.altname, d.member, d.model, d.status, dp.edituser, dp.editdate, dp.qauser, dp.qadate
 			FROM dcim_deviceport AS dp
 				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -387,7 +391,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName,$deviceAltName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -405,7 +409,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 			
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 					
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -436,7 +440,7 @@
 		$reportTitle = "Devices Missing assets";
 		$reportNote= "These are active physical devices that do not have assets.";
 		
-		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -453,7 +457,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -472,7 +476,7 @@
 				else $rowClass = "dataRowTwo";
 			
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
-				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
@@ -509,7 +513,7 @@
 		$reportTitle = "Devices with duplicate assets";
 		$reportNote= "These are active physical devices that have identical assets.";
 		
-		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM (SELECT d.deviceid, d.name, d.asset, COUNT(d.asset) AS count
 					FROM dcim_device AS d
 					WHERE d.status='A' AND d.asset<>''
@@ -530,7 +534,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -549,7 +553,7 @@
 				else $rowClass = "dataRowTwo";
 			
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
-				$deviceFullName = GetDeviceFullName($name, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
@@ -710,7 +714,7 @@
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s) or in Unknown.";
 		
-		$query = "SELECT d.hno, d.deviceid, d.name, d.member, d.model, d.locationid, l.locationid, l.name
+		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model, d.locationid, l.locationid, l.name
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -725,7 +729,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName, $member, $model, $locationID, $linkedLocationID,$locationName);
+		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $locationID, $linkedLocationID,$locationName);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -742,7 +746,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, false);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
@@ -773,7 +777,7 @@
 		$reportTitle = "Device Ports Without Devices or Customers";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.member, d.model, dp.pic, dp.port, dp.type
+		$query = "SELECT dp.deviceportid, d.hno, dp.deviceid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.type
 			FROM dcim_deviceport AS  dp
 				LEFT JOIN dcim_device AS d ON dp.deviceid=d.deviceid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
@@ -788,7 +792,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName, $member, $model, $pic, $port, $type);
+		$stmt->bind_result($deviceportid, $hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $type);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -805,7 +809,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
@@ -892,7 +896,7 @@
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
 		
-		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.model, d.member
+		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.altname, d.model, d.member
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 			WHERE c.status='I' AND NOT d.status='I'
@@ -906,7 +910,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($cust, $hno, $deviceID, $deviceName, $model, $member);
+		$stmt->bind_result($cust, $hno, $deviceID, $deviceName,$deviceAltName, $model, $member);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -924,7 +928,7 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member, true);
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
@@ -951,11 +955,12 @@
 		$reportTitle = "Power records without any linking location record";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT p.powerid, p.panel, p.circuit
-			FROM dcim_power AS p
-				LEFT JOIN dcim_powerloc AS pl ON p.powerid=pl.powerid
-			WHERE pl.powerid IS NULL
-			ORDER BY p.panel, p.circuit";
+		$query = "SELECT pc.powercircuitid, pp.name, pc.circuit
+			FROM dcim_powercircuit AS pc
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+			WHERE pcl.powercircuitid IS NULL
+			ORDER BY pp.name, pc.circuit";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -965,14 +970,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerID, $panel, $circuit);
+		$stmt->bind_result($powerCircuitID, $panel, $circuit);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerID","Panel","Circuit"));
+			$longResult.= CreateDataTableHeader(array("PowerCircuitID","Panel","Circuit"));
 				
 			//list result data
 			$oddRow = false;
@@ -983,7 +988,7 @@
 				else $rowClass = "dataRowTwo";
 				
 				$longResult.= "<tr class='$rowClass'>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>\n";
 				$longResult.= "</tr>\n";
@@ -991,7 +996,7 @@
 			$longResult.= "</table>\n";
 		
 			//show results short
-			$shortResult.= FormatSimpleMessage("$count Circuits",3);
+			$shortResult.= FormatSimpleMessage("$count Circuits",2);
 		}
 		else
 		{
@@ -1008,11 +1013,11 @@
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT pl.powerlocid, pl.powerid, pl.locationid, p.powerid, l.locationid
-			FROM dcim_powerloc AS pl
-				LEFT JOIN dcim_location AS l ON pl.locationid=l.locationid
-				LEFT JOIN dcim_power AS p ON pl.powerid=p.powerid
-			WHERE l.locationid IS NULL OR p.powerid IS NULL
+		$query = "SELECT pcl.powercircuitlocid, pcl.powercircuitid, pcl.locationid, pc.powercircuitid, l.locationid
+			FROM dcim_powercircuitloc AS pcl
+				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
+				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
+			WHERE l.locationid IS NULL OR pc.powercircuitid IS NULL
 			ORDER BY 1";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -1023,14 +1028,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerLocID, $powerID, $locationID,$linkedPowerID, $linkedLocationID);
+		$stmt->bind_result($powerLocID, $powerCircuitID, $locationID,$linkedPowerCicuitID, $linkedLocationID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerID","LocationID","LinkedPowerID","LinkedLocationID"));
+			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerCircuitID","LocationID","LinkedPowerCircuitID","LinkedLocationID"));
 				
 			//list result data
 			$oddRow = false;
@@ -1042,9 +1047,9 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedLocationID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
@@ -1127,9 +1132,9 @@
 		$reportTitle = "Active location with no power";
 		$reportNote = "Location with active device(s) but not linked to power";
 		
-		$query = "SELECT l.locationid, s.name, r.name, l.name, l.roomid, r.roomid, COUNT(d.locationid) AS devicecount, COUNT(pl.locationid) AS powercount
+		$query = "SELECT l.locationid, s.name, r.name, l.name, l.roomid, r.roomid, COUNT(d.locationid) AS devicecount, COUNT(pcl.locationid) AS powercount
 			FROM dcim_location AS l
-				LEFT JOIN dcim_powerloc AS pl ON l.locationid=pl.locationid
+				LEFT JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
@@ -1190,20 +1195,21 @@
 		$reportTitle = "Data Records missing data history";
 		$reportNote= "These are records that managed to exist without proper insert log records to match.";
 		
-		$query = "SELECT cur.* FROM 
-					(
-						SELECT 'site' AS `table`, s.siteid AS id, sl.siteid AS l_id, sl.logtype FROM dcim_site AS s LEFT JOIN dcimlog_site AS sl ON s.siteid = sl.siteid AND sl.logtype='I'
-						UNION SELECT 'badge', b.badgeid, bl.badgeid, bl.logtype FROM dcim_badge AS b LEFT JOIN dcimlog_badge AS bl ON b.badgeid = bl.badgeid AND bl.logtype='I' 
-						UNION SELECT 'customer', c.hno, cl.hno, cl.logtype FROM dcim_customer AS c LEFT JOIN dcimlog_customer AS cl ON c.hno = cl.hno AND cl.logtype='I' 
-						UNION SELECT 'device', d.deviceid, dl.deviceid, dl.logtype FROM dcim_device AS d LEFT JOIN dcimlog_device AS dl ON d.deviceid = dl.deviceid AND dl.logtype='I' 
-						UNION SELECT 'deviceport', dp.deviceportid, dpl.deviceportid, dpl.logtype FROM dcim_deviceport AS dp LEFT JOIN dcimlog_deviceport AS dpl ON dp.deviceportid = dpl.deviceportid AND dpl.logtype='I' 
-						UNION SELECT 'location', l.locationid, ll.locationid, ll.logtype FROM dcim_location AS l LEFT JOIN dcimlog_location AS ll ON l.locationid = ll.locationid AND ll.logtype='I' 
-						UNION SELECT 'portconnection', pc.portconnectionid, pcl.portconnectionid, pcl.logtype FROM dcim_portconnection AS pc LEFT JOIN dcimlog_portconnection AS pcl ON pc.portconnectionid = pcl.portconnectionid AND pcl.logtype='I' 
-						UNION SELECT 'portvlan', pv.portvlanid, pvl.portvlanid, pvl.logtype FROM dcim_portvlan AS pv LEFT JOIN dcimlog_portvlan AS pvl ON pv.portvlanid = pvl.portvlanid AND pvl.logtype='I' 
-						UNION SELECT 'power', p.powerid, pl.powerid, pl.logtype FROM dcim_power AS p LEFT JOIN dcimlog_power AS pl ON p.powerid = pl.powerid AND pl.logtype='I' 
-						UNION SELECT 'powerloc', pl.powerlocid, pll.powerlocid, pll.logtype FROM dcim_powerloc AS pl LEFT JOIN dcimlog_powerloc AS pll ON pl.powerlocid = pll.powerlocid AND pll.logtype='I' 
-						UNION SELECT 'room', r.roomid, rl.roomid, rl.logtype FROM dcim_room AS r LEFT JOIN dcimlog_room AS rl ON r.roomid = rl.roomid AND rl.logtype='I' 
-						UNION SELECT 'vlan', v.vlanid, vl.vlanid, vl.logtype FROM dcim_vlan AS v LEFT JOIN dcimlog_vlan AS vl ON v.vlanid = vl.vlanid AND vl.logtype='I'
+		$query = "SELECT cur.* FROM (
+		  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype   FROM dcim_site AS s				LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
+	UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype   FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
+	UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype   FROM dcim_customer AS c			LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
+	UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype   FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
+	UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype  FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
+	UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype   FROM dcim_location AS l			LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
+	UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype  FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
+	UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype  FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
+	UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype  FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
+	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
+	UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype  FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
+	UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype  FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
+	UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype   FROM dcim_room AS r				LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
+	UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype   FROM dcim_vlan AS v				LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
 					) AS cur
 					WHERE cur.l_id IS NULL
 					ORDER BY 1, 2";
@@ -1216,7 +1222,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($table, $id, $logID, $logType);
+		$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1224,7 +1230,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Table","ID"));
+			$longResult.= CreateDataTableHeader(array("Table","ID","Parent Table","Parent ID",));
 			
 			//list result data
 			$oddRow = false;
@@ -1240,10 +1246,19 @@
 				if($pageKey!=null)
 					$idDisplay = "<a href='./?$pageKey=$id'>$id</a>";
 				$tableDescription = GetTableRecordDescription($table);
+
+				$parentTable = "dcim_".$parentTable;
+				$parentPageKey = GetRecordPageKey($parentTable);
+				$parentIDDisplay = $parentID;
+				if($parentPageKey!=null)
+					$parentIDDisplay = "<a href='./?$parentPageKey=$parentID'>$parentID</a>";
+				$parentTableDescription = GetTableRecordDescription($parentTable);
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>$tableDescription</td>\n";
 				$longResult.= "<td class='data-table-cell'>$idDisplay</td>\n";
+				$longResult.= "<td class='data-table-cell'>$parentTableDescription</td>\n";
+				$longResult.= "<td class='data-table-cell'>$parentIDDisplay</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";

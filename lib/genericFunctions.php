@@ -258,7 +258,7 @@
 		$verboseResult .= "Grand total in '$srcDir':$totalLines<BR>";
 		return $totalLines;
 	}
-
+	
 	function CountDBRecords(&$verboseResult = "")
 	{//show count for all tables in DB
 		global $mysqli;
@@ -302,6 +302,67 @@
 			$verboseResult .= "-DB total: - $grandTotal records.</BR>\n\n\n";
 		}
 		return $grandTotal;
+	}
+	
+	function CreateTableRowCountTable(&$grandTotal=0)
+	{//show count for all tables in DB
+		global $mysqli;
+		global $errorMessage;
+		
+		$result = "";
+		$grandTotal = 0;
+		
+		$query = "SHOW TABLES";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = $errorMessage."ShowDBCounts() - Prepare 1 failed: ($query) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+			$result = "SQL Failed - CountDBRowsTable()";
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($table);
+			
+			$cellStyle = "style='border:1px solid black; border-collapse:collapse; padding:2px;'";
+			$result .= "<table $cellStyle>\n";
+			$result .= "<tr>
+			<th $cellStyle>Table</th>
+			<th $cellStyle>Rows</th>
+			</tr>\n";
+			
+			while ($stmt->fetch()) 
+			{
+				$query2 = "SELECT COUNT(*) FROM $table";
+					
+				if (!($stmt2 = $mysqli->prepare($query2)))
+				{
+					$errorMessage[] = $errorMessage."ShowDBCounts() - Prepare 2 failed: ($query2) (" . $mysqli->errno . ") " . $mysqli->error . "</BR>";
+					$result .= "<tr><td colspan=2>SQL Error with table $table - CountDBRowsTable()</td></tr>\n";
+				}
+				else
+				{
+					$stmt2->execute();
+					$stmt2->store_result();
+					//$count = $stmt2->num_rows; //this is a count() this will always be 1
+					$stmt2->bind_result($count);
+					$stmt2->fetch();
+					$grandTotal += $count;
+					
+					$result .= "<tr>
+					<td $cellStyle>$table</td>
+					<td $cellStyle>$count</td>
+					</tr>\n";
+				}
+			}
+			$result .= "<tr>
+			<td $cellStyle><b>Total</b></td>
+			<td $cellStyle><b>$grandTotal</b</td>
+			</tr>\n
+			</table><BR>\n";
+		}
+		return $result;
 	}
 	
 	function DescribeDBInMarkDown()
@@ -381,7 +442,7 @@
 				}
 				else
 				{
-					$cellStyle = "style='border:1px solid black; border-collapse:collapse;'";
+					$cellStyle = "style='border:1px solid black; border-collapse:collapse; padding:2px;'";
 					$result .= "<B> Describe $table</B><BR>\n";
 					$result .= "<table $cellStyle>\n";
 					$result .= "<tr>
@@ -406,7 +467,7 @@
 							<td $cellStyle>$key</td>
 							<td $cellStyle>".(is_null($default)?"<i>NULL</i>":$default)."</td>
 							<td $cellStyle>$extra</td>
-							<tr>\n";
+							</tr>\n";
 					}
 					$result .= "</table><BR>\n";
 				}
