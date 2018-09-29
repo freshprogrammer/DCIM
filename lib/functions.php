@@ -3463,6 +3463,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$widthInput = 411.11;
 		$depthInput = 511.11;
 		$noteInput = "notes input";
+		$keynoInput = "key";
 		
 		$sizeInput = "654321-1";//drop this
 		$statusInput = "A";//drop this
@@ -3594,7 +3595,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					<tr>
 						<td align='right' width=1>Key#:</td>
 						<td align='left'>
-							<input id=EditLocation_keyno type='text' tabindex=13 size=18 name='keyno' value='<?php echo $keyno;?>' placeholder="master" class='' >
+							<input id=EditLocation_keyno type='text' tabindex=13 size=18 name='keyno' value='<?php echo $keynoInput;?>' placeholder="master" class='' >
 						</td>
 					</tr>
 					<tr>
