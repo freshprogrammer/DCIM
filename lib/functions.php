@@ -5215,6 +5215,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$count = $stmt->num_rows;
 		
 		//data title
+		$result = "";
 		$result .= "<span class='tableTitle'>All Sites</span>\n";
 		$result .= "<BR>\n";
 		
