@@ -5319,6 +5319,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				$fullRoomName = FormatLocation($site, $fullName, "");
 				$fullRoomName = MakeHTMLSafe($fullRoomName);
 				$safeRoomName = MakeHTMLSafe($name);
+				$safeSiteFullName = MakeHTMLSafe($siteFullName);
 				$pageSubTitle = "$fullRoomName";
 				
 				if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasRoomPermission())
@@ -5360,6 +5361,53 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "</td>\n";
 				echo "</tr>\n";
 				echo "</table>\n";
+
+				$showRoomDetails = true;
+				if($showRoomDetails)
+				{
+					//details//details
+					echo "<table>\n";
+					echo "<tr>\n";
+					echo "<td align=right class='customerDetails'>\n";
+					echo "<b>Site:</b>";
+					echo "</td>\n";
+					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<a href='./?siteid=$siteID'>".MakeHTMLSafe($safeSiteFullName)."</a>";
+					echo "</td>\n";
+					
+					echo "<td align=right class='customerDetails'>\n";
+					echo "<b>Position:</b>";
+					echo "</td>\n";
+					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "$pos";
+					echo "</td>\n";
+					
+					echo "</tr>\n";
+					echo "<tr>\n";
+					
+					echo "<td align=right class='customerDetails'>\n";
+					echo "<b>Cust Access:</b>";
+					echo "</td>\n";
+					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo RoomCustAccess($custAccess);
+					echo "</td>\n";
+					
+					echo "<td align=right class='customerDetails'>\n";
+					echo "<b>Size:</b>";
+					echo "</td>\n";
+					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "$size";
+					echo "</td>\n";
+					
+					echo "<td align=right class='customerDetails'>\n";
+					echo "<b>Orientation:</b>";
+					echo "</td>\n";
+					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
+					echo "</td>\n";
+					
+					echo "</tr></table>\n";
+				}
 				
 				//render room - ignore 0 width or height rooms
 				if($width>0 && $depth>0)

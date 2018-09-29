@@ -690,29 +690,36 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			}
 			else if($roomID==21)
 			{//area2 2
-				$cornerWidthInset = 100*32/150;//percent inset corner - 32 ft
-				$cornerDepthInset = 100*(-5)/54;//-5 ft - from bottom
+				$cornerWidthInset = 100*32/150;//percent inset corner
+				$cornerDepthInset = 100*(-5)/54;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==27)
 			{//LOU area3
-				$cornerWidthInset = 100*(-18)/55;//percent inset corner - 32 ft
-				$cornerDepthInset = 100*(-35)/66;//-5 ft - from bottom
+				$cornerWidthInset = 100*(-18)/55;//percent inset corner
+				$cornerDepthInset = 100*(-35)/66;
+				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
+				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
+			}
+			else if($roomID==28)
+			{//NWK DC2
+				$cornerWidthInset = 100*(44)/83;//percent inset corner
+				$cornerDepthInset = 100*(-24)/89;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==29)
 			{//NWK DC3
-				$cornerWidthInset = 100*(-10)/41;//percent inset corner - 32 ft
-				$cornerDepthInset = 100*(-9)/95;//-5 ft - from bottom
+				$cornerWidthInset = 100*(-10)/41;//percent inset corner
+				$cornerDepthInset = 100*(-9)/95;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
 			}
 			else if($roomID==36)
 			{//SFO colo4
-				$cornerWidthInset = 100*(-10)/81;//percent inset corner - 32 ft
-				$cornerDepthInset = 100*(16)/61;//-5 ft - from bottom
+				$cornerWidthInset = 100*(-10)/81;//percent inset corner
+				$cornerDepthInset = 100*(16)/61;
 				CreateRoomLayout_CornerInset($cornerWidthInset,$cornerDepthInset, $roomID, $roomTypeClass,$roomCustomStyle,$roomCustomHTML);
 				$roomCustomHTML .= "<span style='' class='roomLayoutTitle'>$name</span>\n";
 			}
