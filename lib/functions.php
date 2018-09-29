@@ -5175,6 +5175,78 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ShowSiteListPage()
+	{
+		global $pageSubTitle;
+		
+		$pageSubTitle = "Site List";
+		$result = "";
+		
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Site List</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		
+		$result .= ListSites();
+		
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
+		
+		echo $result;
+	}
+	
+	function ListSites()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT s.siteid, s.name, s.fullname, COUNT(r.roomid) AS rooms
+				FROM dcim_site AS s
+					LEFT JOIN dcim_room AS r ON r.siteid=s.siteid
+				GROUP BY s.siteid
+				ORDER BY s.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[]="ListSites() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		
+		$stmt->store_result();
+		$stmt->bind_result($siteID, $siteName, $siteFullName, $roomCount);
+		$count = $stmt->num_rows;
+		
+		//data title
+		$result .= "<span class='tableTitle'>All Sites</span>\n";
+		$result .= "<BR>\n";
+		
+		if($count>0)
+		{
+			$result .= CreateDataTableHeader(array("Name","Full Name","Rooms"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'>"."<a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a>"."</td>\n";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteFullName)."</td>\n";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomCount)."</td>\n";
+				$result .= "</tr>\n";
+			}
+			$result .= "</table>\n";
+		}
+		else
+			$result .= "No Sites Found.<BR>\n";
+		
+		if(CustomFunctions::UserHasSitePermission())
+		{
+			//EditSiteForm($input);
+		}
+		return $result;
+	}
+	
 	function ShowSitePage($siteID)
 	{
 		global $mysqli;

@@ -171,6 +171,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		
 		public static function CreateNavigationQuickLinks()
 		{
+			//TODO this should be customised to each user based on siteid
 			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
 			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
@@ -195,46 +196,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
 			
-			$result .= "<div class=\"panel\">\n";
-			$result .= "<div class=\"panel-header\">\n";
-			$result .= "$appName\n";
-			$result .= "</div>\n";
-			
-			$result .= "<div class=\"panel-body\">\n\n";
-			
-			//select site(s) from table for rendering each one
-			$query = "SELECT siteid, name, fullname, width, depth
-					FROM dcim_site
-					WHERE width > 0 AND depth > 0";
-			
-			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
-			{
-				$errorMessage[]= "CreateHomePageContent() SQL Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			}
-			else
-			{
-				$stmt->store_result();
-				$stmt->bind_result($siteID, $name , $fullName, $width, $depth);
-				
-				while($stmt->fetch())
-				{
-					$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
-					$result .= "<style>\n";
-					$result .= "#siteContainer$siteID {\n";
-					$result .= "	padding-bottom:$depthToWidthRatio%;\n";
-					$result .= "}\n";
-					$result .= "</style>\n";
-					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
-					$result .= CreateSiteLayout($siteID, $name, $fullName, $width, $depth);//this should be a lookup of all sites...
-					$result .= "</div>\n";
-					
-					$result .= "<BR>\n";
-					$result .= ListSiteRooms($siteID, $fullName);
-				}
-			}
-			
-			$result .= "</div>\n";//end panel
-			$result .= "</div>\n";
+			$result .= ShowSitePage(0);//TODO should look up users home page
 			return $result;
 		}
 		

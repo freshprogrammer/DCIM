@@ -259,7 +259,12 @@
 		else if(strlen($roomIDInput) > 0)
 			ShowRoomPage($roomIDInput);
 		else if(strlen($siteIDInput) > 0)
-			ShowSitePage($siteIDInput);
+		{
+			if($siteIDInput==-1)
+				ShowSiteListPage();
+			else
+				ShowSitePage($siteIDInput);
+		}
 		else if(strlen($deviceIDInput) > 0)
 			ShowDevicePage($deviceIDInput);
 		else if(strlen($chassisnameInput) > 0)
@@ -296,7 +301,7 @@
 			}
 			else
 			{
-				//search all	
+				//search all
 				$resultCount = 0;
 				if(strlen($search) > 0)
 				{
