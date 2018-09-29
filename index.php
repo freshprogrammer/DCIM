@@ -142,7 +142,14 @@
 	$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 	$menuItems .= "	<a href='.'>Home</a>\n";
 	$menuItems .= "</td>\n";
-				
+	
+	$multipleSites = true;
+	if($multipleSites)
+	{
+		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
+		$menuItems .= "	<a href='./?siteid=-1'>All Sites</a>\n";
+		$menuItems .= "</td>\n";
+	}
 	if(UserHasWritePermission())
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
