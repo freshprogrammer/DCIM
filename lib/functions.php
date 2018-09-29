@@ -7557,16 +7557,19 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$filter = "pp.roomid=?";
 			$addEnabled = true;
 			$editEnabled = true;
+			$formAction = "./?roomid=$input";
 		}
 		else if($page=="U")
 		{//UPS page
 			$filter = "pu.powerupsid=?";
 			$editEnabled = true;
+			$formAction = "./?powerupsid=$input";
 		}
 		else if($page=="S")
 		{//Site page - actualy power audit panel list
 			$filter = "s.siteid=?";
 			$editEnabled = true;
+			$formAction = "./?siteid=$input";
 		}
 		
 		$query = "SELECT s.siteid, s.name, r.roomid, r.name, pp.powerupsid, pu.name, pp.powerpanelid, pp.name, pp.amps, SUM(pc.load), pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate
@@ -7605,7 +7608,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				//show results
 				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Utilization","Note"),true,true,true);
-					
+				
 				//list result data
 				$oddRow = false;
 				while ($stmt->fetch())
@@ -7626,11 +7629,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$result .= "<td class='data-table-cell'>".FormatPowerUtilization($load, $amps)."</td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe(Truncate($note))."</td>";
 
-					$result .= "<td class='data-table-cell' rowspan='$circuitLocCount'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 					if(CustomFunctions::UserHasPanelPermission())
 					{
 						//edit button
-						$result .= "<td class='data-table-cell-button editButtons_hidden' rowspan='$circuitLocCount'>\n";
+						$result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
 						
 						$jsSafeSiteName = MakeJSSafeParam($siteName);
 						$jsSafeName = MakeJSSafeParam($panelName);
@@ -7639,7 +7642,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$params = "false, $powerPanelID, $roomID, $upsID, '$jsSafeSiteName', '$jsSafeName', '$amps', '$circuits', '$orientation', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						$result .= "<button onclick=\"EditPowerPanel($params)\">Edit</button>";
 						$result .= "</td>\n";
-						$result .= CreateQACell("dcim_powercircuit", $powerCircuitID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate,true,$circuitLocCount);
+						$result .= CreateQACell("dcim_powerpanel", $powerPanelID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 					}
 					$result .= "</tr>";
 				}
