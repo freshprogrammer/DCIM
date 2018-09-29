@@ -103,6 +103,7 @@
 		global $debugMessage;
 		global $mainTables;
 		global $logTables;
+		global $demoSiteEnabled;
 		
 		//updates in sync with v1.3 - DB v3
 		//paramaters should be mutually exclusive, so only 1 is true at any time
@@ -317,7 +318,7 @@
 				//assumes valid legacy panel data
 				//create parent records for panels
 				$cmd = "INSERT INTO dcim_powerpanel (name,powerupsid,amps,circuits,roomid,note)
-					SELECT DISTINCT pc.panel, 0,125,42,r.roomid,'Automated'
+					SELECT DISTINCT pc.panel, 0,225,42,r.roomid,'Automated'
 						FROM dcim_powercircuit AS pc
 						LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 						LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
@@ -340,13 +341,13 @@
 				ExecuteThis("UP3_panelcreation-l-3",$cmdl,$reportsucsess);
 			}
 			
-			$createDemoPowerUPSs = true;
+			$createDemoPowerUPSs = $demoSiteEnabled;
 			if($createDemoPowerUPSs)
 			{
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',240,500,'Automated')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',480,500,'Automated')";
 				ExecuteThis("UP3_upscreation-1",$cmd,$reportsucsess);
 				
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (2,0,'UPS-2',240,500,'Automated')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (2,0,'UPS-2',480,500,'Automated')";
 				ExecuteThis("UP3_upscreation-2",$cmd,$reportsucsess);
 				
 				ExecuteThis("UP3_upscreation-3","INSERT INTO dcimlog_powerups			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerups		AS cur WHERE 1=1",$reportsucsess);
@@ -391,6 +392,9 @@
 			}
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
+			
+			
+			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 Still need to create and sync power panels to ups records. Also need to create 208v3p power records (3 each)";
 		}
 		
 		// Part 2 unsafe changes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

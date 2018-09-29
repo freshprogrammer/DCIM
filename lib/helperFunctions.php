@@ -774,7 +774,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	function IsUserUsingDefaultPassword()
-	{
+	{//these are only valid if the sdefault salt is used - should be move to the DCIM functions to allow salt to be changed
 		$result = false;
 		if(isset($_COOKIE["dcim_password"]))
 		{
