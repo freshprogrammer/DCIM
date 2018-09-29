@@ -1,5 +1,6 @@
 <?php 
 	//--configuration data
+	$codeVersion = "2.0";
 	$dbVersion = 3;//this must match the state and value in the DB (dcim_config.dbversion)
 	
 	//Name of this web site - show at top of page near logo
