@@ -272,20 +272,18 @@
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-
+		
 		$valid = false;
 		$powerCircuitIDs = array();
 		$loads = array();
 		$stati = array();
-		$circuitsPerPanel = 42;
+		$circuitsPerPanel = 42;//TODO this should be looking up the circuit count from dcim_powerpanel
 		
-		//currently still broken - after DBv3
-		
-		$powerPanelIDInput = GetInput("c".$circuit."powerpanelid");
+		$errorMessage[]="ProcessPowerAuditPanelUpdate($action) - start";
 		
 		for($circuit=1; $circuit<=$circuitsPerPanel; $circuit++)
 		{
-			$powerCircuitID = GetInput("c".$circuit."powerCircuitID");
+			$powerCircuitID = GetInput("c".$circuit."powercircuitid");
 			$load = GetInput("c".$circuit."load");
 			$status = GetInput("c".$circuit."status");
 			
@@ -301,11 +299,12 @@
 		
 		$inputCount = count($powerCircuitIDs);
 		$valid = $inputCount>0;
+		$errorMessage[]="ProcessPowerAuditPanelUpdate() - $inputCount inputs";
 		if($valid)
 		{
-			$query = "UPDATE dcim_power AS p
-					SET p.load=?, p.status=?
-					WHERE p.powerCircuitID=?
+			$query = "UPDATE dcim_powercircuit AS pc
+					SET pc.load=?, pc.status=?
+					WHERE pc.powercircuitid=?
 					LIMIT 1";
 			
 			if (!($stmt = $mysqli->prepare($query)))
@@ -344,13 +343,16 @@
 						
 						//these moved out because i dont care if the values are the saem durring an audit - (probably just still 0)
 						$resultMessage[] = "Successfully updated power circuit (PowerCircuitID:$writePowerCircuitID Load:$writeLoad Status:$writeStatus).";
-						UpdateRecordEditUser("dcim_power","powercircuitid",$writePowerCircuitID);//assume this is a full power audit so log it even if the data hasn't changed
-						LogDBChange("dcim_power",$writePowerCircuitID,"U");
+						UpdateRecordEditUser("dcim_powercircuit","powercircuitid",$writePowerCircuitID);//assume this is a full power audit so log it even if the data hasn't changed
+						LogDBChange("dcim_powercircuit",$writePowerCircuitID,"U");
 					}
 				}
 				$resultMessage[] = "Power Audit Panel - Updated $inputCount Records. ($goodCount Updates,$badCount Failures)";
 			}
 		}
+		$poweraPanelID = GetInput("powerpanelid");
+		$redirectPage = "./?powerpanelid=$poweraPanelID";
+		return $redirectPage;
 	}
 	
 	function ProcessQAAction($action)
@@ -7110,7 +7112,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 	
 	function ShowPowerPanelAuditPage($powerPanelID)
 	{
-		//TODO This really should be using a panelID from a panel table but that not currently necisarry
 		global $mysqli;
 		global $pageSubTitle;
 		
@@ -7270,6 +7271,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}
 				}
 				echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
+				echo "<input id=PowerAuditPanel_powerpanelid type='hidden' name='powerpanelid' value='$powerPanelID'>\n";
 				echo "<input id=PowerAuditPanel_action type='hidden' name='action' value='PowerAudit_PanelUpdate'>\n";
 				echo "<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>\n";
 				echo "</table></form>\n";
