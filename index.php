@@ -8,15 +8,17 @@
 	require_once 'helperFunctions.php';
 	require_once 'functions.php';
 	
-	UpdateSettingsForiPad();
-	SessionSetup();
-	SQLIConnect();
-	
 	//globals
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
 	$redirectAroundFormResubmitWarning = true;
+	
+	UpdateSettingsForiPad();
+	SessionSetup();
+	SQLIConnect();
+	
+	LoadConfigVariables();
 	
 	if($redirectAroundFormResubmitWarning)
 	{
@@ -39,9 +41,9 @@
 	//$errorMessage[] = "initialized";
 	//$debugMessage[] = "initialized";
 
-	global $appName;
-	global $pageTitle;
-	global $versionNote;
+	global $config_appName;
+	global $config_pageTitle;
+	global $config_versionNote;
 	
 	//varibles definitions
 	//dyanmic
@@ -95,7 +97,7 @@
 <head>
 <script src="lib/js/genericScripts.js"></script>
 <script src="lib/js/scripts.js"></script>
-<title><?php echo $pageTitle;?></title>
+<title><?php echo $config_pageTitle;?></title>
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="lib/css/default.css">
 </head>
@@ -107,7 +109,7 @@
 				<a href="./"><img src="images/logo.png" border="0"></a>
 			</td>
 			<td valign="middle">
-				<div id="appname"><h1><?php echo $appName;?></h1><?php echo $versionNote;?></div>
+				<div id="appname"><h1><?php echo $config_appName;?></h1><?php echo $config_versionNote;?></div>
 			</td>
 			<?php
 	if(!UserHasReadPermission())
@@ -209,7 +211,6 @@
 	<table id="pagecontainer" id="pagecontainer" class='center pageMinWidth'><tbody><tr><td>
 	
 	<?php
-	//BackupDatabase();
 	
 	$output= "<!-- HEADER LINKS -->\n";
 	$output.= "<table width='100%'><tr>\n";
@@ -243,7 +244,7 @@
 	
 	if(!UserHasReadPermission())
 	{
-		if(isset($demoSiteEnabled) && $demoSiteEnabled)
+		if(isset($config_demoSiteEnabled) && $config_demoSiteEnabled)
 		{
 			echo "<!--  Demo Message  -->\n<BR>\n";
 			$demoMessage = "<span style='font-size: 12px;'>
@@ -375,7 +376,7 @@
 		//update title if necisarry
 		if(strlen($pageSubTitle) > 0)
 		{
-			$pageTitle = $pageTitle." - ".$pageSubTitle;
+			$pageTitle = $config_pageTitle." - ".$pageSubTitle;
 			echo "document.title = '$pageTitle';\n";
 		}
 	?>

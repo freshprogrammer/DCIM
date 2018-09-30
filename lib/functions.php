@@ -1,6 +1,60 @@
 <?php
 	/* These functions process data or create HTML for the page */
 	
+	function LoadConfigVariables()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT dbversion, appname, pagetitle, versionnote, cookiedurration, cookiedurrationipad, badgesenabled, subnetsenabled, qaenabled, demoenvironment
+				FROM dcim_config
+				LIMIT 1";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+			$errorMessage[]="LoadConfigVariables() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($db_config_dbVersion, $db_config_appName, $db_config_pageTitle, $db_config_versionNote, $db_config_loginCookieDurration, $db_config_loginCookieDurrationOniPad, $db_config_badgesEnabled, $db_config_subnetsEnabled, $db_config_qaEnabled, $db_config_demoSiteEnabled);
+			$count = $stmt->num_rows;
+			
+			if($count!=1)
+				$errorMessage[]="LoadConfigVariables() Failed to find any config data - using defaults";
+			else
+			{
+				$stmt->fetch();
+				
+				global $config_dbVersion;
+				if($config_dbVersion != $db_config_dbVersion)
+					$errorMessage[]="LoadConfigVariables() - Code DB version($config_dbVersion) doesn't match the dcim_config.dbversion($db_config_dbVersion). Please contact your administrator to correct this issue.";
+				else
+				{
+					global $config_demoSiteEnabled;
+					$config_demoSiteEnabled= $db_config_demoSiteEnabled;
+					
+					global $config_appName;
+					$config_appName = $db_config_appName;
+					global $config_pageTitle;
+					$config_pageTitle = $db_config_pageTitle;
+					global $config_versionNote;
+					$config_versionNote = $db_config_versionNote;
+					
+					global $config_loginCookieDurration;
+					$config_loginCookieDurration = $db_config_loginCookieDurration*60*60;//hours
+					global $config_loginCookieDurrationOniPad;
+					$config_loginCookieDurrationOniPad = $db_config_loginCookieDurrationOniPad*60*60;//hours
+					
+					global $config_badgesEnabled;
+					$config_badgesEnabled = ($db_config_badgesEnabled=="T");
+					global $config_subnetsEnabled;
+					$config_subnetsEnabled = ($db_config_subnetsEnabled=="T");
+					global $config_qaEnabled;
+					$config_qaEnabled = ($db_config_qaEnabled=="T");
+				}
+			}
+		}
+	}
+	
 	function UpdatePermissionLevel()
 	{
 		global $mysqli;
@@ -8,7 +62,7 @@
 		global $userID;
 		global $resultMessage;
 		global $errorMessage;
-		global $userPasswordSalt;
+		global $config_userPasswordSalt;
 		
 		//check cookie
 		if(isset($_COOKIE["dcim_user"]))
@@ -23,7 +77,7 @@
 			$user = GetInput("logInUserName");
 			$password = GetInput("logInPassword");
 			//should change to password_hash($pass,PASSWORD_BCRYPT) & password_verify($pass,$hash)
-			$password = md5($password.$userPasswordSalt);
+			$password = md5($password.$config_userPasswordSalt);
 		}
 		
 		//Validate User Authentication against DB - always
@@ -91,11 +145,11 @@
 	
 	function UpdateLoginCookies($user, $password)
 	{
-		global $loginCookieDurration;
+		global $config_loginCookieDurration;
 		//update cookie info
-		setcookie("dcim_user", $user, time()+$loginCookieDurration);
+		setcookie("dcim_user", $user, time()+$config_loginCookieDurration);
 		//this should be the MD5 of the password so it is never stored on the local machie as original
-		setcookie("dcim_password", $password, time()+$loginCookieDurration);
+		setcookie("dcim_password", $password, time()+$config_loginCookieDurration);
 		
 		//update the current var - seesion cookie in browser doesn't actualy update till the page is reloaded
 		$_COOKIE["dcim_user"] = $user;
@@ -247,23 +301,6 @@
 				header('location:'.$_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING']);
 			exit;
 		}
-	}
-	
-	function BackupDatabase()
-	{
-		/*
-		global $db_host;
-		global $db_user;
-		global $db_password;
-		global $database;
-		
-		$backup_file = "db_autoBackup_" . date("Y-m-d-H-i-s") . '.gz';
-		$command = "mysqldump --opt -h $dbhost -u $dbuser -p $dbpass "."test_db | gzip > $backup_file";
-		
-		select * into outfile '/tmp/outfile.csv' FIELDS TERMINATED BY ',' ENCLOSED BY '"' ESCAPED BY '\\' LINES TERMINATED BY '\n' from database.table_name;
-		
-		system($command);
-		*/
 	}
 	
 	function ProcessPowerAuditPanelUpdate($action)
@@ -2925,7 +2962,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-		global $userPasswordSalt;
+		global $config_userPasswordSalt;
 		
 		$totalAffectedCount = 0;
 		$valid = true;
@@ -2967,7 +3004,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					$stmt->fetch();
 					
-					$oldPasInput = md5($oldPasInput.$userPasswordSalt);
+					$oldPasInput = md5($oldPasInput.$config_userPasswordSalt);
 					$pasToTest = "";
 					if($validateAdminPas)
 					{
@@ -3006,7 +3043,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($valid)//push new password to DB
 		{
-			$newFinalPas = md5($newpas1.$userPasswordSalt);
+			$newFinalPas = md5($newpas1.$config_userPasswordSalt);
 			$query = "UPDATE dcim_user SET pass=?
 				WHERE userid=? LIMIT 1 ";
 				

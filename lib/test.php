@@ -8,10 +8,10 @@
 	
 	SQLIConnect();
 	
-	global $appName;
+	global $config_appName;
 	
 	?>
-<head><title>Test <?php echo $appName;?></title></head>
+<head><title>Test <?php echo $config_appName;?></title></head>
 <!--
 <body>
 

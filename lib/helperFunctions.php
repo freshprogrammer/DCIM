@@ -433,14 +433,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function UpdateSettingsForiPad()
 	{
-		global $loginCookieDurration;
-		global $loginCookieDurrationOniPad;
+		global $config_loginCookieDurration;
+		global $config_loginCookieDurrationOniPad;
 		
 		$isiPad = (bool) strpos($_SERVER['HTTP_USER_AGENT'],'iPad');
 		
 		if($isiPad)
 		{
-			$loginCookieDurration = $loginCookieDurrationOniPad;
+			$config_loginCookieDurration = $config_loginCookieDurrationOniPad;
 		}
 	}
 	
@@ -775,15 +775,18 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function IsUserUsingDefaultPassword()
 	{//these are only valid if the sdefault salt is used - should be move to the DCIM functions to allow salt to be changed
+		global $config_userPasswordSalt;
 		$result = false;
 		if(isset($_COOKIE["dcim_password"]))
 		{
 			$password = $_COOKIE["dcim_password"];
-			if($password=="805f22790497dae93be21fbc69549509")//md5 of default password "Pa55word"+salt
+			if($password==md5("Pa55word".$config_userPasswordSalt))
 				return true;
-			else if($password=="cfdc03556bbbc4d474fc535c58798b95")//md5 of default password "password1"+salt
+			else if($password==md5("password1".$config_userPasswordSalt))
 				return true;
-			else if($password=="d280a422f43b4b704334a4012c4b0f46")//md5 of default password "testPass"+salt
+			else if($password==md5("testPass".$config_userPasswordSalt))
+				return true;
+			else if($password==md5("chang3me".$config_userPasswordSalt))
 				return true;
 		}
 		return $result;

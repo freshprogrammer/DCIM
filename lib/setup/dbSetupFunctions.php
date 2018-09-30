@@ -103,7 +103,7 @@
 		global $debugMessage;
 		global $mainTables;
 		global $logTables;
-		global $demoSiteEnabled;
+		global $config_demoSiteEnabled;
 		
 		//updates in sync with v1.3 - DB v3
 		//paramaters should be mutually exclusive, so only 1 is true at any time
@@ -341,7 +341,7 @@
 				ExecuteThis("UP3_panelcreation-l-3",$cmdl,$reportsucsess);
 			}
 			
-			$createDemoPowerUPSs = $demoSiteEnabled;
+			$createDemoPowerUPSs = $config_demoSiteEnabled;
 			if($createDemoPowerUPSs)
 			{
 				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',480,500,'Automated')";

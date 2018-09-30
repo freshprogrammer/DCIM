@@ -182,7 +182,6 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		
 		public static function CreateHomePageContent()
 		{//just logged in - at home page
-			global $appName;
 			global $mysqli;
 			global $errorMessage;
 			global $pageSubTitle;
