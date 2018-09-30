@@ -8,7 +8,8 @@
 	require_once 'customFunctions.php';
 	require_once 'genericFunctions.php';
 	require_once 'helperFunctions.php';
-	require_once 'functions.php';
+	require_once 'dataFunctions.php';
+	require_once 'htmlFunctions.php';
 	require_once 'setup/dbSetupFunctions.php';
 	
 	$resultMessage = array();

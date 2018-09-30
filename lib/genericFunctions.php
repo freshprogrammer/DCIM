@@ -476,6 +476,11 @@
 		return $result;
 	}
 	
+	function FormatSizeInFeet($w,$h)
+	{
+		return round($w,2)."' x ".round($h,2)."'";
+	}
+	
 	function OutputCSV($fileName,$data) 
 	{
 		header("Content-Type: text/csv");

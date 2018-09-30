@@ -966,11 +966,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $result;
 	}
 	
-	function FormatSizeInFeet($w,$h)
-	{
-		return round($w,2)."' x ".round($h,2)."'";	
-	}
-	
 	function RoomAccesClass($access)
 	{//define room color
 		if($access=="T")return "caBackground";
