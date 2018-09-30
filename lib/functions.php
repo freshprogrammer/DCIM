@@ -4065,7 +4065,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//VLANs
 			if($config_subnetsEnabled)
 			{
-				$vlanCount = ListCustomerSubnets($hNo);
+				$vlanCount = ListCustomerSubnets("C",$hNo);
 				echo "<BR>\n";
 			}
 			
@@ -4854,13 +4854,13 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE d.name LIKE ? OR d.altname LIKE ? OR d.note LIKE ? OR l.note LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR d.asset LIKE ? OR d.serial LIKE ? OR d.model LIKE ?
+					WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
 				UNION
 					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE (CONCAT(s.name,' ',r.name,' ',l.name) LIKE ? OR CONCAT(s.name,' ',r.name,' ',l.altname) LIKE ? OR CONCAT(s.name,' ',r.name,'.',l.name) LIKE ? OR l.note LIKE ?)
+						WHERE CONCAT(l.name,'~',l.altname,'~',l.keyno,'~',l.note) LIKE ?
 				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
 			
 			if (!($stmt = $mysqli->prepare($query))) 
@@ -4868,7 +4868,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//TODO hadnle errors better
 				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			}
-			$stmt->bind_Param('sssssssssssss', $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input, $input);
+			$stmt->bind_Param('ss', $input, $input);
 			
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
@@ -4911,9 +4911,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","AltName","Model","Serial","Asset","Note"));
+				echo CreateDataTableHeader(array("Location&#x25B2;", "Location Note","Customer","Device","AltName","Model","Serial","Asset","Note"));
 			else
-				echo CreateDataTableHeader(array("Location&#x25B2;",		   "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
+				echo CreateDataTableHeader(array("Location&#x25B2;", "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -4936,7 +4936,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				echo "<tr class='$rowClass'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
+				{
+					echo "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($locationNote))."</td>";
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				}
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				if($search)
 				{
@@ -5231,20 +5234,35 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo $result;
 	}
 	
-	function ListSites()
+	function ListSites($page="L", $input="1")
 	{
 		global $mysqli;
 		global $errorMessage;
 		
-		$query = "SELECT s.siteid, s.name, s.fullname, COUNT(r.roomid) AS rooms
-				FROM dcim_site AS s
-					LEFT JOIN dcim_room AS r ON r.siteid=s.siteid
-				GROUP BY s.siteid
-				ORDER BY s.name";
-		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		if($page=="L")
 		{
-			$errorMessage[]="ListSites() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$title = "All Sites";
+			$listPage = true;
+			$filter = "?=1";
+		}
+		else if($page=="?")
+		{
+			$title = "Sites";
+			$searchPage = true;
+			$input = "%".trim($input)."%";
+			$filter = "CONCAT(s.name,'~',s.fullname) LIKE ?";
+		}
+		
+		$query = "SELECT s.siteid, s.name, s.fullname, COUNT(r.roomid) AS rooms
+		FROM dcim_site AS s
+		LEFT JOIN dcim_room AS r ON r.siteid=s.siteid
+		WHERE $filter
+		GROUP BY s.siteid
+		ORDER BY s.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
+		{
+			$errorMessage[]="ListSites($page) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
 		$stmt->store_result();
@@ -5253,7 +5271,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//data title
 		$result = "";
-		$result .= "<span class='tableTitle'>All Sites</span>\n";
+		$result .= "<span class='tableTitle'>$title</span>\n";
 		$result .= "<BR>\n";
 		
 		if($count>0)
@@ -5278,12 +5296,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 		else
 			$result .= "No Sites Found.<BR>\n";
-		
-		if(CustomFunctions::UserHasSitePermission())
-		{
-			//EditSiteForm($input);
-		}
-		return $result;
+			
+			if(CustomFunctions::UserHasSitePermission())
+			{
+				//EditSiteForm($input);
+			}
+			return $result;
 	}
 	
 	function ShowSitePage($siteID)
@@ -5388,7 +5406,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$result .= "<div class='panel-header'>$safeSiteFullName Details</div>\n";
 			$result .= "<div class='panel-body'>\n\n";
 
-			$result .= ListSiteRooms($siteID,$siteFullName);
+			$result .= ListRooms("S",$siteID,$siteFullName);
 			$result .= "<BR>";
 			echo $result;
 			
@@ -5403,6 +5421,110 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo $result;
 		}//site found
 		//return $count;
+	}
+	
+	function ListRooms($page, $input, $siteFullName="")
+	{
+		global $mysqli;
+		global $errorMessage;
+		//$formAction = "./?host=$hNo";
+		
+		if($page=="S")
+		{
+			$sitePage = true;
+			$filter = "s.siteid=?";
+		}
+		else if($page=="?")
+		{
+			$searchPage = true;
+			$input = "%".trim($input)."%";
+			$filter = "CONCAT(r.name,'~',r.fullname) LIKE ?";
+		}
+		
+		$query = "SELECT r.roomid, r.name, r.fullname, r.custaccess, s.name, r.edituser, r.editdate, r.qauser, r.qadate
+		FROM dcim_room AS r
+		LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+		WHERE $filter
+		ORDER BY r.fullname";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "ListSiteRooms() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		
+		$stmt->bind_Param('s', $input);
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
+		$count = $stmt->num_rows;
+		
+		$result = "<span class='tableTitle'>$siteFullName Rooms</span>\n";
+		//Add button
+		/*if($sitePage && UserHasWritePermission())
+		 {
+		 $result .=
+		 //function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+		 ?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
+		 <?php
+		 }*/
+		$result .= "<BR>";
+		if($count>0)
+		{
+			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
+			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				if($custAccess=="T")$custAccess = "Yes";
+				else $custAccess = "No";
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomFullName)."</td>";
+				$result .= "<td class='data-table-cell'>".$custAccess."</td>";
+				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				/*if(UserHasWritePermission())
+				 {
+				 //edit button
+				 $result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
+				 
+				 $jsSafeVLAN = MakeJSSafeParam($vlan);
+				 $jsSafeSubnet = MakeJSSafeParam($subnet);
+				 $jsSafeMask = MakeJSSafeParam($mask);
+				 $jsSafeFirst = MakeJSSafeParam($first);
+				 $jsSafeLast = MakeJSSafeParam($last);
+				 $jsSafeGateway = MakeJSSafeParam($gateway);
+				 $jsSafeNote = MakeJSSafeParam($note);
+				 //function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+				 $params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
+				 ?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
+				 <?php
+				 $result .= "</td>\n";
+				 
+				 $result .= CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+				 }*/
+				$result .= "</tr>";
+			}
+			$result .= "</table>";
+		}
+		else
+		{
+			$result .= "No room records found.<BR>\n";
+		}
+		
+		/*if($sitePage && UserHasWritePermission())
+		 {
+		 EditSubnetForm($formAction,$hNo);
+		 }*/
+		
+		return $result;
 	}
 	
 	function ShowRoomPage($roomID)
@@ -6013,13 +6135,30 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		<?php
 	}
 	
-	function ListCustomerSubnets($hNo)
+	function ListCustomerSubnets($page, $key)
 	{
 		global $mysqli;
-		$formAction = "./?host=$hNo";
+		global $errorMessage;
 		
+		if($page=="C")
+		{
+			$customerPage = true;
+			$input= $key;
+			$formAction = "./?host=$key";
+			$innerFilter = "d.hno=?";
+			$outerFilter = "1";
+		}
+		else if($page=="?")
+		{
+			$searchPage = true;
+			$input = "%".trim($key)."%";
+			$innerFilter = "1";
+			$outerFilter= "CONCAT(v.vlan,'~',v.subnet,'~',v.note) LIKE ? AND ? != 'bshere'";//and portion need to keep the bing_param count
+		}
+		
+		//TODO this is not properly showing active ports
 		//GROUP to by VLAN/SUBNET to show unique networks link to customer
-		$query = "SELECT dp.deviceportid, v.vlanid, v.vlan, v.subnet, v.mask, v.first, v.last, v.gateway, v.note, v.edituser, v.editdate, v.qauser, v.qadate
+		$query = "SELECT d.deviceid, d.name, dp.deviceportid, v.vlanid, v.vlan, v.subnet, v.mask, v.first, v.last, v.gateway, v.note, v.edituser, v.editdate, v.qauser, v.qadate
 			FROM
 				(SELECT pv.vlan
 						FROM dcim_device AS d
@@ -6028,7 +6167,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							INNER JOIN dcim_deviceport AS sp ON pc.parentportid=sp.deviceportid
 							INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 							LEFT JOIN dcim_portvlan AS pv ON sp.deviceportid=pv.deviceportid
-						WHERE d.hno=?
+						WHERE $innerFilter
 					UNION 
 					SELECT pv.vlan
 						FROM dcim_device AS d
@@ -6037,28 +6176,30 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							INNER JOIN dcim_deviceport AS sp ON pc.childportid=sp.deviceportid
 							INNER JOIN dcim_device AS s ON sp.deviceid=s.deviceid
 							LEFT JOIN dcim_portvlan AS pv ON dp.deviceportid=pv.deviceportid
-						WHERE d.hno=?) AS csr
+						WHERE $innerFilter) AS csr
 				LEFT JOIN dcim_vlan AS v ON v.vlan=csr.vlan
 				INNER JOIN dcim_portvlan AS pv ON pv.vlan=v.vlan
 				INNER JOIN dcim_deviceport AS dp ON dp.deviceportid=pv.deviceportid
+				LEFT JOIN dcim_device AS d ON d.deviceid=dp.deviceid
+			WHERE $outerFilter
 			GROUP BY v.vlanid
 			ORDER BY v.vlan";
 		
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
 			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$errorMessage[]="Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->bind_Param('ss', $hNo, $hNo);
+		$stmt->bind_Param('ss', $input, $input);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($devicePortID, $vlanID, $vlan, $subnet, $mask, $first, $last, $gateway, $note, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $deviceName, $devicePortID, $vlanID, $vlan, $subnet, $mask, $first, $last, $gateway, $note, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		echo "<span class='tableTitle'>Subnets</span>\n";
 		//Add button
-		if(UserHasWritePermission())
+		if(!$searchPage && UserHasWritePermission())
 		{
 			//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
 			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
@@ -6067,7 +6208,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		echo "<BR>";
 		if($count>0)
 		{
-			echo CreateDataTableHeader(array("VLAN","Subnet","Mask","First","Last","Gateway","Note"),true,UserHasWritePermission(),UserHasWritePermission());
+			echo CreateDataTableHeader(array("Device","VLAN","Subnet","Mask","First","Last","Gateway","Note"),!$searchPage,!$searchPage && UserHasWritePermission(),!$searchPage && UserHasWritePermission());
 			
 			//list result data
 			$oddRow = false;
@@ -6078,33 +6219,37 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				else $rowClass = "dataRowTwo";
 				
 				echo "<tr class='$rowClass'>";
+				echo "<td class='data-table-cell'><a href='?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>";
 				echo "<td class='data-table-cell'>".FormatVLAN($vlan)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($subnet)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($mask)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($first)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($last)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($gateway)."</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
-				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-				if(UserHasWritePermission())
+				echo "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($note))."</td>";
+				if(!$searchPage)
 				{
-					//edit button
-					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
-					
-					$jsSafeVLAN = MakeJSSafeParam($vlan);
-					$jsSafeSubnet = MakeJSSafeParam($subnet);
-					$jsSafeMask = MakeJSSafeParam($mask);
-					$jsSafeFirst = MakeJSSafeParam($first);
-					$jsSafeLast = MakeJSSafeParam($last);
-					$jsSafeGateway = MakeJSSafeParam($gateway);
-					$jsSafeNote = MakeJSSafeParam($note);
-					//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
-					$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
-					?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
-					<?php 
-					echo "</td>\n";
-					
-					echo CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					if(!$searchPage && UserHasWritePermission())
+					{
+						//edit button
+						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
+						
+						$jsSafeVLAN = MakeJSSafeParam($vlan);
+						$jsSafeSubnet = MakeJSSafeParam($subnet);
+						$jsSafeMask = MakeJSSafeParam($mask);
+						$jsSafeFirst = MakeJSSafeParam($first);
+						$jsSafeLast = MakeJSSafeParam($last);
+						$jsSafeGateway = MakeJSSafeParam($gateway);
+						$jsSafeNote = MakeJSSafeParam($note);
+						//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+						$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
+						?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
+						<?php 
+						echo "</td>\n";
+						
+						echo CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+					}
 				}
 				echo "</tr>";
 			}
@@ -6115,104 +6260,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			echo "No VLAN subnet records found.<BR>\n";
 		}
 		
-		if(UserHasWritePermission())
+		if($customerPage && UserHasWritePermission())
 		{
-			EditSubnetForm($formAction,$hNo);
+			EditSubnetForm($formAction,$key);
 		}
 		
 		return $count;
-	}
-	
-	function ListSiteRooms($siteID, $siteFullName)
-	{
-		global $mysqli;
-		global $errorMessage;
-		//$formAction = "./?host=$hNo";
-		
-		$query = "SELECT r.roomid, r.name, r.fullname, r.custaccess, s.name, r.edituser, r.editdate, r.qauser, r.qadate
-			FROM dcim_room AS r
-				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
-			WHERE s.siteid=?
-			ORDER BY r.fullname";
-		
-		if (!($stmt = $mysqli->prepare($query))) 
-		{
-			$errorMessage[] = "ListSiteRooms() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
-		}
-		
-		$stmt->bind_Param('i', $siteID);
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($roomID, $roomName, $roomFullName, $custAccess, $siteName, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-		
-		$result = "<span class='tableTitle'>$siteFullName Rooms</span>\n";
-		//Add button
-		/*if(UserHasWritePermission())
-		{
-		$result .=
-			//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
-			?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
-			<?php 
-		}*/
-		$result .= "<BR>";
-		if($count>0)
-		{
-			//echo CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true,UserHasWritePermission(),UserHasWritePermission());
-			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch()) 
-			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				if($custAccess=="T")$custAccess = "Yes";
-				else $custAccess = "No";
-				
-				$result .= "<tr class='$rowClass'>";
-				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
-				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
-				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomFullName)."</td>";
-				$result .= "<td class='data-table-cell'>".$custAccess."</td>";
-				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-				/*if(UserHasWritePermission())
-				{
-					//edit button
-					$result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
-					
-					$jsSafeVLAN = MakeJSSafeParam($vlan);
-					$jsSafeSubnet = MakeJSSafeParam($subnet);
-					$jsSafeMask = MakeJSSafeParam($mask);
-					$jsSafeFirst = MakeJSSafeParam($first);
-					$jsSafeLast = MakeJSSafeParam($last);
-					$jsSafeGateway = MakeJSSafeParam($gateway);
-					$jsSafeNote = MakeJSSafeParam($note);
-					//function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
-					$params = "false,$vlanID, $devicePortID, '$jsSafeVLAN', '$jsSafeSubnet', '$jsSafeMask', '$jsSafeGateway', '$jsSafeFirst', '$jsSafeLast', '$jsSafeNote'";
-					?><button onclick="EditSubnet(<?php echo $params;?>)">Edit</button>
-					<?php 
-					$result .= "</td>\n";
-					
-					$result .= CreateQACell("dcim_vlan", $vlanID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
-				}*/
-				$result .= "</tr>";
-			}
-			$result .= "</table>";
-		}
-		else 
-		{
-			$result .= "No room records found.<BR>\n";
-		}
-		
-		/*if(UserHasWritePermission())
-		{
-			EditSubnetForm($formAction,$hNo);
-		}*/
-		
-		return $result;
 	}
 	
 	function EditSubnetForm($action, $hNo)
@@ -7407,6 +7460,87 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $count;
 	}
 	
+	function ListUPSs($page, $input, $siteFullName="")
+	{
+		global $mysqli;
+		global $errorMessage;
+		//$formAction = "./?host=$hNo";
+		
+		if($page=="S")
+		{
+			$sitePage = true;
+			$filter = "s.siteid=?";
+		}
+		else if($page=="?")
+		{
+			$searchPage = true;
+			$input = "%".trim($input)."%";
+			$filter = "CONCAT(pu.name,'~',pu.note) LIKE ?";
+		}
+		
+		$query = "SELECT s.name, pu.powerupsid, pu.name, pu.note
+			FROM dcim_powerups AS pu
+				LEFT JOIN dcim_site AS s ON s.siteid=pu.siteid
+			WHERE $filter
+			ORDER BY s.name, pu.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "ListUPSs() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		
+		$stmt->bind_Param('s', $input);
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($siteName, $powerUpsID, $upsName, $upsNote);
+		$count = $stmt->num_rows;
+		
+		$result = "<span class='tableTitle'>$siteFullName UPSs</span>\n";
+		//Add button
+		/*if($sitePage && UserHasWritePermission())
+		 {
+		 $result .=
+		 //function EditSubnet(add, portID,vlan,subnet,mask,gateway,first,last,note)
+		 ?><button class='editButtons_hidden' onclick="EditSubnet(true,-1,-1,'','','','','','','')">Add New</button>
+		 <?php
+		 }*/
+		$result .= "<BR>";
+		if($count>0)
+		{
+			$result .= CreateDataTableHeader(array("Site","UPS","Note"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				if($custAccess=="T")$custAccess = "Yes";
+				else $custAccess = "No";
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='?powerupsid=$powerUpsID'>".MakeHTMLSafe($upsName)."</a></td>";
+				$result .= "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($upsNote))."</td>";
+				$result .= "</tr>";
+			}
+			$result .= "</table>";
+		}
+		else
+		{
+			$result .= "No ups records found.<BR>\n";
+		}
+		
+		/*if($sitePage && UserHasWritePermission())
+		 {
+		 EditSubnetForm($formAction,$hNo);
+		 }*/
+		
+		return $result;
+	}
+	
 	function ShowPowerUPSPage($powerUpsID)
 	{
 		global $mysqli;
@@ -7584,12 +7718,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		if($page=="?")
 		{//search
-			//replace '-' and ' ' to '' and compare to search
-			//$input = str_replace("-","",$input);
-			//$input = str_replace(" ","",$input);
-			$input = "%".$input."%";
-			//$filter = "REAPLCE(REAPLCE(p.panel,'-',''),' ','') LIKE = ?";
-			$filter = "pp.name LIKE ?";
+			$input = "%".trim($input)."%";
+			$filter = "CONCAT(pp.name,'~',pp.note) LIKE ?";
 		}
 		else if($page=="R")
 		{//room page

@@ -310,7 +310,6 @@
 			else
 			{
 				//search all
-				$resultCount = 0;
 				if(strlen($search) > 0)
 				{
 					$pageSubTitle = "Search:\"".MakeHTMLSafe($search)."\"";
@@ -320,19 +319,41 @@
 					echo "</div>\n";
 					echo "<div class=\"panel-body\">\n\n";
 					
+					//search for sites (name, fullname)
+					echo ListSites("?", $search);
+					echo "<BR>\n";
+					
+					//search for rooms (name, fullname)
+					echo ListRooms("?", $search);
+					echo "<BR>\n";
+					
 					//search in customer (hno, cno, name, note)
-					$resultCount += ListSearchCustomers($search);
+					ListSearchCustomers($search);
 					echo "<BR>\n";
 					
-					//search in badge (name, badgeno)
-					$resultCount += ListBadges(true,$search);
+					if($config_badgesEnabled)
+					{
+						//search in badge (name, badgeno)
+						ListBadges(true,$search);
+						echo "<BR>\n";
+					}
+					
+					//search in locaion/device (l.name, l.altname, l.note, d.name, d.model, d.asset, d.serial, d.note)
+					ListDevices(true,$search);
 					echo "<BR>\n";
 					
-					//search in device (name, note)
-					$resultCount += ListDevices(true,$search);
+					if($config_subnetsEnabled)
+					{
+						//search in VLANs (vlan name, subnet, note)
+						ListCustomerSubnets("?",$search);
+						echo "<BR>\n";
+					}
+					
+					//search in powerups (name, note)
+					echo ListUPSs("?",$search);
 					echo "<BR>\n";
 					
-					//search for panels
+					//search in powerpanel (name, note)
 					ListPowerPanels("?", $search);
 					
 					echo "</div>\n";
