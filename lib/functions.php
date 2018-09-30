@@ -5297,6 +5297,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			FROM dcim_site AS s
 			WHERE s.siteid=?";
 		
+		$result = "";
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $siteID) || !$stmt->execute()) 
 			$errorMessage[]= "ShowSitePage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -5314,22 +5315,21 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				
 				if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
 				{
-					echo "<script src='lib/js/customerEditScripts.js'></script>\n";	
+					$result .= "<script src='lib/js/customerEditScripts.js'></script>\n";	
 				}
 				
 				$size = FormatSizeInFeet($width,$depth);
 				
-				echo "<div class='panel'>\n";
-				echo "<div class='panel-header'>$safeSiteFullName</div>\n";
-				echo "<div class='panel-body'>\n\n";
+				$result .= "<div class='panel'>\n";
+				$result .= "<div class='panel-header'>$safeSiteFullName</div>\n";
+				$result .= "<div class='panel-body'>\n\n";
 				
+				$result .= "<table width=100%><tr>\n";
+				$result .= "<td align='left'>\n";
+				$result .= "<span class='customerName'>$safeSiteFullName - ($safeSiteName)</span>\n";
+				$result .= "</td>\n";
 				
-				echo "<table width=100%><tr>\n";
-				echo "<td align='left'>\n";
-				echo "<span class='customerName'>$safeSiteFullName - ($safeSiteName)</span>\n";
-				echo "</td>\n";
-				
-				echo "<td align='right'>\n";
+				$result .= "<td align='right'>\n";
 				//edit site button - not visible till in edit mode
 				/*if(CustomFunctions::UserHasLocationPermission())
 				{
@@ -5345,17 +5345,17 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				//editMode button
 				if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
 				{
-					echo "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
+					$result .= "<button type='button' onclick='ToggleEditMode()' style='display:inline;'>Edit Mode</button>\n";
 				}
-				echo "</td>\n";
-				echo "</tr>\n";
-				echo "</table>\n";
+				$result .= "</td>\n";
+				$result .= "</tr>\n";
+				$result .= "</table>\n";
 				
 				//render room - ignore 0 width or height rooms
 				if($width>0 && $depth>0)
 				{
 					$depthToWidthRatio = 100*$depth/$width;//key proportian of the site
-					$result = "<style>\n";
+					$result .= "<style>\n";
 					$result .= "#siteContainer$siteID {\n";
 					$result .= "	padding-bottom:$depthToWidthRatio%;\n";
 					$result .= "}\n";
@@ -5363,44 +5363,44 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$result .= "<div id='siteContainer$siteID' class='siteContainer'>\n";
 					$result .= CreateSiteLayout($siteID, $safeSiteName, $safeSiteFullName, $width, $depth);//this should be a lookup of all sites...
 					$result .= "</div>\n";
-					echo $result;
 				}
 			}
 			else
 			{
-				echo "<div class='panel'>\n";
-				echo "<div class='panel-header'>Site</div>\n";
-				echo "<div class='panel-body'>\n\n";
-				echo "Site ID#$siteID not found.<BR>\n";
+				$result .= "<div class='panel'>\n";
+				$result .= "<div class='panel-header'>Site</div>\n";
+				$result .= "<div class='panel-body'>\n\n";
+				$result .= "Site ID#$siteID not found.<BR>\n";
 			}
 		}
 		
 		if(UserHasWritePermission())
 		{
-			//EditSiteForm();
+			//$result .= EditSiteForm();
 		}
 		
-		echo "</div>\n";
-		echo "</div>\n\n";
+		$result .= "</div>\n";
+		$result .= "</div>\n\n";
 		
 		if($siteFound)
 		{
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>$safeSiteFullName Details</div>\n";
-			echo "<div class='panel-body'>\n\n";
+			$result .= "<div class='panel'>\n";
+			$result .= "<div class='panel-header'>$safeSiteFullName Details</div>\n";
+			$result .= "<div class='panel-body'>\n\n";
 
-			echo ListSiteRooms($siteID,$siteFullName);
-			echo "<BR>";
+			$result .= ListSiteRooms($siteID,$siteFullName);
+			$result .= "<BR>";
+			echo $result;
+			
 			ListPowerPanels("S", $siteID);
 			
-			echo "</div>\n";
-			echo "</div>\n";
+			$result = "</div>\n</div>\n";
 			
 			if(CustomFunctions::UserHasSitePermission() || CustomFunctions::UserHasRoomPermission())
-			{
-				//initialize page JS
-				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
+			{//initialize page JS
+				$result .= "<script type='text/javascript'>InitializeEditButton();</script>\n";
 			}
+			echo $result;
 		}//site found
 		//return $count;
 	}

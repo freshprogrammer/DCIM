@@ -343,7 +343,7 @@
 					if($searchbtn==="T")//mock for empty search
 						$errorMessage[] ="Search for nuthin yields a whole lot of nuthin.";
 					
-					echo CustomFunctions::CreateHomePageContent();
+					CustomFunctions::CreateHomePageContent();
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust

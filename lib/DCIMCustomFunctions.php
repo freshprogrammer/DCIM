@@ -194,9 +194,8 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			{
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
-			
-			$result .= ShowSitePage(0);//TODO should look up users home page
-			return $result;
+			echo $result;
+			ShowSitePage(0);//TODO should look up users home page
 		}
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $width, $depth)
