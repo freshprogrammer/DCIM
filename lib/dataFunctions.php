@@ -757,6 +757,74 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		}
 	}
 	
+	class PowerCircuit
+	{
+		public $id;
+		public $circuit;
+		public $volts;
+		public $amps;
+		public $status;
+		public $load;
+	}
+	
+	function Get3PhasePowerLookup($powerPanelID, $inputCircuitID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		//pull list of all circuits for panel
+		//return an array of the 3 PowerCircuits for this 3 phase power circuit in circuit order
+		$query = "SELECT pc.powercircuitid, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pp.circuits, pp.powerpanelid, pp.name
+			FROM dcim_powerpanel AS pp
+				LEFT JOIN dcim_powercircuit AS pc ON pc.powerpanelid=pp.powerpanelid
+			WHERE pc.powerpanelid=? AND pc.volts=308
+			ORDER BY pc.circuit%2=0, pc.circuit";
+		
+		$found = false;
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
+			$errorMessage[] = "Prepare failed: ($action-a2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				if($count>=1)
+				{
+					$stmt->bind_result($powerCircuitID, $circuit, $volts, $amps, $status, $load, $circuits, $powerPanelID, $panelName);
+					$phaseNo = 1;//1-3
+					$result = array();
+					while ($stmt->fetch())
+					{
+						if($powerCircuitID==$inputCircuitID)	$found=true;
+						
+						$c = new PowerCircuit();
+						$c->id = $powerCircuitID;
+						$c->circuit = $circuit;
+						$c->volts = $volts;
+						$c->amps = $amps;
+						$c->status = $status;
+						$c->load = $load;
+						
+						$result[] = $c;
+						
+						$phaseNo++;
+						if($phaseNo==4)
+						{
+							$phaseNo=1;
+							if($found) break;
+							else $result = array();//try again
+						}
+					}
+					if($phaseNo!=1)//found !%3 circuits
+						$errorMessage[] = "Warning! Get3PhaseMasterLookup() Failed to locate correct number of 208v3p power citrcuits on this panel($powerPanelID)($phaseNo).";
+				}
+				else
+				{//no 3 phase power found - this function should only be called if this is a 208v3p circuit. This shouldn't happen
+					$errorMessage[] = "Warning! Unexpected number of 208v3p power circuits on this panel ($panelName). Please alert you admin to correct this issue.";
+				}
+			}
+			if($found) return $result;
+			else return null;
+	}
+	
 	function ProcessPowerCircuitAction($action)
 	{
 		global $mysqli;
@@ -793,6 +861,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidPowerCircuitAmps($amps);
 		if($valid)$valid = ValidPowerCircuitStatus($status);
 		if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
+		
+		$isDoubleCircuit = (int)$volts == 208;
+		$isTrippleCircuit = (int)$volts == 308;
+		$updateAll = false;//need to update all 3 in 3 phase
 		
 		//DB CHECKS
 		//check valid IDs in tables 
@@ -835,8 +907,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$valid = false;
 			$passedDBChecks = false;
 			//this could be optomised by filtering inner selects by panel and/or range of circuit
-			$isDoubleCircuit = (int)$volts == 208; 
-			$isTrippleCircuit = (int)$volts == 308; 
 			$filter = "";
 			if($isDoubleCircuit)
 				$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=?)";
@@ -849,10 +919,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					SELECT powerpanelid,powercircuitid,circuit,volts,amps, '' AS reserved
 						FROM dcim_powercircuit
 					UNION 
-						SELECT powerpanelid,powercircuitid,IF(volts=208 OR volts=308,circuit+2,NULL) AS cir,volts,amps, 'T'
-						FROM dcim_powercircuit HAVING NOT(cir IS NULL)
-					UNION 
-						SELECT powerpanelid,powercircuitid,IF(volts=308,circuit+4,NULL) AS cir,volts,amps, 'T'
+						SELECT powerpanelid,powercircuitid,IF(volts=208,circuit+2,NULL) AS cir,volts,amps, 'T'
 						FROM dcim_powercircuit HAVING NOT(cir IS NULL)
 						) AS csr
 					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=csr.powerpanelid
@@ -906,9 +973,25 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$valid=$passedDBChecks;
 		}
 		
-		//push to DB
-		if($valid)
+		if($valid && $isTrippleCircuit && !$add)
 		{
+			//look up 2083p power circuits
+			$lookupResult = Get3PhasePowerLookup($powerPanelID,$powerCircuitID);
+			if($lookupResult==null)$valid = false;
+			if($valid)
+			{
+				list($c1,$c2,$c3) = $lookupResult;
+				$debugMessage[]="ProcessPowerCircuitAction() tripple: ($c1->id,$c2->id,$c3->id) - powerPanelID = $powerPanelID";
+				//changes that should be pushed to all 3 records
+				if($c1->status!=$status || $c2->status!=$status || $c3->status!=$status)$updateAll = true;
+				if($c1->amps!=$amps|| $c2->amps!=$amps|| $c3->amps!=$amps)$updateAll = true;
+			}
+			//testing above
+			if(!$delete)$valid = false;
+		}
+		
+		if($valid)
+		{//push changes to DB
 			if($add)
 			{
 				$totalAffectedCount += ProcessPowerCircuitAction_Add($powerPanelID, $circuit, $volts, $amps, $status, $load, $locationID);
@@ -922,47 +1005,15 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 			else if($delete)
 			{
-				//delete where powerCircuitID=? in power and powerloc
-				$query = "DELETE FROM  dcim_powercircuit
-					WHERE powercircuitid=?
-					LIMIT 1";
-				
-				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
-					$errorMessage[] = "Prepare failed: ($action-d1) (" . $mysqli->errno . ") " . $mysqli->error;
+				if($isTrippleCircuit)
+				{
+					ProcessPowerCircuitAction_Delete($c1->id, $powerPanelID, $c1->circuit);
+					ProcessPowerCircuitAction_Delete($c2->id, $powerPanelID, $c2->circuit);
+					ProcessPowerCircuitAction_Delete($c3->id, $powerPanelID, $c3->circuit);
+				}
 				else
 				{
-					$affectedCount = $stmt->affected_rows;
-					$totalAffectedCount += $affectedCount;
-					if($affectedCount==1)
-					{
-						LogDBChange("dcim_powercircuit",$powerCircuitID,"D");
-						$resultMessage[] = "Successfully deleted power circuit (PanelID:$powerPanelID Circuit#$circuit).";
-						
-						//delete link - dont limit to 1 because this 1 power record could be linked to multiple locations
-						$query = "DELETE FROM  dcim_powercircuitloc
-							WHERE powercircuitid=?";
-						
-						if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
-							$errorMessage[] = "Prepare failed: ($action-d2) (" . $mysqli->errno . ") " . $mysqli->error;
-						else
-						{
-							$affectedCount = $stmt->affected_rows;
-							$totalAffectedCount += $affectedCount;
-							if($affectedCount>=1)
-							{
-								//TODO this should be tested to make sure multiple are updated in the case where 1 power circuit is connected to multiple locations
-								LogDBChange("dcim_powercircuitloc",-1,"D","powercircuitid='$powerCircuitID'");
-								$resultMessage[] = "Successfully unlinked power circuit from location(Panel ID:$powerPanelID Circuit#$circuit). $affectedCount unlinked";
-								
-							}
-							else
-								$resultMessage[] = "Successfully unlinked power, but affected $affectedCount rows.";
-						}
-					}
-					else
-					{
-						$errorMessage[] = "Successfully deleted power record, but affected $affectedCount rows.";
-					}
+					ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelID, $circuit);
 				}
 			}
 			else
@@ -971,7 +1022,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					SET pc.amps=?, pc.status=?, pc.load=? 
 					WHERE pc.powercircuitid=? 
 					LIMIT 1";
-		
+				
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 				else
@@ -1016,7 +1067,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//															   pcvaslu
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssssi', $powerPanelID, $circuit, $volts, $amps, $status, $load, $userID) || !$stmt->execute())
-			$errorMessage[] = "Prepare failed: ($action-a1) (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "ProcessPowerCircuitAction_Add - Prepare failed: (a1) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
 		{
 			$affectedCount = $stmt->affected_rows;
@@ -1036,7 +1087,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				WHERE pc.powerpanelid=? AND pc.circuit=?";
 			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('is', $powerPanelID, $circuit) || !$stmt->execute())
-				$errorMessage[] = "Prepare failed: ($action-a2) (" . $mysqli->errno . ") " . $mysqli->error;
+				$errorMessage[] = "ProcessPowerCircuitAction_Add - Prepare failed: (a2) (" . $mysqli->errno . ") " . $mysqli->error;
 			else
 			{
 				$stmt->store_result();
@@ -1059,7 +1110,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					
 					//															   plu
 					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iii', $powerCircuitID, $locationID, $userID) || !$stmt->execute())
-						$errorMessage[] = "Prepare failed: ($action-a3) (" . $mysqli->errno . ") " . $mysqli->error;
+						$errorMessage[] = "ProcessPowerCircuitAction_Add - Prepare failed: (a3) (" . $mysqli->errno . ") " . $mysqli->error;
 						else
 						{
 							$affectedCount = $stmt->affected_rows;
@@ -1079,6 +1130,59 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($count!=1)//only report error if circuit was not found, otherwist locationwas deleberately skipped
 						$errorMessage[] = "Failed to locate inserted record. Power (if created) is not linked to Location. PowerID:$powerPanelID Circuit:$circuit";
 				}
+			}
+		}
+		return $totalAffectedCount;
+	}
+	
+	function ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelID, $circuit)
+	{
+		global $mysqli;
+		global $userID;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$totalAffectedCount = 0;
+		//delete where powerCircuitID=? in power and powerloc
+		$query = "DELETE FROM  dcim_powercircuit
+					WHERE powercircuitid=?
+					LIMIT 1";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
+			$errorMessage[] = "ProcessPowerCircuitAction_Delete() - Prepare failed: (d1) (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$affectedCount = $stmt->affected_rows;
+			$totalAffectedCount += $affectedCount;
+			if($affectedCount==1)
+			{
+				LogDBChange("dcim_powercircuit",$powerCircuitID,"D");
+				$resultMessage[] = "Successfully deleted power circuit (PanelID:$powerPanelID Circuit#$circuit).";
+				
+				//delete link - dont limit to 1 because this 1 power record could be linked to multiple locations
+				$query = "DELETE FROM  dcim_powercircuitloc
+						WHERE powercircuitid=?";
+				
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
+					$errorMessage[] = "ProcessPowerCircuitAction_Delete() - Prepare failed: (d2) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$affectedCount = $stmt->affected_rows;
+					$totalAffectedCount += $affectedCount;
+					if($affectedCount>=1)
+					{
+						//TODO this should be tested to make sure multiple are updated in the case where 1 power circuit is connected to multiple locations
+						LogDBChange("dcim_powercircuitloc",-1,"D","powercircuitid='$powerCircuitID'");
+						$resultMessage[] = "Successfully unlinked power circuit from location(Panel ID:$powerPanelID Circuit#$circuit). $affectedCount unlinked";
+						
+					}
+					else
+						$resultMessage[] = "Successfully unlinked power, but affected $affectedCount rows.";
+				}
+			}
+			else
+			{
+				$errorMessage[] = "Successfully deleted power record, but affected $affectedCount rows.";
 			}
 		}
 		return $totalAffectedCount;
