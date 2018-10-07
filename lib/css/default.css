@@ -438,9 +438,25 @@ td.powerAuditCellDouble {
 	background-color: #DDD;
 }
 
-td.powerAuditCellTripple {
-	height: 150px;
-	background-color: #DDD;
+div.powerAuditMarker, div.powerCircuitCellMarker{
+	position: absolute;
+	background: linear-gradient(to bottom, #000 0%,#000 50%,#000 100%);
+	opacity: 0.5;
+	z-index: 1;
+}
+	
+div.powerAuditMarker{
+	left: 282px;
+	top: 10px;
+	width: 40px;
+	height: calc(60px*3 - 26px);
+}
+
+div.powerCircuitCellMarker{
+	left: -3px;
+	top: -3px;
+	width: 25px;
+	height: calc(22px*3 - 3px);
 }
 
 td.powerAuditCellEmpty {

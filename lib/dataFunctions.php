@@ -270,8 +270,6 @@
 		$stati = array();
 		$circuitsPerPanel = 42;//TODO this should be looking up the circuit count from dcim_powerpanel
 		
-		$errorMessage[]="ProcessPowerAuditPanelUpdate($action) - start";
-		
 		for($circuit=1; $circuit<=$circuitsPerPanel; $circuit++)
 		{
 			$powerCircuitID = GetInput("c".$circuit."powercircuitid");
@@ -290,7 +288,6 @@
 		
 		$inputCount = count($powerCircuitIDs);
 		$valid = $inputCount>0;
-		$errorMessage[]="ProcessPowerAuditPanelUpdate() - $inputCount inputs";
 		if($valid)
 		{
 			$query = "UPDATE dcim_powercircuit AS pc

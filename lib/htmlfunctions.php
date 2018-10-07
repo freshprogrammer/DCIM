@@ -2831,19 +2831,16 @@
 					$noLocation = $circuitLocCount==0;
 					if($noLocation)$circuitLocCount = 1;
 					
-					$trippleCircuitDisplayWidth= 25;
-					$cellHeight = 22;
-					$trippleCircuitDisplayMargin = 3;
 					$trippleCircuitDisplay = "";
 					if($numberIn3Phase==1)//just 2 divs - outer relative parent and inner absolute
-						$trippleCircuitDisplay = "<div style='position: relative;'><div style='background: rgb(0, 0, 0); opacity: 0.4; left: -".$trippleCircuitDisplayMargin."px; top: -".$trippleCircuitDisplayMargin."px; width: ".$trippleCircuitDisplayWidth."px; height: calc(".$cellHeight."px*3 - ".$trippleCircuitDisplayMargin."px); position: absolute;'></div></div>";
+						$trippleCircuitDisplay = "<div style='position: relative;'><div class='powerCircuitCellMarker'></div></div>";
 					
 					echo "<tr class='$rowClass'>";
 					if($powerCircuitID!=$lastCircuitID)
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
 						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell' rowspan='$circuitLocCount'><span title='powercircuitid=$powerCircuitID'>$trippleCircuitDisplay".MakeHTMLSafe($visibleCircuit)."</span></td>";
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay<span title='powercircuitid=$powerCircuitID' style='position:relative; z-index:2;'>".MakeHTMLSafe($visibleCircuit)."</span></td>";
 						else
 							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay".MakeHTMLSafe($visibleCircuit)."</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
@@ -4253,6 +4250,8 @@
 				$tableCircuitNo = 0;
 				$leftSpan = 1;
 				$rightSpan = 1;
+				$numberIn3PhaseLeft = 0;
+				$numberIn3PhaseRight = 0;
 				while($tableCircuitNo<$numberOfCircuitsPerPanel)//42 circuits per panel
 				{
 					//odd circutis are on the left 
@@ -4281,6 +4280,19 @@
 						$rowSpan="";
 						$displayVolts = FormatVolts($volts);
 						$displayCircuit = $circuit;
+						$trippleBreaker = false;
+						
+						if($left)
+						{
+							if($volts==308)$numberIn3PhaseLeft++;
+							else $numberIn3PhaseLeft=0;
+						}
+						else
+						{
+							if($volts==308)$numberIn3PhaseRight++;
+							else $numberIn3PhaseRight=0;
+						}
+						
 						if($volts==208)//208 volt circuits take up double
 						{
 							if($left)
@@ -4291,8 +4303,14 @@
 							$rowSpan = " rowspan=2";
 							$displayCircuit = Format208CircuitNumber($circuit);
 						}
+						else if($left && $numberIn3PhaseLeft==1 || !$left && $numberIn3PhaseRight==1)
+						{
+							$trippleBreaker = true;
+							$trippleBreakerMarker = "<div style='position: relative;'><div class='powerAuditMarker'></div></div>\n";
+						}
 						
 						echo "<td $rowSpan class='$cellClass'>\n";
+						if($trippleBreaker)echo $trippleBreakerMarker;
 						echo "	<table width=100%><tr>\n";
 						echo "	<td><b>".MakeHTMLSafe($panel)." CKT ".MakeHTMLSafe($displayCircuit)."</b></td>\n";
 						echo "	<td align=right>".MakeHTMLSafe($cust)."</td>\n";
@@ -4307,7 +4325,7 @@
 						$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 						$checked = ($status==="A") ? " checked" : "";
 						echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-						echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");'>\n";
+						echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");' style='position:relative; z-index:2;'>\n";
 						echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powercircuitid type='hidden' name='c".$circuit."powercircuitid' value='$powerCircuitID'>\n";
 						echo "	</td></tr>\n";
 						echo "	</table>\n";
@@ -4328,6 +4346,8 @@
 					{//end row
 						echo "</tr>\n";
 					}
+					if($numberIn3PhaseLeft==3)$numberIn3PhaseLeft = 0;
+					if($numberIn3PhaseRight==3)$numberIn3PhaseRight= 0;
 				}
 				echo "<tr><td colspan='2' align='center' style='padding-top: 8px;'><input type='submit' value='Save' tabindex='".($numberOfCircuitsPerPanel*2+1)."'></td></tr>\n";
 				echo "<input id=PowerAuditPanel_powerpanelid type='hidden' name='powerpanelid' value='$powerPanelID'>\n";
