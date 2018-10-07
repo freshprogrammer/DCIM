@@ -2810,11 +2810,15 @@
 				//list result data
 				$oddRow = false;
 				$lastCircuitID = -1;
+				$numberIn3Phase = 0; 
 				while ($stmt->fetch())
 				{
 					$pagePanelID = $powerPanelID;//for edit form - any one will be fine - just needs to be a panel in the correct site 
 					$fullLocationName = FormatLocation($site, $room, $location);
-				
+					
+					if($volts==308)$numberIn3Phase++;
+					else $numberIn3Phase=0;
+					
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
@@ -2827,14 +2831,21 @@
 					$noLocation = $circuitLocCount==0;
 					if($noLocation)$circuitLocCount = 1;
 					
+					$trippleCircuitDisplayWidth= 25;
+					$cellHeight = 22;
+					$trippleCircuitDisplayMargin = 3;
+					$trippleCircuitDisplay = "";
+					if($numberIn3Phase==1)//just 2 divs - outer relative parent and inner absolute
+						$trippleCircuitDisplay = "<div style='position: relative;'><div style='background: rgb(0, 0, 0); opacity: 0.4; left: -".$trippleCircuitDisplayMargin."px; top: -".$trippleCircuitDisplayMargin."px; width: ".$trippleCircuitDisplayWidth."px; height: calc(".$cellHeight."px*3 - ".$trippleCircuitDisplayMargin."px); position: absolute;'></div></div>";
+					
 					echo "<tr class='$rowClass'>";
 					if($powerCircuitID!=$lastCircuitID)
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
 						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell' rowspan='$circuitLocCount'><span title='powercircuitid=$powerCircuitID'>".MakeHTMLSafe($visibleCircuit)."</span></td>";
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'><span title='powercircuitid=$powerCircuitID'>$trippleCircuitDisplay".MakeHTMLSafe($visibleCircuit)."</span></td>";
 						else
-							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".MakeHTMLSafe($visibleCircuit)."</td>";
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay".MakeHTMLSafe($visibleCircuit)."</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$amps</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".PowerStatus($status)."</td>";
@@ -2866,6 +2877,7 @@
 					}
 					$lastCircuitID = $powerCircuitID;
 					echo "</tr>";
+					if($numberIn3Phase==3)$numberIn3Phase = 0;//reset for next
 				}
 				echo "</table>";
 			}
