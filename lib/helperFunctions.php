@@ -1062,12 +1062,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 		else if($minVal!=-1 && $input<$minVal)
 		{
-			$errorMessage[] = $fieldName." ".$input ." must be greater than ".$minVal;
+			$errorMessage[] = $fieldName." ".$input ." must be greater than or equal to ".$minVal;
 			return false;
 		}
 		else if($maxVal!=-1 && $input>$maxVal)
 		{
-			$errorMessage[] = $fieldName." ".$input ." must be less than ".$maxVal;
+			$errorMessage[] = $fieldName." ".$input ." must be less than or equal to ".$maxVal;
 			return false;
 		}
 		else if($minVal==-1 && $input <0)// by default must be positive
@@ -1728,9 +1728,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPowerCircuitNo($input)
+	function ValidPowerCircuitNo($input, $max)
 	{
-		return ValidNumber($input,"Power Circuit",1,2,0,50);
+		return ValidNumber($input,"Power Circuit",1,3,1,$max);
 	}
 	
 	function ValidPowerCircuitVolts($input)

@@ -853,7 +853,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$totalAffectedCount = 0;
 		$valid = true;
 		
-		if($valid)$valid = ValidPowerCircuitNo($circuit);
 		if($valid)$valid = ValidPowerCircuitVolts($volts);
 		if($valid)$valid = ValidPowerCircuitAmps($amps);
 		if($valid)$valid = ValidPowerCircuitStatus($status);
@@ -865,8 +864,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		
 		//DB CHECKS
 		//check valid IDs in tables 
-		if($valid)$valid = ValidRecord("powerpanelid","Power Panel ID",$powerPanelID,"dcim_powerpanel",true);
-		if($valid && $locationID!=-1)$valid = ValidRecord("locationid","Location ID",$locationID,"dcim_location",true);
+		if($valid && $add && $locationID!=-1)$valid = ValidRecord("locationid","Location ID",$locationID,"dcim_location",true);
+		
+		if($valid)
+		{//validate panel and look up info
+			$valid = false;
+			$query = "SELECT pp.powerpanelid, pp.name, pp.circuits
+				FROM dcim_powerpanel AS pp
+				WHERE pp.powerpanelid=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
+				$errorMessage[] = "Prepare 0 failed: ProcessPowerCircuitAction($action) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$count = $stmt->num_rows;
+				
+				if($count==1)
+				{
+					$valid=true;
+					$stmt->bind_result($powerPanelID, $powerPanelName, $panelCircuits);
+					$stmt->fetch();
+				}
+				else if($count==0)
+					$errorMessage[] = "Power Panel #$powerPanelID not found";
+				else
+					$errorMessage[] = "Found more than 1 Power Panel with ID#$powerPanelID";
+			}
+		}
 		
 		if(!$add && $valid)
 		{//make sure this record exists and lookup old info for comparison
@@ -892,11 +917,14 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$stmt->fetch();
 				}
 				else if($count==0)
-					$errorMessage[] = "";
+					$errorMessage[] = "Circuit #$powerCircuitID not found";
 				else
 					$errorMessage[] = "Found more than 1 circuit with ID#$powerCircuitID";
 			}
 		}
+		
+		$debugMessage[]="ProcessPowerCircuitAction() valid circuit- ($circuit, $panelCircuits)";
+		if($valid)$valid = ValidPowerCircuitNo($circuit, $panelCircuits);
 		
 		//check for existing panel circuit combo
 		if($add && $valid)
@@ -922,7 +950,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=csr.powerpanelid
 				WHERE $filter
 				ORDER BY circuit";
-		
+			
 			if (!($stmt = $mysqli->prepare($query)))
 				$errorMessage[] = "ProcessPowerCircuitAction() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			else
@@ -983,8 +1011,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($c1->status!=$status || $c2->status!=$status || $c3->status!=$status)$updateAll = true;
 				if($c1->amps!=$amps|| $c2->amps!=$amps|| $c3->amps!=$amps)$updateAll = true;
 			}
-			//testing above
-			if(!$delete)$valid = false;
 		}
 		
 		if($valid)
@@ -1004,47 +1030,29 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				if($isTrippleCircuit)
 				{
-					ProcessPowerCircuitAction_Delete($c1->id, $powerPanelID, $c1->circuit);
-					ProcessPowerCircuitAction_Delete($c2->id, $powerPanelID, $c2->circuit);
-					ProcessPowerCircuitAction_Delete($c3->id, $powerPanelID, $c3->circuit);
+					$totalAffectedCount += ProcessPowerCircuitAction_Delete($c1->id, $powerPanelName, $c1->circuit);
+					$totalAffectedCount += ProcessPowerCircuitAction_Delete($c2->id, $powerPanelName, $c2->circuit);
+					$totalAffectedCount += ProcessPowerCircuitAction_Delete($c3->id, $powerPanelName, $c3->circuit);
 				}
 				else
 				{
-					ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelID, $circuit);
+					$totalAffectedCount += ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelName, $circuit);
 				}
+				$resultMessage[] = "$totalAffectedCount total records Deleted.";
 			}
 			else
-			{//TODO XXX this needs to also update location links 
-				$query = "UPDATE dcim_powercircuit AS pc
-					SET pc.amps=?, pc.status=?, pc.load=? 
-					WHERE pc.powercircuitid=? 
-					LIMIT 1";
-				
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+			{//update
+				if($updateAll)
+				{
+					$totalAffectedCount += ProcessPowerCircuitAction_Update($c1->id, $amps, $status, $load, $c1->circuit, $powerPanelName);
+					$totalAffectedCount += ProcessPowerCircuitAction_Update($c2->id, $amps, $status, $load, $c2->circuit, $powerPanelName);
+					$totalAffectedCount += ProcessPowerCircuitAction_Update($c3->id, $amps, $status, $load, $c3->circuit, $powerPanelName);
+				}
 				else
 				{
-					$stmt->bind_Param('sssi', $amps, $status, $load, $powerCircuitID);	
-					
-					if (!$stmt->execute())//execute 
-						//failed (errorNo-error)
-						$errorMessage[] = "Failed to execute power circuit edit (" . $stmt->errno . "-" . $stmt->error . ").";
-					else
-					{
-						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
-						if($affectedCount==1)
-						{
-							$resultMessage[] = "Successfully edited power circuit (Panel:$panel Circuit#$circuit). $totalAffectedCount records updated.";
-							UpdateRecordEditUser("dcim_powercircuit","powercircuitid",$powerCircuitID);//do this seperate to distinquish actual record changes from identical updates (updates without changes)
-							LogDBChange("dcim_powercircuit",$powerCircuitID,"U");
-						}
-						else
-						{
-							$errorMessage[] = "Successfully edited power record, but affected $affectedCount rows.";
-						}
-					}
+					$totalAffectedCount += ProcessPowerCircuitAction_Update($powerCircuitID, $amps, $status, $load, $circuit, $powerPanelName);
 				}
+				$resultMessage[] = "$totalAffectedCount total records Updated.";
 			}
 		}
 	}
@@ -1132,10 +1140,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		return $totalAffectedCount;
 	}
 	
-	function ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelID, $circuit)
+	function ProcessPowerCircuitAction_Delete($powerCircuitID, $powerPanelName, $circuit)
 	{
 		global $mysqli;
-		global $userID;
 		global $errorMessage;
 		global $resultMessage;
 		
@@ -1154,7 +1161,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($affectedCount==1)
 			{
 				LogDBChange("dcim_powercircuit",$powerCircuitID,"D");
-				$resultMessage[] = "Successfully deleted power circuit (PanelID:$powerPanelID Circuit#$circuit).";
+				$resultMessage[] = "Successfully deleted power circuit (Panel:$powerPanelName Circuit#$circuit).";
 				
 				//delete link - dont limit to 1 because this 1 power record could be linked to multiple locations
 				$query = "DELETE FROM  dcim_powercircuitloc
@@ -1170,7 +1177,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					{
 						//TODO this should be tested to make sure multiple are updated in the case where 1 power circuit is connected to multiple locations
 						LogDBChange("dcim_powercircuitloc",-1,"D","powercircuitid='$powerCircuitID'");
-						$resultMessage[] = "Successfully unlinked power circuit from location(Panel ID:$powerPanelID Circuit#$circuit). $affectedCount unlinked";
+						$resultMessage[] = "Successfully unlinked power circuit from location(Panel:$powerPanelName Circuit#$circuit). $affectedCount unlinked";
 						
 					}
 					else
@@ -1180,6 +1187,45 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			else
 			{
 				$errorMessage[] = "Successfully deleted power record, but affected $affectedCount rows.";
+			}
+		}
+		return $totalAffectedCount;
+	}
+	
+	function ProcessPowerCircuitAction_Update($powerCircuitID, $amps, $status, $load, $circuit, $powerPanelName)
+	{
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		
+		$totalAffectedCount = 0;
+		$query = "UPDATE dcim_powercircuit AS pc
+					SET pc.amps=?, pc.status=?, pc.load=?
+					WHERE pc.powercircuitid=?
+					LIMIT 1";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+			$errorMessage[] = "Prepare failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+		else
+		{
+			$stmt->bind_Param('sssi', $amps, $status, $load, $powerCircuitID);
+			
+			if (!$stmt->execute())//execute - failed (errorNo-error)
+				$errorMessage[] = "Failed to execute power circuit edit (" . $stmt->errno . "-" . $stmt->error . ").";
+			else
+			{
+				$affectedCount = $stmt->affected_rows;
+				$totalAffectedCount += $affectedCount;
+				if($affectedCount==1)
+				{
+					$resultMessage[] = "Successfully edited power circuit (Panel:$powerPanelName Circuit#$circuit). $totalAffectedCount records updated.";
+					UpdateRecordEditUser("dcim_powercircuit","powercircuitid",$powerCircuitID);//do this seperate to distinquish actual record changes from identical updates (updates without changes)
+					LogDBChange("dcim_powercircuit",$powerCircuitID,"U");
+				}
+				else
+				{
+					$errorMessage[] = "Successfully edited power record, but affected $affectedCount rows.";
+				}
 			}
 		}
 		return $totalAffectedCount;
