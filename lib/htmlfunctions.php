@@ -2122,55 +2122,66 @@
 			$filter = "CONCAT(s.name,'~',s.fullname) LIKE ?";
 		}
 		
-		$query = "SELECT s.siteid, s.name, s.fullname, COUNT(r.roomid) AS rooms
-		FROM dcim_site AS s
-		LEFT JOIN dcim_room AS r ON r.siteid=s.siteid
-		WHERE $filter
-		GROUP BY s.siteid
-		ORDER BY s.name";
+		$query = "SELECT s.siteid, s.name, s.fullname, COUNT(r.roomid) AS rooms, 
+				(SELECT COUNT(pu.powerupsid)   FROM dcim_powerups AS pu   WHERE pu.siteid=s.siteid) AS upss, 
+				(SELECT COUNT(l.locationid)    FROM dcim_location AS l    INNER JOIN dcim_room AS r ON l.roomid=r.roomid  WHERE r.siteid=s.siteid) AS locations,
+				(SELECT COUNT(pp.powerpanelid) FROM dcim_powerpanel AS pp INNER JOIN dcim_room AS r ON pp.roomid=r.roomid WHERE r.siteid=s.siteid) AS powerpanels,
+				(SELECT COUNT(d.deviceid)      FROM dcim_device AS d      INNER JOIN dcim_location AS l ON d.locationid=l.locationid INNER JOIN dcim_room AS r ON l.roomid=r.roomid WHERE r.siteid=s.siteid AND d.status='A') AS devices
+			FROM dcim_site AS s
+				LEFT JOIN dcim_room AS r ON r.siteid=s.siteid
+			WHERE $filter
+			GROUP BY s.siteid
+			ORDER BY s.name";
 		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
+		$result = "";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
 		{
 			$errorMessage[]="ListSites($page) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		
-		$stmt->store_result();
-		$stmt->bind_result($siteID, $siteName, $siteFullName, $roomCount);
-		$count = $stmt->num_rows;
-		
-		//data title
-		$result = "";
-		$result .= "<span class='tableTitle'>$title</span>\n";
-		$result .= "<BR>\n";
-		
-		if($count>0)
-		{
-			$result .= CreateDataTableHeader(array("Name","Full Name","Rooms"));
-			
-			//list result data
-			$oddRow = false;
-			while ($stmt->fetch())
-			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$result .= "<tr class='$rowClass'>";
-				$result .= "<td class='data-table-cell'>"."<a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a>"."</td>\n";
-				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteFullName)."</td>\n";
-				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomCount)."</td>\n";
-				$result .= "</tr>\n";
-			}
-			$result .= "</table>\n";
+			$result .= "Error Looking up sites";
 		}
 		else
-			$result .= "No Sites Found.<BR>\n";
+		{
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $siteFullName, $roomCount, $upsCount, $locationCount, $powerPanelCount, $deviceCount);
+			$count = $stmt->num_rows;
+			
+			//data title
+			$result .= "<span class='tableTitle'>$title</span>\n";
+			$result .= "<BR>\n";
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Name","Full Name","UPSs","Rooms","Panels","Locations","Devices"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'>"."<a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a>"."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteFullName)."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($upsCount)."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomCount)."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($powerPanelCount)."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($locationCount)."</td>\n";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($deviceCount)."</td>\n";
+					$result .= "</tr>\n";
+				}
+				$result .= "</table>\n";
+			}
+			else
+				$result .= "No Sites Found.<BR>\n";
 			
 			if(CustomFunctions::UserHasSitePermission())
 			{
 				//EditSiteForm($input);
 			}
-			return $result;
+		}
+		return $result;
 	}
 	
 	function ShowSitePage($siteID)
