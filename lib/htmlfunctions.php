@@ -2831,7 +2831,10 @@
 					if($powerCircuitID!=$lastCircuitID)
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
-						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".MakeHTMLSafe($visibleCircuit)."</td>";
+						if(CustomFunctions::UserHasDevPermission())
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'><span title='powercircuitid=$powerCircuitID'>".MakeHTMLSafe($visibleCircuit)."</span></td>";
+						else
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".MakeHTMLSafe($visibleCircuit)."</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$amps</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>".PowerStatus($status)."</td>";
