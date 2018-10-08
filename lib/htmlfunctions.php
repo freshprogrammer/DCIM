@@ -392,7 +392,7 @@
 			echo "<BR>\n";
 			
 			//list power circuits
-			ListPowerCircuits("L",$locationID);
+			ListPowerCircuits("L",$locationID, -1);
 			
 			echo "</div>\n";
 			echo "</div>\n";
@@ -939,7 +939,7 @@
 			}
 			
 			//Power Circuits of devices
-			$powerCircuitsCount = ListPowerCircuits("C",$hNo);
+			$powerCircuitsCount = ListPowerCircuits("C",$hNo, -1);
 			
 			//end search (or customer details) panel and panel body
 		}
@@ -2723,7 +2723,7 @@
 		return $count;
 	}
 	
-	function ListPowerCircuits($page, $pageLookupID)
+	function ListPowerCircuits($page, $pageLookupID, $panelCircuits)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -2887,12 +2887,12 @@
 		if(CustomFunctions::UserHasPowerCircuitPermission())
 		{
 			if($panelPage) $pagePanelID = $pageLookupID;
-			EditPowerCircuitForm($formAction, $pagePanelID, $page);
+			EditPowerCircuitForm($formAction, $pagePanelID, $page, $panelCircuits);
 		}
 		return $count;
 	}
 	
-	function EditPowerCircuitForm($action, $powerPanelIDInput, $page)
+	function EditPowerCircuitForm($action, $powerPanelIDInput, $page, $panelCircuits)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -2968,7 +2968,7 @@
 								<?php echo $panelOptions; ?>
 							</select>
 							Circuit:
-							<div class='inputToolTipContainer'><input id='EditPowerCircuit_circuit' type='number' tabindex=2 size=5 name='circuit' value='' placeholder='1' step=1 min=1 max=50>
+							<div class='inputToolTipContainer'><input id='EditPowerCircuit_circuit' type='number' tabindex=2 size=5 name='circuit' value='' placeholder='1' step=1 min=1 max='<?php echo $panelCircuits;?>'>
 							<span class=inputTooltip>If 208v this must be the lesser circuit</span></div>
 						</td>
 					</tr>
@@ -3966,7 +3966,7 @@
 			echo "<div class='panel-header'>Power Panel Details: $fullPanelName</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
-			ListPowerCircuits("P",$powerPanelID);//temp test code
+			ListPowerCircuits("P",$powerPanelID, $circuits);//temp test code
 				
 			echo "</div>\n";
 			echo "</div>\n";

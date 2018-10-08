@@ -828,8 +828,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
-		global $debugMessage;
-		$debugMessage[]="ProcessPowerCircuitAction($action)";
 		
 		$add = $action==="PowerCircuit_Add";
 		$delete = $action==="PowerCircuit_Delete";
@@ -842,10 +840,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$amps = GetInput("amps");
 		$status = GetInput("status");
 		$load = GetInput("load");
-		
-		$debugMessage[]="ProcessPowerCircuitAction() IDs ($powerCircuitID,$powerPanelID,$locationID)";
-		$debugMessage[]="ProcessPowerCircuitAction() data2 ($circuit,$volts,$amps)";
-		$debugMessage[]="ProcessPowerCircuitAction() data3 ($status,$load)";
 		
 		if(!isset($status) || strlen($status)==0)
 			$status = "D";
@@ -923,8 +917,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			}
 		}
 		
-		$debugMessage[]="ProcessPowerCircuitAction() valid circuit- ($circuit, $panelCircuits)";
 		if($valid)$valid = ValidPowerCircuitNo($circuit, $panelCircuits);
+		if($valid && $add && ($isDoubleCircuit || $isTrippleCircuit))$valid = ValidPowerCircuitNo($circuit+2, $panelCircuits);
+		if($valid && $add && $isTrippleCircuit)$valid = ValidPowerCircuitNo($circuit+4, $panelCircuits);
 		
 		//check for existing panel circuit combo
 		if($add && $valid)
