@@ -4172,7 +4172,7 @@
 		global $pageSubTitle;
 		
 		//lookup site room and circuit info for headers
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, pp.name
+		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname, pp.name, pp.circuits
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
@@ -4193,12 +4193,12 @@
 		$stmt->bind_Param('s' ,$powerPanelID);
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel);
+		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName, $panel, $numberOfCircuitsPerPanel);
 		$count = $stmt->num_rows;
 		
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
-			//TODO: This room name is not guranteed to be the room the panel is in so it could be a little confusing. it is just a room linked to at least one of the circuitts.
+			//TODO: This room name is not guranteed to be the room the panel is in so it could be a little confusing. it is just a room linked to at least one of the circuits.
 			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
 			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name 
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
@@ -4238,7 +4238,7 @@
 			if($count>0)
 			{
 				//show results
-				echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?page=PowerAudit\");'>Back to panel list</a><BR><BR>\n";
+				echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?siteid=$siteID\");'>Back to $site site page</a><BR><BR>\n";
 				echo "<span class='tableTitle'>Circuits for $fullPanelDescription</span><BR>\n";
 				echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
 				echo "<table style='border-collapse: collapse'>\n";
@@ -4246,7 +4246,6 @@
 				$stmt->fetch();
 				
 				//count from 1 to $numberOfCircuitsPerPanel pulling records out of cursor as necisary
-				$numberOfCircuitsPerPanel = 42;
 				$tableCircuitNo = 0;
 				$leftSpan = 1;
 				$rightSpan = 1;
