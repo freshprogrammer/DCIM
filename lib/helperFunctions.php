@@ -1407,7 +1407,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $errorMessage;
 		
 		$results = array();
-		$query = "SELECT $keyField FROM $table WHERE $filter";
+		$query = "SELECT $keyField FROM $table WHERE $filter GROUP BY $keyField";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Prepare failed: GetKeysFromFilter($table, $filter, $keyField) (" . $mysqli->errno . ") " . $mysqli->error;

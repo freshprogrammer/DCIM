@@ -373,10 +373,14 @@
 		$keyFieldName = GetKeyField($table);
 		$logTable = GetLogTable($table);
 		
+		$keyLookupTable = $table;
+		if((strlen($filter)>0) && $action=="D")//its already been deleted - look up in log table with filter for keys
+			$keyLookupTable = $logTable;
+		
 		//run filter and re run with keys
 		if(strlen($filter)>0)
 		{
-			$keys = GetKeysFromFilter($table,$filter,$keyFieldName);
+			$keys = GetKeysFromFilter($keyLookupTable,$filter,$keyFieldName);
 			foreach ($keys as $ukey)
 				LogDBChange($table, $ukey, $action);
 			return;
@@ -415,8 +419,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', qauser=-1, qadate='';";
 			$query3 = "INSERT INTO $logTable SELECT * FROM tmptable_1;";
 			$query4 = "DROP TEMPORARY TABLE IF EXISTS tmptable_1;";
-		
-		
+			
 			//$query1
 			if (!($stmt1 = $mysqli->prepare($query1)))
 				$errorMessage[] = "Prepare failed: LogDBChange ($table, $ukey, $action)-1 (" . $mysqli->errno . ") " . $mysqli->error;
@@ -1170,7 +1173,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$totalAffectedCount += $affectedCount;
 					if($affectedCount>=1)
 					{
-						//TODO this should be tested to make sure multiple are updated in the case where 1 power circuit is connected to multiple locations
 						LogDBChange("dcim_powercircuitloc",-1,"D","powercircuitid='$powerCircuitID'");
 						$resultMessage[] = "Successfully unlinked power circuit from location(Panel:$powerPanelName Circuit#$circuit). $affectedCount unlinked";
 						
