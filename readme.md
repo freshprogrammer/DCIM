@@ -1,5 +1,5 @@
 # DCIM - Data Center Infrastructure Management
-### v2.0
+### v2.1
 Web interface for tracking and maintaining data on customers, devices, networking and infrastructure. Supports multiple users with multiple access levels and user change tracking with data rollback capabilities. Demo environemt can be seen [here](http://dcim.freshprogramming.com "Demo Environment") and test credentials can be seen [here](documentation/creds.md "Credentials").
 
 
