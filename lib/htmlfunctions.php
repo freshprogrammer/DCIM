@@ -609,8 +609,8 @@
 		global $userID;
 		global $mysqli;
 		global $pageSubTitle;
+		global $errorMessage;
 		
-		//TODO this could be optimized to only select from dcim_user once (with bellow) - admins only, who cares
 		if(UserHasAdminPermission())
 		{
 			$pageSubTitle = "Accounts"; 
@@ -619,52 +619,51 @@
 			echo "<div class='panel-header'>User List</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
-			$query = "SELECT userid,username, name, initials, permission, lastactivity, edituser, editdate
-				FROM dcim_user
-				ORDER BY name";
+			$query = "SELECT u.siteid, s.name, u.userid, u.username, u.name, u.initials, u.permission, u.lastactivity, u.edituser, u.editdate
+				FROM dcim_user AS u
+					LEFT JOIN dcim_site AS s ON s.siteid=u.siteid
+				ORDER BY s.name, u.name";
 			
-			if (!($stmt = $mysqli->prepare($query))) 
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+				$errorMessage[] = "ShowUserPage() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			else
 			{
-				$errorMessage[] = "ShowUserPage Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			}
-			
-			$stmt->execute();
-			$stmt->store_result();
-			$stmt->bind_result($dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate);
-			$count = $stmt->num_rows;
-			
-			echo "<span class='tableTitle'>Users</span>\n";
-			//Add User button here?
-			echo "<BR>\n";
-			
-			if($count>0)
-			{
-				echo CreateDataTableHeader(array("Name","User Name","Initials","Permission","Last Activity"),true);
+				$stmt->store_result();
+				$stmt->bind_result($dbSiteID, $dbSiteName, $dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate);
+				$count = $stmt->num_rows;
 				
-				//list result data
-				$oddRow = false;
-				while ($stmt->fetch()) 
+				echo "<span class='tableTitle'>Users</span>\n";
+				//Add User button here?
+				echo "<BR>\n";
+				
+				if($count>0)
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
+					echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
 					
-					echo "<tr class='$rowClass'>";
-					echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
-					echo "<td class='data-table-cell'>$dbInitials</td>";
-					echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
-					echo "<td class='data-table-cell'>$dbLastActivity</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
-					echo "</tr>";
+					//list result data
+					$oddRow = false;
+					while ($stmt->fetch())
+					{
+						$oddRow = !$oddRow;
+						if($oddRow) $rowClass = "dataRowOne";
+						else $rowClass = "dataRowTwo";
+						
+						echo "<tr class='$rowClass'>";
+						echo "<td class='data-table-cell'><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
+						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
+						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
+						echo "<td class='data-table-cell'>$dbInitials</td>";
+						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
+						echo "<td class='data-table-cell'>$dbLastActivity</td>";
+						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
+						echo "</tr>";
+					}
+					echo "</table>";
 				}
-				echo "</table>";
+				else
+					echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
 			}
-			else 
-			{
-				echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
-			}
-		
+			
 			/*if(UserHasWritePermission())
 			{	
 				$action = "./?host=$input";
@@ -688,17 +687,14 @@
 		echo "<div class='panel-body'>\n\n";
 		
 		$query = "SELECT userid, username, name, email, initials, note, permission, lastactivity, edituser, editdate
-			FROM dcim_user 
+			FROM dcim_user
 			WHERE userid=?
 			LIMIT 1";
 		
-		if (!($stmt = $mysqli->prepare($query))) 
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $input) || !$stmt->execute())
 		{
 			$errorMessage[] = "ShowUserPage Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
-		$stmt->bind_Param('i', $input);
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($dbUserID, $dbUserName, $name, $email, $initials, $note, $dbPermission, $lastActivity, $editUserID, $editDate);
 		$count = $stmt->num_rows;
@@ -717,17 +713,6 @@
 			echo "<span class='tableTitle'>".MakeHTMLSafe($name)." - ".MakeHTMLSafe($dbUserName)." - $initials - ID#$dbUserID</span><BR>\n";
 			echo "Permmision: ".DescribeUserPermissionLevel($dbPermission,false,UserHasAdminPermission())."<BR>\n";
 			echo "Last Activity: $lastActivity<BR>\n";
-		
-			/*
-			echo "<BR>\n";
-			echo "<BR>\n";
-			echo "<BR>\n";
-			echo "dbUserID='$dbUserID'<BR>\n";
-			echo "userID='$userID'<BR>\n";
-			echo "dbUserID==userID = '".($dbUserID==$userID)."'<BR>\n";
-			echo "dbUserID===userID = '".($dbUserID===$userID)."'<BR>\n";
-			echo "(int)dbUserID==(int)userID = '".((int)$dbUserID==(int)$userID)."'<BR>\n";
-			*/
 			
 			if(UserHasAdminPermission() ||($editingSelf && UserHasWritePermission()))
 			{
