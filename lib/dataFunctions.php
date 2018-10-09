@@ -1966,8 +1966,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			//advanced checks
 			if($add)
 			{
-				//check if customer (hno or cno) already exists before insertion
-				//$query = "SELECT hno,cno FROM dcim_customer WHERE hno=? OR cno=?";//disabled cno check
+				//check if customer (hno) already exists before insertion
 				$query = "SELECT hno,cno FROM dcim_customer WHERE hno=?";
 				
 				if (!($stmt = $mysqli->prepare($query)))
@@ -1989,11 +1988,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$stmt->fetch();
 						
 						if(strcmp($hNo,$hNoDB)==0)
-							$errorMessage[] = "Error: Existing Customer with H# found. input(H$hNo) found(H$hNoDB).";
+							$errorMessage[] = "Error: Existing Customer with H# found. input(H$hNo) found(<a href='./?host=$hNoDB'>H$hNoDB</a>).";
 						else if(strcmp($cNo,$cNoDB)==0)
-							$errorMessage[] = "Error: Existing Customer with C# found. input(C$cNo) found(C$cNoDB).";
+							$errorMessage[] = "Error: Existing Customer with C# found. input(C$cNo) found(<a href='./?host=$hNoDB'>C$cNoDB</a>).";
 						else
-							$errorMessage[] = "Unknown Error matching H# & C# input(H$hNo,C$cNo) found(H$hNoDB,C$cNoDB).";
+							$errorMessage[] = "Unknown Error matching H# & C# input(H$hNo,C$cNo) found(<a href='./?host=$hNoDB'>H$hNoDB</a>,C$cNoDB).";
 					}
 					
 				}
