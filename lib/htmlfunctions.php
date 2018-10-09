@@ -3797,7 +3797,7 @@
 		global $errorMessage;
 		
 		$query = "SELECT pp.powerpanelid, pp.roomid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate, 
-					COUNT(pc.powercircuitid) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pp.powerupsid
+					SUM(IF(pc.volts=208,2,1)) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pp.powerupsid
 				FROM dcim_powerpanel AS pp
 					LEFT JOIN dcim_powercircuit AS pc ON pp.powerpanelid=pc.powerpanelid
 					LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
