@@ -60,6 +60,7 @@
 		global $mysqli;
 		global $user;
 		global $userID;
+		global $userSiteID;
 		global $resultMessage;
 		global $errorMessage;
 		global $config_userPasswordSalt;
@@ -84,7 +85,7 @@
 		$hasRights = false;
 		if(isset($user) && strlen($user) > 0)
 		{
-			$query = "SELECT userid, username, pass, name, initials, note, permission
+			$query = "SELECT userid, username, pass, name, initials, note, permission, siteid
 				FROM dcim_user
 				WHERE username=?";
 			if (!($stmt = $mysqli->prepare($query)))
@@ -96,13 +97,14 @@
 				$stmt->bind_Param('s', $user);
 				$stmt->execute();
 				$stmt->store_result();
-				$stmt->bind_result($uID, $uName, $dbPass, $uFullName, $uInitials, $note, $permission);
+				$stmt->bind_result($uID, $uName, $dbPass, $uFullName, $uInitials, $note, $permission, $siteID);
 				$count = $stmt->num_rows;
 				
 				if($count>0)
 				{
 					$stmt->fetch();
 					$userID = $uID;
+					$userSiteID = $siteID;
 					$user = $uName; //use name from DB - match case
 					if(strcmp($password,$dbPass)==0)
 					{
@@ -528,7 +530,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$logKeyField = GetKeyField($table);
 			$query = "UPDATE $table SET qauser=?, qadate=CURRENT_TIMESTAMP WHERE $keyField=$ukey ORDER BY $logKeyField DESC LIMIT 1";
 		}
-	
+		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Prepare failed: QARecord($table, $ukey, $keyField, $liveRecord) (" . $mysqli->errno . ") " . $mysqli->error;
 		else
@@ -782,47 +784,47 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$found = false;
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
 			$errorMessage[] = "Prepare failed: ($action-a2) (" . $mysqli->errno . ") " . $mysqli->error;
-			else
+		else
+		{
+			$stmt->store_result();
+			$count = $stmt->num_rows;
+			if($count>=1)
 			{
-				$stmt->store_result();
-				$count = $stmt->num_rows;
-				if($count>=1)
+				$stmt->bind_result($powerCircuitID, $circuit, $volts, $amps, $status, $load, $circuits, $powerPanelID, $panelName);
+				$phaseNo = 1;//1-3
+				$result = array();
+				while ($stmt->fetch())
 				{
-					$stmt->bind_result($powerCircuitID, $circuit, $volts, $amps, $status, $load, $circuits, $powerPanelID, $panelName);
-					$phaseNo = 1;//1-3
-					$result = array();
-					while ($stmt->fetch())
+					if($powerCircuitID==$inputCircuitID)	$found=true;
+					
+					$c = new PowerCircuit();
+					$c->id = $powerCircuitID;
+					$c->circuit = $circuit;
+					$c->volts = $volts;
+					$c->amps = $amps;
+					$c->status = $status;
+					$c->load = $load;
+					
+					$result[] = $c;
+					
+					$phaseNo++;
+					if($phaseNo==4)
 					{
-						if($powerCircuitID==$inputCircuitID)	$found=true;
-						
-						$c = new PowerCircuit();
-						$c->id = $powerCircuitID;
-						$c->circuit = $circuit;
-						$c->volts = $volts;
-						$c->amps = $amps;
-						$c->status = $status;
-						$c->load = $load;
-						
-						$result[] = $c;
-						
-						$phaseNo++;
-						if($phaseNo==4)
-						{
-							$phaseNo=1;
-							if($found) break;
-							else $result = array();//try again
-						}
+						$phaseNo=1;
+						if($found) break;
+						else $result = array();//try again
 					}
-					if($phaseNo!=1)//found !%3 circuits
-						$errorMessage[] = "Warning! Get3PhaseMasterLookup() Failed to locate correct number of 208v3p power citrcuits on this panel($powerPanelID)($phaseNo).";
 				}
-				else
-				{//no 3 phase power found - this function should only be called if this is a 208v3p circuit. This shouldn't happen
-					$errorMessage[] = "Warning! Unexpected number of 208v3p power circuits on this panel ($panelName). Please alert you admin to correct this issue.";
-				}
+				if($phaseNo!=1)//found !%3 circuits
+					$errorMessage[] = "Warning! Get3PhaseMasterLookup() Failed to locate correct number of 208v3p power citrcuits on this panel($powerPanelID)($phaseNo).";
 			}
-			if($found) return $result;
-			else return null;
+			else
+			{//no 3 phase power found - this function should only be called if this is a 208v3p circuit. This shouldn't happen
+				$errorMessage[] = "Warning! Unexpected number of 208v3p power circuits on this panel ($panelName). Please alert you admin to correct this issue.";
+			}
+		}
+		if($found) return $result;
+		else return null;
 	}
 	
 	function ProcessPowerCircuitAction($action)
@@ -1349,7 +1351,6 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		//validate This is a lone PowerPanel record with no circuits linked to it so it can be deleted
 		if($delete && $valid)
 		{
-			//TODO not tested
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			$query = "SELECT pc.powercircuitid, CONCAT(pp.name,' CRK#',pc.circuit)
 						FROM dcim_powerpanel AS pp

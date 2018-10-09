@@ -171,12 +171,30 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		
 		public static function CreateNavigationQuickLinks()
 		{
-			//TODO this should be customised to each user based on siteid
-			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=4'>CA4</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=5'>CA5</a>&nbsp;\n";
+			global $userSiteID;
+			global $mysqli;
+			global $errorMessage;
+			
+			$query = "SELECT r.roomid, r.name, r.fullname, COUNT(l.locationid) AS cnt
+				FROM dcim_room AS r
+					LEFT JOIN dcim_location AS l ON l.roomid=r.roomid
+				WHERE r.siteid=?
+				GROUP BY r.roomid
+				HAVING cnt>0
+				ORDER by r.siteid, r.name";
+			
+			$result = "";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $userSiteID) || !$stmt->execute())
+				$errorMessage[]= "Prepare failed: CreateNavigationQuickLinks() (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$stmt->bind_result($roomID,$roomName,$roomFullName, $locCount);
+				if($stmt->num_rows>0)
+					while ($stmt->fetch())
+						$result .= "<a class='navLinks' href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a>&nbsp;\n";
+			}
 			return $result;
 		}
 		
@@ -186,6 +204,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			global $errorMessage;
 			global $pageSubTitle;
 			global $userID;
+			global $userSiteID;
 			
 			$pageSubTitle = "Home";
 			
@@ -195,7 +214,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
 			echo $result;
-			ShowSitePage(0);//TODO should look up users home page
+			ShowSitePage($userSiteID);
 		}
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $width, $depth)
