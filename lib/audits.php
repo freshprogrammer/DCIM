@@ -114,7 +114,7 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
+		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
@@ -132,7 +132,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $room, $locationID, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
+		$stmt->bind_result($site, $room, $locationID, $locaiton, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -152,7 +152,7 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
@@ -465,7 +465,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes"),true);
+			$longResult.= CreateDataTableHeader(array("Location","Device","Unit","Model","Size","Type","Asset","Status","Notes"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -480,14 +480,14 @@
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>$unit</td>";
-				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
@@ -531,7 +531,7 @@
 			$errorMessage[] = "Prepare failed: Check_DeviceWithDuplicateAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DeviceWithDuplicateAsset()";
 		}
-				
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
@@ -561,10 +561,10 @@
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>$unit</td>";
-				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";

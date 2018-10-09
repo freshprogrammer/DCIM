@@ -95,7 +95,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		{
 			$linesOfCode = CountLinesInDir();
 			$dbRecs = CountDBRecords();
-			$rand = rand(0,90);
+			$rand = rand(0,999);
 			$searchPlaceHolders = array();
 			//ROUGH LIMIT           "------------------------"
 			$searchPlaceHolders[] = "Search";
@@ -105,6 +105,8 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Like a pet but useful";
 			$searchPlaceHolders[] = "Type here";
 			$searchPlaceHolders[] = "Waiting...";
+			$searchPlaceHolders[] = "Waiting... ...";
+			$searchPlaceHolders[] = "Waiting... ...  ...";
 			$searchPlaceHolders[] = "Got your back";
 			$searchPlaceHolders[] = "It's cool, I got this";
 			$searchPlaceHolders[] = "You know what to do";
@@ -126,6 +128,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Search never sleeps";
 			$searchPlaceHolders[] = "Wont save you on car inssurance";
 			$searchPlaceHolders[] = "Smoke free for $rand days";
+			$searchPlaceHolders[] = "Now searving guest #$rand";
 			$searchPlaceHolders[] = "NSA free for 0 days";
 			$searchPlaceHolders[] = "Not a calculator";
 			$searchPlaceHolders[] = "Still not a calculator";
@@ -139,11 +142,15 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Doesn't search Facebook";
 			$searchPlaceHolders[] = "No Facebook login";
 			$searchPlaceHolders[] = "No like buttons here";
+			$searchPlaceHolders[] = "No up vote buttons here";
+			$searchPlaceHolders[] = "The gang learns to search";
+			$searchPlaceHolders[] = "Never received a classified request for user information";
 				
 			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
 			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
 			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
-			$searchPlaceHolders[] = "15K+ line club";
+			$searchPlaceHolders[] = "$linesOfCode lines, but who's counting anyways";
+			$searchPlaceHolders[] = "18K+ line club";
 			$searchPlaceHolders[] = "$dbRecs+ DB Records";
 			$searchPlaceHolders[] = "$dbRecs Records and counting";
 				
@@ -157,14 +164,20 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Not AltaVista";
 			$searchPlaceHolders[] = "Fetch Jeeves";
 			$searchPlaceHolders[] = "Fresh Search";
-				
+			$searchPlaceHolders[] = "Fresh++ Search";
+			$searchPlaceHolders[] = "Fresh Search++";
+			
 			$searchPlaceHolders[] = "e.g. H######";
+			$searchPlaceHolders[] = "e.g. ######-##";
 			$searchPlaceHolders[] = "e.g. C######";
 			$searchPlaceHolders[] = "e.g. Company name";
 			$searchPlaceHolders[] = "e.g. Company note";
 			$searchPlaceHolders[] = "e.g. Device Name";
 			$searchPlaceHolders[] = "e.g. Badge Holder";
 			$searchPlaceHolders[] = "e.g. Location Name";
+			$searchPlaceHolders[] = "e.g. Site Name";
+			$searchPlaceHolders[] = "e.g. Room Name";
+			$searchPlaceHolders[] = "e.g. Panel Name";
 				
 			return $searchPlaceHolders[array_rand($searchPlaceHolders)];
 		}
