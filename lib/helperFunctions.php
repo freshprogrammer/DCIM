@@ -691,6 +691,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function FormatLocation($siteName, $roomName, $locationName, $showSite=true)
 	{
+		if($locationName==null)
+			$locationName = "N/A";
+		
 		if($showSite)
 		{
 			if($roomName==null)

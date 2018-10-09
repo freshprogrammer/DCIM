@@ -64,14 +64,21 @@
 		
 		public static function RemotePowerPanelAuditHelpPopup()
 		{
-			//links to direct files left off so custom links can be included.
+			global $userSiteID;
 			//Power Audit Creator can be found in a seperate repo here http://github.com/freshprogrammer/ExcelController/releases
-			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Automation</span><BR>
-After a DC power audit has been done and the data has all been updated a RPP Audit workbook can be created and uploaded as necessary. 
-Simply export the power data then run the RPP Audit creation tool. 
-The tool will prompt for a data file and a template file and then create the new workbook for you. 
-From there you can easily save it with an appropriate name and store it.<BR>
-</span>";
+			
+			$date = date("Y-m-d");
+			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Creator</span><BR>
+			After a DC power audit has been done and the data has all been updated in DCIM a RPP Audit workbook can be created.<BR>
+			Simply export the power data then run the RPP Audit creation tool.
+			The tool will prompt for a data file and a template file and then create the new workbook for you.
+			From there you can easily save it with an appropriate name and upoad.<BR>
+			<BR>
+			<a href='#' onClick='var input= prompt(\"Please enter a date\", \"$date\");
+			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerHistory&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
+			<a href='./files/RPP Audit Creator.exe'>RPP Audit Creation Tool</a><BR>
+			<a href='./files/RPP Audit - Template.xlsx'>Template File</a>
+			</span>";
 			return $result;
 		}
 		
