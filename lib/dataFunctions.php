@@ -1467,7 +1467,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!CustomFunctions::UserHasLocationPermission())
 		{
 			$valid = false;
-			$errorMessage[] = "Your do not have permission to edit locations. Please contact your administrator.";
+			$errorMessage[] = "You do not have permission to edit locations. Please contact your administrator.";
 		}
 		else
 		{
@@ -1513,7 +1513,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			if($valid)$valid = ValidLocation($locationID, true);
 		if($valid)$valid = ValidRoom($roomID, true);
 		
-		//validate room id and look up parent dimentions
+		//validate room id and look up parent dimensions
 		if(!$delete && $valid)
 		{
 			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
