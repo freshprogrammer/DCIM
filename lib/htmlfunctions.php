@@ -3017,6 +3017,8 @@
 		global $mysqli;
 		global $errorMessage;
 		
+		$customerPage = false;
+		$searchPage = false;
 		if($page=="C")
 		{
 			$customerPage = true;
@@ -3027,7 +3029,6 @@
 		}
 		else if($page=="?")
 		{
-			$searchPage = true;
 			$input = "%".trim($key)."%";
 			$innerFilter = "1";
 			$outerFilter= "CONCAT(v.vlan,'~',v.subnet,'~',v.note) LIKE ? AND ? != 'bshere'";//and portion need to keep the bing_param count
