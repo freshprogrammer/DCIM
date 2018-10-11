@@ -689,11 +689,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $portFullName;
 	}
 	
-	function FormatLocation($siteName, $roomName, $locationName, $showSite=true)
+	function FormatLocation($siteName, $roomName, $locationName, $showSite=true, $showLocation=true)
 	{
 		if($locationName==null)
 			$locationName = "N/A";
-		
+		if(!$showLocation)
+			$locationName = "";
 		if($showSite)
 		{
 			if($roomName==null)

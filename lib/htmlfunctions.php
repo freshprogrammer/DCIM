@@ -2416,7 +2416,7 @@
 			if($roomFound)
 			{
 				$stmt->fetch();
-				$fullRoomName = FormatLocation($site, $fullName, "");
+				$fullRoomName = FormatLocation($site, $fullName, "",true,false);
 				$fullRoomName = MakeHTMLSafe($fullRoomName);
 				$safeRoomName = MakeHTMLSafe($name);
 				$safeSiteFullName = MakeHTMLSafe($siteFullName);
