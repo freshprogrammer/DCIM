@@ -217,7 +217,7 @@ function ConfirmIntent()
 				if($allocation=="O")$allocation = "E";//Open should be Empty
 				$type=$type[0];
 				if($type=="2")$type = "R";//2post should be Rack
-				if($order=="True")$order="N";
+				if($order=="TRUE")$order="N";
 				else $order = "R";
 				
 				$importObjects[]= new locationRec($roomid,$name,$altname,$allocation,$keyno,$type,$units,$order,$xpos,$ypos,$width,$depth,$orientation,$notes);
