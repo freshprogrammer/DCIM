@@ -4922,12 +4922,13 @@
 		$parentDepth = $depth;
 		
 		//select locations from table for rendering each one
-		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, COUNT(Distinct l.locationid) AS countl, COUNT(Distinct d.deviceid) AS countd
+		$query = "SELECT l.locationid, l.name, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.allocation, s.name, r.fullname, d.hno, c.name AS cust, d.deviceid, d.name as device, COUNT(Distinct l.locationid) AS countl, COUNT(Distinct d.deviceid) AS countd, pcl.powercircuitid
 				FROM dcim_location AS l
 					LEFT JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status = 'A'
 					LEFT JOIN dcim_customer AS c ON d.hno = c.hno
 					LEFT JOIN dcim_room AS r ON r.roomid = l.roomid
 					LEFT JOIN dcim_site AS s ON s.siteid = r.siteid
+					LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.locationid=l.locationid
 				WHERE l.roomid=? AND l.width > 0 AND l.depth > 0
 				GROUP BY l.xpos, l.ypos, l.width, l.depth, l.orientation
 				ORDER BY l.name";
@@ -4937,13 +4938,14 @@
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $countL, $countD);
-
+			$stmt->bind_result($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $allocation, $site, $room, $hNo, $customer, $deviceid, $deviceName, $countL, $countD, $powerCircuitID);
+			
 			$lastLocationID = PHP_INT_MAX;
 			while($stmt->fetch())
 			{
 				$firstDevice = true;
 				$popupText = "";
+				$hasPower = ($powerCircuitID!=null);
 				
 				if(!$renderingWithinParent)
 				{
@@ -5002,7 +5004,7 @@
 						}
 					}
 					else
-					{ /* disabled since this code is not active and not up to date - see above comment
+					{/* disabled since this code is not active and not up to date - see above comment
 						$fullLocationName = FormatLocation($site, $room, $name);
 						if($countD==0)
 							$popupText = "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>Empty";
@@ -5017,7 +5019,7 @@
 					//if($countD>1)$customer = "Multiple";//could do this better with SQL group
 					//if($countL>1)$name = "Multiple";
 				}
-				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinParent, $popupText);
+				$result .= CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $countD, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinParent, $popupText, $hasPower, $allocation);
 			}
 		}
 		
@@ -5130,7 +5132,7 @@
 		$roomCustomHTML .= "<div class='$roomTypeClass roomBorders roomCorner' id='room".$roomID."_corner'></div>\n";
 	}
 	
-	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite, $popupText)
+	function CreateLocationLayout($locationID, $name, $xPos, $yPos, $width, $depth, $orientation, $deviceCount, $hNo, $customer, $parentWidth, $parentDepth, $renderingWithinSite, $popupText, $hasPower, $allocation)
 	{
 		$toolTipOffset = 15;
 		
@@ -5172,10 +5174,12 @@
 				$name = $name . " ($customer [$deviceCount device".($deviceCount>1?"s":"")."])";
 			else
 				$name = $name . " ($customer)";//maybe show device names if this is a non cust access room like the MDF
-			$locationClass = "locationFullBackground";
 		}
-		else
-			$locationClass = "locationEmptyBackground";
+		
+		if($allocation=="I")$locationClass 		= "locationBackground_Internal";
+		else if($allocation=="M")$locationClass = "locationBackground_Managed";
+		else if($allocation=="C")$locationClass = "locationBackground_Colo";
+		else $locationClass 					= "locationBackground_Empty";
 		
 		$rotation = OritentationToDegrees($orientation);
 		$rotationTransform = "";
