@@ -4572,7 +4572,11 @@
 			echo "<div class='panel-body'>\n\n";
 			
 			ListPowerPanels("U",$powerUpsID);
-				
+			
+			echo "</BR>\n";
+			
+			echo ListPowerUPSCustomerDevices($powerUpsID);
+			
 			echo "</div>\n";
 			echo "</div>\n";
 			
@@ -4583,6 +4587,71 @@
 			}
 		}//ups found*/
 		//return $count;
+	}
+	
+	function ListPowerUPSCustomerDevices($powerUpsID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT c.hno, c.name, d.deviceid, d.name, d.altname, d.member, d.model, d.type, r.name, l.locationid, l.name
+			FROM dcim_powerups AS pu
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerupsid=pu.powerupsid
+				LEFT JOIN dcim_powercircuit AS pc ON pc.powerpanelid=pp.powerpanelid
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid AND l.locationid IS NOT NULL
+				LEFT JOIN dcim_device AS d on d.locationid=l.locationid AND d.status='A'
+				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+				LEFT JOIN dcim_room AS r ON r.roomid=l.roomid
+			WHERE pu.powerupsid=?
+			GROUP BY d.deviceid
+			HAVING d.deviceid IS NOT NULL
+			ORDER BY c.name, d.name";
+		
+		$result = "<span class='tableTitle'>Devices on UPS</span>\n";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerUpsID) || !$stmt->execute())
+		{
+			$errorMessage[]= "Prepare failed: ListPowerUPSCustomerDevices() (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "<BR>SQL error locating devices on UPS";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($hNo,$custName,$deviceID,$deviceName, $deviceAltName, $member, $model, $deviceType, $roomName, $locationID, $locationName);
+			$count = $stmt->num_rows;
+			
+			$result .= "<BR>";
+			
+			if($count>0)
+			{
+				//show results
+				$result .= CreateDataTableHeader(array("Customer","Device","Model","Location"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
+					$fullLocationName = FormatLocation("", $roomName, $locationName,false);
+					
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($custName)."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+					$result .= "</tr>";
+				}
+				$result .= "</table>";
+			}
+			else
+				$result .= "No devices found on this UPS<BR>";
+		}
+		return $result;
 	}
 	
 	function PowerAuditPanelList()
