@@ -91,7 +91,7 @@
 			
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
-			echo "<span class='customerName'>$fullLocationName</span>\n";
+			echo "<span class='pageMainHeader'>$fullLocationName</span>\n";
 			echo "</td>\n";
 			
 			echo "<td align='right'>\n";
@@ -120,85 +120,85 @@
 			//details
 			echo "<table>\n";
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Alt Name:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo MakeHTMLSafe($altName);
 			echo "</td>\n";
 			echo "</tr>\n";
 			
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Room:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Position:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo "$pos";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Units:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo $units;
 			echo "</td>\n";
 			echo "</tr>\n";
 			
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Type:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo LocationType($type);
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Size:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo "$size";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Orientation:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 			echo "</td>\n";
 			echo "</tr>\n";
 			
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Key#:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo MakeHTMLSafe($keyno);
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Allocation:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo LocationAllocation($allocation);
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Order:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo LocationOrder($order);
 			echo "</td>\n";
 			echo "</tr>\n";
 			
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails' valign='top'>\n";
+			echo "<td align=right class='pageMainSubHeader' valign='top'>\n";
 			echo "<b>Notes:</b>";
 			echo "</td>\n";
 			echo "<td valign=top align=left colspan='5'>\n";
@@ -829,7 +829,7 @@
 				echo "<table width=100%>\n";
 				echo "<tr>\n";
 				echo "<td valign=top>\n";
-				echo "<span class='customerName'>".MakeHTMLSafe($customer)."</span>\n";
+				echo "<span class='pageMainHeader'>".MakeHTMLSafe($customer)."</span>\n";
 				echo CustomFunctions::CreateInternalLink($hNo, $cNo, true);
 			
 				echo "</td>\n";
@@ -861,7 +861,7 @@
 				echo "<tr>\n";
 				//cust details
 				echo "<td valign=top width=105>\n";
-				echo "<span class='customerDetails'>\n";
+				echo "<span class='pageMainSubHeader'>\n";
 				echo "H<span id='customerHNo' onclick=\"SelectIDRange('customerHNo')\">$hNo</span>\n";
 				echo "<BR>\n";
 				echo "C<span id='customerCNo' onclick=\"SelectIDRange('customerCNo')\">$cNo</span>\n";
@@ -1074,7 +1074,7 @@
 			echo "<table width=100%>\n";
 			echo "<tr>\n";
 			echo "<td valign=top>\n";
-			echo "<span class='customerName'>".MakeHTMLSafe($deviceFullName)."</span>\n";
+			echo "<span class='pageMainHeader'>".MakeHTMLSafe($deviceFullName)."</span>\n";
 			echo CustomFunctions::CreateInternalLink($deviceName, "", false);
 			
 			//if switch give link to chassis - all matching device name
@@ -1108,53 +1108,53 @@
 			//details
 			echo "<table>\n";
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Customer:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo "<a href='./?host=$hNo'>".MakeHTMLSafe($customerName)."</a>";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			if($deviceInfo->coloDevice)
 				echo "<b>Colo:</b>";
 			else
 				echo "<b>Model:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			if($deviceInfo->coloDevice)
 				echo MakeHTMLSafe(DeviceType($type));
 			else
 				echo MakeHTMLSafe($model);
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Status:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails'>\n";
+			echo "<td align=left class='pageMainSubHeader'>\n";
 			echo FormatTechDetails($editUserID,$editDate,DeviceStatus($status), $qaUserID, $qaDate);
 			echo "</td>\n";
 			echo "</tr>\n";
 			
 			echo "<tr>\n";
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Location:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo "<a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a>";
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Unit:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+			echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 			echo $unit;
 			echo "</td>\n";
 			
-			echo "<td align=right class='customerDetails'>\n";
+			echo "<td align=right class='pageMainSubHeader'>\n";
 			echo "<b>Size:</b>";
 			echo "</td>\n";
-			echo "<td align=left class='customerDetails'>\n";
+			echo "<td align=left class='pageMainSubHeader'>\n";
 			echo MakeHTMLSafe($size);
 			echo "</td>\n";
 			echo "</tr>\n";
@@ -1162,7 +1162,7 @@
 			
 			//asset serial and notes
 			echo "<table width=100%>\n";
-			echo "<tr><td valign=top width=150 class='customerDetails'>\n";
+			echo "<tr><td valign=top width=150 class='pageMainSubHeader'>\n";
 			if(!$deviceInfo->coloDevice)
 			{
 				echo  "<b>Asset:</b> ".CustomFunctions::CreateInternalInventoryLink($asset)."<BR>\n";
@@ -2209,7 +2209,7 @@
 				
 				$result .= "<table width=100%><tr>\n";
 				$result .= "<td align='left'>\n";
-				$result .= "<span class='customerName'>$safeSiteFullName - ($safeSiteName)</span>\n";
+				$result .= "<span class='pageMainHeader'>$safeSiteFullName - ($safeSiteName)</span>\n";
 				$result .= "</td>\n";
 				
 				$result .= "<td align='right'>\n";
@@ -2437,7 +2437,7 @@
 				
 				echo "<table width=100%><tr>\n";
 				echo "<td align='left'>\n";
-				echo "<span class='customerName'>$fullRoomName - ($safeRoomName)</span>\n";
+				echo "<span class='pageMainHeader'>$fullRoomName - ($safeRoomName)</span>\n";
 				echo "</td>\n";
 				
 				echo "<td align='right'>\n";
@@ -2468,41 +2468,41 @@
 					//details//details
 					echo "<table>\n";
 					echo "<tr>\n";
-					echo "<td align=right class='customerDetails'>\n";
+					echo "<td align=right class='pageMainSubHeader'>\n";
 					echo "<b>Site:</b>";
 					echo "</td>\n";
-					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 					echo "<a href='./?siteid=$siteID'>".MakeHTMLSafe($safeSiteFullName)."</a>";
 					echo "</td>\n";
 					
-					echo "<td align=right class='customerDetails'>\n";
+					echo "<td align=right class='pageMainSubHeader'>\n";
 					echo "<b>Position:</b>";
 					echo "</td>\n";
-					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 					echo "$pos";
 					echo "</td>\n";
 					
 					echo "</tr>\n";
 					echo "<tr>\n";
 					
-					echo "<td align=right class='customerDetails'>\n";
+					echo "<td align=right class='pageMainSubHeader'>\n";
 					echo "<b>Cust Access:</b>";
 					echo "</td>\n";
-					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 					echo RoomCustAccess($custAccess);
 					echo "</td>\n";
 					
-					echo "<td align=right class='customerDetails'>\n";
+					echo "<td align=right class='pageMainSubHeader'>\n";
 					echo "<b>Size:</b>";
 					echo "</td>\n";
-					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 					echo "$size";
 					echo "</td>\n";
 					
-					echo "<td align=right class='customerDetails'>\n";
+					echo "<td align=right class='pageMainSubHeader'>\n";
 					echo "<b>Orientation:</b>";
 					echo "</td>\n";
-					echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+					echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 					echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 					echo "</td>\n";
 					
@@ -3825,7 +3825,7 @@
 				
 				echo "<table width=100%><tr>\n";
 				echo "<td align='left'>\n";
-				echo "<span class='customerName'>$panelName</span>\n";
+				echo "<span class='pageMainHeader'>$panelName</span>\n";
 				echo "</td>\n";
 				
 				echo "<td align='right'>\n";
@@ -3854,74 +3854,74 @@
 				//details//details
 				echo "<table>\n";
 				echo "<tr>\n";
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Site:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo $siteFullName;
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>UPS:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				if($upsID!=-1)
 					echo "<a href='./?powerupsid=$upsID'>$upsName</a>";
 				else
 					echo "None";
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Circuits:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "$linkedCircuits / $circuits";
 				echo "</td>\n";
 				
 				echo "</tr>\n";
 				echo "<tr>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Room:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "<a href='./?roomid=$roomID'>$roomFullName</a>";
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Position:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "$pos";
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Load:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "$load / $amps ".FormatPowerUtilization($load, $amps);
 				echo "</td>\n";
 				
 				echo "</tr>\n";
 				echo "<tr>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Orientation:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo FormatTechDetails($editUserID,$editDate,Orientation($orientation), $qaUserID, $qaDate);
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Size:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "$size";
 				echo "</td>\n";
 				echo "</tr>\n";
 				
 				echo "<tr>\n";
-				echo "<td align=right class='customerDetails' valign='top'>\n";
+				echo "<td align=right class='pageMainSubHeader' valign='top'>\n";
 				echo "<b>Notes:</b>";
 				echo "</td>\n";
 				echo "<td valign=top align=left colspan='5'>\n";
@@ -4483,7 +4483,7 @@
 				
 				echo "<table width=100%><tr>\n";
 				echo "<td align='left'>\n";
-				echo "<span class='customerName'>$displayUpsName</span>\n";
+				echo "<span class='pageMainHeader'>$displayUpsName</span>\n";
 				echo "</td>\n";
 				
 				echo "<td align='right'>\n";
@@ -4513,34 +4513,34 @@
 				//details//details
 				echo "<table>\n";
 				echo "<tr>\n";
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Site:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "<a href='./?siteid=$siteID'>$siteFullName</a>";
 				echo "</td>\n";
 				
 				echo "</tr>\n";
 				echo "<tr>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Volts:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo $volts;
 				echo "</td>\n";
 				
-				echo "<td align=right class='customerDetails'>\n";
+				echo "<td align=right class='pageMainSubHeader'>\n";
 				echo "<b>Load:</b>";
 				echo "</td>\n";
-				echo "<td align=left class='customerDetails' style='padding-right: 25;'>\n";
+				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
 				echo "$load / $amps ".FormatPowerUtilization($load, $amps);
 				echo "</td>\n";
 				
 				echo "</tr>\n";
 				echo "<tr>\n";
 				
-				echo "<td align=right class='customerDetails' valign='top'>\n";
+				echo "<td align=right class='pageMainSubHeader' valign='top'>\n";
 				echo "<b>Notes:</b>";
 				echo "</td>\n";
 				echo "<td valign=top align=left colspan='5'>\n";

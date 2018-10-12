@@ -256,18 +256,18 @@ a:hover, a:active {
 	text-decoration: underline;
 }
 
-.customerName {
-	font-size: 18px;
-	font-weight: bold;
-	display: inline;
-}
-
 a.internalLink {
 	/* padding-left: 20px; */
 	display: inline;
 }
 
-.customerDetails {
+.pageMainHeader {
+	font-size: 18px;
+	font-weight: bold;
+	display: inline;
+}
+
+.pageMainSubHeader {
 	font-size: 16px;
 }
 
