@@ -5242,12 +5242,12 @@
 		$result .= "</style>\n";
 		
 		$result .= "<div id='location$locationID' class='locationContainer tooltip'>\n";
-		if($renderingWithinSite)
+		//if($renderingWithinSite)
 			$result .= "	<a href='./?locationid=$locationID' title='$name'>\n";
 		$result .= "	<div id='' class='$locationClass'>\n";
 		$result .= "		<div id='location".$locationID."_title' class='locationTitle'>$name</div>\n";
 		$result .= "	</div>\n";
-		if($renderingWithinSite)
+		//if($renderingWithinSite)
 			$result .= "	</a>\n";
 		$result .= "</div>\n";
 		if(!$renderingWithinSite)
