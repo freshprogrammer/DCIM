@@ -21,6 +21,7 @@
 		global $pageSubTitle;
 		global $config_badgesEnabled;
 		global $config_subnetsEnabled;
+		global $userSiteID;
 		$pageSubTitle = "Data Audits";
 		$result = "";
 		
@@ -33,12 +34,12 @@
 		if($config_badgesEnabled)
 			$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		
-		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
-				
+		//$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
+		
 		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
 		$result .= "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		
-		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit\"'>Export Location Power Readings as CSV</button>";
+		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$userSiteID\"'>Export Location Power Readings as CSV</button>";
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
@@ -114,7 +115,7 @@
 		$reportNote = "";
 		
 		//could properly sort circuits, but meh
-		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
+		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
@@ -132,7 +133,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($site, $room, $locationID, $locaiton, $panel, $circuit, $volts, $amps, $status, $load);
+		$stmt->bind_result($site, $room, $locationID, $locaiton, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -152,7 +153,7 @@
 				
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
@@ -465,7 +466,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes"),true);
+			$longResult.= CreateDataTableHeader(array("Location","Device","Unit","Model","Size","Type","Asset","Status","Notes"),true);
 			
 			//list result data
 			$oddRow = false;
@@ -480,14 +481,14 @@
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>$unit</td>";
-				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
@@ -531,7 +532,7 @@
 			$errorMessage[] = "Prepare failed: Check_DeviceWithDuplicateAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DeviceWithDuplicateAsset()";
 		}
-				
+		
 		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
@@ -561,10 +562,10 @@
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>$unit</td>";
-				$longResult.= "<td class='data-table-cell'>$model</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>$asset</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
@@ -1196,20 +1197,20 @@
 		$reportNote= "These are records that managed to exist without proper insert log records to match.";
 		
 		$query = "SELECT cur.* FROM (
-		  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype   FROM dcim_site AS s				LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
-	UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype   FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
-	UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype   FROM dcim_customer AS c			LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
-	UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype   FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
-	UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype  FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
-	UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype   FROM dcim_location AS l			LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
-	UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype  FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
-	UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype  FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
-	UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype  FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
-	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
-	UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype  FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
-	UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype  FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
-	UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype   FROM dcim_room AS r				LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
-	UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype   FROM dcim_vlan AS v				LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
+		  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype, s.edituser, s.editdate		FROM dcim_site AS s					LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
+	UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype, b.edituser, b.editdate		FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
+	UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype, c.edituser, c.editdate		FROM dcim_customer AS c				LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
+	UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype, d.edituser, d.editdate		FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
+	UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype,dp.edituser,dp.editdate		FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
+	UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype, l.edituser, l.editdate		FROM dcim_location AS l				LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
+	UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype,pc.edituser,pc.editdate		FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
+	UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype,pv.edituser,pv.editdate		FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
+	UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype,pc.edituser,pc.editdate		FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
+	UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype,pcl.edituser,pcl.editdate	FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
+	UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype, pp.edituser, pp.editdate	FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
+	UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype, pu.edituser, pu.editdate	FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
+	UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype, r.edituser, r.editdate		FROM dcim_room AS r					LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
+	UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype, v.edituser, v.editdate		FROM dcim_vlan AS v					LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
 					) AS cur
 					WHERE cur.l_id IS NULL
 					ORDER BY 1, 2";
@@ -1222,7 +1223,7 @@
 				
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType);
+		$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType, $editUserID, $editDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1230,7 +1231,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Table","ID","Parent Table","Parent ID",));
+			$longResult.= CreateDataTableHeader(array("Table","ID","Parent Table","Parent ID","Tech", "Date"));
 			
 			//list result data
 			$oddRow = false;
@@ -1259,6 +1260,8 @@
 				$longResult.= "<td class='data-table-cell'>$idDisplay</td>\n";
 				$longResult.= "<td class='data-table-cell'>$parentTableDescription</td>\n";
 				$longResult.= "<td class='data-table-cell'>$parentIDDisplay</td>\n";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";

@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 45.40.164.51
--- Generation Time: Sep 20, 2018 at 12:40 AM
+-- Generation Time: Oct 13, 2018 at 02:15 AM
 -- Server version: 5.5.51
 -- PHP Version: 5.1.6
 --
@@ -767,7 +767,7 @@ CREATE TABLE IF NOT EXISTS `dcim_site` (
   `qadate` datetime NOT NULL,
   PRIMARY KEY (`siteid`),
   KEY `qauser` (`qauser`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 

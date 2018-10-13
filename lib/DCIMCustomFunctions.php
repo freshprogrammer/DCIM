@@ -64,14 +64,21 @@
 		
 		public static function RemotePowerPanelAuditHelpPopup()
 		{
-			//links to direct files left off so custom links can be included.
+			global $userSiteID;
 			//Power Audit Creator can be found in a seperate repo here http://github.com/freshprogrammer/ExcelController/releases
-			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Automation</span><BR>
-After a DC power audit has been done and the data has all been updated a RPP Audit workbook can be created and uploaded as necessary. 
-Simply export the power data then run the RPP Audit creation tool. 
-The tool will prompt for a data file and a template file and then create the new workbook for you. 
-From there you can easily save it with an appropriate name and store it.<BR>
-</span>";
+			
+			$date = date("Y-m-d");
+			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Creator</span><BR>
+			After a DC power audit has been done and the data has all been updated in DCIM a RPP Audit workbook can be created.<BR>
+			Simply export the power data then run the RPP Audit creation tool.
+			The tool will prompt for a data file and a template file and then create the new workbook for you.
+			From there you can easily save it with an appropriate name and upoad.<BR>
+			<BR>
+			<a href='#' onClick='var input= prompt(\"Please enter a date\", \"$date\");
+			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerHistory&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
+			<a href='./files/RPP Audit Creator.exe'>RPP Audit Creation Tool</a><BR>
+			<a href='./files/RPP Audit - Template.xlsx'>Template File</a>
+			</span>";
 			return $result;
 		}
 		
@@ -95,7 +102,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 		{
 			$linesOfCode = CountLinesInDir();
 			$dbRecs = CountDBRecords();
-			$rand = rand(0,90);
+			$rand = rand(0,999);
 			$searchPlaceHolders = array();
 			//ROUGH LIMIT           "------------------------"
 			$searchPlaceHolders[] = "Search";
@@ -105,6 +112,8 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Like a pet but useful";
 			$searchPlaceHolders[] = "Type here";
 			$searchPlaceHolders[] = "Waiting...";
+			$searchPlaceHolders[] = "Waiting... ...";
+			$searchPlaceHolders[] = "Waiting... ...  ...";
 			$searchPlaceHolders[] = "Got your back";
 			$searchPlaceHolders[] = "It's cool, I got this";
 			$searchPlaceHolders[] = "You know what to do";
@@ -126,6 +135,7 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Search never sleeps";
 			$searchPlaceHolders[] = "Wont save you on car inssurance";
 			$searchPlaceHolders[] = "Smoke free for $rand days";
+			$searchPlaceHolders[] = "Now searving guest #$rand";
 			$searchPlaceHolders[] = "NSA free for 0 days";
 			$searchPlaceHolders[] = "Not a calculator";
 			$searchPlaceHolders[] = "Still not a calculator";
@@ -139,11 +149,15 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Doesn't search Facebook";
 			$searchPlaceHolders[] = "No Facebook login";
 			$searchPlaceHolders[] = "No like buttons here";
+			$searchPlaceHolders[] = "No up vote buttons here";
+			$searchPlaceHolders[] = "The gang learns to search";
+			$searchPlaceHolders[] = "Never received a classified request for user information";
 				
 			$searchPlaceHolders[] = "$linesOfCode+ lines of code";
 			$searchPlaceHolders[] = "$linesOfCode+ free range lines";
 			$searchPlaceHolders[] = "$linesOfCode lines, but cutting back";
-			$searchPlaceHolders[] = "15K+ line club";
+			$searchPlaceHolders[] = "$linesOfCode lines, but who's counting anyways";
+			$searchPlaceHolders[] = "18K+ line club";
 			$searchPlaceHolders[] = "$dbRecs+ DB Records";
 			$searchPlaceHolders[] = "$dbRecs Records and counting";
 				
@@ -157,36 +171,60 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			$searchPlaceHolders[] = "Not AltaVista";
 			$searchPlaceHolders[] = "Fetch Jeeves";
 			$searchPlaceHolders[] = "Fresh Search";
-				
+			$searchPlaceHolders[] = "Fresh++ Search";
+			$searchPlaceHolders[] = "Fresh Search++";
+			
 			$searchPlaceHolders[] = "e.g. H######";
+			$searchPlaceHolders[] = "e.g. ######-##";
 			$searchPlaceHolders[] = "e.g. C######";
 			$searchPlaceHolders[] = "e.g. Company name";
 			$searchPlaceHolders[] = "e.g. Company note";
 			$searchPlaceHolders[] = "e.g. Device Name";
 			$searchPlaceHolders[] = "e.g. Badge Holder";
 			$searchPlaceHolders[] = "e.g. Location Name";
+			$searchPlaceHolders[] = "e.g. Site Name";
+			$searchPlaceHolders[] = "e.g. Room Name";
+			$searchPlaceHolders[] = "e.g. Panel Name";
 				
 			return $searchPlaceHolders[array_rand($searchPlaceHolders)];
 		}
 		
 		public static function CreateNavigationQuickLinks()
 		{
-			//TODO this should be customised to each user based on siteid
-			$result  = "<a class='navLinks' href='?roomid=1'>CA1</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=2'>CA2</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=3'>CA3</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=4'>CA4</a>&nbsp;\n";
-			$result .= "<a class='navLinks' href='?roomid=5'>CA5</a>&nbsp;\n";
+			global $userSiteID;
+			global $mysqli;
+			global $errorMessage;
+			
+			$query = "SELECT r.roomid, r.name, r.fullname, COUNT(l.locationid) AS cnt
+				FROM dcim_room AS r
+					LEFT JOIN dcim_location AS l ON l.roomid=r.roomid
+				WHERE r.siteid=?
+				GROUP BY r.roomid
+				HAVING cnt>0
+				ORDER by r.siteid, r.name";
+			
+			$result = "";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $userSiteID) || !$stmt->execute())
+				$errorMessage[]= "Prepare failed: CreateNavigationQuickLinks() (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$stmt->bind_result($roomID,$roomName,$roomFullName, $locCount);
+				if($stmt->num_rows>0)
+					while ($stmt->fetch())
+						$result .= "<a class='navLinks' href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a>&nbsp;\n";
+			}
 			return $result;
 		}
 		
 		public static function CreateHomePageContent()
 		{//just logged in - at home page
-			global $appName;
 			global $mysqli;
 			global $errorMessage;
 			global $pageSubTitle;
 			global $userID;
+			global $userSiteID;
 			
 			$pageSubTitle = "Home";
 			
@@ -195,9 +233,8 @@ From there you can easily save it with an appropriate name and store it.<BR>
 			{
 				$result .= CreateMessagePanel("Warning","Please <a href='./?userid=$userID'>change your password</a> from the default when you get a chance.");
 			}
-			
-			$result .= ShowSitePage(0);//TODO should look up users home page
-			return $result;
+			echo $result;
+			ShowSitePage($userSiteID);
 		}
 		
 		public static function CreateSiteCustomLayout($siteID, $name, $fullName, $width, $depth)

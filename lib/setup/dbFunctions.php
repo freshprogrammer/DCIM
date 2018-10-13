@@ -103,6 +103,7 @@
 		global $debugMessage;
 		global $mainTables;
 		global $logTables;
+		global $config_demoSiteEnabled;
 		
 		//updates in sync with v1.3 - DB v3
 		//paramaters should be mutually exclusive, so only 1 is true at any time
@@ -317,7 +318,7 @@
 				//assumes valid legacy panel data
 				//create parent records for panels
 				$cmd = "INSERT INTO dcim_powerpanel (name,powerupsid,amps,circuits,roomid,note)
-					SELECT DISTINCT pc.panel, 0,125,42,r.roomid,'Automated'
+					SELECT DISTINCT pc.panel, 0,225,42,r.roomid,'Automated'
 						FROM dcim_powercircuit AS pc
 						LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 						LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
@@ -340,13 +341,13 @@
 				ExecuteThis("UP3_panelcreation-l-3",$cmdl,$reportsucsess);
 			}
 			
-			$createDemoPowerUPSs = true;
+			$createDemoPowerUPSs = $config_demoSiteEnabled;
 			if($createDemoPowerUPSs)
 			{
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',240,500,'Automated')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (1,0,'UPS-1',480,500,'Automated')";
 				ExecuteThis("UP3_upscreation-1",$cmd,$reportsucsess);
 				
-				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (2,0,'UPS-2',240,500,'Automated')";
+				$cmd = "INSERT INTO dcim_powerups (powerupsid,siteid,name,volts,amps,note) VALUES (2,0,'UPS-2',480,500,'Automated')";
 				ExecuteThis("UP3_upscreation-2",$cmd,$reportsucsess);
 				
 				ExecuteThis("UP3_upscreation-3","INSERT INTO dcimlog_powerups			SELECT NULL,'I' AS logtype,cur.* FROM dcim_powerups		AS cur WHERE 1=1",$reportsucsess);
@@ -391,6 +392,9 @@
 			}
 			
 			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 complete";
+			
+			
+			$resultMessage[]= "RunDBUpdate_Update1()-Part 1 Still need to create and sync power panels to ups records. Also need to create 208v3p power records (3 each)";
 		}
 		
 		// Part 2 unsafe changes /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -549,10 +553,91 @@
 	function RestoreDemoCreds()
 	{
 		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
+		$u1 = "INSERT INTO `dcim_user` VALUES(0, 0, 'Admin', 'Administrator', '973012e8bea45a61b6538239e3de145d', 'dcim@freshprogramming.com', 'AM', 'the1AdminPass', '9', 0, '2018-09-19 07:24:33', 0, '2016-04-22 00:00:00');";
+		$u1a= "UPDATE `dcim_user` SET userid=0 WHERE 1;";//cannot insert as 0 for some reason - using 0 just create a next autoincrement
+		$u2 = "INSERT INTO `dcim_user` VALUES(1, 0, 'writer', 'Test Writer', 'd280a422f43b4b704334a4012c4b0f46', '', 'TW', 'testPass', '8', 0, '2016-01-02 06:17:06', 0, '2016-04-22 00:00:00');";
+		$u3 = "INSERT INTO `dcim_user` VALUES(2, 0, 'reader', 'Test Reader', 'd280a422f43b4b704334a4012c4b0f46', '', 'TR', 'testPass', '1', 0, '2016-01-02 06:18:39', 0, '2016-04-22 00:00:00');";
+		$u4 = "INSERT INTO `dcim_user` VALUES(3, 0, 'blocked', 'Test Blocked', 'cfb50a3e928aa308917fad97a1d84cc9', '', 'TB', 'blocked123', '0', 0, '2014-07-21 00:41:24', 0, '2016-04-22 00:00:00');";
 		
-		$errorMessage[] = "RestoreDemoCreds() - Stub - did nothing";
+		ExecuteThis("ResetDemoCreds-0","TRUNCATE TABLE dcim_user");
+		ExecuteThis("ResetDemoCreds-1",$u1,true);
+		ExecuteThis("ResetDemoCreds-1a",$u1a,true);
+		ExecuteThis("ResetDemoCreds-2",$u2,true);
+		ExecuteThis("ResetDemoCreds-3",$u3,true);
+		ExecuteThis("ResetDemoCreds-4",$u4,true);
+		$resultMessage[] = "Reset Creds to demo state. Can be seen <a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/creds.md'>here</a>.";
+	}
+	
+	class DBLogRecord
+	{
+		public $table;
+		public $key;
+		public $editUser;
+		public $editDate;
+	}
+	
+	function CreateMissingInsertLogRecords()
+	{
+		global $userID;
+		global $mysqli;
+		global $resultMessage;
+		global $errorMessage;
+		
+		//get list of missing log records - coppied from Check_RecordsMisingInsertLog()
+		$query = "SELECT cur.* FROM (
+	  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype, s.edituser, s.editdate		FROM dcim_site AS s					LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
+UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype, b.edituser, b.editdate		FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
+UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype, c.edituser, c.editdate		FROM dcim_customer AS c				LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
+UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype, d.edituser, d.editdate		FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
+UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype,dp.edituser,dp.editdate		FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
+UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype, l.edituser, l.editdate		FROM dcim_location AS l				LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
+UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype,pc.edituser,pc.editdate		FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
+UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype,pv.edituser,pv.editdate		FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
+UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype,pc.edituser,pc.editdate		FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
+UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype,pcl.edituser,pcl.editdate	FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
+UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype, pp.edituser, pp.editdate	FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
+UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype, pu.edituser, pu.editdate	FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
+UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype, r.edituser, r.editdate		FROM dcim_room AS r					LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
+UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype, v.edituser, v.editdate		FROM dcim_vlan AS v					LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
+					) AS cur
+					WHERE cur.l_id IS NULL
+					ORDER BY 1, 2";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[] = "CreateMissingInsertLogRecords()-Prepare failed:(" . $mysqli->errno . ") - E:" . $mysqli->error;
+			return false;
+		}
+		else
+		{
+			
+			$stmt->store_result();
+			$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType, $editUserID, $editDate);
+			$count = $stmt->num_rows;
+			
+			$recs = array();
+			while ($stmt->fetch())
+			{
+				$r = new DBLogRecord();
+				$r->table = $table;
+				$r->key = $id;
+				$r->editUser = $editUserID;
+				$r->editDate = $editDate;
+				$recs[]=$r;
+			}
+			
+			//processing done after finished looping through results 
+			$affectedCount = 0;
+			foreach($recs as $r)
+			{
+				$userID = $r->editUser;
+				LogDBChange("dcim_".$r->table,$r->key,"I");
+				$affectedCount++;
+				$resultMessage[]= "Sucsessfully created log record for #".$r->key." in dcimlog_".$r->table.".";
+			}
+			
+			$resultMessage[]= "Sucsessfully created $affectedCount missing insert records tables";
+		}
 	}
 	
 	function GenRandomCompanyName()

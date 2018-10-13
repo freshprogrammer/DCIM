@@ -2,12 +2,12 @@
 	function SQLIConnect()
 	{
 		global $mysqli;
-		global $db_host;
-		global $database;
-		global $db_user;
-		global $db_password;
+		global $config_db_host;
+		global $config_database;
+		global $config_db_user;
+		global $config_db_password;
 		
-		$mysqli = new mysqli($db_host, $db_user, $db_password, $database);
+		$mysqli = new mysqli($config_db_host, $config_db_user, $config_db_password, $config_database);
 		
 		/* check connection */
 		if (mysqli_connect_errno()) {
@@ -19,12 +19,12 @@
 	function SQLIConnect_Admin()
 	{
 		global $mysqli;
-		global $db_host;
-		global $database;
-		global $db_admin_user;
-		global $db_admin_password;
+		global $config_db_host;
+		global $config_database;
+		global $config_db_admin_user;
+		global $config_db_admin_password;
 		
-		$mysqli = new mysqli($db_host, $db_admin_user, $db_admin_password, $database);
+		$mysqli = new mysqli($config_db_host, $config_db_admin_user, $config_db_admin_password, $config_database);
 		
 		/* check connection */
 		if (mysqli_connect_errno()) {
@@ -474,6 +474,11 @@
 			}
 		}
 		return $result;
+	}
+	
+	function FormatSizeInFeet($w,$h)
+	{
+		return round($w,2)."' x ".round($h,2)."'";
 	}
 	
 	function OutputCSV($fileName,$data) 

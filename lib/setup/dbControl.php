@@ -8,15 +8,20 @@
 	require_once 'customFunctions.php';
 	require_once 'genericFunctions.php';
 	require_once 'helperFunctions.php';
-	require_once 'functions.php';
-	require_once 'setup/dbSetupFunctions.php';
+	require_once 'dataFunctions.php';
+	require_once 'htmlFunctions.php';
+	require_once 'setup/dbFunctions.php';
+	
+	$resultMessage = array();
+	$errorMessage = array();
+	$debugMessage = array();
+	$timeStamp = date("Y-m-d H:i:s");
 	
 	SQLIConnect_Admin();
 	SessionSetup();
+	LoadConfigVariables();
 	
 	//globals
-	global $appName;
-	global $pageTitle;
 	//rebuilds
 	$SCRIPTID_BUILD_DATABASE = 1;
 	$SCRIPTID_CREATE_DEMO_DATA = 2;
@@ -29,6 +34,7 @@
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	//simple procedures
 	$SCRIPTID_RECREATE_ALL_LOGS = 101;
+	$SCRIPTID_CREATE_MISSING_INSERT_LOGS = 102;
 	//Data correction functions - Mass QA, ect
 	$SCRIPTID_QA_ALL_RECORDS = 201;
 	
@@ -37,19 +43,14 @@
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_1;
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_2;
 	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
-	
-	$resultMessage = array();
-	$errorMessage = array();
-	$debugMessage = array();
-	$timeStamp = date("Y-m-d H:i:s");
-	
+	$liveEnvironmentScripts []= $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
 	
 	$restoreStructureSQLFile = "../../restoredata/structure.sql";
 	$restoreDataSQLFile = "../../restoredata/demoData.sql";
 	
 ?>
 <head>
-<title><?php echo $pageTitle;?> - DB update control</title>
+<title><?php echo $config_pageTitle;?> - DB update control</title>
 <link rel="icon" type="image/x-icon" href="../../images/favicon.ico">
 <link rel="stylesheet" href="../css/default.css">
 <script type='text/javascript'>
@@ -76,7 +77,7 @@ function ConfirmIntent()
 }
 </script>
 </head>
-<font size=5><b><?php echo $appName;?> Database update control</b></font><?php
+<font size=5><b><?php echo $config_appName;?> Database update control</b></font><?php
  	echo " on PHP v".phpversion()."<BR>\n";
 	
 	//simple action selection form
@@ -96,6 +97,7 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
+		<option value='$SCRIPTID_CREATE_MISSING_INSERT_LOGS'>Create missing insert log records.</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
 	</select>
@@ -120,7 +122,7 @@ function ConfirmIntent()
 	$debugMessage[]= "-Start - testing permisions and db status";
 	if(!$dbScriptID==0)
 	{
-		if(!isset($demoSiteEnabled) || !$demoSiteEnabled)
+		if(!isset($config_demoSiteEnabled) || !$config_demoSiteEnabled)
 		{//this is not a demo server - anthing other that an update will screw with the core data or structure and is not allowed
 			
 			if(in_array($dbScriptID,$liveEnvironmentScripts))
@@ -145,7 +147,7 @@ function ConfirmIntent()
 		if($dbScriptID==0)
 			$errorMessage[]= "No action selected";
 		else if(!$validAction)
-			$errorMessage[]= "Cannot wipe data or structure on live production servers. Aborted. DemoServer='$demoSiteEnabled' scriptID=$dbScriptID";
+			$errorMessage[]= "Cannot wipe data or structure on live production servers. Aborted. DemoServer='$config_demoSiteEnabled' scriptID=$dbScriptID";
 		else if(!$validSession)
 			$errorMessage[]= "Invalid session. Preveted run on refresh. Re-submit form to run again";
 		else if(!$commited)
@@ -207,6 +209,7 @@ function ConfirmIntent()
 		global $SCRIPTID_DB_UPDATEv3_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
+		global $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
 		global $SCRIPTID_QA_ALL_RECORDS;
 		global $errorMessage;
 		global $restoreStructureSQLFile;
@@ -274,6 +277,11 @@ function ConfirmIntent()
 			case $SCRIPTID_RECREATE_ALL_LOGS:
 				echo "Rebuilding log records";
 				WipeAndReCreateAllLogs();
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_CREATE_MISSING_INSERT_LOGS:
+				echo "Creating missing Insert log records";
+				CreateMissingInsertLogRecords();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_QA_ALL_RECORDS:

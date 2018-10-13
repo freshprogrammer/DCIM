@@ -6,17 +6,20 @@
 	require_once 'customFunctions.php';
 	require_once 'genericFunctions.php';
 	require_once 'helperFunctions.php';
-	require_once 'functions.php';
-	
-	UpdateSettingsForiPad();
-	SessionSetup();
-	SQLIConnect();
+	require_once 'dataFunctions.php';
+	require_once 'htmlFunctions.php';
 	
 	//globals
 	$resultMessage = array();
 	$errorMessage = array();
 	$debugMessage = array();
 	$redirectAroundFormResubmitWarning = true;
+	
+	UpdateSettingsForiPad();
+	SessionSetup();
+	SQLIConnect();
+	
+	LoadConfigVariables();
 	
 	if($redirectAroundFormResubmitWarning)
 	{
@@ -39,9 +42,9 @@
 	//$errorMessage[] = "initialized";
 	//$debugMessage[] = "initialized";
 
-	global $appName;
-	global $pageTitle;
-	global $versionNote;
+	global $config_appName;
+	global $config_pageTitle;
+	global $config_versionNote;
 	
 	//varibles definitions
 	//dyanmic
@@ -95,7 +98,7 @@
 <head>
 <script src="lib/js/genericScripts.js"></script>
 <script src="lib/js/scripts.js"></script>
-<title><?php echo $pageTitle;?></title>
+<title><?php echo $config_pageTitle;?></title>
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="lib/css/default.css">
 </head>
@@ -107,7 +110,7 @@
 				<a href="./"><img src="images/logo.png" border="0"></a>
 			</td>
 			<td valign="middle">
-				<div id="appname"><h1><?php echo $appName;?></h1><?php echo $versionNote;?></div>
+				<div id="appname"><h1><?php echo $config_appName;?></h1><?php echo $config_versionNote;?></div>
 			</td>
 			<?php
 	if(!UserHasReadPermission())
@@ -142,7 +145,14 @@
 	$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 	$menuItems .= "	<a href='.'>Home</a>\n";
 	$menuItems .= "</td>\n";
-				
+	
+	$multipleSites = true;
+	if($multipleSites)
+	{
+		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
+		$menuItems .= "	<a href='./?siteid=-1'>All Sites</a>\n";
+		$menuItems .= "</td>\n";
+	}
 	if(UserHasWritePermission())
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
@@ -202,7 +212,6 @@
 	<table id="pagecontainer" id="pagecontainer" class='center pageMinWidth'><tbody><tr><td>
 	
 	<?php
-	//BackupDatabase();
 	
 	$output= "<!-- HEADER LINKS -->\n";
 	$output.= "<table width='100%'><tr>\n";
@@ -236,14 +245,14 @@
 	
 	if(!UserHasReadPermission())
 	{
-		if(isset($demoSiteEnabled) && $demoSiteEnabled)
+		if(isset($config_demoSiteEnabled) && $config_demoSiteEnabled)
 		{
 			echo "<!--  Demo Message  -->\n<BR>\n";
 			$demoMessage = "<span style='font-size: 12px;'>
 			This is a demo environment of DCIM. Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a><BR>
 			Test login credentials can be found <a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/creds.md' target='_blank'>here</a><BR>
 			<BR>
-			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.
+			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbControl.php' target='_blank'>here</a>.
 			</span>";
 			echo CreateMessagePanel("Demo Notice:",$demoMessage);
 		}
@@ -302,7 +311,6 @@
 			else
 			{
 				//search all
-				$resultCount = 0;
 				if(strlen($search) > 0)
 				{
 					$pageSubTitle = "Search:\"".MakeHTMLSafe($search)."\"";
@@ -312,19 +320,41 @@
 					echo "</div>\n";
 					echo "<div class=\"panel-body\">\n\n";
 					
+					//search for sites (name, fullname)
+					echo ListSites("?", $search);
+					echo "<BR>\n";
+					
+					//search for rooms (name, fullname)
+					echo ListRooms("?", $search);
+					echo "<BR>\n";
+					
 					//search in customer (hno, cno, name, note)
-					$resultCount += ListSearchCustomers($search);
+					ListSearchCustomers($search);
 					echo "<BR>\n";
 					
-					//search in badge (name, badgeno)
-					$resultCount += ListBadges(true,$search);
+					if($config_badgesEnabled)
+					{
+						//search in badge (name, badgeno)
+						ListBadges(true,$search);
+						echo "<BR>\n";
+					}
+					
+					//search in locaion/device (l.name, l.altname, l.note, d.name, d.model, d.asset, d.serial, d.note)
+					ListDevices(true,$search);
 					echo "<BR>\n";
 					
-					//search in device (name, note)
-					$resultCount += ListDevices(true,$search);
+					if($config_subnetsEnabled)
+					{
+						//search in VLANs (vlan name, subnet, note)
+						ListCustomerSubnets("?",$search);
+						echo "<BR>\n";
+					}
+					
+					//search in powerups (name, note)
+					echo ListUPSs("?",$search);
 					echo "<BR>\n";
 					
-					//search for panels
+					//search in powerpanel (name, note)
 					ListPowerPanels("?", $search);
 					
 					echo "</div>\n";
@@ -335,7 +365,7 @@
 					if($searchbtn==="T")//mock for empty search
 						$errorMessage[] ="Search for nuthin yields a whole lot of nuthin.";
 					
-					echo CustomFunctions::CreateHomePageContent();
+					CustomFunctions::CreateHomePageContent();
 				}//end search len > 0
 			}//single cust not found
 		}//not specific row/ca/cust
@@ -368,7 +398,7 @@
 		//update title if necisarry
 		if(strlen($pageSubTitle) > 0)
 		{
-			$pageTitle = $pageTitle." - ".$pageSubTitle;
+			$pageTitle = $config_pageTitle." - ".$pageSubTitle;
 			echo "document.title = '$pageTitle';\n";
 		}
 	?>

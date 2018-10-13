@@ -433,14 +433,14 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function UpdateSettingsForiPad()
 	{
-		global $loginCookieDurration;
-		global $loginCookieDurrationOniPad;
+		global $config_loginCookieDurration;
+		global $config_loginCookieDurrationOniPad;
 		
 		$isiPad = (bool) strpos($_SERVER['HTTP_USER_AGENT'],'iPad');
 		
 		if($isiPad)
 		{
-			$loginCookieDurration = $loginCookieDurrationOniPad;
+			$config_loginCookieDurration = $config_loginCookieDurrationOniPad;
 		}
 	}
 	
@@ -689,8 +689,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $portFullName;
 	}
 	
-	function FormatLocation($siteName, $roomName, $locationName, $showSite=true)
+	function FormatLocation($siteName, $roomName, $locationName, $showSite=true, $showLocation=true)
 	{
+		if($locationName==null)
+			$locationName = "N/A";
+		if(!$showLocation)
+			$locationName = "";
 		if($showSite)
 		{
 			if($roomName==null)
@@ -774,17 +778,16 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	}
 	
 	function IsUserUsingDefaultPassword()
-	{
+	{//these are only valid if the sdefault salt is used - should be move to the DCIM functions to allow salt to be changed
+		global $config_userPasswordSalt;
 		$result = false;
 		if(isset($_COOKIE["dcim_password"]))
 		{
 			$password = $_COOKIE["dcim_password"];
-			if($password=="805f22790497dae93be21fbc69549509")//md5 of default password "Pa55word"+salt
-				return true;
-			else if($password=="cfdc03556bbbc4d474fc535c58798b95")//md5 of default password "password1"+salt
-				return true;
-			else if($password=="d280a422f43b4b704334a4012c4b0f46")//md5 of default password "testPass"+salt
-				return true;
+			if($password==     md5("Pa55word".$config_userPasswordSalt))return true;
+			else if($password==md5("password1".$config_userPasswordSalt))return true;
+			else if($password==md5("testPass".$config_userPasswordSalt))return true;
+			else if($password==md5("chang3me".$config_userPasswordSalt))return true;
 		}
 		return $result;
 	}
@@ -963,11 +966,6 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $result;
 	}
 	
-	function FormatSizeInFeet($w,$h)
-	{
-		return round($w,2)."' x ".round($h,2)."'";	
-	}
-	
 	function RoomAccesClass($access)
 	{//define room color
 		if($access=="T")return "caBackground";
@@ -1064,12 +1062,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 		else if($minVal!=-1 && $input<$minVal)
 		{
-			$errorMessage[] = $fieldName." ".$input ." must be greater than ".$minVal;
+			$errorMessage[] = $fieldName." ".$input ." must be greater than or equal to ".$minVal;
 			return false;
 		}
 		else if($maxVal!=-1 && $input>$maxVal)
 		{
-			$errorMessage[] = $fieldName." ".$input ." must be less than ".$maxVal;
+			$errorMessage[] = $fieldName." ".$input ." must be less than or equal to ".$maxVal;
 			return false;
 		}
 		else if($minVal==-1 && $input <0)// by default must be positive
@@ -1409,7 +1407,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $errorMessage;
 		
 		$results = array();
-		$query = "SELECT $keyField FROM $table WHERE $filter";
+		$query = "SELECT $keyField FROM $table WHERE $filter GROUP BY $keyField";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 			$errorMessage[] = "Prepare failed: GetKeysFromFilter($table, $filter, $keyField) (" . $mysqli->errno . ") " . $mysqli->error;
@@ -1730,9 +1728,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return true;
 	}
 	
-	function ValidPowerCircuitNo($input)
+	function ValidPowerCircuitNo($input, $max)
 	{
-		return ValidNumber($input,"Power Circuit",1,2,0,50);
+		return ValidNumber($input,"Power Circuit",1,3,1,$max);
 	}
 	
 	function ValidPowerCircuitVolts($input)

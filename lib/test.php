@@ -4,14 +4,15 @@
 	require_once 'customFunctions.php';
 	require_once 'genericFunctions.php';
 	require_once 'helperFunctions.php';
-	require_once 'functions.php';
+	require_once 'dataFunctions.php';
+	require_once 'htmlFunctions.php';
 	
 	SQLIConnect();
 	
-	global $appName;
+	global $config_appName;
 	
 	?>
-<head><title>Test <?php echo $appName;?></title></head>
+<head><title>Test <?php echo $config_appName;?></title></head>
 <!--
 <body>
 
