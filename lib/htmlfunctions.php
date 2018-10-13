@@ -4017,8 +4017,8 @@
 		$upsOptions = "";
 		$query = "SELECT pu.siteid, s.name AS site, pu.powerupsid, pu.name
 		FROM dcim_room AS r
-			LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
-			LEFT JOIN dcim_powerups AS pu ON pu.siteid=s.siteid
+			INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			INNER JOIN dcim_powerups AS pu ON pu.siteid=s.siteid
 		WHERE r.roomid=$roomID
 		ORDER BY pu.name";
 		
