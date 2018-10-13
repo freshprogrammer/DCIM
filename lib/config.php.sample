@@ -23,7 +23,7 @@
 	////// All config variables below here are defaults only - they will be overwritten by the settings in the dcim_config table
 	
 	
-	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbSetup.php
+	//True if this is a demo/non production site and data - when false a DB reset/wipe option exists in _dbControl.php
 	$config_demoSiteEnabled = false;
 	
 	//Name of this web site - show at top of page near logo

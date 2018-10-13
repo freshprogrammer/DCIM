@@ -252,7 +252,7 @@
 			This is a demo environment of DCIM. Check out the source code at the <a href='https://github.com/freshprogrammer/DCIM' target='_blank'>GIT repository here</a><BR>
 			Test login credentials can be found <a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/creds.md' target='_blank'>here</a><BR>
 			<BR>
-			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbSetupControl.php' target='_blank'>here</a>.
+			The entire demo database can be reset back to the last restore point <a href='lib/setup/dbControl.php' target='_blank'>here</a>.
 			</span>";
 			echo CreateMessagePanel("Demo Notice:",$demoMessage);
 		}

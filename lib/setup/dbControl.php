@@ -10,7 +10,7 @@
 	require_once 'helperFunctions.php';
 	require_once 'dataFunctions.php';
 	require_once 'htmlFunctions.php';
-	require_once 'setup/dbSetupFunctions.php';
+	require_once 'setup/dbFunctions.php';
 	
 	$resultMessage = array();
 	$errorMessage = array();
