@@ -5014,6 +5014,28 @@
 			}
 		}
 		
+		//select locations from table for rendering each one
+		$query = "SELECT pp.powerpanelid, pp.name, pp.xpos, pp.ypos, pp.width, pp.depth, pp.orientation, s.name, r.fullname, COUNT(pp.powerpanelid) AS count
+				FROM dcim_powerpanel AS pp
+					INNER JOIN dcim_room AS r ON r.roomid = pp.roomid
+					INNER JOIN dcim_site AS s ON s.siteid = r.siteid
+				WHERE pp.roomid=? AND pp.width > 0 AND pp.depth > 0
+				GROUP BY pp.xpos, pp.ypos, pp.width, pp.depth, pp.orientation";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $roomID) || !$stmt->execute())
+			$errorMessage[]= "CreateRoomLayout() SQL setup 3 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($powerPanelID, $name, $xPos, $yPos, $width, $depth, $orientation, $site, $room, $count);
+			
+			$lastLocationID = PHP_INT_MAX;
+			while($stmt->fetch())
+			{
+				$result .= CreatePowerPanelLayout($powerPanelID, $name, $xPos, $yPos, $width, $depth, $orientation, $count, $parentWidth, $parentDepth, $renderingWithinParent);
+			}
+		}
+		
 		if($renderingWithinParent)$result .= "</a>\n";
 		$result .= "</div>\n";
 		
@@ -5091,7 +5113,6 @@
 			if($cornerNo!=4)$roomCustomHTML .= "<div class='$roomTypeClass roomBorders' id='room".$roomID."_BottomLeft'></div>\n";
 		}
 	}
-	
 	
 	function CreateRoomLayout_FarLeftCornerAngle($cornerWidth, $roomID, $roomTypeClass, $depthToWidthRatio, &$roomCustomStyle, &$roomCustomHTML)
 	{//not finished and not 100% correct
@@ -5233,6 +5254,96 @@
 		{
 			$result .= "<span id='location".$locationID."_tooltip' class='toolTip_LocationDetails'>$popupText</span>\n";
 		}
+		return $result;
+	}
+	
+	function CreatePowerPanelLayout($powerPanelID, $name, $xPos, $yPos, $width, $depth, $orientation, $count, $parentWidth, $parentDepth, $renderingWithinSite)
+	{
+		//these are the back left of the location so it can be rotated into place
+		$relativeX = 100*$xPos/$parentWidth;
+		$relativeY= 100*$yPos/$parentDepth;
+		
+		//these are true top left on the screen for tooltips
+		$relativeTopLeftX = $xPos;
+		$relativeTopLeftY = $yPos;
+		if($orientation=="E")$relativeTopLeftX -= $depth;
+		else if($orientation=="W")$relativeTopLeftY -= $width;
+		else if($orientation=="S")
+		{
+			$relativeTopLeftX -= $width;
+			$relativeTopLeftY -= $depth;
+		}
+		
+		$relativeTopLeftX = 100*($relativeTopLeftX/$parentWidth);
+		$relativeTopLeftY= 100*($relativeTopLeftY/$parentDepth);
+		
+		//adjust dimentions if rotated
+		if($orientation=="E" || $orientation=="W")
+		{
+			$relativeWidth= 100*(($width/$parentDepth)*($parentDepth/$parentWidth));
+			$relativeDepth = 100*(($depth/$parentWidth)*($parentWidth/$parentDepth));
+		}
+		else
+		{
+			$relativeWidth = 100*($width/$parentWidth);
+			$relativeDepth= 100*($depth/$parentDepth);
+		}
+		
+		if($count>1)
+			$name = $name . " (1 of $count Panels)";
+		
+		$rotation = OritentationToDegrees($orientation);
+		$rotationTransform = "";
+		$reverseRotationTransform = "";
+		if($rotation!=0)
+		{
+			$rotationTransform = "	transform: rotate(".$rotation."deg); -ms-transform: rotate(".$rotation."deg); -webkit-transform: rotate(".$rotation."deg);\n";
+			$reverseRotationTransform = "	transform: rotate(".-$rotation."deg); -ms-transform: rotate(".-$rotation."deg); -webkit-transform: rotate(".-$rotation."deg);\n";
+		}
+		
+		$titleWidth = 100;
+		$titleHeight = 100;
+		if($orientation=="E" || $orientation=="W")
+		{
+			$titleWidth= 100*($depth/$width);
+			$titleHeight = 100*($width/$depth);
+		}
+		
+		$result = "<style>\n";
+		$result .= "#powerPanel$powerPanelID{\n";
+		$result .= "	left: $relativeX%;\n";
+		$result .= "	top: $relativeY%;\n";
+		$result .= "	width: $relativeWidth%;\n";
+		$result .= "	height: $relativeDepth%;\n";
+		$result .= $rotationTransform;
+		$result .= "}\n";
+		$result .= "#powerPanel".$powerPanelID."_title {\n";
+		$result .= "	width: $titleWidth%;\n";
+		$result .= "	height: $titleHeight%;\n";
+		$result .= $reverseRotationTransform;
+		
+		if($orientation=="E")
+			$result .= "	top: 100%;\n";
+		else if($orientation=="S")
+		{
+			$result .= "	top: 100%;\n";
+			$result .= "	left: 100%;\n";
+		}
+		else if($orientation=="W")
+			$result .= "	left: 100%;\n";
+		
+		$result .= "}\n";
+		$result .= "</style>\n";
+		
+		$result .= "<div id='powerPanel$powerPanelID' class='locationContainer' title='$name'>\n";
+		if($count==1)
+			$result .= "	<a href='./?powerpanelid=$powerPanelID'>\n";
+		$result .= "	<div id='' class='powerPanelBackground'>\n";
+		$result .= "		<div id='powerPanel".$powerPanelID."_title' class='locationTitle'>$name</div>\n";
+		$result .= "	</div>\n";
+		if($count==1)
+			$result .= "	</a>\n";
+		$result .= "</div>\n";
 		return $result;
 	}
 ?>
