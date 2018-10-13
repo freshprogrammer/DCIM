@@ -415,6 +415,11 @@ tr.dataRowTwo {
 	background-color: #EEE;
 }
 
+span.powerPanelAuditWarning{
+	color: green;
+	font-size: 12px;
+}
+
 td.powerAuditCellTwo, td.powerAuditCellOne {
 	height: 50px;
 	width: 320px;
