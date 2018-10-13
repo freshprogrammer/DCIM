@@ -559,6 +559,78 @@
 		$errorMessage[] = "RestoreDemoCreds() - Stub - did nothing";
 	}
 	
+	class DBLogRecord
+	{
+		public $table;
+		public $key;
+		public $editUser;
+		public $editDate;
+	}
+	
+	function CreateMissingInsertLogRecords()
+	{
+		global $userID;
+		global $mysqli;
+		global $resultMessage;
+		global $errorMessage;
+		
+		//get list of missing log records - coppied from Check_RecordsMisingInsertLog()
+		$query = "SELECT cur.* FROM (
+	  SELECT 'site' AS `table`, s.siteid AS id,			NULL AS parent, NULL AS parentid, 	sl.siteid AS l_id, 		sl.logtype, s.edituser, s.editdate		FROM dcim_site AS s					LEFT JOIN dcimlog_site AS sl				ON s.siteid = sl.siteid								AND sl.logtype='I'
+UNION SELECT 'badge', b.badgeid,						'customer', b.hno, 					bl.badgeid,				bl.logtype, b.edituser, b.editdate		FROM dcim_badge AS b				LEFT JOIN dcimlog_badge AS bl				ON b.badgeid = bl.badgeid							AND bl.logtype='I'
+UNION SELECT 'customer', c.hno,							NULL, NULL,							cl.hno,					cl.logtype, c.edituser, c.editdate		FROM dcim_customer AS c				LEFT JOIN dcimlog_customer AS cl			ON c.hno = cl.hno									AND cl.logtype='I'
+UNION SELECT 'device', d.deviceid,						'customer', d.hno, 					dl.deviceid,			dl.logtype, d.edituser, d.editdate		FROM dcim_device AS d				LEFT JOIN dcimlog_device AS dl				ON d.deviceid = dl.deviceid							AND dl.logtype='I'
+UNION SELECT 'deviceport', dp.deviceportid,				'device', dp.deviceid,				dpl.deviceportid,		dpl.logtype,dp.edituser,dp.editdate		FROM dcim_deviceport AS dp			LEFT JOIN dcimlog_deviceport AS dpl			ON dp.deviceportid = dpl.deviceportid				AND dpl.logtype='I'
+UNION SELECT 'location', l.locationid,					'room', l.roomid, 					ll.locationid,			ll.logtype, l.edituser, l.editdate		FROM dcim_location AS l				LEFT JOIN dcimlog_location AS ll			ON l.locationid = ll.locationid						AND ll.logtype='I'
+UNION SELECT 'portconnection', pc.portconnectionid,		'deviceport', pc.childportid,		pcl.portconnectionid,	pcl.logtype,pc.edituser,pc.editdate		FROM dcim_portconnection AS pc		LEFT JOIN dcimlog_portconnection AS pcl		ON pc.portconnectionid = pcl.portconnectionid		AND pcl.logtype='I'
+UNION SELECT 'portvlan', pv.portvlanid,					'deviceport', pv.deviceportid,		pvl.portvlanid,			pvl.logtype,pv.edituser,pv.editdate		FROM dcim_portvlan AS pv			LEFT JOIN dcimlog_portvlan AS pvl			ON pv.portvlanid = pvl.portvlanid					AND pvl.logtype='I'
+UNION SELECT 'powercircuit', pc.powercircuitid,			'powerpanel', pc.powerpanelid, 		pcl.powercircuitid,		pcl.logtype,pc.edituser,pc.editdate		FROM dcim_powercircuit AS pc		LEFT JOIN dcimlog_powercircuit AS pcl		ON pc.powercircuitid = pcl.powercircuitid			AND pcl.logtype='I'
+UNION SELECT 'powercircuitloc', pcl.powercircuitlocid,	'powercircuit', pcl.powercircuitid,	pcll.powercircuitlocid,	pcll.logtype,pcl.edituser,pcl.editdate	FROM dcim_powercircuitloc AS pcl	LEFT JOIN dcimlog_powercircuitloc AS pcll	ON pcl.powercircuitlocid = pcll.powercircuitlocid	AND pcll.logtype='I'
+UNION SELECT 'powerpanel', pp.powerpanelid,				'powerups', pp.powerupsid, 			ppl.powerpanelid,		ppl.logtype, pp.edituser, pp.editdate	FROM dcim_powerpanel AS pp			LEFT JOIN dcimlog_powerpanel AS ppl			ON pp.powerpanelid = ppl.powerpanelid				AND ppl.logtype='I'
+UNION SELECT 'powerups', pu.powerupsid,					'site', pu.siteid, 					pul.powerupsid,			pul.logtype, pu.edituser, pu.editdate	FROM dcim_powerups AS pu			LEFT JOIN dcimlog_powerups AS pul			ON pu.powerupsid = pul.powerupsid					AND pul.logtype='I'
+UNION SELECT 'room', r.roomid,							'site', r.siteid, 					rl.roomid,				rl.logtype, r.edituser, r.editdate		FROM dcim_room AS r					LEFT JOIN dcimlog_room AS rl				ON r.roomid = rl.roomid								AND rl.logtype='I'
+UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.logtype, v.edituser, v.editdate		FROM dcim_vlan AS v					LEFT JOIN dcimlog_vlan AS vl				ON v.vlanid = vl.vlanid								AND vl.logtype='I'
+					) AS cur
+					WHERE cur.l_id IS NULL
+					ORDER BY 1, 2";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[] = "CreateMissingInsertLogRecords()-Prepare failed:(" . $mysqli->errno . ") - E:" . $mysqli->error;
+			return false;
+		}
+		else
+		{
+			
+			$stmt->store_result();
+			$stmt->bind_result($table, $id, $parentTable, $parentID, $logID, $logType, $editUserID, $editDate);
+			$count = $stmt->num_rows;
+			
+			$recs = array();
+			while ($stmt->fetch())
+			{
+				$r = new DBLogRecord();
+				$r->table = $table;
+				$r->key = $id;
+				$r->editUser = $editUserID;
+				$r->editDate = $editDate;
+				$recs[]=$r;
+			}
+			
+			//processing done after finished looping through results 
+			$affectedCount = 0;
+			foreach($recs as $r)
+			{
+				$userID = $r->editUser;
+				LogDBChange("dcim_".$r->table,$r->key,"I");
+				$affectedCount++;
+				$resultMessage[]= "Sucsessfully created log record for #".$r->key." in dcimlog_".$r->table.".";
+			}
+			
+			$resultMessage[]= "Sucsessfully created $affectedCount missing insert records tables";
+		}
+	}
+	
 	function GenRandomCompanyName()
 	{
 		$companyNameNouns = array();

@@ -34,6 +34,7 @@
 	$SCRIPTID_CREATE_POPULATE_UPDATE = 21;
 	//simple procedures
 	$SCRIPTID_RECREATE_ALL_LOGS = 101;
+	$SCRIPTID_CREATE_MISSING_INSERT_LOGS = 102;
 	//Data correction functions - Mass QA, ect
 	$SCRIPTID_QA_ALL_RECORDS = 201;
 	
@@ -42,6 +43,7 @@
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_1;
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_2;
 	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
+	$liveEnvironmentScripts []= $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
 	
 	$restoreStructureSQLFile = "../../restoredata/structure.sql";
 	$restoreDataSQLFile = "../../restoredata/demoData.sql";
@@ -95,6 +97,7 @@ function ConfirmIntent()
 		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
+		<option value='$SCRIPTID_CREATE_MISSING_INSERT_LOGS'>Create missing insert log records.</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
 	</select>
@@ -206,6 +209,7 @@ function ConfirmIntent()
 		global $SCRIPTID_DB_UPDATEv3_2;
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
+		global $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
 		global $SCRIPTID_QA_ALL_RECORDS;
 		global $errorMessage;
 		global $restoreStructureSQLFile;
@@ -273,6 +277,11 @@ function ConfirmIntent()
 			case $SCRIPTID_RECREATE_ALL_LOGS:
 				echo "Rebuilding log records";
 				WipeAndReCreateAllLogs();
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_CREATE_MISSING_INSERT_LOGS:
+				echo "Creating missing Insert log records";
+				CreateMissingInsertLogRecords();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_QA_ALL_RECORDS:
