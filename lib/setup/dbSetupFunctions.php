@@ -553,10 +553,19 @@
 	function RestoreDemoCreds()
 	{
 		global $resultMessage;
-		global $errorMessage;
-		global $debugMessage;
+		$u1 = "INSERT INTO `dcim_user` VALUES(0, 0, 'Admin', 'Administrator', '973012e8bea45a61b6538239e3de145d', 'dcim@freshprogramming.com', 'AM', 'the1AdminPass', '9', 0, '2018-09-19 07:24:33', 0, '2016-04-22 00:00:00');";
+		$u1a= "UPDATE `dcim_user` SET userid=0 WHERE 1;";//cannot insert as 0 for some reason - using 0 just create a next autoincrement
+		$u2 = "INSERT INTO `dcim_user` VALUES(1, 0, 'writer', 'Test Writer', 'd280a422f43b4b704334a4012c4b0f46', '', 'TW', 'testPass', '8', 0, '2016-01-02 06:17:06', 0, '2016-04-22 00:00:00');";
+		$u3 = "INSERT INTO `dcim_user` VALUES(2, 0, 'reader', 'Test Reader', 'd280a422f43b4b704334a4012c4b0f46', '', 'TR', 'testPass', '1', 0, '2016-01-02 06:18:39', 0, '2016-04-22 00:00:00');";
+		$u4 = "INSERT INTO `dcim_user` VALUES(3, 0, 'blocked', 'Test Blocked', 'cfb50a3e928aa308917fad97a1d84cc9', '', 'TB', 'blocked123', '0', 0, '2014-07-21 00:41:24', 0, '2016-04-22 00:00:00');";
 		
-		$errorMessage[] = "RestoreDemoCreds() - Stub - did nothing";
+		ExecuteThis("ResetDemoCreds-0","TRUNCATE TABLE dcim_user");
+		ExecuteThis("ResetDemoCreds-1",$u1,true);
+		ExecuteThis("ResetDemoCreds-1a",$u1a,true);
+		ExecuteThis("ResetDemoCreds-2",$u2,true);
+		ExecuteThis("ResetDemoCreds-3",$u3,true);
+		ExecuteThis("ResetDemoCreds-4",$u4,true);
+		$resultMessage[] = "Reset Creds to demo state. Can be seen <a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/creds.md'>here</a>.";
 	}
 	
 	class DBLogRecord

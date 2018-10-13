@@ -784,14 +784,10 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if(isset($_COOKIE["dcim_password"]))
 		{
 			$password = $_COOKIE["dcim_password"];
-			if($password==md5("Pa55word".$config_userPasswordSalt))
-				return true;
-			else if($password==md5("password1".$config_userPasswordSalt))
-				return true;
-			else if($password==md5("testPass".$config_userPasswordSalt))
-				return true;
-			else if($password==md5("chang3me".$config_userPasswordSalt))
-				return true;
+			if($password==     md5("Pa55word".$config_userPasswordSalt))return true;
+			else if($password==md5("password1".$config_userPasswordSalt))return true;
+			else if($password==md5("testPass".$config_userPasswordSalt))return true;
+			else if($password==md5("chang3me".$config_userPasswordSalt))return true;
 		}
 		return $result;
 	}
