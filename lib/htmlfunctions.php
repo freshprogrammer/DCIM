@@ -3595,7 +3595,7 @@
 				LEFT JOIN dcim_site AS site ON r.siteid=site.siteid
 			WHERE $filter
 			GROUP BY dp.deviceportid
-			ORDER BY 3,4,6,7";
+			ORDER BY d.name,d.altname,d.member, dp.pic, dp.port";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
