@@ -72,6 +72,7 @@
 		$result .= Check_CircuitInactiveWithLoad();
 		$result .= Check_DeviceWithoutAsset();
 		$result .= Check_DeviceWithDuplicateAsset();
+		$result .= Check_DevicesWithUnknownModel();
 		//$result .= Check_DeviceWithInvalidLocation();
 		//$result .= Check_SwitchIsMainDeviceOnDevicePortRecords();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
@@ -938,6 +939,73 @@
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Devices",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesWithUnknownModel()
+	{
+		global $mysqli;
+		global $errorMessage;
+		global $deviceModels;
+		
+		$reportTitle = "Devices With unknown model";
+		$reportNote = "Devices that have a model that is not in the DB.";
+		
+		$filter = "d.model NOT IN (";
+		foreach($deviceModels as $model)
+		{
+			$filter .= "'".$model->name."',";
+		}
+		$filter = substr($filter,0,-1).")";
+		
+		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model
+			FROM dcim_device AS  d
+			WHERE $filter
+			ORDER BY d.model";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_DevicesWithUnknownModel() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicesWithUnknownModel()";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","Model"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
