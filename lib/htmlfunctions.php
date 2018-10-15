@@ -2053,6 +2053,86 @@
 		return $result;
 	}
 	
+	function ListPowerPanelCircuitHistory($powerPanelID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT pc.powercircuitid, pp.powerpanelid, pp.name, s.name, r.name, l.locationid, l.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, pc.logtype
+			FROM dcimlog_powercircuit AS pc
+				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+				LEFT JOIN dcimlog_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcimlog_location AS l ON l.locationid=pcl.locationid
+			WHERE pc.powerpanelid=?
+			GROUP BY pc.powercircuitlogid, pcl.powercircuitid, l.locationid
+			ORDER BY pc.circuit, pc.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
+		{
+			$errorMessage[]= "ListPowerPanelCircuitHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result = "Error looking up power panel circuit history<BR>\n";
+		}
+		else
+		{
+			$result = "<span class='tableTitle'>Power Panel Circuit History</span> - Grouped by circuit\n<BR>\n";
+			
+			$stmt->store_result();
+			$stmt->bind_result($powerCircuitID, $powerPanelID, $panelName, $siteName, $roomName, $locationID, $locationName, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+			$count = $stmt->num_rows;
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Panel","Circuit","Volts","Amps","Status","Load","Location","Tech","Date&#x25BC;"));
+				
+				//list result data
+				$oddRow = false;
+				$lastCircuit = -1;
+				while ($stmt->fetch())
+				{
+					$rowStyle = "";//new circuit marker
+					if($lastCircuit!=-1 && $lastCircuit!=$circuit)
+					{
+						$oddRow = !$oddRow;
+						//$rowStyle = "style='border-top: black 2px solid;'";
+					}
+					
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$panelName = MakeHTMLSafe($siteName." ".$panelName);
+					$location = "None";
+					if($locationID!=null)
+						$location = "<a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a>";
+					
+					$result .= "<tr class='$rowClass' $rowStyle>";
+					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
+					
+					if(CustomFunctions::UserHasDevPermission())
+						$result .= "<td class='data-table-cell'><span title='powercircuitid=$powerCircuitID'>$circuit</span></td>";
+					else
+						$result .= "<td class='data-table-cell'>$circuit</td>";
+					$result .= "<td class='data-table-cell'>$volts</td>";
+					$result .= "<td class='data-table-cell'>$amps</td>";
+					$result .= "<td class='data-table-cell'>".PowerOnOff($status)."</td>";
+					$result .= "<td class='data-table-cell'>$load</td>";
+					$result .= "<td class='data-table-cell'>$location</td>";
+					$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
+					$result .= "</tr>";
+					$lastCircuit = $circuit;
+				}
+				$result .= "</table>";
+			}
+			else
+			{
+				$result .= "No power panel circuit history found for powerpanelid($powerPanelID).<BR>\n";
+			}
+		}
+		return $result;
+	}
+	
 	function EditDeviceForm($action)
 	{
 		global $mysqli;
@@ -3030,7 +3110,7 @@
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
 						if(CustomFunctions::UserHasDevPermission())
-							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay<span title='powercircuitid=$powerCircuitID' style='position:relative; z-index:2;'>".MakeHTMLSafe($visibleCircuit)."</span></td>";
+							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay<span title='powercircuitid=$powerCircuitID'>".MakeHTMLSafe($visibleCircuit)."</span></td>";
 						else
 							echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$trippleCircuitDisplay".MakeHTMLSafe($visibleCircuit)."</td>";
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'>$visibleVolts</td>";
@@ -4163,6 +4243,8 @@
 			echo "<div class='panel-header'>Power Panel History: $fullPanelName</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			echo ListPowerPanelHistory($powerPanelID);
+			echo "</BR>\n";
+			echo ListPowerPanelCircuitHistory($powerPanelID);
 			echo "</div>\n";
 			echo "</div>\n";
 			
