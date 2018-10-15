@@ -2433,22 +2433,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else 
 		{
 			//These should match must match the definitions in BuildDeviceModelArrays()
-			if($type=="F")
-			{
-				$model = "Full Cab";	
-			}
-			else if($type=="C")
-			{
-				$model = "Cage";	
-			}
-			else if($type=="H")
-			{
-				$bottomHalf = CustomFunctions::IsThisLocationABottomHalfCab($locationID);
-				if($bottomHalf)
-					$model = "Half Cab-Bottom";
-				else
-					$model = "Half Cab-Top";
-			}
+			if($type=="F")$model = "Colo Cabinet";
+			else if($type=="C")$model = "Colo Cage";
+			else if($type=="H")$model = "Colo Half Cabinet";
 			$member = 0;
 			$asset = "";
 			$serial = "";

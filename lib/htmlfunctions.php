@@ -33,7 +33,6 @@
 	function ShowLocationPage($input)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
 		
@@ -1694,10 +1693,8 @@
 	function ListDevices($search, $input)
 	{
 		global $mysqli;
-		global $deviceModels;
 		
 		$formAction = "./?host=$input";
-			
 		if($search)
 		{
 			$input = "%".$input."%";
@@ -1750,9 +1747,6 @@
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-		
-		
-			
 		
 		if(!$search && UserHasWritePermission())
 		{
@@ -1828,7 +1822,6 @@
 					//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
 					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
-					
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
 				echo "</tr>";
@@ -1838,11 +1831,11 @@
 		}
 		else 
 		{
-		  echo "No Devices Found.<BR>\n";
+			echo "No Devices Found.<BR>\n";
 		}
 	
 		if(UserHasWritePermission())
-		{	
+		{
 			EditDeviceForm($formAction);
 		}
 		return $count;
@@ -2739,7 +2732,6 @@
 	function ShowRoomPage($roomID)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
 		global $errorMessage;
@@ -3633,7 +3625,6 @@
 	function EditConnectionForm($action, $hNo)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $config_subnetsEnabled;
 		
 		//edit/Add Connection form
@@ -4458,11 +4449,11 @@
 							<td align='right' width=1>Width:</td>
 							<td align='left'>
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+									<input id=EditPowerPanel_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="1.67" class='' >
 								<span class=inputTooltip>In feet</span></div>
 								Depth:
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+									<input id=EditPowerPanel_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="0.56" class='' >
 								<span class=inputTooltip>In feet</span></div>
 							</td>
 						</tr>
@@ -5078,7 +5069,7 @@
 			if($addEnabled && CustomFunctions::UserHasPanelPermission())
 			{
 				//function EditPowerPanel(add, powerPanelID, roomID, upsID, siteName, name, amps, circuis, orientation, x, y, width, depth, note)
-				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 225, 42, 'N', 0, 0, 1.21, 0.35, ''";
+				$params = "true, -1, '".MakeJSSafeParam($input)."', -1, '', '', 225, 42, 'N', 0, 0, 1.67, 0.56, ''";
 				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditPowerPanel($params);\">Add New</button>";
 			}
 			$result .= "<BR>";
