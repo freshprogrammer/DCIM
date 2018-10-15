@@ -38,7 +38,7 @@
 			$this->showDeviceImage = $showDeviceImage;
 			
 			//device render properties that are differnet for each model
-			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cabinet")
 			{
 				$this->deviceWidthPx = 950;
 				$this->deviceHeightPx = 91;
@@ -77,7 +77,7 @@
 			$set2Offset = 30;
 			$set3Offset = 40;
 			$set4Offset = 50;
-			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cabinet")
 			{
 				$topOffset = 2;
 				$bottomOffset = 39;
@@ -181,8 +181,8 @@
 		 */
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, true);//colo cabs and cages
-		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1, 2,true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1,24,true,false,false,false, 6, true);//colo cabs and cages
+		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1,24,true,false,false,false, 6, true);
 		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 2,true,false,false,false, 6,false);
 		
 		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1,false);
@@ -868,8 +868,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function DeviceType($type)
 	{
 		if($type === "C") return "Cage";
-		else if($type === "F") return "Full Cab";
-		else if($type === "H") return "Half Cab";
+		else if($type === "F") return "Cabinet";
+		else if($type === "H") return "Half Cabinet";
 		else if($type === "S") return "Physical";
 		else return "Unknown";
 	}
@@ -884,8 +884,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function LocationType($type)
 	{
 		if($type === "C") return "Cage";
-		else if($type === "F") return "Full Cab";
-		else if($type === "H") return "Half Cab";
+		else if($type === "F") return "Cabinet";
+		else if($type === "H") return "Half Cabinet";
 		else if($type === "M") return "Misc";
 		else if($type === "R") return "Rack";
 		else return "Unknown";

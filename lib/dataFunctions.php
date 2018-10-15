@@ -2965,6 +2965,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$startPortNo = $device->startPort;
 		$portCount = $device->portCount;
 		
+		if($device->coloDevice)
+		{//dont mass create ports for colo spaces - they can be created manualy
+			$portCount = 1;
+		}
+		
 		//could utilize DB default values for PIC(0), TYPE(E) and STATUS(D)
 		$query = "INSERT INTO dcim_deviceport
 			(deviceid, port, edituser, editdate, pic, type, status) 

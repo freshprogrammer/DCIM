@@ -495,8 +495,8 @@
 						<td align='left'>
 							<select id=EditLocation_type onchange='EditLocationTypeChanged()' name="type" tabindex=4>
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
-								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
-								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
+								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Cabinet</option>
+								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cabinet</option>
 								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Misc</option>
 								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Rack</option>
 							</select>
@@ -2265,8 +2265,8 @@
 						<td align='left'>
 							<select id=EditDevice_type onchange='EditDeviceTypeChanged(true)' name="type" tabindex=3>
 								<option value="S" <?php if($typeInput==="S") echo "Selected"; ?>>Physical</option>
-								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Full Cab</option>
-								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cab</option>
+								<option value="F" <?php if($typeInput==="F") echo "Selected"; ?>>Cabinet</option>
+								<option value="H" <?php if($typeInput==="H") echo "Selected"; ?>>Half Cabinet</option>
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Cage</option>
 							</select>
 							Size:
