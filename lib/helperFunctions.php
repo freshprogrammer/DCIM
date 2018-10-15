@@ -374,25 +374,44 @@
 		$userFullName = array();
 		$userInitials = array();
 		
-		$query = "SELECT userid, username, name, initials
-			FROM dcim_user";
+		$query = "SELECT userid, username, name, initials FROM dcim_user";
 
-		if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 		{
-			//TODO hadnle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "BuildUsersHashTable() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
-		
-		while ($stmt->fetch())
+		else
 		{
-			$userName["$userID"] = MakeHTMLSafe($uName);
-			$userFullName["$userID"] = MakeHTMLSafe($uFullName);
-			$userInitials["$userID"] = MakeHTMLSafe($uInitials);
+			$stmt->store_result();
+			$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
+			
+			while ($stmt->fetch())
+			{
+				$userName["$userID"] = MakeHTMLSafe($uName);
+				$userFullName["$userID"] = MakeHTMLSafe($uFullName);
+				$userInitials["$userID"] = MakeHTMLSafe($uInitials);
+			}
 		}
+	}
+	
+	function GetMySqlVersion()
+	{
+		global $mysqli;
+		
+		$query = "SHOW VARIABLES LIKE 'version'";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			echo "GetMySqlVersion() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($variableName, $value);
+			$stmt->fetch();
+			return $value;
+		}
+		return null;
 	}
 	
 	function CustomerDecomHelpPopup()

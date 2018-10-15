@@ -22,6 +22,8 @@
 		global $config_badgesEnabled;
 		global $config_subnetsEnabled;
 		global $userSiteID;
+		global $config_dbVersion;
+		global $config_codeVersion;
 		$pageSubTitle = "Data Audits";
 		$result = "";
 		
@@ -82,15 +84,17 @@
 			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
-			$recCount = 0;
-			$output = CreateTableRowCountTable($recCount);
-			$result .= "<a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/database_structure.md' target='_blank'>DB Documentation on GitHub</a><BR/>";
-			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
-
+			$result .= "PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
+			
 			$output = "";
 			$lineCount = CountLinesInDir($output);
 			$result .= "<a href='https://github.com/freshprogrammer/DCIM' target='_blank'>Source on GitHub</a><BR/>";
 			$result .= CreateReport("Lines of Code","$lineCount lines",$output,"");
+			
+			$recCount = 0;
+			$output = CreateTableRowCountTable($recCount);
+			$result .= "<a href='https://github.com/freshprogrammer/DCIM/blob/master/documentation/database_structure.md' target='_blank'>DB Documentation on GitHub</a><BR/>";
+			$result .= CreateReport("Database Record Counts","$recCount records",$output,"");
 			
 			$result .= Check_BadgesWithoutCustomers();
 			$result .= Check_DevicesWithoutCustomersOrLocation();

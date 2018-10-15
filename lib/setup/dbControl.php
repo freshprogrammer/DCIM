@@ -78,7 +78,7 @@ function ConfirmIntent()
 </script>
 </head>
 <font size=5><b><?php echo $config_appName;?> Database update control</b></font><?php
- 	echo " on PHP v".phpversion()."<BR>\n";
+	echo " on PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
 	
 	//simple action selection form
 	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>
