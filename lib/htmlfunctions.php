@@ -4181,7 +4181,7 @@
 		if($count==1 && $stmt->fetch())
 		{//sucsessfull lookup
 			//TODO: This room name is not guranteed to be the room the panel is in so it could be a little confusing. it is just a room linked to at least one of the circuits.
-			$fullPanelDescription = MakeHTMLSafe("$site $roomFullName Panel:".$panel);
+			$fullPanelDescription = MakeHTMLSafe("$site $room Panel:".$panel);
 			$pageSubTitle = "Power Audit - ".MakeHTMLSafe("$site $room Panel:".$panel);//short room name 
 			echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 			echo "<div class='panel'>\n";
@@ -4218,7 +4218,9 @@
 			$count = $stmt->num_rows;
 			
 			//show results
-			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?siteid=$siteID\");'>Back to $site site page</a><BR><BR>\n";
+			echo "<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?siteid=$siteID\");'>Back to $site site page</a>\n";
+			echo "&nbsp;&nbsp;-&nbsp;&nbsp;<a href='javascript:;' onclick='PowerAuditPanel_ConfirmPageChange(\"./?powerpanelid=$powerPanelID\");'>Back to $panel panel page</a><BR><BR>\n";
+			echo "<BR><BR>\n";
 			echo "<span class='powerPanelAuditWarning'>Before doing a panel audit, please double check the volts &amp; amps of each circuit. Also check for any extra or missing circuits.</span><BR><BR>\n";
 			echo "<span class='tableTitle'>Circuits for $fullPanelDescription</span><BR>\n";
 			echo "<form action='./?page=PowerAudit' method='post' id='PowerAuditPanelForm' onsubmit='return SavePowerAuditPanel()' class=''>\n";
