@@ -1354,8 +1354,7 @@
 				EditDeviceForm($action);
 			}
 			
-			//end top panel and panel body
-			echo "</div>\n";
+			echo "</div>\n";//end top panel and panel body
 			echo "</div>\n";
 			
 			echo "<div class='panel'>\n";
@@ -1365,6 +1364,16 @@
 			
 			//all Ports
 			ListDevicePorts($deviceID,$deviceFullNameShort);
+			
+			echo "</div>\n";//end details panel and panel body
+			echo "</div>\n";
+			
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Device History</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			//all Ports
+			 echo ListDeviceHistory($deviceID);
 		}
 		else 
 		{
@@ -1846,6 +1855,74 @@
 			EditDeviceForm($formAction);
 		}
 		return $count;
+	}
+	
+	function ListDeviceHistory($deviceID)
+	{
+		global $mysqli;
+		global $deviceModels;
+		global $errorMessage;
+		
+		
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate, d.logtype
+		FROM dcimlog_device AS d
+			LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+			LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+			LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+			LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+		WHERE d.deviceid=?
+		ORDER BY d.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID) || !$stmt->execute())
+		{
+			$errorMessage[]= "ListDeviceHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		
+		$result = "<span class='tableTitle'>Device History</span>\n<BR>\n";
+		
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+		$count = $stmt->num_rows;
+		
+		if($count>0)
+		{
+			$result .= CreateDataTableHeader(array("Location", "Device","Unit","AltName","Model","Size","Type","Asset","Serial","Status","Notes", "Tech","Date&#x25BC;"));
+				
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
+				$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
+				$fullLocationName = FormatLocation($site, $room, $location, false);
+				
+				$result .= "<tr class='$rowClass'>";
+				$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				$result .= "<td class='data-table-cell'>$unit</td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($deviceAltName)."</td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$result .= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>";
+				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($serial)."</td>";
+				$result .= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$result .= "<td class='data-table-cell'>$visibleNotes</td>";
+				$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
+				$result .= "</tr>";
+			}
+			$result .= "</table>";
+		}
+		else
+		{
+			$result .= "No Device History Found for deviceID($deviceID).<BR>\n";
+		}
+		return $result;
 	}
 	
 	function EditDeviceForm($action)
