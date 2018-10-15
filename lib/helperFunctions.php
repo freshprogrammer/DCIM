@@ -865,6 +865,24 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else return "Unknown";
 	}
 	
+	function DBLogType($type, $pastTenseVerb=false)
+	{
+		if(!$pastTenseVerb)
+		{
+			if($type === "I") return "Insert";
+			else if($type === "U") return "Update";
+			else if($type === "D") return "Delete";
+			else return "Unknown";
+		}
+		else
+		{
+			if($type === "I") return "Inserted";
+			else if($type === "U") return "Updated";
+			else if($type === "D") return "Deleted";
+			else return "Unknown";
+		}
+	}
+	
 	function DeviceType($type)
 	{
 		if($type === "C") return "Cage";

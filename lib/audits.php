@@ -58,6 +58,12 @@
 			$result .= Check_BadgesToQA();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Data Changes</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_DevicesRecentlyUpdated();
+		$result .= Check_DevicesRecentlyChangedStatus();
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
 		$result .= "<div class=\"panel-header\">Data Inconsistencies</div>\n";
@@ -552,12 +558,12 @@
 			
 			//list result data
 			$oddRow = false;
-			while ($stmt->fetch()) 
+			while ($stmt->fetch())
 			{
 				$oddRow = !$oddRow;
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
-			
+				
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
@@ -580,6 +586,162 @@
 			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesRecentlyUpdated($days=90)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Recent Device Changes";
+		$reportNote= "These devices have been updated in the past $days days.";
+		
+		$query = "SELECT * FROM (SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate as editdate, d.qauser, d.qadate, d.logtype
+				FROM dcimlog_device AS d
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+				WHERE d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+				ORDER BY d.editdate DESC) AS cur
+			GROUP BY cur.deviceid
+			ORDER BY cur.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_DevicesRecentlyUpdated() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicesRecentlyUpdated()";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Action","Date&#x25BC;"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DBLogType($logType,true)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Devices",1);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesRecentlyChangedStatus($days=90)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Recent Devices added or removed";
+		$reportNote= "These devices have been added or remvoed (marked inactive) in the past $days days.";
+		
+		$query = "SELECT group_concat(cur.status separator '') as allstati,cur.* 
+			FROM (SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate as editdate, d.qauser, d.qadate, d.logtype
+				FROM dcimlog_device AS d
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+				WHERE d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+				ORDER BY d.editdate DESC) AS cur
+			GROUP BY cur.deviceid
+			HAVING (allstati LIKE '%A%' AND allstati LIKE '%I%') OR logtype='I'
+			ORDER BY cur.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_DevicesRecentlyChangedStatus() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_DevicesRecentlyChangedStatus()";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($stati, $deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		//data title
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Action","Date&#x25BC;"));
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				
+				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DBLogType($logType,true)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Devices",1);
 		}
 		else
 		{
