@@ -39,8 +39,6 @@
 		
 		$addLocation = (int)$input==-1;
 		
-		//UNITS desc from 42 to 1 in most cabs
-		
 		//top panel - location info / form / search fail 
 		echo "<div class='panel'>\n";
 		echo "<div class='panel-header'>Location</div>\n";
@@ -222,6 +220,10 @@
 		
 		if($locationFound)
 		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Location Details</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
 			$descendingUnits = $order=="R";
 			$unitStart = $units+1;//start decending 42
 			$unitLimit = 1;//stop decending at 1
@@ -234,10 +236,6 @@
 			}
 			//ignore empty units on cages
 			$showEmptyUnits = $type!="C";
-			
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>Location Details</div>\n";
-			echo "<div class='panel-body'>\n\n";
 			
 			//list devices at this location - cant use notml list function because this list is ordered by unit for displaying devices in the cab as they actualy are
 			$query = "SELECT s.name AS site, r.name AS room, l.locationid, l.name AS loc, 
@@ -397,25 +395,20 @@
 			echo "</div>\n";
 			echo "</div>\n";
 			
+			$pageSubTitle = MakeHTMLSafe($fullLocationName);
 			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasPowerCircuitPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
-				if($addLocation)//populate and make visible
-				{
-					/* dont think this page is accessable - and JS is outdated
-					$pageSubTitle = "Add Location";
-					echo "<script type='text/javascript'>EditLocation(true,'','','','','A');</script>\n";
-					$focusSearch = false;
-					
-					*/
-				}
-				else 
-				{
-					$pageSubTitle = MakeHTMLSafe($fullLocationName);
-				}
 			}
 		}//location found
+		
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>Location History</div>\n";
+		echo "<div class='panel-body'>\n\n";
+		echo ListLocationHistory($input);
+		echo "</div>\n";
+		echo "</div>\n";
 		//return $count;
 	}
 	
@@ -922,21 +915,22 @@
 				$vlanCount = ListCustomerSubnets("C",$hNo);
 				echo "<BR>\n";
 			}
-			
 			//Power Circuits of devices
 			$powerCircuitsCount = ListPowerCircuits("C",$hNo, -1);
-			
 			//end search (or customer details) panel and panel body
-			echo "</div>\n";
-			echo "</div>\n";
+		}
+		
+		echo "</div>\n";
+		echo "</div>\n";
+		if(!$addCust)
+		{
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Customer History</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
 			echo ListCustomerHistory($hNo);
+			echo "</div>\n";
+			echo "</div>\n";
 		}
-		echo "</div>\n";
-		echo "</div>\n";
 
 		if(UserHasWritePermission())
 		{
@@ -1366,20 +1360,18 @@
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			ListDevicePorts($deviceID,$deviceFullNameShort);//all Ports
-			
-			echo "</div>\n";//end details panel and panel body
-			echo "</div>\n";
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>Device History</div>\n";
-			echo "<div class='panel-body'>\n\n";
-			echo ListDeviceHistory($deviceID);
 		}
 		else 
 		{
 			echo "Device Not Found";
 		}//device found
 		
-		//end panel and panel body
+		echo "</div>\n";//end details panel and panel body
+		echo "</div>\n";
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>Device History</div>\n";
+		echo "<div class='panel-body'>\n\n";
+		echo ListDeviceHistory($input);
 		echo "</div>\n";
 		echo "</div>\n";
 		
@@ -2016,7 +2008,6 @@
 				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					
 					$oddRow = !$oddRow;
 					if($oddRow) $rowClass = "dataRowOne";
 					else $rowClass = "dataRowTwo";
@@ -2031,10 +2022,78 @@
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($siteName." ".$roomName)."</a></td>";
 					if($upsID!=-1)
 						$result .= "<td class='data-table-cell'><a href='./?upsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
-					else
-						$result .= "<td class='data-table-cell'>None</td>";
-					$result .= "<td class='data-table-cell'>$amps</td>";
-					$result .= "<td class='data-table-cell'>$circuits</td>";
+						else
+							$result .= "<td class='data-table-cell'>None</td>";
+							$result .= "<td class='data-table-cell'>$amps</td>";
+							$result .= "<td class='data-table-cell'>$circuits</td>";
+							$result .= "<td class='data-table-cell'>$pos</td>";
+							$result .= "<td class='data-table-cell'>$size</td>";
+							$result .= "<td class='data-table-cell'>".Orientation($orientation)."</td>";
+							$result .= "<td class='data-table-cell'>$visibleNotes</td>";
+							$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+							$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
+							$result .= "</tr>";
+				}
+				$result .= "</table>";
+			}
+			else
+			{
+				$result .= "No power panel history found for powerpanelid($powerPanelID).<BR>\n";
+			}
+		}
+		return $result;
+	}
+	
+	function ListLocationHistory($locationID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT l.locationid, l.name, l.altname, l.type, l.units, l.xpos, l.ypos, l.width, l.depth, l.orientation, l.keyno, l.allocation, l.order, l.visible, l.note, s.name, r.name, l.edituser, l.editdate, l.qauser, l.qadate, l.logtype
+			FROM dcimlog_location AS l
+				LEFT JOIN dcim_room AS r ON r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE l.locationid=?
+			ORDER BY l.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $locationID) || !$stmt->execute())
+		{
+			$errorMessage[]= "ListLocationHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result = "Error looking up location history<BR>\n";
+		}
+		else
+		{
+			$result = "<span class='tableTitle'>Location History</span>\n<BR>\n";
+			
+			$stmt->store_result();
+			$stmt->bind_result($locationID, $locationName, $altName, $type, $units, $xPos, $yPos, $width, $depth, $orientation, $keyno, $allocation, $order, $visible, $notes, $site, $room, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+			$count = $stmt->num_rows;
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Name","AltName","Type","Units","Allocation","Key#","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					//$fullLocationName = FormatLocation($site, $room, $locationName, true);
+					$pos = FormatSizeInFeet($xPos,$yPos);
+					$size = FormatSizeInFeet($width,$depth);
+					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
+					
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a></td>";
+					
+					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($altName)."</td>";
+					$result .= "<td class='data-table-cell'>".LocationType($type)."</td>";
+					$result .= "<td class='data-table-cell'>$units(".LocationOrder($order).")</td>";
+					$result .= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>";
+					$result .= "<td class='data-table-cell'>$keyno</td>";
 					$result .= "<td class='data-table-cell'>$pos</td>";
 					$result .= "<td class='data-table-cell'>$size</td>";
 					$result .= "<td class='data-table-cell'>".Orientation($orientation)."</td>";
@@ -2047,7 +2106,7 @@
 			}
 			else
 			{
-				$result .= "No power panel history found for powerpanelid($powerPanelID).<BR>\n";
+				$result .= "No location history found for locationid($locationID).<BR>\n";
 			}
 		}
 		return $result;
@@ -4230,7 +4289,6 @@
 			echo "</div>\n";
 			echo "</div>\n\n";
 		}
-		
 		if($panelFound)
 		{
 			echo "<div class='panel'>\n";
@@ -4239,22 +4297,21 @@
 			ListPowerCircuits("P",$powerPanelID, $circuits);//temp test code
 			echo "</div>\n";//end details panel and panel body
 			echo "</div>\n";
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>Power Panel History: $fullPanelName</div>\n";
-			echo "<div class='panel-body'>\n\n";
-			echo ListPowerPanelHistory($powerPanelID);
-			echo "</BR>\n";
-			echo ListPowerPanelCircuitHistory($powerPanelID);
-			echo "</div>\n";
-			echo "</div>\n";
 			
 			if(CustomFunctions::UserHasPanelPermission() || CustomFunctions::UserHasPowerCircuitPermission())
 			{
 				//initialize page JS
 				echo "<script type='text/javascript'>InitializeEditButton();</script>\n";
 			}
-		}//panel found*/
-		//return $count;
+		}//panel found
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>Power Panel History: $fullPanelName</div>\n";
+		echo "<div class='panel-body'>\n\n";
+		echo ListPowerPanelHistory($powerPanelID);
+		echo "</BR>\n";
+		echo ListPowerPanelCircuitHistory($powerPanelID);
+		echo "</div>\n";
+		echo "</div>\n";
 	}
 	
 	function EditPowerPanelForm($roomID)
