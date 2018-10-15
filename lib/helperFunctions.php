@@ -182,8 +182,8 @@
 		$deviceModels = array();
 		
 		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, true);//colo cabs and cages
-		$deviceModels[] = new DeviceModel("Colo Half Cab"				, 1, 2,true,false,false,false, 6, true);
-		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 6,true,false,false,false, 6,false);
+		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1, 2,true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 2,true,false,false,false, 6,false);
 		
 		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1,false);
 		

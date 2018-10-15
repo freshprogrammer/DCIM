@@ -33,7 +33,6 @@
 	function ShowLocationPage($input)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
 		
@@ -1694,10 +1693,8 @@
 	function ListDevices($search, $input)
 	{
 		global $mysqli;
-		global $deviceModels;
 		
 		$formAction = "./?host=$input";
-			
 		if($search)
 		{
 			$input = "%".$input."%";
@@ -1750,9 +1747,6 @@
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
-		
-		
-			
 		
 		if(!$search && UserHasWritePermission())
 		{
@@ -1828,7 +1822,6 @@
 					//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
 					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
-					
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
 				echo "</tr>";
@@ -1838,11 +1831,11 @@
 		}
 		else 
 		{
-		  echo "No Devices Found.<BR>\n";
+			echo "No Devices Found.<BR>\n";
 		}
 	
 		if(UserHasWritePermission())
-		{	
+		{
 			EditDeviceForm($formAction);
 		}
 		return $count;
@@ -2395,7 +2388,6 @@
 	function ShowRoomPage($roomID)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $pageSubTitle;
 		global $focusSearch;
 		global $errorMessage;
@@ -3289,7 +3281,6 @@
 	function EditConnectionForm($action, $hNo)
 	{
 		global $mysqli;
-		global $deviceModels;
 		global $config_subnetsEnabled;
 		
 		//edit/Add Connection form
