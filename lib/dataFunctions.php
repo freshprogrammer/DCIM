@@ -2269,7 +2269,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							{
 								$portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
 								$resultMessage[] = "Successfully Created Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName";
-								LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
+								LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type'");
 							}
 							else 
 								$errorMessage[] = "Success, but affected $affectedCount rows.";
