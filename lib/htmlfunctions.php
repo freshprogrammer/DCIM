@@ -1360,27 +1360,19 @@
 				$action = "./?deviceid=$input";
 				EditDeviceForm($action);
 			}
-			
 			echo "</div>\n";//end top panel and panel body
 			echo "</div>\n";
-			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
-			
-			//all Ports
-			ListDevicePorts($deviceID,$deviceFullNameShort);
+			ListDevicePorts($deviceID,$deviceFullNameShort);//all Ports
 			
 			echo "</div>\n";//end details panel and panel body
 			echo "</div>\n";
-			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device History</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
-			//all Ports
-			 echo ListDeviceHistory($deviceID);
+			echo ListDeviceHistory($deviceID);
 		}
 		else 
 		{
@@ -1945,8 +1937,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $hNo) || !$stmt->execute())
 		{
-			$errorMessage[]= "ListDeviceHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-			$result = "Error looking up device history<BR>\n";
+			$errorMessage[]= "ListCustomerHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result = "Error looking up customer history<BR>\n";
 		}
 		else
 		{
@@ -1985,6 +1977,77 @@
 			else
 			{
 				$result .= "No customer history found for hno($hNo).<BR>\n";
+			}
+		}
+		return $result;
+	}
+	
+	function ListPowerPanelHistory($powerPanelID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$query = "SELECT pp.powerpanelid, pp.roomid, pp.powerupsid, pp.name, pp.amps, pp.circuits, pp.xpos, pp.ypos, pp.width, pp.depth, pp.orientation, pp.note, s.name, r.name, pu.name, pp.edituser, pp.editdate, pp.qauser, pp.qadate, pp.logtype
+			FROM dcimlog_powerpanel AS pp
+				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+				LEFT JOIN dcim_powerups AS pu ON pu.powerupsid=pp.powerupsid
+			WHERE pp.powerpanelid=?
+			ORDER BY pp.editdate DESC";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
+		{
+			$errorMessage[]= "ListPowerPanelHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result = "Error looking up power panel history<BR>\n";
+		}
+		else
+		{
+			$result = "<span class='tableTitle'>Power Panel History</span>\n<BR>\n";
+			
+			$stmt->store_result();
+			$stmt->bind_result($powerPanelID, $roomID, $upsID, $panelName, $amps, $circuits, $xPos, $yPos, $width, $depth, $orientation, $notes, $siteName, $roomName, $upsName, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+			$count = $stmt->num_rows;
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Name", "Room","UPS","Amps","Circuits","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
+				
+				//list result data
+				$oddRow = false;
+				while ($stmt->fetch())
+				{
+					
+					$oddRow = !$oddRow;
+					if($oddRow) $rowClass = "dataRowOne";
+					else $rowClass = "dataRowTwo";
+					
+					$panelName = MakeHTMLSafe($panelName);
+					$pos = FormatSizeInFeet($xPos,$yPos);
+					$size = FormatSizeInFeet($width,$depth);
+					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
+					
+					$result .= "<tr class='$rowClass'>";
+					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
+					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($siteName." ".$roomName)."</a></td>";
+					if($upsID!=-1)
+						$result .= "<td class='data-table-cell'><a href='./?upsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
+					else
+						$result .= "<td class='data-table-cell'>None</td>";
+					$result .= "<td class='data-table-cell'>$amps</td>";
+					$result .= "<td class='data-table-cell'>$circuits</td>";
+					$result .= "<td class='data-table-cell'>$pos</td>";
+					$result .= "<td class='data-table-cell'>$size</td>";
+					$result .= "<td class='data-table-cell'>".Orientation($orientation)."</td>";
+					$result .= "<td class='data-table-cell'>$visibleNotes</td>";
+					$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
+					$result .= "</tr>";
+				}
+				$result .= "</table>";
+			}
+			else
+			{
+				$result .= "No power panel history found for powerpanelid($powerPanelID).<BR>\n";
 			}
 		}
 		return $result;
@@ -3950,6 +4013,8 @@
 				$panelName = MakeHTMLSafe($panelName);
 				$roomFullName = MakeHTMLSafe($roomFullName);
 				$upsName = MakeHTMLSafe($upsName);
+				$pos = FormatSizeInFeet($xPos,$yPos);
+				$size = FormatSizeInFeet($width,$depth);
 				
 				$pageSubTitle = "$fullPanelName";
 				
@@ -3957,9 +4022,6 @@
 				{
 					echo "<script src='lib/js/customerEditScripts.js'></script>\n";
 				}
-				
-				$pos = FormatSizeInFeet($xPos,$yPos);
-				$size = FormatSizeInFeet($width,$depth);
 				
 				echo "<div class='panel'>\n";
 				echo "<div class='panel-header'>Power Panel: $fullPanelName</div>\n";
@@ -4094,9 +4156,13 @@
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Power Panel Details: $fullPanelName</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			
 			ListPowerCircuits("P",$powerPanelID, $circuits);//temp test code
-				
+			echo "</div>\n";//end details panel and panel body
+			echo "</div>\n";
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>Power Panel History: $fullPanelName</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			echo ListPowerPanelHistory($powerPanelID);
 			echo "</div>\n";
 			echo "</div>\n";
 			
