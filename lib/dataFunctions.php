@@ -418,7 +418,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$logKeyField = GetKeyField($logTable);
 			$query1 = "CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM $logTable WHERE $keyFieldName = $ukey ORDER BY $logKeyField DESC LIMIT 1;";
 			//^LIMIT 1 to only copy most recent log record
-			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', qauser=-1, qadate='';";
+			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate='';";
 			$query3 = "INSERT INTO $logTable SELECT * FROM tmptable_1;";
 			$query4 = "DROP TEMPORARY TABLE IF EXISTS tmptable_1;";
 			
