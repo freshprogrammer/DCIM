@@ -2119,7 +2119,7 @@
 				LEFT JOIN dcimlog_location AS l ON l.locationid=pcl.locationid
 			WHERE pc.powerpanelid=?
 			GROUP BY pc.powercircuitlogid, pcl.powercircuitid, l.locationid
-			ORDER BY pc.circuit, pc.editdate DESC";
+			ORDER BY pc.circuit%2=0, pc.circuit, pc.editdate DESC";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
 		{
