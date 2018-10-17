@@ -2165,7 +2165,7 @@
 						$result .= "<td class='data-table-cell'><span title='powercircuitid=$powerCircuitID'>$circuit</span></td>";
 					else
 						$result .= "<td class='data-table-cell'>$circuit</td>";
-					$result .= "<td class='data-table-cell'>$volts</td>";
+					$result .= "<td class='data-table-cell'>".FormatVolts($volts)."</td>";
 					$result .= "<td class='data-table-cell'>$amps</td>";
 					$result .= "<td class='data-table-cell'>".PowerOnOff($status)."</td>";
 					$result .= "<td class='data-table-cell'>$load</td>";
