@@ -2014,18 +2014,18 @@
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($siteName." ".$roomName)."</a></td>";
 					if($upsID!=-1)
-						$result .= "<td class='data-table-cell'><a href='./?upsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
-						else
-							$result .= "<td class='data-table-cell'>None</td>";
-							$result .= "<td class='data-table-cell'>$amps</td>";
-							$result .= "<td class='data-table-cell'>$circuits</td>";
-							$result .= "<td class='data-table-cell'>$pos</td>";
-							$result .= "<td class='data-table-cell'>$size</td>";
-							$result .= "<td class='data-table-cell'>".Orientation($orientation)."</td>";
-							$result .= "<td class='data-table-cell'>$visibleNotes</td>";
-							$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-							$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
-							$result .= "</tr>";
+						$result .= "<td class='data-table-cell'><a href='./?powerupsid=$upsID'>".MakeHTMLSafe($upsName)."</a></td>";
+					else
+						$result .= "<td class='data-table-cell'>None</td>";
+					$result .= "<td class='data-table-cell'>$amps</td>";
+					$result .= "<td class='data-table-cell'>$circuits</td>";
+					$result .= "<td class='data-table-cell'>$pos</td>";
+					$result .= "<td class='data-table-cell'>$size</td>";
+					$result .= "<td class='data-table-cell'>".Orientation($orientation)."</td>";
+					$result .= "<td class='data-table-cell'>$visibleNotes</td>";
+					$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					$result .= "<td class='data-table-cell'>$editDate ($logType)</td>";
+					$result .= "</tr>";
 				}
 				$result .= "</table>";
 			}
