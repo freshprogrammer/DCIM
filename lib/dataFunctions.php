@@ -811,7 +811,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($phaseNo==4)
 					{
 						$phaseNo=1;
-						if($found) break;
+						if($found)
+						{
+							$validSet = ($result[0]->circuit==$result[1]->circuit+2 && $result[0]->circuit==$result[2]->circuit+4);//ensure that all 3 circuits are sequential (1,3,5)
+							if(!$validSet)//found but invalid
+							{
+								$errorMessage[] = "Warning! Found record but not part of valid 3 phase set on this panel. Contact your Admin to correct this.($powerPanelID)(Circuits:".$result[0]->circuit.",".$result[1]->circuit.",".$result[2]->circuit.").";
+								$found = false;//return null
+							}
+							break;//stop and return result
+						}
 						else $result = array();//try again
 					}
 				}
