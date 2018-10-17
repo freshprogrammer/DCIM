@@ -1248,7 +1248,7 @@
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
 		
-		$query = "SELECT pcl.powercircuitlocid, pcl.powercircuitid, pcl.locationid, pc.powercircuitid, l.locationid
+		$query = "SELECT pcl.powercircuitlocid, pcl.powercircuitid, pcl.locationid, pc.powercircuitid, l.locationid, l.name
 			FROM dcim_powercircuitloc AS pcl
 				LEFT JOIN dcim_location AS l ON pcl.locationid=l.locationid
 				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
@@ -1263,7 +1263,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerLocID, $powerCircuitID, $locationID,$linkedPowerCicuitID, $linkedLocationID);
+		$stmt->bind_result($powerLocID, $powerCircuitID, $locationID,$linkedPowerCircuitID, $linkedLocationID, $locationName);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1283,9 +1283,9 @@
 				$longResult.= "<tr class='$rowClass'>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedPowerCircuitID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedLocationID)."</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$linkedLocationID'>".MakeHTMLSafe("($locationID) - $locationName")."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
