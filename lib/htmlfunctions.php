@@ -5319,7 +5319,11 @@
 									$popupText .= "<BR>";//blank line between locations
 								
 								if($newLocation)
+								{
 									$popupText .= "<b><a href='?locationid=$locationID'>$fullLocationName</a></b><BR>\n";
+									if(CustomFunctions::UserHasDevPermission())
+										$popupText .= "$locationID - ($xPos , $yPos , $width , $depth , $orientation)<BR>\n";
+								}
 								
 								if($hNo==NULL)
 									$popupText .= "Empty";
