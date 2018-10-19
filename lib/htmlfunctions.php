@@ -5013,7 +5013,7 @@
 		global $errorMessage;
 		
 		$filter = "";
-		
+		$formAction = "";
 		$addEnabled = false;
 		$editEnabled = false;
 		
@@ -5100,7 +5100,7 @@
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe(Truncate($note))."</td>";
 
 					$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
-					if(CustomFunctions::UserHasPanelPermission())
+					if($editEnabled && CustomFunctions::UserHasPanelPermission())
 					{
 						//edit button
 						$result .= "<td class='data-table-cell-button editButtons_hidden'>\n";
