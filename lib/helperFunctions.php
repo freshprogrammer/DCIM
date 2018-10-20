@@ -915,6 +915,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($allocation === "C") return "Colo";
 		else if($allocation === "I") return "Internal";
 		else if($allocation === "M") return "Managed";
+		else if($allocation === "R") return "Reserved";
 		else return "Unknown";
 	}
 	
@@ -1888,7 +1889,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidLocationAllocation($input)
 	{
-		$validFlags = array('E','C','I','M');
+		$validFlags = array('E','C','I','M','R');
 		return ValidFlag($input,"Location Allocation",$validFlags);
 	}
 	

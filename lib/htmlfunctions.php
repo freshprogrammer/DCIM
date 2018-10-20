@@ -506,6 +506,7 @@
 								<option value="C" <?php if($typeInput==="C") echo "Selected"; ?>>Colo</option>
 								<option value="I" <?php if($typeInput==="I") echo "Selected"; ?>>Internal</option>
 								<option value="M" <?php if($typeInput==="M") echo "Selected"; ?>>Managed</option>
+								<option value="R" <?php if($typeInput==="R") echo "Selected"; ?>>Reserved</option>
 							</select>
 						</td>
 					</tr>
@@ -5536,6 +5537,7 @@
 		if($allocation=="I")$locationClass 		= "locationBackground_Internal";
 		else if($allocation=="M")$locationClass = "locationBackground_Managed";
 		else if($allocation=="C")$locationClass = "locationBackground_Colo";
+		else if($allocation=="R")$locationClass = "locationBackground_Reserved";
 		else $locationClass 					= "locationBackground_Empty";
 		
 		$rotation = OritentationToDegrees($orientation);
