@@ -445,7 +445,7 @@
 	
 	function QAAllRecordsAsAdmin()
 	{
-		$adminUserID=0;
+		global $adminUserID;
 
 		ExecuteThis("Q1","UPDATE dcim_badge				SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
 		ExecuteThis("Q1","UPDATE dcim_customer			SET qauser=$adminUserID, qadate=CURRENT_TIMESTAMP WHERE qauser=-1");
@@ -637,6 +637,95 @@ UNION SELECT 'vlan', v.vlanid,							'portvlan', v.vlan, 				vl.vlanid,				vl.lo
 			}
 			
 			$resultMessage[]= "Sucsessfully created $affectedCount missing insert records tables";
+		}
+	}
+	
+	function CorrectOutOfDateLogs()
+	{//code code coppied from Check_RecordLogOutOfSync_Table
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $userID;
+		global $adminUserID;
+		
+		$userID = $adminUserID;//admin
+		
+		$tables = array();
+		$tables[]="dcim_badge";
+		$tables[]="dcim_customer";
+		$tables[]="dcim_device";
+		$tables[]="dcim_deviceport";
+		$tables[]="dcim_portconnection";
+		$tables[]="dcim_location";
+		$tables[]="dcim_portvlan";
+		$tables[]="dcim_powerpanel";
+		$tables[]="dcim_powerups";
+		$tables[]="dcim_powercircuit";
+		$tables[]="dcim_powercircuitloc";
+		$tables[]="dcim_room";
+		$tables[]="dcim_site";
+		$tables[]="dcim_vlan";
+		
+		foreach ($tables as $table)
+		{
+			$affectedCount = 0;
+			echo "<BR>Correcting out of date logs by updating unsyncronized records in $table";
+			$logTable = GetLogTable($table);
+			$keyfield = GetKeyField($table);
+			$fields = GetTableFieldsFromDocs($table,true);
+			
+			//remove First and last 4 fields - edit info and keyfield
+			array_shift($fields);
+			array_pop($fields);
+			array_pop($fields);
+			array_pop($fields);
+			array_pop($fields);
+			
+			$fieldSeperator = "-";
+			$fieldConcat = "CONCAT(`".implode("`,'$fieldSeperator',`",$fields)."`)";
+			
+			//build sql
+			$query= "SELECT a.$keyfield,
+			(SELECT $fieldConcat FROM    $table WHERE $keyfield=a.$keyfield) AS cur,
+			(SELECT $fieldConcat FROM $logTable WHERE $keyfield=a.$keyfield ORDER BY editdate DESC LIMIT 1) AS log
+			FROM $table AS a
+			HAVING cur!=log
+			ORDER BY $keyfield";
+			
+			if (!($stmt = $mysqli->prepare($query)))
+			{
+				$errorMessage[] = "Prepare failed: CorrectOutOfDateLogs() - (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{
+				$stmt->execute();
+				$stmt->store_result();
+				$stmt->bind_result($key, $cur, $log);
+				$count = $stmt->num_rows;
+				
+				if($count>0)
+				{
+					//list result data
+					$keys = array();
+					while ($stmt->fetch())
+					{
+						$keys[]=$key;
+					}
+					
+					//dont seperate to avoid $stmt conflicts
+					foreach($keys as $key)
+					{
+						LogDBChange($table,$key,"U","",true);
+						$affectedCount++;
+						$resultMessage[]= "Sucsessfully created log record for #$key in $table log.";
+					}
+				}
+				else
+				{
+					//nothing to do - all good
+				}
+			}
+			$resultMessage[]= "Sucsessfully created $affectedCount missing update records in $table";
 		}
 	}
 	

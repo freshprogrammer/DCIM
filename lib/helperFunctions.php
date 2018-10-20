@@ -584,10 +584,12 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $resultHTML;
 	}
 	
-	function GetTableFieldsFromDocs($table)
+	function GetTableFieldsFromDocs($table, $runFromSetup=false)
 	{
 		$result = null;
-		$dbDocs = file_get_contents('documentation/database_structure.md');
+		$path = "documentation/";
+		if($runFromSetup)$path = "../../".$path;
+		$dbDocs = file_get_contents($path."database_structure.md");
 		$lines = explode("\n", $dbDocs);
 		$found = false;
 		$fieldNo = -1;

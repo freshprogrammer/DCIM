@@ -16,6 +16,7 @@
 	$errorMessage = array();
 	$debugMessage = array();
 	$timeStamp = date("Y-m-d H:i:s");
+	$adminUserID=0;
 	
 	SQLIConnect_Admin();
 	SessionSetup();
@@ -35,6 +36,7 @@
 	//simple procedures
 	$SCRIPTID_RECREATE_ALL_LOGS = 101;
 	$SCRIPTID_CREATE_MISSING_INSERT_LOGS = 102;
+	$SCRIPTID_CREATE_MISSING_UPDATE_LOGS = 103;
 	//Data correction functions - Mass QA, ect
 	$SCRIPTID_QA_ALL_RECORDS = 201;
 	
@@ -44,6 +46,7 @@
 	$liveEnvironmentScripts []= $SCRIPTID_DB_UPDATEv3_2;
 	$liveEnvironmentScripts []= $SCRIPTID_QA_ALL_RECORDS;
 	$liveEnvironmentScripts []= $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
+	$liveEnvironmentScripts []= $SCRIPTID_CREATE_MISSING_UPDATE_LOGS;
 	
 	$restoreStructureSQLFile = "../../restoredata/structure.sql";
 	$restoreDataSQLFile = "../../restoredata/demoData.sql";
@@ -84,7 +87,7 @@ function ConfirmIntent()
 	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>
 	Script to run:
 	<select id='scriptidselect' name='scriptid'>
-		<option value='0'									>No Action</option>
+		<option value='0'									>No Action - Refresh</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
 		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
@@ -98,6 +101,7 @@ function ConfirmIntent()
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
 		<option value='$SCRIPTID_CREATE_MISSING_INSERT_LOGS'>Create missing insert log records.</option>
+		<option value='$SCRIPTID_CREATE_MISSING_UPDATE_LOGS'>Correct Out Of Date Logs - Update Logs.</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
 	</select>
@@ -210,6 +214,7 @@ function ConfirmIntent()
 		global $SCRIPTID_CREATE_POPULATE_UPDATE;
 		global $SCRIPTID_RECREATE_ALL_LOGS;
 		global $SCRIPTID_CREATE_MISSING_INSERT_LOGS;
+		global $SCRIPTID_CREATE_MISSING_UPDATE_LOGS;
 		global $SCRIPTID_QA_ALL_RECORDS;
 		global $errorMessage;
 		global $restoreStructureSQLFile;
@@ -282,6 +287,11 @@ function ConfirmIntent()
 			case $SCRIPTID_CREATE_MISSING_INSERT_LOGS:
 				echo "Creating missing Insert log records";
 				CreateMissingInsertLogRecords();
+				echo "<BR>Done";
+				break;
+			case $SCRIPTID_CREATE_MISSING_UPDATE_LOGS:
+				echo "Correcting out of date logs by updating unsyncronized records";
+				CorrectOutOfDateLogs();
 				echo "<BR>Done";
 				break;
 			case $SCRIPTID_QA_ALL_RECORDS:

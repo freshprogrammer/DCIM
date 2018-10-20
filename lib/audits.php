@@ -1574,8 +1574,8 @@
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
-			$errorMessage[] = "Prepare failed: Check_ActiveLocationWithoutPower() - (" . $mysqli->errno . ") " . $mysqli->error;
-			return "Prepare failed in Check_ActiveLocationWithoutPower()";
+			$errorMessage[] = "Prepare failed: Check_RecordLogOutOfSync_Table() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_RecordLogOutOfSync_Table()";
 		}
 		
 		$stmt->execute();

@@ -363,7 +363,7 @@
 		}
 	}
 	
-	function LogDBChange($table, $ukey, $action, $filter="")
+	function LogDBChange($table, $ukey, $action, $filter="", $setCurrentDateAndUser=false)
 	{
 		//TODO this should be tested and probably adjusted to accomodate multiple updates where using filter instead of ukey and multiple records can be found (mostly for deleing linking recrods like powerloc deletion)
 		// ^ also worth noting that thst there is no front end way to link double cross link power records so not super important
@@ -433,7 +433,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt1->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q1), but affected <1 row.";
-				}	
+				}
 			}
 			//$query2
 			if (!($stmt2 = $mysqli->prepare($query2)))
@@ -446,7 +446,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt2->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q2), but affected <1 row.";
-				}	
+				}
 			}
 			//$query3
 			if (!($stmt3 = $mysqli->prepare($query3)))
@@ -459,7 +459,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt3->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q3), but affected <1 row.";
-				}	
+				}
 			}
 			//$query4
 			if (!($stmt4 = $mysqli->prepare($query4)))
@@ -468,19 +468,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				if (!$stmt4->execute())//execute 
 					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-4 (" . $stmt4->errno . "-" . $stmt4->error . ").";
-				else 
+				else
 				{
 					//do nothing here - record count will always be 0
 					//if($stmt4->affected_rows<1)
 					//	$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q4), but affected <1 row.";
-				}	
+				}
 			}
 		}
-		else 
+		else
 		{
 			$query = "INSERT INTO $logTable SELECT NULL,'$action',cur.* FROM $table AS cur WHERE $keyFieldName='$ukey'";	
-		
-		
+			
 			if (!($stmt = $mysqli->prepare($query)))
 				$errorMessage[] = "Prepare failed: (LogDBChange ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
 			else
@@ -500,7 +499,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
 					}
 				}	
-			}		
+			}
+			
+			if($setCurrentDateAndUser)
+			{
+				$logKeyField = GetKeyField($logTable);
+				$query = "UPDATE $logTable SET edituser=$userID, editdate=CURRENT_TIMESTAMP , qauser=-1, qadate=NULL WHERE $keyFieldName='$ukey' ORDER BY $logKeyField DESC LIMIT 1";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: (LogDBChange-2 ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action) (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						if($affectedCount==1)
+						{
+							//$resultMessage[] = "Successfully Logged change ($table, $ukey, $action).";
+						}
+						else
+						{
+							$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+			}
 		}
 	}
 	
