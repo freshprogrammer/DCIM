@@ -112,6 +112,12 @@
 			$result .= Check_PowerWithoutPowerLoc();
 			$result .= Check_RecordsMisingInsertLog();
 			$result .= "</div>\n</div>\n";//end panel and panel body
+			
+			$result .= "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits - Untracked data changes</div>\n";
+			$result .= "<div class=\"panel-body\">\n";
+			$result .= Check_RecordLogOutOfSync_AllTables();
+			$result .= "</div>\n</div>\n";//end panel and panel body
 		}
 		
 		return $result;
@@ -1496,6 +1502,108 @@
 				$longResult.= "<td class='data-table-cell'>$parentIDDisplay</td>\n";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$editDate</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Records",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_RecordLogOutOfSync_AllTables()
+	{	
+		$tables = array();
+		$tables[]="dcim_badge";
+		$tables[]="dcim_customer";
+		$tables[]="dcim_device";
+		$tables[]="dcim_deviceport";
+		$tables[]="dcim_portconnection";
+		$tables[]="dcim_location";
+		$tables[]="dcim_portvlan";
+		$tables[]="dcim_powerpanel";
+		$tables[]="dcim_powerups";
+		$tables[]="dcim_powercircuit";
+		$tables[]="dcim_powercircuitloc";
+		$tables[]="dcim_room";
+		$tables[]="dcim_site";
+		$tables[]="dcim_vlan";
+		
+		$result = "";
+		foreach ($tables as $table)
+		{
+			$result.= Check_RecordLogOutOfSync_Table($table);
+		}
+		return $result;
+	}
+	
+	function Check_RecordLogOutOfSync_Table($table)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$logTable = GetLogTable($table);
+		$keyfield = GetKeyField($table);
+		$fields = GetTableFieldsFromDocs($table);
+		
+		$reportTitle = "Records out of sync in $table";
+		$reportNote = "Records where the current record in $table doesnt match the most recent log record in $logTable";
+		
+		//remove First and last 4 fields - edit info and keyfield
+		array_shift($fields);
+		array_pop($fields);
+		array_pop($fields);
+		array_pop($fields);
+		array_pop($fields);
+		
+		$fieldSeperator = "-";
+		$fieldConcat = "CONCAT(`".implode("`,'$fieldSeperator',`",$fields)."`)";
+		
+		//build sql
+		$query= "SELECT a.$keyfield,
+				(SELECT $fieldConcat FROM    $table WHERE $keyfield=a.$keyfield) AS cur,
+				(SELECT $fieldConcat FROM $logTable WHERE $keyfield=a.$keyfield ORDER BY editdate DESC LIMIT 1) AS log
+			FROM $table AS a
+			HAVING cur!=log
+			ORDER BY $keyfield";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "Prepare failed: Check_ActiveLocationWithoutPower() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_ActiveLocationWithoutPower()";
+		}
+		
+		$stmt->execute();
+		$stmt->store_result();
+		$stmt->bind_result($key, $cur, $log);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Table","Record","Current","Log"));
+			
+			$pageURLKey = GetRecordPageKey($table);
+			
+			//list result data
+			$oddRow = false;
+			while ($stmt->fetch())
+			{
+				$oddRow = !$oddRow;
+				if($oddRow) $rowClass = "dataRowOne";
+				else $rowClass = "dataRowTwo";
+				
+				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<td class='data-table-cell'>$table</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?$pageURLKey=$key'>$key</a></td>";
+				$longResult.= "<td class='data-table-cell'>$cur</td>\n";
+				$longResult.= "<td class='data-table-cell'>$log</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";

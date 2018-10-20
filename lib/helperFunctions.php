@@ -584,6 +584,36 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		return $resultHTML;
 	}
 	
+	function GetTableFieldsFromDocs($table)
+	{
+		$result = null;
+		$dbDocs = file_get_contents('documentation/database_structure.md');
+		$lines = explode("\n", $dbDocs);
+		$found = false;
+		$fieldNo = -1;
+		foreach ($lines as $line)
+		{
+			if(!$found && strpos($line,$table))
+			{
+				$found = true;
+				$result = array();
+				continue;
+			}
+			if($found)
+			{
+				if(strlen(trim($line))==0)break;//end of table
+				$fieldNo++;
+				if($fieldNo<=1)continue;//headers
+				
+				$end = strpos($line,"|",1);
+				$field = substr($line,1,$end-1);
+				$result[]=$field;
+				//echo "F#$fieldNo - line=$line -e#$end Field:$field<BR>";
+			}
+		}
+		return  $result;
+	}
+	
 	function CreateMessagePanel($panelTitle, $message)
 	{
 		$result = "<div class='panel'>\n";
