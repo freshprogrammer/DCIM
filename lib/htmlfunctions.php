@@ -4268,7 +4268,7 @@
 				
 				if(CustomFunctions::UserHasPanelPermission())
 				{
-					EditPowerPanelForm($roomID);
+					EditPowerPanelForm("P",$roomID);
 				}
 			}
 			else
@@ -4306,10 +4306,23 @@
 		echo "</div>\n";
 	}
 	
-	function EditPowerPanelForm($roomID)
+	function EditPowerPanelForm($page, $input)
 	{
 		global $errorMessage;
 		global $mysqli;
+		
+		if($page=="P" || $page=="R")
+		{
+			$filter = "r.roomid=$input";
+		}
+		else if($page=="U")
+		{//Power UPS page
+			$filter= "pu.powerupsid=$input";
+		}
+		else if($page=="S")
+		{//Site page
+			$filter= "r.siteid=$input";
+		}
 		
 		//-default values - never seen
 		$action = "";
@@ -4329,10 +4342,12 @@
 		//build room combo options
 		$roomOptions = "";
 		$query = "SELECT s.siteid, s.name, r2.roomid, r2.name, r2.fullname
-			FROM dcim_room AS r1
-				LEFT JOIN dcim_site AS s ON s.siteid=r1.siteid
-				LEFT JOIN dcim_room AS r2 ON r2.siteid=s.siteid
-			WHERE r1.roomid = $roomID
+			FROM dcim_room AS r
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+				LEFT JOIN dcim_room AS r2 ON r2.siteid=r.siteid
+				INNER JOIN dcim_powerups AS pu ON pu.siteid=s.siteid
+			WHERE $filter
+			GROUP BY r2.roomid
 			ORDER BY s.name, r2.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -4359,7 +4374,8 @@
 		FROM dcim_room AS r
 			INNER JOIN dcim_site AS s ON s.siteid=r.siteid
 			INNER JOIN dcim_powerups AS pu ON pu.siteid=s.siteid
-		WHERE r.roomid=$roomID
+		WHERE $filter
+		GROUP BY pu.powerupsid
 		ORDER BY pu.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -5126,7 +5142,7 @@
 		echo $result;
 		
 		if($editEnabled && CustomFunctions::UserHasPanelPermission())
-			EditPowerPanelForm($input);
+			EditPowerPanelForm($page,$input);
 		
 		return $count;
 	}
