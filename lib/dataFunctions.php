@@ -363,7 +363,7 @@
 		}
 	}
 	
-	function LogDBChange($table, $ukey, $action, $filter="")
+	function LogDBChange($table, $ukey, $action, $filter="", $setCurrentDateAndUser=false)
 	{
 		//TODO this should be tested and probably adjusted to accomodate multiple updates where using filter instead of ukey and multiple records can be found (mostly for deleing linking recrods like powerloc deletion)
 		// ^ also worth noting that thst there is no front end way to link double cross link power records so not super important
@@ -418,7 +418,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			$logKeyField = GetKeyField($logTable);
 			$query1 = "CREATE TEMPORARY TABLE tmptable_1 SELECT * FROM $logTable WHERE $keyFieldName = $ukey ORDER BY $logKeyField DESC LIMIT 1;";
 			//^LIMIT 1 to only copy most recent log record
-			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', qauser=-1, qadate='';";
+			$query2 = "UPDATE tmptable_1 SET $logKeyField = NULL, logtype='$action', edituser=$userID, editdate=CURRENT_TIMESTAMP, qauser=-1, qadate='';";
 			$query3 = "INSERT INTO $logTable SELECT * FROM tmptable_1;";
 			$query4 = "DROP TEMPORARY TABLE IF EXISTS tmptable_1;";
 			
@@ -433,7 +433,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt1->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q1), but affected <1 row.";
-				}	
+				}
 			}
 			//$query2
 			if (!($stmt2 = $mysqli->prepare($query2)))
@@ -446,7 +446,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt2->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q2), but affected <1 row.";
-				}	
+				}
 			}
 			//$query3
 			if (!($stmt3 = $mysqli->prepare($query3)))
@@ -459,7 +459,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				{
 					if($stmt3->affected_rows<1)
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q3), but affected <1 row.";
-				}	
+				}
 			}
 			//$query4
 			if (!($stmt4 = $mysqli->prepare($query4)))
@@ -468,19 +468,18 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 			{
 				if (!$stmt4->execute())//execute 
 					$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action)-4 (" . $stmt4->errno . "-" . $stmt4->error . ").";
-				else 
+				else
 				{
 					//do nothing here - record count will always be 0
 					//if($stmt4->affected_rows<1)
 					//	$errorMessage[] = "LogDBChange($table, $ukey, $action) Success(q4), but affected <1 row.";
-				}	
+				}
 			}
 		}
-		else 
+		else
 		{
 			$query = "INSERT INTO $logTable SELECT NULL,'$action',cur.* FROM $table AS cur WHERE $keyFieldName='$ukey'";	
-		
-		
+			
 			if (!($stmt = $mysqli->prepare($query)))
 				$errorMessage[] = "Prepare failed: (LogDBChange ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
 			else
@@ -500,7 +499,34 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
 					}
 				}	
-			}		
+			}
+			
+			if($setCurrentDateAndUser)
+			{
+				$logKeyField = GetKeyField($logTable);
+				$query = "UPDATE $logTable SET edituser=$userID, editdate=CURRENT_TIMESTAMP , qauser=-1, qadate=NULL WHERE $keyFieldName='$ukey' ORDER BY $logKeyField DESC LIMIT 1";
+				
+				if (!($stmt = $mysqli->prepare($query)))
+					$errorMessage[] = "Prepare failed: (LogDBChange-2 ($table, $ukey, $action)) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					if (!$stmt->execute())//execute
+						//failed (errorNo-error)
+						$errorMessage[] = "Failed to execute LogDBChange ($table, $ukey, $action) (" . $stmt->errno . "-" . $stmt->error . ").";
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						if($affectedCount==1)
+						{
+							//$resultMessage[] = "Successfully Logged change ($table, $ukey, $action).";
+						}
+						else
+						{
+							$errorMessage[] = "LogDBChange($table, $ukey, $action) Success, but affected $affectedCount rows.";
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -811,7 +837,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					if($phaseNo==4)
 					{
 						$phaseNo=1;
-						if($found) break;
+						if($found)
+						{
+							$validSet = ($result[0]->circuit==$result[1]->circuit+2 && $result[0]->circuit==$result[2]->circuit+4);//ensure that all 3 circuits are sequential (1,3,5)
+							if(!$validSet)//found but invalid
+							{
+								$errorMessage[] = "Warning! Found record but not part of valid 3 phase set on this panel. Contact your Admin to correct this.($powerPanelID)(Circuits:".$result[0]->circuit.",".$result[1]->circuit.",".$result[2]->circuit.").";
+								$found = false;//return null
+							}
+							break;//stop and return result
+						}
 						else $result = array();//try again
 					}
 				}
@@ -2269,7 +2304,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							{
 								$portFullName = FormatPort($deviceMember, $deviceModel, $pic, $portNo, $type);
 								$resultMessage[] = "Successfully Created Device Port ".MakeHTMLSafe($deviceFullName)." $portFullName";
-								LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type' ORDER BY deviceportid DESC LIMIT 1");
+								LogDBChange("dcim_deviceport",-1,"I","deviceid='$deviceID' AND pic='$pic' AND port='$portNo' AND type='$type'");
 							}
 							else 
 								$errorMessage[] = "Success, but affected $affectedCount rows.";
@@ -2433,22 +2468,9 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		else 
 		{
 			//These should match must match the definitions in BuildDeviceModelArrays()
-			if($type=="F")
-			{
-				$model = "Full Cab";	
-			}
-			else if($type=="C")
-			{
-				$model = "Cage";	
-			}
-			else if($type=="H")
-			{
-				$bottomHalf = CustomFunctions::IsThisLocationABottomHalfCab($locationID);
-				if($bottomHalf)
-					$model = "Half Cab-Bottom";
-				else
-					$model = "Half Cab-Top";
-			}
+			if($type=="F")$model = "Colo Cabinet";
+			else if($type=="C")$model = "Colo Cage";
+			else if($type=="H")$model = "Colo Half Cabinet";
 			$member = 0;
 			$asset = "";
 			$serial = "";
@@ -2977,6 +2999,11 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		$device = GetDeviceFromModelName($model);
 		$startPortNo = $device->startPort;
 		$portCount = $device->portCount;
+		
+		if($device->coloDevice)
+		{//dont mass create ports for colo spaces - they can be created manualy
+			$portCount = 1;
+		}
 		
 		//could utilize DB default values for PIC(0), TYPE(E) and STATUS(D)
 		$query = "INSERT INTO dcim_deviceport

@@ -38,7 +38,7 @@
 			$this->showDeviceImage = $showDeviceImage;
 			
 			//device render properties that are differnet for each model
-			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cabinet")
 			{
 				$this->deviceWidthPx = 950;
 				$this->deviceHeightPx = 91;
@@ -77,7 +77,7 @@
 			$set2Offset = 30;
 			$set3Offset = 40;
 			$set4Offset = 50;
-			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cab")
+			if($this->name=="Colo Cabinet" || $this->name=="Colo Half Cabinet")
 			{
 				$topOffset = 2;
 				$bottomOffset = 39;
@@ -181,9 +181,9 @@
 		 */
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, true);//colo cabs and cages
-		$deviceModels[] = new DeviceModel("Colo Half Cab"				, 1, 2,true,false,false,false, 6, true);
-		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 6,true,false,false,false, 6,false);
+		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1,24,true,false,false,false, 6, true);//colo cabs and cages
+		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1,24,true,false,false,false, 6, true);
+		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 2,true,false,false,false, 6,false);
 		
 		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1,false);
 		
@@ -374,25 +374,44 @@
 		$userFullName = array();
 		$userInitials = array();
 		
-		$query = "SELECT userid, username, name, initials
-			FROM dcim_user";
+		$query = "SELECT userid, username, name, initials FROM dcim_user";
 
-		if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 		{
-			//TODO hadnle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			echo "BuildUsersHashTable() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
-		
-		while ($stmt->fetch())
+		else
 		{
-			$userName["$userID"] = MakeHTMLSafe($uName);
-			$userFullName["$userID"] = MakeHTMLSafe($uFullName);
-			$userInitials["$userID"] = MakeHTMLSafe($uInitials);
+			$stmt->store_result();
+			$stmt->bind_result($userID, $uName, $uFullName, $uInitials);
+			
+			while ($stmt->fetch())
+			{
+				$userName["$userID"] = MakeHTMLSafe($uName);
+				$userFullName["$userID"] = MakeHTMLSafe($uFullName);
+				$userInitials["$userID"] = MakeHTMLSafe($uInitials);
+			}
 		}
+	}
+	
+	function GetMySqlVersion()
+	{
+		global $mysqli;
+		
+		$query = "SHOW VARIABLES LIKE 'version'";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			echo "GetMySqlVersion() Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($variableName, $value);
+			$stmt->fetch();
+			return $value;
+		}
+		return null;
 	}
 	
 	function CustomerDecomHelpPopup()
@@ -563,6 +582,38 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else
 			$resultHTML .= " </span>\n";
 		return $resultHTML;
+	}
+	
+	function GetTableFieldsFromDocs($table, $runFromSetup=false)
+	{
+		$result = null;
+		$path = "documentation/";
+		if($runFromSetup)$path = "../../".$path;
+		$dbDocs = file_get_contents($path."database_structure.md");
+		$lines = explode("\n", $dbDocs);
+		$found = false;
+		$fieldNo = -1;
+		foreach ($lines as $line)
+		{
+			if(!$found && strpos($line,$table))
+			{
+				$found = true;
+				$result = array();
+				continue;
+			}
+			if($found)
+			{
+				if(strlen(trim($line))==0)break;//end of table
+				$fieldNo++;
+				if($fieldNo<=1)continue;//headers
+				
+				$end = strpos($line,"|",1);
+				$field = substr($line,1,$end-1);
+				$result[]=$field;
+				//echo "F#$fieldNo - line=$line -e#$end Field:$field<BR>";
+			}
+		}
+		return  $result;
 	}
 	
 	function CreateMessagePanel($panelTitle, $message)
@@ -846,11 +897,29 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else return "Unknown";
 	}
 	
+	function DBLogType($type, $pastTenseVerb=false)
+	{
+		if(!$pastTenseVerb)
+		{
+			if($type === "I") return "Insert";
+			else if($type === "U") return "Update";
+			else if($type === "D") return "Delete";
+			else return "Unknown";
+		}
+		else
+		{
+			if($type === "I") return "Inserted";
+			else if($type === "U") return "Updated";
+			else if($type === "D") return "Deleted";
+			else return "Unknown";
+		}
+	}
+	
 	function DeviceType($type)
 	{
 		if($type === "C") return "Cage";
-		else if($type === "F") return "Full Cab";
-		else if($type === "H") return "Half Cab";
+		else if($type === "F") return "Cabinet";
+		else if($type === "H") return "Half Cabinet";
 		else if($type === "S") return "Physical";
 		else return "Unknown";
 	}
@@ -865,8 +934,8 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	function LocationType($type)
 	{
 		if($type === "C") return "Cage";
-		else if($type === "F") return "Full Cab";
-		else if($type === "H") return "Half Cab";
+		else if($type === "F") return "Cabinet";
+		else if($type === "H") return "Half Cabinet";
 		else if($type === "M") return "Misc";
 		else if($type === "R") return "Rack";
 		else return "Unknown";
@@ -878,6 +947,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		else if($allocation === "C") return "Colo";
 		else if($allocation === "I") return "Internal";
 		else if($allocation === "M") return "Managed";
+		else if($allocation === "R") return "Reserved";
 		else return "Unknown";
 	}
 	
@@ -1851,7 +1921,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidLocationAllocation($input)
 	{
-		$validFlags = array('E','C','I','M');
+		$validFlags = array('E','C','I','M','R');
 		return ValidFlag($input,"Location Allocation",$validFlags);
 	}
 	

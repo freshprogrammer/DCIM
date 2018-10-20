@@ -55,13 +55,6 @@
 			return $hNo=="387046";
 		}
 		
-		public static function IsThisLocationABottomHalfCab($locationID)
-		{
-			//this should be a more complicated lookup - but so rarely changes could just as easily be edited manualy
-			$bottomIDs = array(142,144,146,148,150,152,154,156,158,160,162,164,166,168);
-			return in_array($locationID,$bottomIDs);
-		}
-		
 		public static function RemotePowerPanelAuditHelpPopup()
 		{
 			global $userSiteID;
