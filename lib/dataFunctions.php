@@ -537,6 +537,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
+		$affectedCount = 0;
 		$recDescrip = GetTableRecordDescription($table);
 	
 		if(strlen($keyField)==0)
@@ -581,7 +582,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$errorMessage[] = "QARecord($table, $ukey, $keyField, $liveRecord) Success, but affected $affectedCount rows.";
 				}
 			}	
-		}	
+		}
+		return $affectedCount;
 	}
 	
 	function ProcessBadgeAction($action)
