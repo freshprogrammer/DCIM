@@ -1569,7 +1569,7 @@
 				(SELECT $fieldConcat FROM    $table WHERE $keyfield=a.$keyfield) AS cur,
 				(SELECT $fieldConcat FROM $logTable WHERE $keyfield=a.$keyfield ORDER BY editdate DESC LIMIT 1) AS log
 			FROM $table AS a
-			HAVING cur!=log
+			HAVING cur!=log OR log IS NULL
 			ORDER BY $keyfield";
 		
 		if (!($stmt = $mysqli->prepare($query)))
