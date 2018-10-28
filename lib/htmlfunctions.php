@@ -2444,6 +2444,55 @@
 		return $result;
 	}
 	
+	function ListLocationAllocations($siteID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$title = "Location Allocation Counts";
+		$query = "SELECT l.allocation, l.type, Count(l.allocation)
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+			WHERE r.siteid=?
+			GROUP BY l.allocation,l.type
+			ORDER BY l.allocation,l.type";
+		
+		$result = "";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteID)|| !$stmt->execute())
+		{
+			$errorMessage[]="ListLocationAllocations($siteID) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "Error Looking up location allocations";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($allocation, $type, $locCount);
+			$count = $stmt->num_rows;
+			
+			//data title
+			$result .= "<span class='tableTitle'>$title</span><BR>\n";
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Allocation","Type","Count"));
+				
+				//list result data
+				while ($stmt->fetch())
+				{
+					$result .= "<tr class='dataRow'>";
+					$result .= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+					$result .= "<td class='data-table-cell'>".LocationType($type)."</td>\n";
+					$result .= "<td class='data-table-cell'>$locCount</td>\n";
+					$result .= "</tr>\n";
+				}
+				$result .= "</table>\n";
+			}
+			else
+				$result .= "No Locations Found.<BR>\n";
+		}
+		return $result;
+	}
+	
 	function ShowSitePage($siteID)
 	{
 		global $mysqli;
@@ -2547,10 +2596,13 @@
 			$result .= "<div class='panel-body'>\n\n";
 
 			$result .= ListRooms("S",$siteID,$siteFullName);
-			$result .= "<BR>";
+			$result .= "</BR>";
 			echo $result;
 			
 			ListPowerPanels("S", $siteID);
+			echo "</BR>";
+			
+			echo ListLocationAllocations($siteID);
 			
 			$result = "</div>\n</div>\n";
 			
