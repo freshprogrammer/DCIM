@@ -64,7 +64,7 @@
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Data Inconsistencies</div>\n";
+		$result .= "<div class=\"panel-header\">Customer/Device Audits</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		if($config_badgesEnabled)
 			$result .= Check_BadgesActiveUnderInactiveCustomer();
@@ -72,16 +72,22 @@
 		$result .= Check_DevicesActiveUnderInactiveCustomer();
 		if($config_subnetsEnabled)
 			$result .= Check_VLANLinkedToDisabledPort();
-		$result .= Check_CircuitOverLoaded();
-		$result .= Check_CircuitInactiveWithLoad();
 		$result .= Check_DeviceWithoutAsset();
 		$result .= Check_DeviceWithDuplicateAsset();
 		$result .= Check_DevicesWithUnknownModel();
-		$result .= Check_ActiveLocationWithoutPower();
 		//$result .= Check_DeviceWithInvalidLocation();
 		//$result .= Check_SwitchIsMainDeviceOnDevicePortRecords();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">Location/Power Audits</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_ActiveLocationWithoutPower();
+		$result .= Check_LocationAllocation_IncorrectEmpty();
+		$result .= Check_LocationAllocation_ShouldBeColo();
+		$result .= Check_CircuitOverLoaded();
+		$result .= Check_CircuitInactiveWithLoad();
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		//admin only stuff - just because its stuff they cant fix
 		if(UserHasAdminPermission())
@@ -1285,6 +1291,120 @@
 			
 			//show results short
 			$shortResult.= FormatSimpleMessage("$count Invalid Locations",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationAllocation_IncorrectEmpty()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Empty Locations with active device(s)";
+		$reportNote = "Locations allocated Empty/Reserved with active device(s).";
+		
+		$query = "SELECT s.name, r.name, l.name, l.locationid, l.allocation, COUNT(d.deviceid) AS cnt
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON  s.siteid=r.siteid
+				LEFT JOIN dcim_device AS d ON  d.locationid=l.locationid
+			WHERE l.allocation IN ('E','R') AND d.status='A'
+			GROUP BY s.siteid, r.roomid, l.locationid
+			HAVING cnt>0
+			ORDER BY s.name, r.name, l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_LocationAllocation_IncorrectEmpty() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_LocationAllocation_IncorrectEmpty()";
+		}
+		
+		$stmt->store_result();
+		$stmt->bind_result($siteName, $roomName, $locationName,$locationID, $allocation, $deviceCount);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Allocation","Device Count"));
+			
+			//list result data
+			while ($stmt->fetch())
+			{
+				$fullLocationName = MakeHTMLSafe(FormatLocation($siteName, $roomName, $locationName));
+				
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$fullLocationName</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$deviceCount</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Invalid Empty Allocations",3);
+		}
+		else
+		{
+			$shortResult.= FormatSimpleMessage("All Good",1);
+		}
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationAllocation_ShouldBeColo()
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Colo devices in non Colo locations";
+		$reportNote = "Colo type devices in locations not allocated for Colo.";
+		
+		$query = "SELECT s.name, r.name, l.name, l.locationid, l.allocation, COUNT(d.deviceid) AS cnt
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON  s.siteid=r.siteid
+				LEFT JOIN dcim_device AS d ON  d.locationid=l.locationid
+			WHERE l.allocation NOT IN ('C') AND d.status='A' AND LEFT(d.model,4)='Colo'
+			GROUP BY s.siteid, r.roomid, l.locationid
+			HAVING cnt>0
+			ORDER BY s.name, r.name, l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_LocationAllocation_ShouldBeColo() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_LocationAllocation_ShouldBeColo()";
+		}
+		
+		$stmt->store_result();
+		$stmt->bind_result($siteName, $roomName, $locationName,$locationID, $allocation, $deviceCount);
+		$count = $stmt->num_rows;
+		
+		$shortResult = "";
+		$longResult = "";
+		if($count>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Allocation","Colo Device Count"));
+			
+			//list result data
+			while ($stmt->fetch())
+			{
+				$fullLocationName = MakeHTMLSafe(FormatLocation($siteName, $roomName, $locationName));
+				
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$fullLocationName</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$deviceCount</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			
+			//show results short
+			$shortResult.= FormatSimpleMessage("$count Invalid Allocations",3);
 		}
 		else
 		{
