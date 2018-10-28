@@ -91,9 +91,10 @@
 		$result .= "<div class=\"panel\">\n";
 		$result .= "<div class=\"panel-header\">$siteFullName - Data to QA</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
-		$result .= Check_CustomerToQA($siteIDFilter);
+		$result .= Check_CustomersToQA($siteIDFilter);
 		if($config_badgesEnabled)
 			$result .= Check_BadgesToQA($siteIDFilter);
+		$result .= Check_DevicesToQA($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
@@ -815,13 +816,12 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_CustomerToQA($siteIDFilter)
+	function Check_CustomersToQA($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Customers Pending QA";
-		$reportNote = "These just  need the name, status, and account numbers of the customer validated.";
+		$reportNote = "These need the name, status, and account numbers of the customer validated.";
 		
 		$query = "SELECT c.name, c.hno, c.cno, c.note, c.status, c.edituser, c.editdate, c.qauser, c.qadate 
 			FROM dcim_site AS s
@@ -832,27 +832,20 @@
 			WHERE c.qauser=-1 AND s.siteid LIKE ?
 			GROUP BY c.hno
 			ORDER BY c.name";
-		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_CustomerToQA()";
 		}
-		
 		$stmt->store_result();
 		$stmt->bind_result($name, $hNo, $cNo, $note, $status, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-	
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Customer","H#","C#","Status","Note"),true);
-			
 			while ($stmt->fetch()) 
 			{
 				$note = Truncate($note);
-				
 				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($name)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".$hNo."</td>\n";
@@ -863,14 +856,63 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Pending",2);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
 		}
-		else
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesToQA($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Devices Pending QA";
+		$reportNote = "These devices need their recent changes validated.";
+		
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate as editdate, d.qauser, d.qadate
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid
+				INNER JOIN dcim_customer AS c ON c.hno=d.hno
+			WHERE d.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY d.deviceid
+			ORDER BY d.name, d.member";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
+			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomerToQA()";
 		}
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Customer","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
