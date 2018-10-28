@@ -162,7 +162,7 @@
 	if(UserHasWritePermission())
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-		$menuItems .= "	<a href='./?page=Audits'>Audits</a>\n";
+		$menuItems .= "	<a href='./?page=Audits&siteid=$userSiteID'>Audits</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(UserHasWritePermission())
@@ -263,7 +263,27 @@
 	{//officaliy logged in with min read access-------------------------------------------------------------------------------------------------
 		echo "<!--  PAGE BODY-->\n";
 		
-		if(strlen($host) > 0)
+		if(strlen($powerPanelIDInput) > 0)
+		{
+			if($page==="PowerAudit")
+				ShowPowerPanelAuditPage($powerPanelIDInput);
+			else
+				ShowPowerPanelPage($powerPanelIDInput);
+		}
+		else if(strlen($page) > 0)
+		{
+			if($page==="Audits")
+			{
+				require_once 'audits.php';
+				echo BuildAuditsPage($siteIDInput);
+			}
+			else if($page==="Audits_History")
+			{
+				require_once 'audits.php';
+				echo BuildAuditsHistoryPage();
+			}
+		}
+		else if(strlen($host) > 0)
 			ShowCustomerPage($host);
 		else if(strlen($roomIDInput) > 0)
 			ShowRoomPage($roomIDInput);
@@ -282,21 +302,8 @@
 			ShowLocationPage($locationIDInput);
 		else if(strlen($userIDInput) > 0)
 			ShowUsersPage($userIDInput);
-		else if(strlen($powerPanelIDInput) > 0)
-		{
-			if($page==="PowerAudit")
-				ShowPowerPanelAuditPage($powerPanelIDInput);
-			else 
-				ShowPowerPanelPage($powerPanelIDInput);
-		}
 		else if(strlen($powerUPSIDInput) > 0)
 			ShowPowerUPSPage($powerUPSIDInput);
-		else if(strlen($page) > 0)
-		{
-			require_once 'audits.php';
-			if($page==="Audits") echo BuildAuditsPage();
-			else if($page==="Audits_History") echo BuildAuditsHistoryPage();
-		}
 		else
 		{
 			//quick check to see if this is a company name or hno to sckip strait to customer page
