@@ -25,9 +25,9 @@
 		$pageSubTitle = "Data Audits";
 		$result = "";
 		
-		//Audit functions
+		//Audit Tools
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
+		$result .= "<div class=\"panel-header\">Audit Tools</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		
 		if(UserHasAdminPermission()) $result .= "<a class='' href='./?page=Audits_History'>History Audits (Admin)</a>\n<BR><BR>";
@@ -87,13 +87,14 @@
 		$result .= Check_LocationAllocation_ShouldBeColo();
 		$result .= Check_CircuitOverLoaded();
 		$result .= Check_CircuitInactiveWithLoad();
+		$result .= Check_PowerWithoutPowerLoc();
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		//admin only stuff - just because its stuff they cant fix
 		if(UserHasAdminPermission())
 		{
 			$result .= "<div class=\"panel\">\n";
-			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits - These should always be green - Alert senior admin to investigate</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
 			$result .= "PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
@@ -113,7 +114,6 @@
 			$result .= Check_DevicePortsWithoutCustomersOrDevices();
 			$result .= Check_LocationWithoutRoom();
 			$result .= Check_PowerLocWithoutLocationOrPower();
-			$result .= Check_PowerWithoutPowerLoc();
 			$result .= "</div>\n</div>\n";//end panel and panel body
 		}
 		return $result;
@@ -1145,37 +1145,39 @@
 		$reportTitle = "Power records without any linking location record";
 		$reportNote = "Power circuits not linked to a location. (Circuits added for panel audits)";
 		
-		$query = "SELECT pc.powercircuitid, pp.name, pc.circuit
+		$query = "SELECT pc.powercircuitid, s.siteid, s.name, pp.powerpanelid, pp.name, pc.circuit
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
+				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
 			WHERE pcl.powercircuitid IS NULL
 			ORDER BY pp.name, pc.circuit";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_PowerWithoutPowerLoc()";
 		}
 		
-		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerCircuitID, $panel, $circuit);
+		$stmt->bind_result($powerCircuitID, $siteID, $siteName, $powerPanelID, $panel, $circuit);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerCircuitID","Panel","Circuit"));
+			$longResult.= CreateDataTableHeader(array("Site","Panel","Circuit","PowerCircuitID"));
 				
 			//list result data
 			while ($stmt->fetch())
 			{
 				$longResult.= "<tr class='dataRow'>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
