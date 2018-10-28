@@ -95,6 +95,7 @@
 		if($config_badgesEnabled)
 			$result .= Check_BadgesToQA($siteIDFilter);
 		$result .= Check_DevicesToQA($siteIDFilter);
+		$result .= Check_LocationsToQA($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
@@ -869,7 +870,7 @@
 		$reportTitle = "Devices Pending QA";
 		$reportNote = "These devices need their recent changes validated.";
 		
-		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate as editdate, d.qauser, d.qadate
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_site AS s
 				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
 				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
@@ -905,6 +906,48 @@
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationsToQA($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Locations Pending QA";
+		$reportNote = "These locations need their recent changes validated.";
+		
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name AS room, l.locationid, l.name AS loc, l.edituser, l.editdate, l.qauser, l.qadate
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+			WHERE l.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY l.locationid
+			ORDER BY s.name, r.name, l.name";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomerToQA()";
+		}
+		$stmt->store_result();
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $editUserID, $editDate, $qaUserID, $qaDate);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Site","Room","Location","Tech","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?siteid=$siteID'>".MakeHTMLSafe($site)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($location)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 				$longResult.= "<td class='data-table-cell'>$editDate</td>";
 				$longResult.= "</tr>\n";
