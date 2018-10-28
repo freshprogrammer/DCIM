@@ -293,11 +293,9 @@
 			ShowPowerUPSPage($powerUPSIDInput);
 		else if(strlen($page) > 0)
 		{
-			if($page==="Audits")
-			{
-				require_once 'audits.php';
-				echo BuildAuditsPage();
-			}
+			require_once 'audits.php';
+			if($page==="Audits") echo BuildAuditsPage();
+			else if($page==="Audits_History") echo BuildAuditsHistoryPage();
 		}
 		else
 		{

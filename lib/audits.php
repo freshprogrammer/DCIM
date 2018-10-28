@@ -10,9 +10,7 @@
 		port with connection thats not active - or visa versa
 		port linked to invalid port - basicly any invalid ports in table
 		port linked to more than 1  port- portid in portconnectiontable more than once
-		unknown stati in all tables
-		log records where first is not I - or missing
-		Log records (not "D") missing parent records - parent missing log		
+		unknown stati in all tables		
 	*/
 	
 	//this function is inserted into page layout
@@ -32,14 +30,14 @@
 		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		
+		if(UserHasAdminPermission()) $result .= "<a class='' href='./?page=Audits_History'>History Audits (Admin)</a>\n<BR><BR>";
 		
-		if($config_badgesEnabled)
-			$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		if($config_badgesEnabled) $result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
 		
 		//$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
 		
 		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
-		$result .= "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
+		$result .= "<a class='' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		
 		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$userSiteID\"'>Export Location Power Readings as CSV</button>";
 		
@@ -110,6 +108,28 @@
 			$result .= Check_ActiveLocationWithoutPower();
 			$result .= Check_PowerLocWithoutLocationOrPower();
 			$result .= Check_PowerWithoutPowerLoc();
+			$result .= "</div>\n</div>\n";//end panel and panel body
+		}
+		return $result;
+	}
+	
+	function BuildAuditsHistoryPage()
+	{
+		global $pageSubTitle;
+		global $config_badgesEnabled;
+		global $config_subnetsEnabled;
+		global $userSiteID;
+		global $config_dbVersion;
+		global $config_codeVersion;
+		$pageSubTitle = "Data History Audits";
+		$result = "";
+		
+		//admin only stuff - just because its stuff they cant fix
+		if(UserHasAdminPermission())
+		{
+			$result .= "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			$result .= "<div class=\"panel-body\">\n";
 			$result .= Check_RecordsMisingInsertLog();
 			$result .= "</div>\n</div>\n";//end panel and panel body
 			
@@ -118,6 +138,10 @@
 			$result .= "<div class=\"panel-body\">\n";
 			$result .= Check_RecordLogOutOfSync_AllTables();
 			$result .= "</div>\n</div>\n";//end panel and panel body
+		}
+		else
+		{
+			CreateMessagePanel("History Audits","You do dont hvae access to view this page");
 		}
 		
 		return $result;
