@@ -1,16 +1,15 @@
 <?php 
-	//This is just a set of functions used for gathering and displaying audits. 
+	//This is a set of functions used for gathering and displaying data audits. 
 	/*
 		::need to add::
 		Multiple Devices connencted to a single device port
 		location without 2x power
 		verify location.status if a device is linked
-		power without location
 		power amps at 0 or negative value
 		port with connection thats not active - or visa versa
 		port linked to invalid port - basicly any invalid ports in table
 		port linked to more than 1  port- portid in portconnectiontable more than once
-		unknown stati in all tables		
+		unknown stati in all tables
 	*/
 	
 	//this function is inserted into page layout
@@ -24,6 +23,7 @@
 		global $config_dbVersion;
 		global $config_codeVersion;
 		
+		if($siteIDFilter==null || strlen($siteIDFilter)==0)$siteIDFilter=-1;
 		if($siteIDFilter!=-1)
 		{
 			$query = "SELECT s.siteid, s.name, s.fullname
