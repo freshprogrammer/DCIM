@@ -1900,7 +1900,7 @@
 			
 			if($count>0)
 			{
-				$result .= CreateDataTableHeader(array("Hosting#", "Customer#","Name","Notes","Status","Tech","Date&#x25BC;"));
+				$result .= CreateDataTableHeader(array("Hosting#", "Customer#","Name","Status","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
 				while ($stmt->fetch())
