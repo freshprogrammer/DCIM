@@ -1,5 +1,5 @@
 <?php 
-	//This is a set of functions used for gathering and displaying data audits. 
+	//This is a set of functions used for gathering and displaying data audits.
 	/*
 		::need to add::
 		Multiple Devices connencted to a single device port
