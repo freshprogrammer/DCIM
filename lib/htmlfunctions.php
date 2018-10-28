@@ -270,7 +270,6 @@
 				echo CreateDataTableHeader(array("Unit","Customer","Device","Model","Size","Type","Status","Note"),true);
 				
 				//list result data
-				$oddRow = false;
 				$lastUnit = $unitStart;
 				while ($stmt->fetch())
 				{
@@ -286,22 +285,14 @@
 							else
 								$lastUnit++;
 							if($lastUnit!=$unit)
-							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								//empty unit
-								echo "<tr class='$rowClass'>";
+							{//empty unit
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$lastUnit</td>";
 								echo "<td class='data-table-cell' colspan=8></td>";
 								echo "</tr>";
 							}
 						}
 					}
-					
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					
 					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
@@ -315,7 +306,7 @@
 							$unitSize=1;
 					}
 					
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					echo "<td class='data-table-cell'>$unit</td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
@@ -333,10 +324,7 @@
 						{
 							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
 							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								echo "<tr class='$rowClass'>";
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
 							}
@@ -345,10 +333,7 @@
 						{
 							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
 							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								echo "<tr class='$rowClass'>";
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
 							}
@@ -369,11 +354,8 @@
 						$lastUnit--;
 					else
 						$lastUnit++;
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					//empty unit
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					echo "<td class='data-table-cell'>$lastUnit</td>";
 					echo "<td class='data-table-cell' colspan=8></td>";
 					echo "</tr>";
@@ -634,14 +616,9 @@
 					echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
 					
 					//list result data
-					$oddRow = false;
 					while ($stmt->fetch())
 					{
-						$oddRow = !$oddRow;
-						if($oddRow) $rowClass = "dataRowOne";
-						else $rowClass = "dataRowTwo";
-						
-						echo "<tr class='$rowClass'>";
+						echo "<tr class='dataRow'>";
 						echo "<td class='data-table-cell'><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
 						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
 						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
@@ -1478,14 +1455,9 @@
 				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				if($search == true)
 					echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
@@ -1765,7 +1737,6 @@
 				echo CreateDataTableHeader(array("Location&#x25B2;", "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			$lastLocationID = -1;
 			while ($stmt->fetch()) 
 			{
@@ -1773,16 +1744,12 @@
 				if($locationID==$lastLocationID && strlen($name)<=0)
 					continue;
 				
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
 				{
@@ -1874,18 +1841,13 @@
 				$result .= CreateDataTableHeader(array("Location", "Device","Unit","AltName","Model","Size","Type","Asset","Serial","Status","Notes", "Tech","Date&#x25BC;"));
 					
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
 					$fullLocationName = FormatLocation($site, $room, $location, false);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					$result .= "<td class='data-table-cell'>$unit</td>";
@@ -1939,16 +1901,11 @@
 				$result .= CreateDataTableHeader(array("Hosting#", "Customer#","Name","Notes","Status","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($hNo)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?search=".$cNo."&searchbtn=T'>".MakeHTMLSafe($cNo)."</a></td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
@@ -1999,19 +1956,14 @@
 				$result .= CreateDataTableHeader(array("Name", "Room","UPS","Amps","Circuits","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$panelName = MakeHTMLSafe($panelName);
 					$pos = FormatSizeInFeet($xPos,$yPos);
 					$size = FormatSizeInFeet($width,$depth);
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($siteName." ".$roomName)."</a></td>";
 					if($upsID!=-1)
@@ -2068,19 +2020,14 @@
 				$result .= CreateDataTableHeader(array("Name","AltName","Type","Units","Allocation","Key#","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					//$fullLocationName = FormatLocation($site, $room, $locationName, true);
 					$pos = FormatSizeInFeet($xPos,$yPos);
 					$size = FormatSizeInFeet($width,$depth);
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a></td>";
 					
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($altName)."</td>";
@@ -2383,15 +2330,10 @@
 			echo CreateDataTableHeader(array("H#","C#","Name&#x25B2;","Status","Note"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$note = Truncate($note);
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>$hNo</a>"."</td>";
 				echo "<td class='data-table-cell'>$cNo</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
@@ -2477,14 +2419,9 @@
 				$result .= CreateDataTableHeader(array("Name","Full Name","UPSs","Rooms","Panels","Locations","Devices"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'>"."<a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a>"."</td>\n";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteFullName)."</td>\n";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($upsCount)."</td>\n";
@@ -2677,17 +2614,12 @@
 			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				if($custAccess=="T")$custAccess = "Yes";
 				else $custAccess = "No";
 				
-				$result .= "<tr class='$rowClass'>";
+				$result .= "<tr class='dataRow'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomFullName)."</td>";
@@ -2966,13 +2898,8 @@
 				
 				//list result data
 				$lastLocID = -1;
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$additionalDevice = ($locationID==$lastLocID);
 					$lastLocID = $locationID;
 					
@@ -2981,7 +2908,7 @@
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					if(!$additionalDevice)
 					{
 						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -3130,7 +3057,6 @@
 				echo CreateDataTableHeader(array("Panel","Circuit","Volts","Amps","Status","Load","Location"),true,CustomFunctions::UserHasPowerCircuitPermission(),CustomFunctions::UserHasPowerCircuitPermission());
 				
 				//list result data
-				$oddRow = false;
 				$lastCircuitID = -1;
 				$numberIn3Phase = 0; 
 				while ($stmt->fetch())
@@ -3140,10 +3066,6 @@
 					
 					if($volts==308)$numberIn3Phase++;
 					else $numberIn3Phase=0;
-					
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					
 					$visibleVolts = FormatVolts($volts);
 					$visibleCircuit = $circuit;
@@ -3157,7 +3079,7 @@
 					if($numberIn3Phase==1)//just 2 divs - outer relative parent and inner absolute
 						$trippleCircuitDisplay = "<div style='position: relative;'><div class='powerCircuitCellMarker'></div></div>";
 					
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					if($powerCircuitID!=$lastCircuitID)
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
@@ -3426,14 +3348,9 @@
 			echo CreateDataTableHeader(array("Device","VLAN","Subnet","Mask","First","Last","Gateway","Note"),!$searchPage,!$searchPage && UserHasWritePermission(),!$searchPage && UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'><a href='?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>";
 				echo "<td class='data-table-cell'>".FormatVLAN($vlan)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($subnet)."</td>";
@@ -3860,25 +3777,10 @@
 			//list result data
 			$lastDevicePortID = -1;
 			$lastSwitchPortID = -1;
-			$oddRow = false;
-			$oddActiveRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$record = "";
-				$recordHead = "<tr class='$rowClass'>";
-				
 				$activeRow = $status=="A";
-				if($activeRow)
-				{
-					$oddActiveRow = !$oddActiveRow;
-					if($oddActiveRow) $activeRowClass = "dataRowOne";
-					else $activeRowClass = "dataRowTwo";
-					$activeRecordHead = "<tr class='$activeRowClass'>";
-				}
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
@@ -3939,10 +3841,10 @@
 				
 				$record .= "</tr>";
 				
-				$tableWithAllData .= $recordHead.$record;
+				$tableWithAllData .= "<tr class='dataRow'>".$record;
 				if($activeRow)
 				{
-					$tableWithActiveData .= $activeRecordHead.$record;
+					$tableWithActiveData .= "<tr class='dataRow'>".$record;
 				}
 				
 				$lastDevicePortID = $devicePortID;
@@ -4036,21 +3938,14 @@
 			//list result data
 			$lastDevicePortID = -1;
 			$lastSwitchPortID = -1;
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
-				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
-
+				
 				$devicePortTitle = "";
 				$switchPortTitle = "";
 				if(CustomFunctions::UserHasDevPermission())
@@ -4058,7 +3953,7 @@
 					$devicePortTitle = "switchportid=$devicePortID";
 					$switchPortTitle = "switchportid=$switchPortID";
 				}
-
+				
 				$childCells = "<td class='data-table-cell'><a href='./?locationid=$dLocID'>".MakeHTMLSafe($dLocName)."</a></td>\n";
 				$childCells .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$childCells .=  "<td class='data-table-cell'><span title='$devicePortTitle'>$portFullName</span></td>\n";
@@ -4073,6 +3968,8 @@
 					$childCells = $parentCells;
 					$parentCells = $t;
 				}
+				
+				echo "<tr class='dataRow'>";
 				echo $childCells;
 				echo $parentCells;
 				
@@ -4759,17 +4656,12 @@
 			$result .= CreateDataTableHeader(array("Site","UPS","Note"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				if($custAccess=="T")$custAccess = "Yes";
 				else $custAccess = "No";
 				
-				$result .= "<tr class='$rowClass'>";
+				$result .= "<tr class='dataRow'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?powerupsid=$powerUpsID'>".MakeHTMLSafe($upsName)."</a></td>";
 				$result .= "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($upsNote))."</td>";
@@ -4978,17 +4870,12 @@
 				$result .= CreateDataTableHeader(array("Customer","Device","Model","Location"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 					$fullLocationName = FormatLocation("", $roomName, $locationName,false);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($custName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
@@ -5097,14 +4984,9 @@
 				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Utilization","Note"),true,true,true);
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</td>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
