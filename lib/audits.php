@@ -99,6 +99,7 @@
 		$result .= "<div class=\"panel\">\n";
 		$result .= "<div class=\"panel-header\">$siteFullName - Data Changes</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_CustomersRecentlyUpdated($siteIDFilter);
 		$result .= Check_DevicesRecentlyUpdated($siteIDFilter);
 		$result .= Check_DevicesRecentlyChangedStatus($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
@@ -132,7 +133,7 @@
 		if(UserHasAdminPermission())
 		{
 			$result .= "<div class=\"panel\">\n";
-			$result .= "<div class=\"panel-header\">Admin Data Audits - These should always be green - Alert senior admin to investigate</div>\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits - These should always be green, if not alert senior admin to investigate</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
 			$result .= "PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
@@ -584,7 +585,6 @@
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Recent Device Changes";
 		$reportNote= "These devices have been updated in the past $days days.";
 		
@@ -598,7 +598,6 @@
 				ORDER BY d.editdate DESC) AS cur
 			GROUP BY cur.deviceid
 			ORDER BY cur.editdate DESC";
-		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DevicesRecentlyUpdated() - (" . $mysqli->errno . ") " . $mysqli->error;
@@ -606,22 +605,15 @@
 		}
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		//data title
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Action","Date&#x25BC;"));
-			
-			//list result data
 			while ($stmt->fetch())
 			{
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
-				
 				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
@@ -639,14 +631,59 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Devices",1);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Devices",1);
 		}
-		else
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	
+	
+	function Check_CustomersRecentlyUpdated($siteIDFilter, $days=90)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Recent Customer Changes";
+		$reportNote= "These customers have been updated in the past $days days.";
+		
+		$query = "SELECT * FROM (SELECT c.hno, c.cno, c.name, c.note, c.edituser, c.editdate, c.qauser, c.qadate, c.logtype
+			FROM dcim_device AS d
+				INNER JOIN dcim_location AS l ON d.locationid=l.locationid
+				INNER JOIN dcim_room AS r ON l.roomid=r.roomid
+				INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				INNER JOIN dcimlog_customer AS c ON d.hno=c.hno
+			WHERE s.siteid LIKE ? AND c.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+			ORDER BY c.editdate DESC) AS cur
+		GROUP BY cur.hno
+		ORDER BY cur.editdate DESC";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
+			$errorMessage[] = "Prepare failed: Check_CustomersRecentlyUpdated() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomersRecentlyUpdated()";
 		}
+		$stmt->store_result();
+		$stmt->bind_result($hNo, $cNo, $customer, $notes, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Customer","Hosting#","Customer#","Note","Tech","Action","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$hNo</td>";
+				$longResult.= "<td class='data-table-cell'>$cNo</td>";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DBLogType($logType,true)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Customers",1);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
