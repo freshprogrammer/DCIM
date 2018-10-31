@@ -1204,6 +1204,103 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		}
 	}
 	
+	function GetPowerPanelID($site, $panel)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT pp.powerpanelid
+			FROM dcim_powerpanel AS pp
+				INNER JOIN dcim_room AS r ON r.roomid=pp.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.name = ? AND pp.name = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site,$panel)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetPowerPanelID($site,$panel): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetPowerPanelID($site,$panel). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "Power Panel not found - GetPowerPanelID($site,$panel).";
+			return -1;
+		}
+	}
+	
+	function GetLocationID($site, $room, $location)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT l.locationid
+			FROM dcim_location AS l
+				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.name = ? AND r.name = ? AND l.name = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('sss', $site,$room,$location)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetLocationID($site,$room,$location): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetLocationID($site,$room,$location). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "Location not found - GetLocationID($site,$room,$location).";
+			return -1;
+		}
+	}
+	
+	function GetUserID($username)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT u.userid
+			FROM dcim_user AS u
+			WHERE u.username = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $username)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetUserID($username): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetUserID($username). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "User not found - GetUserID($username)";
+			return -1;
+		}
+	}
+	
 	//TODO these functions should be merged into one generic function
 	function ValidCustomer($hNo, $shouldFind=true)
 	{
