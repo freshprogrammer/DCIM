@@ -626,8 +626,7 @@
 			echo "Last Activity: $lastActivity<BR>\n";
 			
 			if(UserHasAdminPermission() ||($editingSelf && UserHasWritePermission()))
-			{
-				//change pass form
+			{//change pass form
 				//if not validdate old pas (admin changing someomen elses pass) then hide option and pass some crap as old pas to skip JS tests
 				?>
 					<BR>
@@ -678,13 +677,12 @@
 				<?php 
 			}
 		}
-		else 
+		else
 		{
-			echo "User not Found\n";
+			echo "User ($input) not Found\n";
 		}
 		echo "</div>\n";
 		echo "</div>\n\n";
-		
 		
 		if(UserHasAdminPermission())
 		{
@@ -724,7 +722,7 @@
 						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
 						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
 						echo "<td class='data-table-cell'>$dbInitials</td>";
-						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
+						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,DCIMCustomFunctions::UserHasDevPermission())."</td>";
 						echo "<td class='data-table-cell'>$dbLastActivity</td>";
 						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
 						echo "</tr>";
