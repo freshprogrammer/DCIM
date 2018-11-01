@@ -30,7 +30,7 @@
 				else
 				{
 					global $config_demoSiteEnabled;
-					$config_demoSiteEnabled= $db_config_demoSiteEnabled;
+					$config_demoSiteEnabled= ($db_config_demoSiteEnabled=="T");
 					
 					global $config_appName;
 					$config_appName = $db_config_appName;
