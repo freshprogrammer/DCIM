@@ -65,8 +65,11 @@
 		if(UserHasAdminPermission())
 		{
 			$result .= "(Admin) - <a class='' href='./?page=Audits_History'>History Audits</a>\n";
-			$result .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n";
-			$result .= "<a class='' href='./?page=Audits&siteid=-1'>All Sites Audits</a>\n";
+			if($siteIDFilter!=-1)
+			{
+				$result .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n";
+				$result .= "<a class='' href='./?page=Audits&siteid=-1'>All Sites Audits</a>\n";
+			}
 			$result .= "</BR></BR>\n";
 		}
 		
