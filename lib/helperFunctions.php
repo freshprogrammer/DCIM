@@ -1072,14 +1072,10 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $userFullName;
 		
 		$editUserID = (int)$editUserID;
+		if(is_nan($editUserID)) return "$editUserID is NaN";
 		
-		if(is_nan($editUserID))
-		{//not a number
-			return "$editUserID is nan";
-		}
-		
-		$editUserInitials = "";
-		$editUserFullName = "";
+		$editUserInitials = "??";
+		$editUserFullName = "????";
 		$qaDescription = "";
 		if(!isset($userFullName[$editUserID]))
 		{//not in array
@@ -1091,19 +1087,18 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$editUserFullName = $userFullName[$editUserID];
 			$editUserInitials = $userInitials[$editUserID];
 		}
-	
 		if($qaUserID ==-1)
 			$qaDescription = "None";
 		else 
 		{
 			if(!isset($userFullName[$qaUserID]))//not in array
-				$qaUserFullName = "User#$editUserID";
+				$qaUserFullName = "User#$qaUserID";
 			else
 				$qaUserFullName = $userFullName[$qaUserID];
 			$qaDescription = "$qaUserFullName";//no need to show date here
 		}
 		
-		$lastEditBrief = $userInitials[$editUserID];
+		$lastEditBrief = $editUserInitials;
 		$lastEditFull = $editUserFullName . ": ".$editDate." QA:$qaDescription";
 		
 		if(strlen($visibleText)==0)
