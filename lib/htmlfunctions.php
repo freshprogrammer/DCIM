@@ -3077,7 +3077,7 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE pp.powerpanelid=? AND pc.powercircuitid IS NOT NULL
-			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit";
+			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit, r.name, l.name";
 		}
 		
 		$pagePanelID = -1;
