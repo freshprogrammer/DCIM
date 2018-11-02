@@ -905,6 +905,8 @@
 			echo "<div class='panel-header'>Customer History</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			echo ListCustomerHistory($hNo);
+			echo "<BR>\n";
+			echo ListDeviceHistory(-1,$hNo);
 			echo "</div>\n";
 			echo "</div>\n";
 		}
@@ -1809,10 +1811,18 @@
 		return $count;
 	}
 	
-	function ListDeviceHistory($deviceID)
+	function ListDeviceHistory($deviceID=-1, $hNo=-1)
 	{
 		global $mysqli;
 		global $errorMessage;
+		
+		$filter = "d.deviceid=?";
+		$searchKey = $deviceID;
+		if($hNo!=-1)
+		{//customer page
+			$filter = "d.hno=?";
+			$searchKey = $hNo;
+		}
 		
 		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate, d.logtype
 			FROM dcimlog_device AS d
@@ -1820,10 +1830,10 @@
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.deviceid=?
+			WHERE $filter
 			ORDER BY d.editdate DESC";
 		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID) || !$stmt->execute())
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $searchKey) || !$stmt->execute())
 		{
 			$errorMessage[]= "ListDeviceHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			$result = "Error looking up device history<BR>\n";
@@ -1867,7 +1877,10 @@
 			}
 			else
 			{
-				$result .= "No device history found for deviceID($deviceID).<BR>\n";
+				if($hNo!=-1)
+					$result .= "No device history found for hosting #($searchKey).<BR>\n";
+				else
+					$result .= "No device history found for deviceID($searchKey).<BR>\n";
 			}
 		}
 		return $result;
