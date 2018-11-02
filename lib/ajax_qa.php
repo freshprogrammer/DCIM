@@ -10,6 +10,11 @@
 	//startup
 	SQLIConnect();
 	
+	LoadConfigVariables();//probably not necisarry
+	
+	$userID = -1;
+	$permissionLevel = UpdatePermissionLevel();
+	
 	$dev = GetInput("dev");
 	$dev = $dev==="true";
 	
