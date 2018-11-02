@@ -564,8 +564,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$stmt->bind_Param('i', $userID);
 			
-			if (!$stmt->execute())//execute 
-				//failed (errorNo-error)
+			if (!$stmt->execute())
 				$errorMessage[] = "Failed to execute QARecord($table, $ukey, $keyField, $liveRecord) (" . $stmt->errno . "-" . $stmt->error . ").";
 			else 
 			{
@@ -578,9 +577,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						QARecord(GetLogTable($table),$ukey,$keyField,false);
 				}
 				else
-				{
 					$errorMessage[] = "QARecord($table, $ukey, $keyField, $liveRecord) Success, but affected $affectedCount rows.";
-				}
 			}	
 		}
 		return $affectedCount;

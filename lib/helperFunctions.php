@@ -558,11 +558,11 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true, $rowSpan=1)
 	{
-		$cellID = "qaCell_".$table."_".$recID;
+		$cellID = "qaButtonID_".$table."_".$recID;
 		if($cell)
 			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align='center' id='$cellID' rowspan='$rowSpan'>\n";
 		else 
-			$resultHTML = "<span class='editButtons_hidden'>QA: ";
+			$resultHTML = "<span class='editButtons_hidden'>QA: <span id='$cellID'>";
 			
 		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
 		if($qaStatus==1)
@@ -581,7 +581,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if($cell)
 			$resultHTML .= "</td>\n";
 		else
-			$resultHTML .= " </span>\n";
+			$resultHTML .= " </span></span>\n";
 		return $resultHTML;
 	}
 	
