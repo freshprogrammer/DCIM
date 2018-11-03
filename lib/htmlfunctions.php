@@ -1682,7 +1682,7 @@
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '',  r.roomID, l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.roomID, r.name, '', '',  l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
