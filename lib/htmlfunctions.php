@@ -1003,7 +1003,7 @@
 		echo "<div class='panel-body'>\n\n";
 		
 		//get device info
-		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.roomid, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
 			FROM dcim_device AS d
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -1023,7 +1023,7 @@
 			$stmt->bind_Param('i', $input);		
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceAltName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceAltName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $roomID, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
 			$deviceCount = $stmt->num_rows;
 		}
 		
@@ -1073,8 +1073,8 @@
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
-				//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeAltName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, $roomID, '$hNo', '$jsSafeDeviceName', '$jsSafeAltName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
 			}
 			//editMode button
 			if(UserHasWritePermission())
@@ -1674,7 +1674,7 @@
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -1682,7 +1682,7 @@
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.name, '', '',  r.roomID, l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -1699,8 +1699,8 @@
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
-		{
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		{//customer page
+			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -1720,14 +1720,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $roomID, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new Device
-			//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -1789,8 +1789,8 @@
 					$jsSafeSize = MakeJSSafeParam($size);
 					$jsSafeAsset = MakeJSSafeParam($asset);
 					$jsSafeSerial = MakeJSSafeParam($serial);
-					//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
+					//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+					echo "<button onclick=\"EditDevice(false, $deviceID, $roomID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
@@ -2151,6 +2151,7 @@
 		global $mysqli;
 		global $deviceModels;
 		global $errorMessage;
+		global $userSiteID;
 		
 		//edit/Add Device form
 		//-default values - never seen
@@ -2167,15 +2168,43 @@
 		$serialInput = "serial";
 		$notesInput = "notes input";
 		
-		//build location combo options
+		//build room combo options
+		$roomOptions= "";
+		$query = "SELECT s.name, s.siteid, r.name, r.roomid, COUNT(l.locationid) AS locs
+			FROM dcim_room AS r
+				INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_location AS l ON r.roomid=l.roomid
+			GROUP BY r.roomid
+			HAVING locs>0
+			ORDER BY s.name, r.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditDeviceForm() Prepare 0 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($site, $siteID, $room, $roomID, $locs);
+			while ($stmt->fetch())
+			{
+				$fullLocationName = FormatLocation($site, $room, "", true, false);
+				$selected = ($roomID==$locationInput ? "Selected" : "");
+				$roomOptions.= "<option value='$roomID' $selected>$fullLocationName</option>\n";
+			}
+		}
+		
+		//build location combo options - this is filtered to user's site but this will be populated when roomis populated
 		$locationOptions = "";
 		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.type
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE s.siteid=$userSiteID
 			ORDER BY s.name, r.name, l.name";
-			
-		if (!($stmt = $mysqli->prepare($query))) 
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = "EditDeviceForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
@@ -2184,9 +2213,9 @@
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $type);
-			while ($stmt->fetch()) 
+			while ($stmt->fetch())
 			{
-				$fullLocationName = FormatLocation($site, $room, $location);
+				$fullLocationName = FormatLocation($site, $room, $location, false);
 				$selected = ($locationID==$locationInput ? "Selected" : "");
 				$locationOptions .= "<option value='$locationID' $selected>$fullLocationName</option>\n";
 			}
@@ -2235,19 +2264,27 @@
 						</td>
 					</tr>
 					<tr>
+						<td colspan=1 align=right>Room:</td>
+						<td align='left'>
+							<select id=EditDevice_room name="roomid" onchange='EditDevice_RoomSelectChanged()' tabindex=5>
+								<?php echo $roomOptions; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
 						<td colspan=1 align=right>Location:</td>
 						<td align='left'>
-							<select id=EditDevice_location name="locationid" tabindex=5>
+							<select id=EditDevice_location name="locationid" tabindex=6 style='width:228px;'>
 								<?php echo $locationOptions; ?>
 							</select>
 							Unit:
-							<input id=EditDevice_unit type='text' tabindex=6 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
+							<input id=EditDevice_unit type='text' tabindex=7 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan=1 align=right>Status:</td>
 						<td align='left'>
-							<select id=EditDevice_status name="status" tabindex=7>
+							<select id=EditDevice_status name="status" tabindex=8>
 								<option value="A" <?php if($statusInput==="A") echo "Selected"; ?>>Active</option>
 								<option value="I" <?php if($statusInput==="I") echo "Selected"; ?>>Inactive</option>
 							</select>
@@ -2256,7 +2293,7 @@
 					<tr id='EditDevice_interalFields_row1'>
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
-							<select id=EditDevice_model name="model" tabindex=8>
+							<select id=EditDevice_model name="model" tabindex=9>
 							<?php 
 							//This should be a list of all switch (or other non colo device) models
 							foreach($deviceModels as $model)
@@ -2270,7 +2307,7 @@
 							?>
 							</select>
 							Member:
-							<select id=EditDevice_member name="member" tabindex=9>
+							<select id=EditDevice_member name="member" tabindex=10>
 							<?php 
 							for ($member = 0; $member <= 9; $member++) {
 								echo "<option value='$member'>$member</option>\n";
@@ -2281,25 +2318,25 @@
 					<tr id='EditDevice_interalFields_row2'>
 						<td align='right' width=1>Asset:</td>
 						<td align='left'>
-							<input id=EditDevice_asset type='text' tabindex=10 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
+							<input id=EditDevice_asset type='text' tabindex=11 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
 						</td>
 					</tr>
 					<tr id='EditDevice_interalFields_row3'>
 						<td align='right' width=1>Serial:</td>
 						<td align='left'>
-							<input id=EditDevice_serial type='text' tabindex=11 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
+							<input id=EditDevice_serial type='text' tabindex=12 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditDevice_notes type='text' tabindex=12 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
+							<input id=EditDevice_notes type='text' tabindex=13 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan='2' align='right'>
-							<button type="button" onclick="HideAllEditForms()" tabindex=14>Cancel</button>
-							<input type="submit" value="Save" tabindex=13>
+							<button type="button" onclick="HideAllEditForms()" tabindex=15>Cancel</button>
+							<input type="submit" value="Save" tabindex=14>
 						</td>
 					</tr>
 				</table>
