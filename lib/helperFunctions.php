@@ -481,7 +481,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		$result = "";
 
 		$result .= "<div class='auditReport' id='$reportDivID'>\n";
-		$result .= "<span class='tableTitle'>$title</span>\n";
+		$result .= "<span class='tableTitle'>$title</span><a href='#$reportDivID' onclick='$reportHideFunctionName();'>&#x1F517;</a>\n";
 		if($enableSwitcher)
 			$result .= " <a id='$reportToggleLink' href='#$reportDivID' onclick='$reportHideFunctionName(); return false;'>Toggle</a>\n";
 		$result .= "<BR>\n";

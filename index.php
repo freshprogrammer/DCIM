@@ -93,6 +93,12 @@
 	if(UserHasWritePermission())
 		ProcessFormActions();
 	
+	$onload = "";
+	if($page==="Audits")
+	{
+		$onload = "GotoAuditsFragment();";
+	}
+	
 	//START PAGE CODE **************************************************************************************************
 ?>
 <head>
@@ -102,7 +108,7 @@
 <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 <link rel="stylesheet" href="lib/css/default.css">
 </head>
-<body>
+<body onload='<?php echo $onload;?>'>
 	<!-- Title -->
 	<div id="header-bg">
 	<table class='pageMinWidth center'><tbody><tr>
