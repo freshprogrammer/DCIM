@@ -929,9 +929,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$add && $valid)
 		{//make sure this record exists and lookup old info for comparison
 			$valid = false;
-			$query = "SELECT pc.powercircuitid, IF(pcl.locationid IS NULL, -1, pcl.locationid) AS locationid, pc.circuit, pc.volts, pc.amps, pc.load, pc. status
+			$query = "SELECT pc.powercircuitid, pc.circuit, pc.volts, pc.amps, pc.load, pc. status
 				FROM dcim_powercircuit AS pc
-					LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
 				WHERE pc.powercircuitid=?";
 			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
@@ -946,7 +945,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($count==1)
 				{
 					$valid=true;
-					$stmt->bind_result($powerCircuitID, $oldLocationID,$oldCircuit, $oldVolts, $oldAmps, $oldLoad, $oldStatus);
+					$stmt->bind_result($powerCircuitID,$oldCircuit, $oldVolts, $oldAmps, $oldLoad, $oldStatus);
 					$stmt->fetch();
 				}
 				else if($count==0)
