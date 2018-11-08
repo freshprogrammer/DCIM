@@ -4766,9 +4766,6 @@
 				if($oddRow) $rowClass = "dataRowOne";
 				else $rowClass = "dataRowTwo";
 				
-				if($custAccess=="T")$custAccess = "Yes";
-				else $custAccess = "No";
-				
 				$result .= "<tr class='$rowClass'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?powerupsid=$powerUpsID'>".MakeHTMLSafe($upsName)."</a></td>";
