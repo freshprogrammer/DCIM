@@ -4760,9 +4760,6 @@
 			//list result data
 			while ($stmt->fetch())
 			{
-				if($custAccess=="T")$custAccess = "Yes";
-				else $custAccess = "No";
-				
 				$result .= "<tr class='dataRow'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?powerupsid=$powerUpsID'>".MakeHTMLSafe($upsName)."</a></td>";
