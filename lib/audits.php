@@ -1,47 +1,88 @@
 <?php 
-	//This is just a set of functions used for gathering and displaying audits. 
+	//This is a set of functions used for gathering and displaying data audits.
 	/*
 		::need to add::
 		Multiple Devices connencted to a single device port
 		location without 2x power
 		verify location.status if a device is linked
-		power without location
 		power amps at 0 or negative value
 		port with connection thats not active - or visa versa
 		port linked to invalid port - basicly any invalid ports in table
 		port linked to more than 1  port- portid in portconnectiontable more than once
 		unknown stati in all tables
-		log records where first is not I - or missing
-		Log records (not "D") missing parent records - parent missing log		
 	*/
 	
 	//this function is inserted into page layout
-	function BuildAuditsPage()
+	function BuildAuditsPage($siteIDFilter)
 	{
+		global $mysqli;
+		global $errorMessage;
 		global $pageSubTitle;
 		global $config_badgesEnabled;
 		global $config_subnetsEnabled;
-		global $userSiteID;
 		global $config_dbVersion;
 		global $config_codeVersion;
-		$pageSubTitle = "Data Audits";
+		
+		if($siteIDFilter==null || strlen($siteIDFilter)==0)$siteIDFilter=-1;
+		if($siteIDFilter!=-1)
+		{
+			$query = "SELECT s.siteid, s.name, s.fullname
+				FROM dcim_site AS s
+				WHERE s.siteid=?
+				LIMIT 1";
+			
+			if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+			{
+				$errorMessage[] = "Prepare failed: BuildAuditsPage($siteIDFilter) - (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($siteID, $siteName, $siteFullName);
+			if($stmt->num_rows>0) $stmt->fetch();
+			else
+			{
+				$errorMessage[] = "Failed to location site#$siteIDFilter";
+				$siteIDFilter = -1;
+			}
+		}
+		
+		if($siteIDFilter==-1)
+		{
+			$siteName = "All Sites";
+			$siteFullName = $siteName;
+			$siteIDFilter = "%";
+		}
+		
+		$pageSubTitle = "Data Audits - $siteFullName";
 		$result = "";
 		
-		//Audit functions
+		//Audit Tools
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Audit Functions</div>\n";
+		$result .= "<div class=\"panel-header\">Audit Tools</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		
+		if(UserHasAdminPermission())
+		{
+			$result .= "(Admin) - <a class='' href='./?page=Audits_History'>History Audits</a>\n";
+			if($siteIDFilter!=-1)
+			{
+				$result .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\n";
+				$result .= "<a class='' href='./?page=Audits&siteid=-1'>All Sites Audits</a>\n";
+			}
+			$result .= "</BR></BR>\n";
+		}
 		
-		if($config_badgesEnabled)
-			$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export Active Badge List as CSV</button><BR><BR>";
+		/*disabled till multi site support 
+		if($config_badgesEnabled) $result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export $siteFullName Active Badge List as CSV</button><BR><BR>";
+		*/
 		
-		//$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./?page=PowerAudit\"'>Power Audit</button>";
-		
+		/*disabled till multi site support
 		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
-		$result .= "<a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
+		$result .= "<a class='' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
+		*/
 		
-		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$userSiteID\"'>Export Location Power Readings as CSV</button>";
+		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$siteIDFilter\"'>Export $siteFullName Location Power Readings as CSV</button>";
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
@@ -51,44 +92,53 @@
 		
 		
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Data to QA</div>\n";
+		$result .= "<div class=\"panel-header\">$siteFullName - Data to QA</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
-		$result .= Check_CustomerToQA();
+		$result .= Check_CustomersToQA($siteIDFilter);
 		if($config_badgesEnabled)
-			$result .= Check_BadgesToQA();
+			$result .= Check_BadgesToQA($siteIDFilter);
+		$result .= Check_DevicesToQA($siteIDFilter);
+		$result .= Check_LocationsToQA($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Data Changes</div>\n";
+		$result .= "<div class=\"panel-header\">$siteFullName - Data Changes</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
-		$result .= Check_DevicesRecentlyUpdated();
-		$result .= Check_DevicesRecentlyChangedStatus();
+		$result .= Check_CustomersRecentlyUpdated($siteIDFilter);
+		$result .= Check_DevicesRecentlyUpdated($siteIDFilter);
+		$result .= Check_DevicesRecentlyChangedStatus($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		$result .= "<div class=\"panel\">\n";
-		$result .= "<div class=\"panel-header\">Data Inconsistencies</div>\n";
+		$result .= "<div class=\"panel-header\">$siteFullName - Customer/Device Audits</div>\n";
 		$result .= "<div class=\"panel-body\">\n";
 		if($config_badgesEnabled)
-			$result .= Check_BadgesActiveUnderInactiveCustomer();
-		$result .= Check_ColoPatch0();
-		$result .= Check_DevicesActiveUnderInactiveCustomer();
+			$result .= Check_BadgesActiveUnderInactiveCustomer($siteIDFilter);
+		$result .= Check_ColoPatch0($siteIDFilter);
+		$result .= Check_DevicesActiveUnderInactiveCustomer($siteIDFilter);
 		if($config_subnetsEnabled)
-			$result .= Check_VLANLinkedToDisabledPort();
-		$result .= Check_CircuitOverLoaded();
-		$result .= Check_CircuitInactiveWithLoad();
-		$result .= Check_DeviceWithoutAsset();
-		$result .= Check_DeviceWithDuplicateAsset();
-		$result .= Check_DevicesWithUnknownModel();
-		//$result .= Check_DeviceWithInvalidLocation();
-		//$result .= Check_SwitchIsMainDeviceOnDevicePortRecords();
+			$result .= Check_VLANLinkedToDisabledPort($siteIDFilter);
+		$result .= Check_DeviceWithoutAsset($siteIDFilter);
+		$result .= Check_DeviceWithDuplicateAsset($siteIDFilter);
+		$result .= Check_DevicesWithUnknownModel($siteIDFilter);
 		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
+		$result .= "<div class=\"panel\">\n";
+		$result .= "<div class=\"panel-header\">$siteFullName - Location/Power Audits</div>\n";
+		$result .= "<div class=\"panel-body\">\n";
+		$result .= Check_ActiveLocationWithoutPower($siteIDFilter);
+		$result .= Check_LocationAllocation_IncorrectEmpty($siteIDFilter);
+		$result .= Check_LocationAllocation_ShouldBeColo($siteIDFilter);
+		$result .= Check_CircuitOverLoaded($siteIDFilter);
+		$result .= Check_CircuitInactiveWithLoad($siteIDFilter);
+		$result .= Check_PowerWithoutPowerLoc($siteIDFilter);
+		$result .= "</div>\n</div>\n\n";//end panel and panel body
 		
 		//admin only stuff - just because its stuff they cant fix
 		if(UserHasAdminPermission())
 		{
 			$result .= "<div class=\"panel\">\n";
-			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits - These should always be green, if not alert senior admin to investigate</div>\n";
 			$result .= "<div class=\"panel-body\">\n";
 			
 			$result .= "PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
@@ -107,9 +157,24 @@
 			$result .= Check_DevicesWithoutCustomersOrLocation();
 			$result .= Check_DevicePortsWithoutCustomersOrDevices();
 			$result .= Check_LocationWithoutRoom();
-			$result .= Check_ActiveLocationWithoutPower();
 			$result .= Check_PowerLocWithoutLocationOrPower();
-			$result .= Check_PowerWithoutPowerLoc();
+			$result .= "</div>\n</div>\n";//end panel and panel body
+		}
+		return $result;
+	}
+	
+	function BuildAuditsHistoryPage()
+	{
+		global $pageSubTitle;
+		$pageSubTitle = "Data History Audits";
+		$result = "";
+		
+		//admin only stuff - just because its stuff they cant fix
+		if(UserHasAdminPermission())
+		{
+			$result .= "<div class=\"panel\">\n";
+			$result .= "<div class=\"panel-header\">Admin Data Audits</div>\n";
+			$result .= "<div class=\"panel-body\">\n";
 			$result .= Check_RecordsMisingInsertLog();
 			$result .= "</div>\n</div>\n";//end panel and panel body
 			
@@ -119,6 +184,10 @@
 			$result .= Check_RecordLogOutOfSync_AllTables();
 			$result .= "</div>\n</div>\n";//end panel and panel body
 		}
+		else
+		{
+			CreateMessagePanel("History Audits","You do dont hvae access to view this page");
+		}
 		
 		return $result;
 	}
@@ -127,11 +196,8 @@
 	{
 		global $mysqli;
 		global $errorMessage;
+		$reportTitle = "Circuits off but still reporting load"; $reportNote = "";
 		
-		$reportTitle = "Circuits off but still reporting load";
-		$reportNote = "";
-		
-		//could properly sort circuits, but meh
 		$query = "SELECT s.name AS site, r.name, l.locationid, l.name AS location, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load 
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
@@ -139,36 +205,22 @@
 				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE pc.status='D' AND pc.load !=0
-			ORDER BY 1,2,3";
-		
-		if (!($stmt = $mysqli->prepare($query)))
+			WHERE s.siteid LIKE ? AND pc.status='D' AND pc.load !=0
+			ORDER BY s.name,r.name,l.name,pp.name,pc.circuit";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_CircuitInactiveWithLoad() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_CircuitInactiveWithLoad()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($site, $room, $locationID, $locaiton, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		//data title
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load"));
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$locaiton</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
@@ -178,26 +230,19 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Circuits",3);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Circuits",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_CircuitOverLoaded($threshold=80)
+	function Check_CircuitOverLoaded($siteIDFilter, $threshold=80)
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Circuits past threshhold ($threshold%) utilization";
 		$reportNote = "";
 		
-		//could properly sort circuits, but meh
 		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, (pc.load/pc.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, pc.edituser, pc.editdate, pc.qauser, pc.qadate
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
@@ -207,39 +252,25 @@
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status ='A'
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE (pc.load/pc.amps*100) > $threshold
+			WHERE s.siteid LIKE ? AND (pc.load/pc.amps*100) > $threshold
 			GROUP BY pc.powercircuitid, c.hno
 			ORDER BY s.name, r.name, pp.name, pc.circuit";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_CircuitOverLoaded() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_CircuitOverLoaded()";
 		}
-				
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		//data title
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Location","Panel","Circuit","Volts","Amps","Load","Utilization","Reading","Customer"));
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$fullLocationName = FormatLocation($site, $room, $location);
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
@@ -252,18 +283,13 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Circuits",2);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Circuits",2);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_VLANLinkedToDisabledPort()
+	function Check_VLANLinkedToDisabledPort($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -273,17 +299,19 @@
 		
 		$query = "SELECT dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.type, dp.status, dp.note, pv.vlan 
 				FROM dcim_portvlan AS pv
-					 LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
-					 LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
-				 WHERE dp.status='D'";
+					LEFT JOIN dcim_deviceport AS dp ON pv.deviceportid=dp.deviceportid
+					LEFT JOIN dcim_device AS d on dp.deviceid=d.deviceid
+					INNER JOIN dcim_location AS l ON l.locationid=d.locationid
+					INNER JOIN dcim_room AS r ON r.roomid=l.roomid
+					INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+				WHERE s.siteid LIKE ? AND dp.status='D'
+				ORDER BY s.name, d.name, d.member, dp.port";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_VLANLinkedToDisabledPort() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_VLANLinkedToDisabledPort()";
 		}
-				
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $type, $status, $note, $vlan);
 		$count = $stmt->num_rows;
@@ -296,17 +324,12 @@
 			$longResult.= CreateDataTableHeader(array("Device","Port","Status","Vlan","Note"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$portFullName</td>\n";
 				$longResult.= "<td class='data-table-cell'>$status</td>\n";
@@ -358,14 +381,9 @@
 			$longResult.= CreateDataTableHeader(array("H#","Name","Badgeno"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>$hno</td>\n";
 				$longResult.= "<td class='data-table-cell'>$name</td>\n";
 				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
@@ -383,7 +401,7 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_ColoPatch0()
+	function Check_ColoPatch0($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -398,16 +416,14 @@
 				LEFT JOIN dcim_location AS l ON l.locationid=d.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.type IN ('F','C','H') AND dp.port=0
+			WHERE s.siteid LIKE ? AND d.type IN ('F','C','H') AND dp.port=0
 			ORDER BY c.name,d.name";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_ColoPatch0() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_ColoPatch0()";
 		}
-				
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($customer, $hNo, $site, $locationID, $room, $location, $deviceID, $deviceName,$deviceAltName, $member, $model, $status, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
@@ -420,17 +436,12 @@
 			$longResult.= CreateDataTableHeader(array("Customer","Location","Device","Status"),true);
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-			
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
-					
-				$longResult.= "<tr class='$rowClass'>\n";
+				
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
@@ -450,7 +461,7 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DeviceWithoutAsset()
+	function Check_DeviceWithoutAsset($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -464,16 +475,14 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-			WHERE d.status='A' AND d.type='S' AND d.asset=''
+			WHERE s.siteid LIKE ? AND d.status='A' AND d.type='S' AND d.asset=''
 			ORDER BY d.status, site, room, loc, unit, d.name, member";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DeviceWithoutAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DeviceWithoutAsset()";
 		}
-				
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
@@ -483,25 +492,20 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Location","Device","Unit","Model","Size","Type","Asset","Status","Notes"),true);
+			$longResult.= CreateDataTableHeader(array("Location","Unit","Device","Model","Size","Type","Asset","Status","Notes"),true);
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-			
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-				$longResult.= "<td class='data-table-cell'>$unit</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
 				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
@@ -512,18 +516,13 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",2);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DeviceWithDuplicateAsset()
+	function Check_DeviceWithDuplicateAsset($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -542,15 +541,14 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
+			WHERE s.siteid LIKE ?
 			ORDER BY d.asset, d.name, d.member";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DeviceWithDuplicateAsset() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DeviceWithDuplicateAsset()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
@@ -561,20 +559,13 @@
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes"),true);
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -589,22 +580,16 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DevicesRecentlyUpdated($days=90)
+	function Check_DevicesRecentlyUpdated($siteIDFilter, $days=90)
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Recent Device Changes";
 		$reportNote= "These devices have been updated in the past $days days.";
 		
@@ -614,42 +599,27 @@
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+				WHERE s.siteid LIKE ? AND d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
 				ORDER BY d.editdate DESC) AS cur
 			GROUP BY cur.deviceid
 			ORDER BY cur.editdate DESC";
-		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DevicesRecentlyUpdated() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DevicesRecentlyUpdated()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		//data title
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Action","Date&#x25BC;"));
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
-				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -666,18 +636,63 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Devices",1);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Devices",1);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DevicesRecentlyChangedStatus($days=90)
+	
+	
+	function Check_CustomersRecentlyUpdated($siteIDFilter, $days=90)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Recent Customer Changes";
+		$reportNote= "These customers have been updated in the past $days days.";
+		
+		$query = "SELECT * FROM (SELECT c.hno, c.cno, c.name, c.note, c.edituser, c.editdate, c.qauser, c.qadate, c.logtype
+			FROM dcim_device AS d
+				INNER JOIN dcim_location AS l ON d.locationid=l.locationid
+				INNER JOIN dcim_room AS r ON l.roomid=r.roomid
+				INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				INNER JOIN dcimlog_customer AS c ON d.hno=c.hno
+			WHERE s.siteid LIKE ? AND c.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+			ORDER BY c.editdate DESC) AS cur
+		GROUP BY cur.hno
+		ORDER BY cur.editdate DESC";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_CustomersRecentlyUpdated() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomersRecentlyUpdated()";
+		}
+		$stmt->store_result();
+		$stmt->bind_result($hNo, $cNo, $customer, $notes, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Customer","Hosting#","Customer#","Note","Tech","Action","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$hNo</td>";
+				$longResult.= "<td class='data-table-cell'>$cNo</td>";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DBLogType($logType,true)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Customers",1);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesRecentlyChangedStatus($siteIDFilter, $days=90)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -692,43 +707,34 @@
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON d.hno=c.hno
-				WHERE d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
+				WHERE s.siteid LIKE ? AND d.editdate BETWEEN NOW() - INTERVAL $days DAY AND NOW()
 				ORDER BY d.editdate DESC) AS cur
 			GROUP BY cur.deviceid
 			HAVING (allstati LIKE '%A%' AND allstati LIKE '%I%') OR logtype='I'
 			ORDER BY cur.editdate DESC";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DevicesRecentlyChangedStatus() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DevicesRecentlyChangedStatus()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($stati, $deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
-		//data title
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Action","Date&#x25BC;"));
 			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				$longResult.= "<tr class='$rowClass'>";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 				//$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -756,28 +762,30 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_BadgesToQA()
+	function Check_BadgesToQA($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
 		$reportTitle = "Badges Pending QA";
-		$reportNote = "These badges need to be verified in badge server.";
+		$reportNote = "These badges need to be verified with badge server.";
 		
-		//could properly sort circuits, but meh
-		$query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate 
-			FROM dcim_badge AS b 
-				LEFT JOIN dcim_customer AS c ON c.hno=b.hno
-			WHERE b.qauser=-1
-			ORDER BY cust,name";
+		$query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid
+				INNER JOIN dcim_customer AS c ON c.hno=d.hno
+				INNER JOIN dcim_badge AS b ON b.hno=c.hno
+			WHERE b.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY b.badgeid
+			ORDER BY c.name,b.name";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_BadgesToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_BadgesToQA()";
 		}
-				
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($customer, $badgeID, $hNo, $name, $badgeNo, $status, $issue, $hand, $returned, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
@@ -787,16 +795,10 @@
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno","Status","Issue","Enroll"),true);
-			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($badgeNo)."</td>\n";
@@ -818,48 +820,37 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_CustomerToQA()
+	function Check_CustomersToQA($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Customers Pending QA";
-		$reportNote = "These just  need the name, status, and account numbers of the customer validated.";
+		$reportNote = "These need the name, status, and account numbers of the customer validated.";
 		
-		//could properly sort circuits, but meh
 		$query = "SELECT c.name, c.hno, c.cno, c.note, c.status, c.edituser, c.editdate, c.qauser, c.qadate 
-			FROM dcim_customer AS c
-			WHERE c.qauser=-1
-			ORDER BY name";
-		
-		if (!($stmt = $mysqli->prepare($query)))
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid
+				INNER JOIN dcim_customer AS c ON c.hno=d.hno
+			WHERE c.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY c.hno
+			ORDER BY c.name";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_CustomerToQA()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($name, $hNo, $cNo, $note, $status, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-	
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Customer","H#","C#","Status","Note"),true);
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$note = Truncate($note);
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($name)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".$hNo."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".$cNo."</td>\n";
@@ -869,14 +860,105 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Pending",2);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
 		}
-		else
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_DevicesToQA($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Devices Pending QA";
+		$reportNote = "These devices need their recent changes validated.";
+		
+		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, c.name, l.locationid, l.name AS loc, d.unit, d.name AS devicename, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid
+				INNER JOIN dcim_customer AS c ON c.hno=d.hno
+			WHERE d.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY d.deviceid
+			ORDER BY d.name, d.member";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
+			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomerToQA()";
 		}
+		$stmt->store_result();
+		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Device","Customer","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
+				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>$unit</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($size)."</td>";
+				$longResult.= "<td class='data-table-cell'>".DeviceType($type)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($asset)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$visibleNotes</td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationsToQA($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Locations Pending QA";
+		$reportNote = "These locations need their recent changes validated.";
+		
+		$query = "SELECT s.siteid, s.name AS site, r.roomid, r.name AS room, l.locationid, l.name AS loc, l.edituser, l.editdate, l.qauser, l.qadate
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+			WHERE l.qauser=-1 AND s.siteid LIKE ?
+			GROUP BY l.locationid
+			ORDER BY s.name, r.name, l.name";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_CustomerToQA()";
+		}
+		$stmt->store_result();
+		$stmt->bind_result($siteID, $site, $roomID, $room, $locationID, $location, $editUserID, $editDate, $qaUserID, $qaDate);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Site","Room","Location","Tech","Date&#x25BC;"));
+			while ($stmt->fetch())
+			{
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?siteid=$siteID'>".MakeHTMLSafe($site)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($location)."</a></td>";
+				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+				$longResult.= "<td class='data-table-cell'>$editDate</td>";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Pending",2);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
@@ -912,17 +994,11 @@
 		{
 			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","LocationID","LinkedLocationID","LinkedLocationName"));
 				
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
@@ -975,18 +1051,12 @@
 		{
 			$longResult.= CreateDataTableHeader(array("DevicePortID","Device","H#","Port"));
 			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>$deviceportid</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe("#$deviceID - Ref:$deviceFullName")."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
@@ -1005,7 +1075,7 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_BadgesActiveUnderInactiveCustomer()
+	function Check_BadgesActiveUnderInactiveCustomer($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -1014,11 +1084,17 @@
 		$reportNote = "These badges need to be deactivated.";
 		
 		$query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
-			FROM dcim_badge AS b 
-				LEFT JOIN dcim_customer AS c ON c.hno=b.hno
-			WHERE c.status='I' AND NOT b.status IN ('D','R')";
+			FROM dcim_site AS s
+				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid
+				INNER JOIN dcim_customer AS c ON c.hno=d.hno
+				INNER JOIN dcim_badge AS b ON b.hno=c.hno
+			WHERE c.status='I' AND NOT b.status IN ('D','R') AND s.siteid LIKE ?
+			GROUP BY b.badgeid
+			ORDER BY c.name,b.name";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_BadgesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_BadgesActiveUnderInactiveCustomer()";
@@ -1037,14 +1113,9 @@
 			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$name</td>\n";
 				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
@@ -1062,7 +1133,7 @@
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 
-	function Check_DevicesActiveUnderInactiveCustomer()
+	function Check_DevicesActiveUnderInactiveCustomer($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -1070,21 +1141,22 @@
 		$reportTitle = "Active devices/colos where parent customer is not active";
 		$reportNote = "These need to be deactivated.";
 		
-		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.altname, d.model, d.member
+		$query = "SELECT c.name AS cust,c.hno,d.deviceid,d.name, d.altname, d.model, d.member, s.name, r.name, l.name, l.locationid
 			FROM dcim_device AS d 
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-			WHERE c.status='I' AND NOT d.status='I'
+				INNER JOIN dcim_location AS l ON l.locationid=d.locationid
+				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.siteid LIKE ? AND c.status='I' AND NOT d.status='I'
 			ORDER BY c.name, d.name, d.member";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DevicesActiveUnderInactiveCustomer() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DevicesActiveUnderInactiveCustomer()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($cust, $hno, $deviceID, $deviceName,$deviceAltName, $model, $member);
+		$stmt->bind_result($cust, $hno, $deviceID, $deviceName,$deviceAltName, $model, $member, $site, $room, $location, $locationID);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1092,43 +1164,33 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Customer","Device"));
-			
-			//list result data
-			$oddRow = false;
+			$longResult.= CreateDataTableHeader(array("Customer","Device", "Location"));
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
+				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_DevicesWithUnknownModel()
+	function Check_DevicesWithUnknownModel($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
 		global $deviceModels;
 		
 		$reportTitle = "Devices With unknown model";
-		$reportNote = "Devices that have a model that is not in the DB.";
+		$reportNote = "Active Devices that have a model that is not in the DB. <a href='https://github.com/freshprogrammer/DCIM/blob/master/lib/helperFunctions.php#L184'>Models</a>";//TODO this should list available models some how
 		
 		$filter = "d.model NOT IN (";
 		foreach($deviceModels as $model)
@@ -1139,16 +1201,17 @@
 		
 		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model
 			FROM dcim_device AS  d
-			WHERE $filter
+				INNER JOIN dcim_location AS l ON l.locationid=d.locationid
+				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.siteid LIKE ? AND d.status='A' AND $filter
 			ORDER BY d.model";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_DevicesWithUnknownModel() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_DevicesWithUnknownModel()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model);
 		$count = $stmt->num_rows;
@@ -1158,18 +1221,11 @@
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","Model"));
-			
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
@@ -1177,14 +1233,9 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
 			$shortResult.= FormatSimpleMessage("$count Devices",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
@@ -1192,57 +1243,41 @@
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Power records without any linking location record";
-		$reportNote = "Disconnected record(s).";
+		$reportNote = "Power circuits not linked to a location. (Circuits added for panel audits)";
 		
-		$query = "SELECT pc.powercircuitid, pp.name, pc.circuit
+		$query = "SELECT pc.powercircuitid, s.siteid, s.name, pp.powerpanelid, pp.name, pc.circuit
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
-			WHERE pcl.powercircuitid IS NULL
+				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.siteid LIKE ? AND pcl.powercircuitid IS NULL
 			ORDER BY pp.name, pc.circuit";
-		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_PowerWithoutPowerLoc()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($powerCircuitID, $panel, $circuit);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$stmt->bind_result($powerCircuitID, $siteID, $siteName, $powerPanelID, $panel, $circuit);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
-			$longResult.= CreateDataTableHeader(array("PowerCircuitID","Panel","Circuit"));
-				
-			//list result data
-			$oddRow = false;
+			$longResult.= CreateDataTableHeader(array("Site","Panel","Circuit","PowerCircuitID"));
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
-				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($panel)."</td>\n";
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($circuit)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-		
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Circuits",2);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Circuits",2);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
@@ -1250,7 +1285,6 @@
 	{
 		global $mysqli;
 		global $errorMessage;
-		
 		$reportTitle = "Power location records linked to missing records";
 		$reportNote = "Disconnected record(s).";
 		
@@ -1260,33 +1294,20 @@
 				LEFT JOIN dcim_powercircuit AS pc ON pcl.powercircuitid=pc.powercircuitid
 			WHERE l.locationid IS NULL OR pc.powercircuitid IS NULL
 			ORDER BY 1";
-		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_PowerLocWithoutLocationOrPower() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_PowerLocWithoutLocationOrPower()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($powerLocID, $powerCircuitID, $locationID,$linkedPowerCircuitID, $linkedLocationID, $locationName);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("PowerLocID","PowerCircuitID","LocationID","LinkedPowerCircuitID","LinkedLocationID"));
-				
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerLocID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCircuitID)."</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
@@ -1295,14 +1316,9 @@
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Errors",3);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Errors",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
@@ -1310,9 +1326,7 @@
 	{
 		global $mysqli;
 		global $errorMessage;
-		
-		$reportTitle = "Location records linked to invalid room";
-		$reportNote = "Disconnected from room.";
+		$reportTitle = "Location records linked to invalid room"; $reportNote = "";
 		
 		$query = "SELECT l.locationid, r.name, l.name, l.roomid, r.roomid
 			FROM dcim_location AS l
@@ -1322,50 +1336,125 @@
 			HAVING r.roomid IS NULL
 			ORDER BY s.name, r.name, l.name";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_LocationWithoutRoom() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_LocationWithoutRoom()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($locationID, $room, $locationName,$roomID, $linkedRoomID);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("LocationID","Location Name","Invalid RoomID"));
-				
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($locationName)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($linkedRoomID)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Invalid Locations",3);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Invalid Locations",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
-	function Check_ActiveLocationWithoutPower()
+	function Check_LocationAllocation_IncorrectEmpty($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$reportTitle = "Empty Locations with active device(s)";
+		$reportNote = "Locations allocated Empty/Reserved with active device(s).";
+		
+		$query = "SELECT s.name, r.name, l.name, l.locationid, l.allocation, COUNT(d.deviceid) AS cnt
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON  s.siteid=r.siteid
+				LEFT JOIN dcim_device AS d ON  d.locationid=l.locationid
+			WHERE s.siteid LIKE ? AND l.allocation IN ('E','R') AND d.status='A'
+			GROUP BY s.siteid, r.roomid, l.locationid
+			HAVING cnt>0
+			ORDER BY s.name, r.name, l.name";
+		
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_LocationAllocation_IncorrectEmpty() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_LocationAllocation_IncorrectEmpty()";
+		}
+		$stmt->bind_result($siteName, $roomName, $locationName,$locationID, $allocation, $deviceCount);
+		$shortResult = "";
+		$longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Allocation","Device Count"));
+			
+			//list result data
+			while ($stmt->fetch())
+			{
+				$fullLocationName = MakeHTMLSafe(FormatLocation($siteName, $roomName, $locationName));
+				
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$fullLocationName</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$deviceCount</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Invalid Empty Allocations",3);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_LocationAllocation_ShouldBeColo($siteIDFilter)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$reportTitle = "Colo devices in non Colo locations";
+		$reportNote = "Colo type devices in locations not allocated for Colo.";
+		
+		$query = "SELECT s.name, r.name, l.name, l.locationid, l.allocation, COUNT(d.deviceid) AS cnt
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON  s.siteid=r.siteid
+				LEFT JOIN dcim_device AS d ON  d.locationid=l.locationid
+			WHERE s.siteid LIKE ? AND l.allocation NOT IN ('C') AND d.status='A' AND d.type!='S'
+			GROUP BY s.siteid, r.roomid, l.locationid
+			HAVING cnt>0
+			ORDER BY s.name, r.name, l.name";
+		
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
+		{
+			$errorMessage[] = "Prepare failed: Check_LocationAllocation_ShouldBeColo() - (" . $mysqli->errno . ") " . $mysqli->error;
+			return "Prepare failed in Check_LocationAllocation_ShouldBeColo()";
+		}
+		$stmt->store_result();
+		$stmt->bind_result($siteName, $roomName, $locationName,$locationID, $allocation, $deviceCount);
+		$shortResult = ""; $longResult = "";
+		if($stmt->num_rows>0)
+		{
+			$longResult.= CreateDataTableHeader(array("Location","Allocation","Colo Device Count"));
+			while ($stmt->fetch())
+			{
+				$fullLocationName = MakeHTMLSafe(FormatLocation($siteName, $roomName, $locationName));
+				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>$fullLocationName</a></td>\n";
+				$longResult.= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+				$longResult.= "<td class='data-table-cell'>$deviceCount</td>\n";
+				$longResult.= "</tr>\n";
+			}
+			$longResult.= "</table>\n";
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Invalid Allocations",3);
+		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
+		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
+	}
+	
+	function Check_ActiveLocationWithoutPower($siteIDFilter)
 	{
 		global $mysqli;
 		global $errorMessage;
@@ -1378,53 +1467,37 @@
 				LEFT JOIN dcim_powercircuitloc AS pcl ON l.locationid=pcl.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid AND d.status='A'
+				LEFT JOIN dcim_device AS d ON l.locationid=d.locationid
+			WHERE s.siteid LIKE ? AND d.status='A'
 			GROUP BY l.locationid
 			HAVING powercount=0 AND devicecount>=1
 			ORDER BY s.name, r.name, l.name";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_ActiveLocationWithoutPower() - (" . $mysqli->errno . ") " . $mysqli->error;
 			return "Prepare failed in Check_ActiveLocationWithoutPower()";
 		}
-		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($locationID, $site, $room, $locationName,$roomID, $linkedRoomID, $deviceCount, $powerCount);
-		$count = $stmt->num_rows;
-		
-		$shortResult = "";
-		$longResult = "";
-		if($count>0)
+		$shortResult = "";$longResult = "";
+		if($stmt->num_rows>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Location","Device Count","Power Count"));
-				
-			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$fullLocationName = FormatLocation($site, $room, $locationName);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($deviceCount)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($powerCount)."</td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
-			
-			//show results short
-			$shortResult.= FormatSimpleMessage("$count Locations",3);
+			$shortResult.= FormatSimpleMessage($stmt->num_rows." Locations",3);
 		}
-		else
-		{
-			$shortResult.= FormatSimpleMessage("All Good",1);
-		}
+		else $shortResult.= FormatSimpleMessage("All Good",1);
 		return CreateReport($reportTitle,$shortResult,$longResult,$reportNote);
 	}
 	
@@ -1474,13 +1547,8 @@
 			$longResult.= CreateDataTableHeader(array("Table","ID","Parent Table","Parent ID","Tech", "Date"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-
 				$table = "dcim_".$table;
 				$pageKey = GetRecordPageKey($table);
 				$idDisplay = $id;
@@ -1495,7 +1563,7 @@
 					$parentIDDisplay = "<a href='./?$parentPageKey=$parentID'>$parentID</a>";
 				$parentTableDescription = GetTableRecordDescription($parentTable);
 				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>$tableDescription</td>\n";
 				$longResult.= "<td class='data-table-cell'>$idDisplay</td>\n";
 				$longResult.= "<td class='data-table-cell'>$parentTableDescription</td>\n";
@@ -1569,7 +1637,7 @@
 				(SELECT $fieldConcat FROM    $table WHERE $keyfield=a.$keyfield) AS cur,
 				(SELECT $fieldConcat FROM $logTable WHERE $keyfield=a.$keyfield ORDER BY editdate DESC LIMIT 1) AS log
 			FROM $table AS a
-			HAVING cur!=log
+			HAVING cur!=log OR log IS NULL
 			ORDER BY $keyfield";
 		
 		if (!($stmt = $mysqli->prepare($query)))
@@ -1588,18 +1656,12 @@
 		if($count>0)
 		{
 			$longResult.= CreateDataTableHeader(array("Table","Record","Current","Log"));
-			
 			$pageURLKey = GetRecordPageKey($table);
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				$longResult.= "<tr class='$rowClass'>\n";
+				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'>$table</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?$pageURLKey=$key'>$key</a></td>";
 				$longResult.= "<td class='data-table-cell'>$cur</td>\n";

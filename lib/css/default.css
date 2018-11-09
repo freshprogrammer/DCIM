@@ -403,16 +403,20 @@ input[type=submit] {
 	padding-bottom: 0;
 }
 
-tr.dataRowOne, tr.dataRowTwo{
-	/* vertical-align: top; */
-}
-
 tr.dataRowOne {
 	background-color: #FFF;
 }
 
 tr.dataRowTwo {
 	background-color: #EEE;
+}
+
+tr.dataRow:nth-child(even){
+	background-color: #EEE;
+}
+
+tr.dataRow:nth-child(odd){
+	background-color: #FFF;
 }
 
 span.powerPanelAuditWarning{

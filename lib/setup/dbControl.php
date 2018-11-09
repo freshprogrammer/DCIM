@@ -83,31 +83,54 @@ function ConfirmIntent()
 <font size=5><b><?php echo $config_appName;?> Database update control</b></font><?php
 	echo " on PHP v".phpversion()." - Mysql v".GetMySqlVersion()." - DCIM v".$config_codeVersion." - DCIM DB v".$config_dbVersion."<BR>\n";
 	
+	if(!isset($config_demoSiteEnabled) || !$config_demoSiteEnabled)
+		echo "<font size=4>Live Environment</font>";
+	else
+		echo "<font size=4>Demo Environment</font>";
+	
 	//simple action selection form
-	echo "<form action='' method='post' onsubmit='return ConfirmIntent()'>
-	Script to run:
-	<select id='scriptidselect' name='scriptid'>
-		<option value='0'									>No Action - Refresh</option>
+	$scriptSelectHeader = "<form action='' method='post' onsubmit='return ConfirmIntent()'>
+		Script to run:
+		<select id='scriptidselect' name='scriptid'>";
+	if(isset($config_demoSiteEnabled) && $config_demoSiteEnabled)
+	{//demo env
+		echo "$scriptSelectHeader
+			<option value='0'									>No Action - Refresh - Demo Scripts</option>
+			<option value='0'									>-</option>
+			<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
+			<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
+			<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
+			<option value='$SCRIPTID_RESET_DEMO_CREDS'			>Reset Demo Credentials</option>
+			<option value='0'									>-</option>
+			<option value='$SCRIPTID_DB_UPDATEv3_1'				>Update database to DBv3 (part 1)</option>
+			<option value='$SCRIPTID_DB_UPDATEv3_2'				>Update database to DBv3 (part 2)</option>
+			<option value='0'									>-</option>
+			<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
+			<option value='0'									>-</option>
+			<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
+			<option value='$SCRIPTID_CREATE_MISSING_INSERT_LOGS'>Create missing insert log records.</option>
+			<option value='$SCRIPTID_CREATE_MISSING_UPDATE_LOGS'>Correct Out Of Date Logs - Update Logs.</option>
+			<option value='0'									>-</option>
+			<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
+			</select>
+			<input type='submit' value='Run'>
+			<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
+		</form>";
+	}
+	else
+	{//live env
+		echo "$scriptSelectHeader
+		<option value='0'									>No Action - Refresh - Live DB Scripts</option>
 		<option value='0'									>-</option>
-		<option value='$SCRIPTID_BUILD_DATABASE'			>Clear database and build new empty database</option>
-		<option value='$SCRIPTID_CREATE_DEMO_DATA'			>Reset all data in database with demo snapshot</option>
-		<option value='$SCRIPTID_BUILD_DB_WITH_DEMO_DATA'	>Clear database and re-populate with demo data</option>
-		<option value='$SCRIPTID_RESET_DEMO_CREDS'			>Reset Demo Credentials</option>
-		<option value='0'									>-</option>
-		<option value='$SCRIPTID_DB_UPDATEv3_1'				>Update database to DBv3 (part 1)</option>
-		<option value='$SCRIPTID_DB_UPDATEv3_2'				>Update database to DBv3 (part 2)</option>
-		<option value='0'									>-</option>
-		<option value='$SCRIPTID_CREATE_POPULATE_UPDATE'	>Rebuild & re-populate & fully update DB (If restore data is not up to date)</option>
-		<option value='0'									>-</option>
-		<option value='$SCRIPTID_RECREATE_ALL_LOGS'			>Wipe and recreate log records as of now.</option>
 		<option value='$SCRIPTID_CREATE_MISSING_INSERT_LOGS'>Create missing insert log records.</option>
 		<option value='$SCRIPTID_CREATE_MISSING_UPDATE_LOGS'>Correct Out Of Date Logs - Update Logs.</option>
 		<option value='0'									>-</option>
 		<option value='$SCRIPTID_QA_ALL_RECORDS'			>QA all outstanding records as Admin.</option>
-	</select>
-	<input type='submit' value='Run'>
-	<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
-</form>";
+		</select>
+		<input type='submit' value='Run'>
+		<input type='hidden' name='page_instance_id' value='".end($_SESSION['page_instance_ids'])."'>
+	</form>";
+	}
 	
 	$resultMessage[] = "Results - $timeStamp";
 	$errorMessage[] = "Errors";

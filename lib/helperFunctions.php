@@ -481,9 +481,9 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		$result = "";
 
 		$result .= "<div class='auditReport' id='$reportDivID'>\n";
-		$result .= "<span class='tableTitle'>$title</span>\n";
+		$result .= "<span class='tableTitle'>$title</span><a href='#$reportDivID' onclick='$reportHideFunctionName();'>&#x1F517;</a>\n";
 		if($enableSwitcher)
-			$result .= " <a id='$reportToggleLink' href='#$reportDivID' onclick='$reportHideFunctionName();'>Toggle</a>\n";
+			$result .= " <a id='$reportToggleLink' href='#$reportDivID' onclick='$reportHideFunctionName(); return false;'>Toggle</a>\n";
 		$result .= "<BR>\n";
 		
 		if(strlen($note)>0)
@@ -558,16 +558,17 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function CreateQACell($table, $recID, $formAction,$editUserID, $editDate, $qaUserID, $qaDate, $cell=true, $rowSpan=1)
 	{
+		$cellID = "qaButtonID_".$table."_".$recID;
 		if($cell)
-			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align='center' rowspan='$rowSpan'>\n";
+			$resultHTML = "<td class='data-table-cell-button editButtons_hidden' align='center' id='$cellID' rowspan='$rowSpan'>\n";
 		else 
-			$resultHTML = "<span class='editButtons_hidden'>QA: ";
+			$resultHTML = "<span class='editButtons_hidden'>QA: <span id='$cellID'>";
 			
 		$qaStatus = DoesRecordRequireQA($editUserID, $editDate, $qaUserID, $qaDate);
 		if($qaStatus==1)
 		{
 			$instanceID = end($_SESSION['page_instance_ids']);
-			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$formAction\",\"$instanceID\")'>QA</button>\n";
+			$resultHTML .= "<button onclick='QARecord(\"$table\",$recID,\"$cellID\")'>QA</button>\n";
 		}
 		else if($qaStatus==0)
 		{
@@ -580,7 +581,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		if($cell)
 			$resultHTML .= "</td>\n";
 		else
-			$resultHTML .= " </span>\n";
+			$resultHTML .= " </span></span>\n";
 		return $resultHTML;
 	}
 	
@@ -1072,14 +1073,10 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 		global $userFullName;
 		
 		$editUserID = (int)$editUserID;
+		if(is_nan($editUserID)) return "$editUserID is NaN";
 		
-		if(is_nan($editUserID))
-		{//not a number
-			return "$editUserID is nan";
-		}
-		
-		$editUserInitials = "";
-		$editUserFullName = "";
+		$editUserInitials = "??";
+		$editUserFullName = "????";
 		$qaDescription = "";
 		if(!isset($userFullName[$editUserID]))
 		{//not in array
@@ -1091,19 +1088,18 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$editUserFullName = $userFullName[$editUserID];
 			$editUserInitials = $userInitials[$editUserID];
 		}
-	
 		if($qaUserID ==-1)
 			$qaDescription = "None";
 		else 
 		{
 			if(!isset($userFullName[$qaUserID]))//not in array
-				$qaUserFullName = "User#$editUserID";
+				$qaUserFullName = "User#$qaUserID";
 			else
 				$qaUserFullName = $userFullName[$qaUserID];
 			$qaDescription = "$qaUserFullName";//no need to show date here
 		}
 		
-		$lastEditBrief = $userInitials[$editUserID];
+		$lastEditBrief = $editUserInitials;
 		$lastEditFull = $editUserFullName . ": ".$editDate." QA:$qaDescription";
 		
 		if(strlen($visibleText)==0)
@@ -1200,6 +1196,103 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			}
 			else
 				return true;
+		}
+	}
+	
+	function GetPowerPanelID($site, $panel)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT pp.powerpanelid
+			FROM dcim_powerpanel AS pp
+				INNER JOIN dcim_room AS r ON r.roomid=pp.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.name = ? AND pp.name = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site,$panel)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetPowerPanelID($site,$panel): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetPowerPanelID($site,$panel). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "Power Panel not found - GetPowerPanelID($site,$panel).";
+			return -1;
+		}
+	}
+	
+	function GetLocationID($site, $room, $location)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT l.locationid
+			FROM dcim_location AS l
+				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
+				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
+			WHERE s.name = ? AND r.name = ? AND l.name = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('sss', $site,$room,$location)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetLocationID($site,$room,$location): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetLocationID($site,$room,$location). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "Location not found - GetLocationID($site,$room,$location).";
+			return -1;
+		}
+	}
+	
+	function GetUserID($username)
+	{
+		global $mysqli;
+		global $errorMessage;
+		$query = "SELECT u.userid
+			FROM dcim_user AS u
+			WHERE u.username = ?";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $username)|| !$stmt->execute())
+		{
+			$errorMessage[] = "GetUserID($username): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			return false;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($id);
+		if($stmt->num_rows==1)
+		{
+			$stmt->fetch();
+			return $id;
+		}
+		else if($stmt->num_rows==2)
+		{
+			$errorMessage[] = "Multiple records found in GetUserID($username). Contact Admin.";
+			return -1;
+		}
+		else
+		{
+			//$errorMessage[] = "User not found - GetUserID($username)";
+			return -1;
 		}
 	}
 	

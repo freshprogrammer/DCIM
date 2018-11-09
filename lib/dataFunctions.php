@@ -30,7 +30,7 @@
 				else
 				{
 					global $config_demoSiteEnabled;
-					$config_demoSiteEnabled= $db_config_demoSiteEnabled;
+					$config_demoSiteEnabled= ($db_config_demoSiteEnabled=="T");
 					
 					global $config_appName;
 					$config_appName = $db_config_appName;
@@ -537,6 +537,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
+		$affectedCount = 0;
 		$recDescrip = GetTableRecordDescription($table);
 	
 		if(strlen($keyField)==0)
@@ -563,8 +564,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$stmt->bind_Param('i', $userID);
 			
-			if (!$stmt->execute())//execute 
-				//failed (errorNo-error)
+			if (!$stmt->execute())
 				$errorMessage[] = "Failed to execute QARecord($table, $ukey, $keyField, $liveRecord) (" . $stmt->errno . "-" . $stmt->error . ").";
 			else 
 			{
@@ -577,11 +577,10 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 						QARecord(GetLogTable($table),$ukey,$keyField,false);
 				}
 				else
-				{
 					$errorMessage[] = "QARecord($table, $ukey, $keyField, $liveRecord) Success, but affected $affectedCount rows.";
-				}
 			}	
-		}	
+		}
+		return $affectedCount;
 	}
 	
 	function ProcessBadgeAction($action)
@@ -930,9 +929,8 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if(!$add && $valid)
 		{//make sure this record exists and lookup old info for comparison
 			$valid = false;
-			$query = "SELECT pc.powercircuitid, IF(pcl.locationid IS NULL, -1, pcl.locationid) AS locationid, pc.circuit, pc.volts, pc.amps, pc.load, pc. status
+			$query = "SELECT pc.powercircuitid, pc.circuit, pc.volts, pc.amps, pc.load, pc. status
 				FROM dcim_powercircuit AS pc
-					LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
 				WHERE pc.powercircuitid=?";
 			
 			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerCircuitID) || !$stmt->execute())
@@ -947,7 +945,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 				if($count==1)
 				{
 					$valid=true;
-					$stmt->bind_result($powerCircuitID, $oldLocationID,$oldCircuit, $oldVolts, $oldAmps, $oldLoad, $oldStatus);
+					$stmt->bind_result($powerCircuitID,$oldCircuit, $oldVolts, $oldAmps, $oldLoad, $oldStatus);
 					$stmt->fetch();
 				}
 				else if($count==0)

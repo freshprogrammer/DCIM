@@ -270,7 +270,6 @@
 				echo CreateDataTableHeader(array("Unit","Customer","Device","Model","Size","Type","Status","Note"),true);
 				
 				//list result data
-				$oddRow = false;
 				$lastUnit = $unitStart;
 				while ($stmt->fetch())
 				{
@@ -286,22 +285,14 @@
 							else
 								$lastUnit++;
 							if($lastUnit!=$unit)
-							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								//empty unit
-								echo "<tr class='$rowClass'>";
+							{//empty unit
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$lastUnit</td>";
 								echo "<td class='data-table-cell' colspan=8></td>";
 								echo "</tr>";
 							}
 						}
 					}
-					
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					
 					//XXX probbable bug - if truncation happend in the middle of a &lt; tag
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
@@ -315,7 +306,7 @@
 							$unitSize=1;
 					}
 					
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					echo "<td class='data-table-cell'>$unit</td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
@@ -333,10 +324,7 @@
 						{
 							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
 							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								echo "<tr class='$rowClass'>";
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
 							}
@@ -345,10 +333,7 @@
 						{
 							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
 							{
-								$oddRow = !$oddRow;
-								if($oddRow) $rowClass = "dataRowOne";
-								else $rowClass = "dataRowTwo";
-								echo "<tr class='$rowClass'>";
+								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
 								echo "</tr>";
 							}
@@ -369,11 +354,8 @@
 						$lastUnit--;
 					else
 						$lastUnit++;
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					//empty unit
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					echo "<td class='data-table-cell'>$lastUnit</td>";
 					echo "<td class='data-table-cell' colspan=8></td>";
 					echo "</tr>";
@@ -604,72 +586,8 @@
 		global $pageSubTitle;
 		global $errorMessage;
 		
-		if(UserHasAdminPermission())
-		{
-			$pageSubTitle = "Accounts"; 
-			
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>User List</div>\n";
-			echo "<div class='panel-body'>\n\n";
-			
-			$query = "SELECT u.siteid, s.name, u.userid, u.username, u.name, u.initials, u.permission, u.lastactivity, u.edituser, u.editdate
-				FROM dcim_user AS u
-					LEFT JOIN dcim_site AS s ON s.siteid=u.siteid
-				ORDER BY s.name, u.name";
-			
-			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
-				$errorMessage[] = "ShowUserPage() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			else
-			{
-				$stmt->store_result();
-				$stmt->bind_result($dbSiteID, $dbSiteName, $dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate);
-				$count = $stmt->num_rows;
-				
-				echo "<span class='tableTitle'>Users</span>\n";
-				//Add User button here?
-				echo "<BR>\n";
-				
-				if($count>0)
-				{
-					echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
-					
-					//list result data
-					$oddRow = false;
-					while ($stmt->fetch())
-					{
-						$oddRow = !$oddRow;
-						if($oddRow) $rowClass = "dataRowOne";
-						else $rowClass = "dataRowTwo";
-						
-						echo "<tr class='$rowClass'>";
-						echo "<td class='data-table-cell'><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
-						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
-						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
-						echo "<td class='data-table-cell'>$dbInitials</td>";
-						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,true)."</td>";
-						echo "<td class='data-table-cell'>$dbLastActivity</td>";
-						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
-						echo "</tr>";
-					}
-					echo "</table>";
-				}
-				else
-					echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
-			}
-			
-			/*if(UserHasWritePermission())
-			{	
-				$action = "./?host=$input";
-				EditDeviceForm($action);
-			}*/
-			echo "</div>\n";
-			echo "</div>\n\n";
-			echo "<BR>\n";
-		}
-		else
-		{
-			$pageSubTitle = "Account";
-		}
+		if(UserHasAdminPermission()) $pageSubTitle = "Accounts"; 
+		else $pageSubTitle = "Account";
 		
 /////////////////user details
 		$maxPasswordLength = 15;//totly arbitrary, MD5 conversion so len doesnt really matter
@@ -708,8 +626,7 @@
 			echo "Last Activity: $lastActivity<BR>\n";
 			
 			if(UserHasAdminPermission() ||($editingSelf && UserHasWritePermission()))
-			{
-				//change pass form
+			{//change pass form
 				//if not validdate old pas (admin changing someomen elses pass) then hide option and pass some crap as old pas to skip JS tests
 				?>
 					<BR>
@@ -760,12 +677,72 @@
 				<?php 
 			}
 		}
-		else 
+		else
 		{
-			echo "User not Found\n";
+			echo "User ($input) not Found\n";
 		}
 		echo "</div>\n";
 		echo "</div>\n\n";
+		
+		if(UserHasAdminPermission())
+		{
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>User List</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			$query = "SELECT u.siteid, s.name, u.userid, u.username, u.name, u.initials, u.permission, u.lastactivity, u.edituser, u.editdate, (SELECT COUNT(siteid) FROM dcim_user WHERE siteid=u.siteid) AS siteCount
+					FROM dcim_user AS u
+						LEFT JOIN dcim_site AS s ON s.siteid=u.siteid
+					ORDER BY s.name, u.name";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+				$errorMessage[] = "ShowUserPage() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				$stmt->bind_result($dbSiteID, $dbSiteName, $dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate, $siteCount);
+				$count = $stmt->num_rows;
+				
+				echo "<span class='tableTitle'>Users</span>\n";
+				//Add User button here?
+				echo "<BR>\n";
+				
+				if($count>0)
+				{
+					echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
+					
+					$lastSiteID = -1;
+					//list result data
+					while ($stmt->fetch())
+					{
+						echo "<tr class='dataRow'>";
+						if($dbSiteID!=$lastSiteID)
+							echo "<td class='data-table-cell' rowspan=$siteCount><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
+						
+						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
+						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
+						echo "<td class='data-table-cell'>$dbInitials</td>";
+						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,DCIMCustomFunctions::UserHasDevPermission())."</td>";
+						echo "<td class='data-table-cell'>$dbLastActivity</td>";
+						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
+						echo "</tr>";
+						$lastSiteID = $dbSiteID;
+					}
+					echo "</table>";
+				}
+				else
+					echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
+			}
+			
+			/*if(UserHasWritePermission())
+			 {
+			 $action = "./?host=$input";
+			 EditDeviceForm($action);
+			 }*/
+			echo "</div>\n";
+			echo "</div>\n\n";
+			echo "<BR>\n";
+		}
 	}
 	
 	function ShowCustomerPage($hNo)
@@ -928,6 +905,8 @@
 			echo "<div class='panel-header'>Customer History</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			echo ListCustomerHistory($hNo);
+			echo "<BR>\n";
+			echo ListDeviceHistory(-1,$hNo);
 			echo "</div>\n";
 			echo "</div>\n";
 		}
@@ -1024,7 +1003,7 @@
 		echo "<div class='panel-body'>\n\n";
 		
 		//get device info
-		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
+		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.member, d.type, d.model, d.unit, d.size, d.status, d.asset, d.serial, d.note, c.name, s.name, r.roomid, r.name, d.locationid, l.name, d.edituser, d.editdate, d.qauser, d.qadate 
 			FROM dcim_device AS d
 				LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -1044,7 +1023,7 @@
 			$stmt->bind_Param('i', $input);		
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceAltName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($deviceID, $hNo, $deviceName, $deviceAltName, $member, $type, $model, $unit, $size, $status, $asset, $serial, $notes, $customerName, $siteName, $roomID, $room, $locationID, $locationName,$editUserID,$editDate, $qaUserID, $qaDate);
 			$deviceCount = $stmt->num_rows;
 		}
 		
@@ -1094,8 +1073,8 @@
 				$jsSafeSize = MakeJSSafeParam($size);
 				$jsSafeAsset = MakeJSSafeParam($asset);
 				$jsSafeSerial = MakeJSSafeParam($serial);
-				//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeDeviceName', '$jsSafeAltName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
+				//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(false, $deviceID, $roomID, '$hNo', '$jsSafeDeviceName', '$jsSafeAltName', '$jsSafeDeviceFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit Device</button>\n";
 			}
 			//editMode button
 			if(UserHasWritePermission())
@@ -1478,14 +1457,9 @@
 				echo CreateDataTableHeader(array(		   "Name&#x25B2;","Badge#","Status","Issue","Enroll"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				if($search == true)
 					echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
@@ -1700,7 +1674,7 @@
 		{
 			$input = "%".$input."%";
 			
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 					FROM dcim_device AS d
 						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
 						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
@@ -1708,7 +1682,7 @@
 						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
 				UNION
-					SELECT '', s.name, r.name, '', '', l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+					SELECT '', s.name, r.roomID, r.name, '', '',  l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
 						FROM dcim_location AS l
 							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
@@ -1725,8 +1699,8 @@
 			echo "<span class='tableTitle'>Locations and Devices</span>\n";
 		}
 		else
-		{
-			$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+		{//customer page
+			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
 			FROM dcim_device AS d
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
@@ -1746,14 +1720,14 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($deviceID, $site, $roomID, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		if(!$search && UserHasWritePermission())
 		{
 			// add button to add new Device
-			//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
 		}
 		echo "<BR>\n";
 		
@@ -1765,7 +1739,6 @@
 				echo CreateDataTableHeader(array("Location&#x25B2;", "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			$lastLocationID = -1;
 			while ($stmt->fetch()) 
 			{
@@ -1773,16 +1746,12 @@
 				if($locationID==$lastLocationID && strlen($name)<=0)
 					continue;
 				
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				//TODO test this with complex HTML
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
 				{
@@ -1820,8 +1789,8 @@
 					$jsSafeSize = MakeJSSafeParam($size);
 					$jsSafeAsset = MakeJSSafeParam($asset);
 					$jsSafeSerial = MakeJSSafeParam($serial);
-					//EditDevice(add, deviceID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-					echo "<button onclick=\"EditDevice(false, $deviceID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
+					//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+					echo "<button onclick=\"EditDevice(false, $deviceID, $roomID, '$hNo', '$jsSafeName', '$jsSafeAltName', '$jsSafeFullName', '$type', '$jsSafeSize', '$locationID', '$unit', '$status', '$jsSafeNotes', '$model', '$member', '$jsSafeAsset', '$jsSafeSerial')\">Edit</button>\n";
 					echo "</td>\n";
 					echo CreateQACell("dcim_device", $deviceID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 				}
@@ -1842,10 +1811,18 @@
 		return $count;
 	}
 	
-	function ListDeviceHistory($deviceID)
+	function ListDeviceHistory($deviceID=-1, $hNo=-1)
 	{
 		global $mysqli;
 		global $errorMessage;
+		
+		$filter = "d.deviceid=?";
+		$searchKey = $deviceID;
+		if($hNo!=-1)
+		{//customer page
+			$filter = "d.hno=?";
+			$searchKey = $hNo;
+		}
 		
 		$query = "SELECT d.deviceid, s.name AS site, r.name AS room, d.hno, '', l.locationid, l.name AS loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate, d.logtype
 			FROM dcimlog_device AS d
@@ -1853,10 +1830,10 @@
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE d.deviceid=?
+			WHERE $filter
 			ORDER BY d.editdate DESC";
 		
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID) || !$stmt->execute())
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $searchKey) || !$stmt->execute())
 		{
 			$errorMessage[]= "ListDeviceHistory() - Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			$result = "Error looking up device history<BR>\n";
@@ -1874,18 +1851,13 @@
 				$result .= CreateDataTableHeader(array("Location", "Device","Unit","AltName","Model","Size","Type","Asset","Serial","Status","Notes", "Tech","Date&#x25BC;"));
 					
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					$deviceFullName = GetDeviceFullName($name, $model, $member,"", true);
 					$fullLocationName = FormatLocation($site, $room, $location, false);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					$result .= "<td class='data-table-cell'>$unit</td>";
@@ -1905,7 +1877,10 @@
 			}
 			else
 			{
-				$result .= "No device history found for deviceID($deviceID).<BR>\n";
+				if($hNo!=-1)
+					$result .= "No device history found for hosting #($searchKey).<BR>\n";
+				else
+					$result .= "No device history found for deviceID($searchKey).<BR>\n";
 			}
 		}
 		return $result;
@@ -1936,19 +1911,14 @@
 			
 			if($count>0)
 			{
-				$result .= CreateDataTableHeader(array("Hosting#", "Customer#","Name","Notes","Status","Tech","Date&#x25BC;"));
+				$result .= CreateDataTableHeader(array("Hosting#", "Customer#","Name","Status","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($hNo)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?search=".$cNo."&searchbtn=T'>".MakeHTMLSafe($cNo)."</a></td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
@@ -1999,19 +1969,14 @@
 				$result .= CreateDataTableHeader(array("Name", "Room","UPS","Amps","Circuits","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$panelName = MakeHTMLSafe($panelName);
 					$pos = FormatSizeInFeet($xPos,$yPos);
 					$size = FormatSizeInFeet($width,$depth);
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($siteName." ".$roomName)."</a></td>";
 					if($upsID!=-1)
@@ -2068,19 +2033,14 @@
 				$result .= CreateDataTableHeader(array("Name","AltName","Type","Units","Allocation","Key#","Pos","Size","Orientation","Notes","Tech","Date&#x25BC;"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					//$fullLocationName = FormatLocation($site, $room, $locationName, true);
 					$pos = FormatSizeInFeet($xPos,$yPos);
 					$size = FormatSizeInFeet($width,$depth);
 					$visibleNotes = MakeHTMLSafe(htmlspecialchars($notes));
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a></td>";
 					
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($altName)."</td>";
@@ -2191,6 +2151,7 @@
 		global $mysqli;
 		global $deviceModels;
 		global $errorMessage;
+		global $userSiteID;
 		
 		//edit/Add Device form
 		//-default values - never seen
@@ -2207,15 +2168,43 @@
 		$serialInput = "serial";
 		$notesInput = "notes input";
 		
-		//build location combo options
+		//build room combo options
+		$roomOptions= "";
+		$query = "SELECT s.name, s.siteid, r.name, r.roomid, COUNT(l.locationid) AS locs
+			FROM dcim_room AS r
+				INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				LEFT JOIN dcim_location AS l ON r.roomid=l.roomid
+			GROUP BY r.roomid
+			HAVING locs>0
+			ORDER BY s.name, r.name";
+		
+		if (!($stmt = $mysqli->prepare($query)))
+		{
+			$errorMessage[] = "EditDeviceForm() Prepare 0 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->execute();
+			$stmt->store_result();
+			$stmt->bind_result($site, $siteID, $room, $roomID, $locs);
+			while ($stmt->fetch())
+			{
+				$fullLocationName = FormatLocation($site, $room, "", true, false);
+				$selected = ($roomID==$locationInput ? "Selected" : "");
+				$roomOptions.= "<option value='$roomID' $selected>$fullLocationName</option>\n";
+			}
+		}
+		
+		//build location combo options - this is filtered to user's site but this will be populated when roomis populated
 		$locationOptions = "";
 		$query = "SELECT s.name, l.locationid, s.siteid, r.name, l.name, l.type
 			FROM dcim_location AS l
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+			WHERE s.siteid=$userSiteID
 			ORDER BY s.name, r.name, l.name";
-			
-		if (!($stmt = $mysqli->prepare($query))) 
+		
+		if (!($stmt = $mysqli->prepare($query)))
 		{
 			$errorMessage[] = "EditDeviceForm() Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
 		}
@@ -2224,9 +2213,9 @@
 			$stmt->execute();
 			$stmt->store_result();
 			$stmt->bind_result($site, $locationID, $siteID, $room, $location, $type);
-			while ($stmt->fetch()) 
+			while ($stmt->fetch())
 			{
-				$fullLocationName = FormatLocation($site, $room, $location);
+				$fullLocationName = FormatLocation($site, $room, $location, false);
 				$selected = ($locationID==$locationInput ? "Selected" : "");
 				$locationOptions .= "<option value='$locationID' $selected>$fullLocationName</option>\n";
 			}
@@ -2275,19 +2264,27 @@
 						</td>
 					</tr>
 					<tr>
+						<td colspan=1 align=right>Room:</td>
+						<td align='left'>
+							<select id=EditDevice_room name="roomid" onchange='EditDevice_RoomSelectChanged()' tabindex=5>
+								<?php echo $roomOptions; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
 						<td colspan=1 align=right>Location:</td>
 						<td align='left'>
-							<select id=EditDevice_location name="locationid" tabindex=5>
+							<select id=EditDevice_location name="locationid" tabindex=6 style='width:228px;'>
 								<?php echo $locationOptions; ?>
 							</select>
 							Unit:
-							<input id=EditDevice_unit type='text' tabindex=6 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
+							<input id=EditDevice_unit type='text' tabindex=7 size=3 name='unit' value='<?php echo $unitInput;?>' placeholder='0' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan=1 align=right>Status:</td>
 						<td align='left'>
-							<select id=EditDevice_status name="status" tabindex=7>
+							<select id=EditDevice_status name="status" tabindex=8>
 								<option value="A" <?php if($statusInput==="A") echo "Selected"; ?>>Active</option>
 								<option value="I" <?php if($statusInput==="I") echo "Selected"; ?>>Inactive</option>
 							</select>
@@ -2296,7 +2293,7 @@
 					<tr id='EditDevice_interalFields_row1'>
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
-							<select id=EditDevice_model name="model" tabindex=8>
+							<select id=EditDevice_model name="model" tabindex=9>
 							<?php 
 							//This should be a list of all switch (or other non colo device) models
 							foreach($deviceModels as $model)
@@ -2310,7 +2307,7 @@
 							?>
 							</select>
 							Member:
-							<select id=EditDevice_member name="member" tabindex=9>
+							<select id=EditDevice_member name="member" tabindex=10>
 							<?php 
 							for ($member = 0; $member <= 9; $member++) {
 								echo "<option value='$member'>$member</option>\n";
@@ -2321,25 +2318,25 @@
 					<tr id='EditDevice_interalFields_row2'>
 						<td align='right' width=1>Asset:</td>
 						<td align='left'>
-							<input id=EditDevice_asset type='text' tabindex=10 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
+							<input id=EditDevice_asset type='text' tabindex=11 size=50 name='asset' value='<?php echo $assetInput;?>' placeholder='000000' class=''>
 						</td>
 					</tr>
 					<tr id='EditDevice_interalFields_row3'>
 						<td align='right' width=1>Serial:</td>
 						<td align='left'>
-							<input id=EditDevice_serial type='text' tabindex=11 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
+							<input id=EditDevice_serial type='text' tabindex=12 size=50 name='serial' value='<?php echo $serialInput;?>' placeholder='FFFFFFFFFFFFFFFF' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td align='right' width=1>Notes:</td>
 						<td align='left'>
-							<input id=EditDevice_notes type='text' tabindex=12 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
+							<input id=EditDevice_notes type='text' tabindex=13 size=50 name='notes' value='<?php echo $notesInput;?>' placeholder='Notes' class=''>
 						</td>
 					</tr>
 					<tr>
 						<td colspan='2' align='right'>
-							<button type="button" onclick="HideAllEditForms()" tabindex=14>Cancel</button>
-							<input type="submit" value="Save" tabindex=13>
+							<button type="button" onclick="HideAllEditForms()" tabindex=15>Cancel</button>
+							<input type="submit" value="Save" tabindex=14>
 						</td>
 					</tr>
 				</table>
@@ -2383,15 +2380,10 @@
 			echo CreateDataTableHeader(array("H#","C#","Name&#x25B2;","Status","Note"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$note = Truncate($note);
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>$hNo</a>"."</td>";
 				echo "<td class='data-table-cell'>$cNo</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
@@ -2477,14 +2469,9 @@
 				$result .= CreateDataTableHeader(array("Name","Full Name","UPSs","Rooms","Panels","Locations","Devices"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'>"."<a href='./?siteid=$siteID'>".MakeHTMLSafe($siteName)."</a>"."</td>\n";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteFullName)."</td>\n";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($upsCount)."</td>\n";
@@ -2503,6 +2490,55 @@
 			{
 				//EditSiteForm($input);
 			}
+		}
+		return $result;
+	}
+	
+	function ListLocationAllocations($siteID)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$title = "Location Allocation Counts";
+		$query = "SELECT l.allocation, l.type, Count(l.allocation)
+			FROM dcim_location AS l
+				LEFT JOIN dcim_room AS r ON  r.roomid=l.roomid
+			WHERE r.siteid=?
+			GROUP BY l.allocation,l.type
+			ORDER BY l.allocation,l.type";
+		
+		$result = "";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteID)|| !$stmt->execute())
+		{
+			$errorMessage[]="ListLocationAllocations($siteID) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$result .= "Error Looking up location allocations";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($allocation, $type, $locCount);
+			$count = $stmt->num_rows;
+			
+			//data title
+			$result .= "<span class='tableTitle'>$title</span><BR>\n";
+			
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Allocation","Type","Count"));
+				
+				//list result data
+				while ($stmt->fetch())
+				{
+					$result .= "<tr class='dataRow'>";
+					$result .= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>\n";
+					$result .= "<td class='data-table-cell'>".LocationType($type)."</td>\n";
+					$result .= "<td class='data-table-cell'>$locCount</td>\n";
+					$result .= "</tr>\n";
+				}
+				$result .= "</table>\n";
+			}
+			else
+				$result .= "No Locations Found.<BR>\n";
 		}
 		return $result;
 	}
@@ -2610,10 +2646,13 @@
 			$result .= "<div class='panel-body'>\n\n";
 
 			$result .= ListRooms("S",$siteID,$siteFullName);
-			$result .= "<BR>";
+			$result .= "</BR>";
 			echo $result;
 			
 			ListPowerPanels("S", $siteID);
+			echo "</BR>";
+			
+			echo ListLocationAllocations($siteID);
 			
 			$result = "</div>\n</div>\n";
 			
@@ -2677,17 +2716,12 @@
 			$result .= CreateDataTableHeader(array("Site","Room","Full Name","Cust Access"),true, false, false);
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				if($custAccess=="T")$custAccess = "Yes";
 				else $custAccess = "No";
 				
-				$result .= "<tr class='$rowClass'>";
+				$result .= "<tr class='dataRow'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?roomid=$roomID'>".MakeHTMLSafe($roomName)."</a></td>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($roomFullName)."</td>";
@@ -2955,7 +2989,7 @@
 			if(CustomFunctions::UserHasLocationPermission())
 			{
 				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
-				$params = "true, -1, $roomID, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3, ''";
+				$params = "true, -1, $roomID, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3.5, ''";
 				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Add New</button>";
 			}
 			$result .= "<BR>";
@@ -2966,13 +3000,8 @@
 				
 				//list result data
 				$lastLocID = -1;
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$additionalDevice = ($locationID==$lastLocID);
 					$lastLocID = $locationID;
 					
@@ -2981,7 +3010,7 @@
 					$pos = FormatSizeInFeet($xPos,$yPos);//not used
 					$size = FormatSizeInFeet($width,$depth);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					if(!$additionalDevice)
 					{
 						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
@@ -3098,7 +3127,7 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE pp.powerpanelid=? AND pc.powercircuitid IS NOT NULL
-			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit";
+			ORDER BY pp.name, (pc.circuit %2 =0), pc.circuit, r.name, l.name";
 		}
 		
 		$pagePanelID = -1;
@@ -3130,7 +3159,6 @@
 				echo CreateDataTableHeader(array("Panel","Circuit","Volts","Amps","Status","Load","Location"),true,CustomFunctions::UserHasPowerCircuitPermission(),CustomFunctions::UserHasPowerCircuitPermission());
 				
 				//list result data
-				$oddRow = false;
 				$lastCircuitID = -1;
 				$numberIn3Phase = 0; 
 				while ($stmt->fetch())
@@ -3140,10 +3168,6 @@
 					
 					if($volts==308)$numberIn3Phase++;
 					else $numberIn3Phase=0;
-					
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
 					
 					$visibleVolts = FormatVolts($volts);
 					$visibleCircuit = $circuit;
@@ -3157,7 +3181,7 @@
 					if($numberIn3Phase==1)//just 2 divs - outer relative parent and inner absolute
 						$trippleCircuitDisplay = "<div style='position: relative;'><div class='powerCircuitCellMarker'></div></div>";
 					
-					echo "<tr class='$rowClass'>";
+					echo "<tr class='dataRow'>";
 					if($powerCircuitID!=$lastCircuitID)
 					{
 						echo "<td class='data-table-cell' rowspan='$circuitLocCount'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>";
@@ -3426,14 +3450,9 @@
 			echo CreateDataTableHeader(array("Device","VLAN","Subnet","Mask","First","Last","Gateway","Note"),!$searchPage,!$searchPage && UserHasWritePermission(),!$searchPage && UserHasWritePermission());
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
+				echo "<tr class='dataRow'>";
 				echo "<td class='data-table-cell'><a href='?deviceid=$deviceID'>".MakeHTMLSafe($deviceName)."</a></td>";
 				echo "<td class='data-table-cell'>".FormatVLAN($vlan)."</td>";
 				echo "<td class='data-table-cell'>".MakeHTMLSafe($subnet)."</td>";
@@ -3860,25 +3879,10 @@
 			//list result data
 			$lastDevicePortID = -1;
 			$lastSwitchPortID = -1;
-			$oddRow = false;
-			$oddActiveRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
 				$record = "";
-				$recordHead = "<tr class='$rowClass'>";
-				
 				$activeRow = $status=="A";
-				if($activeRow)
-				{
-					$oddActiveRow = !$oddActiveRow;
-					if($oddActiveRow) $activeRowClass = "dataRowOne";
-					else $activeRowClass = "dataRowTwo";
-					$activeRecordHead = "<tr class='$activeRowClass'>";
-				}
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
@@ -3939,10 +3943,10 @@
 				
 				$record .= "</tr>";
 				
-				$tableWithAllData .= $recordHead.$record;
+				$tableWithAllData .= "<tr class='dataRow'>".$record;
 				if($activeRow)
 				{
-					$tableWithActiveData .= $activeRecordHead.$record;
+					$tableWithActiveData .= "<tr class='dataRow'>".$record;
 				}
 				
 				$lastDevicePortID = $devicePortID;
@@ -4036,21 +4040,14 @@
 			//list result data
 			$lastDevicePortID = -1;
 			$lastSwitchPortID = -1;
-			$oddRow = false;
 			while ($stmt->fetch()) 
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				echo "<tr class='$rowClass'>";
-				
 				$portFullName = FormatPort($member, $model, $pic, $port, $type);
 				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
 				
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
-
+				
 				$devicePortTitle = "";
 				$switchPortTitle = "";
 				if(CustomFunctions::UserHasDevPermission())
@@ -4058,7 +4055,7 @@
 					$devicePortTitle = "switchportid=$devicePortID";
 					$switchPortTitle = "switchportid=$switchPortID";
 				}
-
+				
 				$childCells = "<td class='data-table-cell'><a href='./?locationid=$dLocID'>".MakeHTMLSafe($dLocName)."</a></td>\n";
 				$childCells .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$childCells .=  "<td class='data-table-cell'><span title='$devicePortTitle'>$portFullName</span></td>\n";
@@ -4073,6 +4070,8 @@
 					$childCells = $parentCells;
 					$parentCells = $t;
 				}
+				
+				echo "<tr class='dataRow'>";
 				echo $childCells;
 				echo $parentCells;
 				
@@ -4759,17 +4758,9 @@
 			$result .= CreateDataTableHeader(array("Site","UPS","Note"));
 			
 			//list result data
-			$oddRow = false;
 			while ($stmt->fetch())
 			{
-				$oddRow = !$oddRow;
-				if($oddRow) $rowClass = "dataRowOne";
-				else $rowClass = "dataRowTwo";
-				
-				if($custAccess=="T")$custAccess = "Yes";
-				else $custAccess = "No";
-				
-				$result .= "<tr class='$rowClass'>";
+				$result .= "<tr class='dataRow'>";
 				$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</a></td>";
 				$result .= "<td class='data-table-cell'><a href='?powerupsid=$powerUpsID'>".MakeHTMLSafe($upsName)."</a></td>";
 				$result .= "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($upsNote))."</td>";
@@ -4978,17 +4969,12 @@
 				$result .= CreateDataTableHeader(array("Customer","Device","Model","Location"));
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
 					$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 					$fullLocationName = FormatLocation("", $roomName, $locationName,false);
 					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($custName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($model)."</td>";
@@ -5097,14 +5083,9 @@
 				$result .= CreateDataTableHeader(array("Site","Panel","Room","UPS","Amps","Utilization","Note"),true,true,true);
 				
 				//list result data
-				$oddRow = false;
 				while ($stmt->fetch())
 				{
-					$oddRow = !$oddRow;
-					if($oddRow) $rowClass = "dataRowOne";
-					else $rowClass = "dataRowTwo";
-					
-					$result .= "<tr class='$rowClass'>";
+					$result .= "<tr class='dataRow'>";
 					$result .= "<td class='data-table-cell'>".MakeHTMLSafe($siteName)."</td>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
 					$result .= "<td class='data-table-cell'><a href='./?roomid=$roomID'>".MakeHTMLSafe($room)."</a></td>";
