@@ -76,7 +76,9 @@
 		if($locationFound)
 		{
 			$stmt->fetch();
+			$siteLink = "<a href='./?siteid=$siteID'>$site</a>";
 			$fullLocationName = FormatLocation($site, $room, $location);
+			$headerLocationName = $siteLink." ".FormatLocation("", $room, $location,false);
 			
 			if(CustomFunctions::UserHasLocationPermission() || CustomFunctions::UserHasPowerCircuitPermission())
 			{
@@ -88,7 +90,7 @@
 			
 			echo "<table width=100%><tr>\n";
 			echo "<td align='left'>\n";
-			echo "<span class='pageMainHeader'>$fullLocationName</span>\n";
+			echo "<span class='pageMainHeader'>$headerLocationName</span>\n";
 			echo "</td>\n";
 			
 			echo "<td align='right'>\n";
@@ -4118,7 +4120,7 @@
 		global $errorMessage;
 		
 		$query = "SELECT pp.powerpanelid, pp.roomid, pp.name, pp.amps, pp.circuits, pp.orientation, pp.xpos, pp.ypos, pp.width, pp.depth, pp.note, pp.edituser, pp.editdate, pp.qauser, pp.qadate, 
-					SUM(IF(pc.volts=208,2,IF(pc.volts IS NULL,0,1))) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pp.powerupsid
+					SUM(IF(pc.volts=208,2,IF(pc.volts IS NULL,0,1))) AS circuitslinked, SUM(pc.load) AS `load`, r.name AS room, r.fullname AS roomfullname, s.siteid, s.name AS sitename, s.fullname AS sitefullname, s.siteid, pu.name AS ups, pp.powerupsid
 				FROM dcim_powerpanel AS pp
 					LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
 					LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
@@ -4132,7 +4134,7 @@
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($powerPanelID, $roomID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $linkedCircuits, $load, $roomName, $roomFullName, $siteName,$siteFullName, $siteID, $upsName, $upsID);
+			$stmt->bind_result($powerPanelID, $roomID, $panelName, $amps, $circuits, $orientation, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $linkedCircuits, $load, $roomName, $roomFullName, $siteID, $siteName,$siteFullName, $siteID, $upsName, $upsID);
 			$panelFound = $stmt->num_rows==1;
 			
 			if($panelFound)
@@ -4193,7 +4195,7 @@
 				echo "<b>Site:</b>";
 				echo "</td>\n";
 				echo "<td align=left class='pageMainSubHeader' style='padding-right: 25;'>\n";
-				echo $siteFullName;
+				echo "<a href='./?siteid=$siteID'>$siteFullName</a>";
 				echo "</td>\n";
 				
 				echo "<td align=right class='pageMainSubHeader'>\n";
