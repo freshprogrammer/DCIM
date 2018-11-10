@@ -417,7 +417,7 @@
 				LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 			WHERE s.siteid LIKE ? AND d.type IN ('F','C','H') AND dp.port=0
-			ORDER BY c.name,d.name";
+			ORDER BY s.name, c.name,d.name";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -433,7 +433,7 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Customer","Location","Device","Status"),true);
+			$longResult.= CreateDataTableHeader(array("Location","Customer","Device","Status"),true);
 			
 			//list result data
 			while ($stmt->fetch()) 
@@ -442,8 +442,8 @@
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='dataRow'>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>".DeviceStatus($status,true)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>\n";
@@ -476,7 +476,7 @@
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid LIKE ? AND d.status='A' AND d.type='S' AND d.asset=''
-			ORDER BY d.status, site, room, loc, unit, d.name, member";
+			ORDER BY s.name, d.status, site, room, loc, unit, d.name, member";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -542,7 +542,7 @@
 				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 			WHERE s.siteid LIKE ?
-			ORDER BY d.asset, d.name, d.member";
+			ORDER BY s.name, d.asset, d.name, d.member";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -770,7 +770,7 @@
 		$reportTitle = "Badges Pending QA";
 		$reportNote = "These badges need to be verified with badge server.";
 		
-		$query = "SELECT c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
+		$query = "SELECT GROUP_CONCAT(Distinct s.name) AS sites, c.name AS cust, b.badgeid, b.hno, b.name, b.badgeno, b.status, b.issue, b.hand, b.returned, b.edituser, b.editdate, b.qauser, b.qadate
 			FROM dcim_site AS s
 				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
 				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
@@ -779,7 +779,7 @@
 				INNER JOIN dcim_badge AS b ON b.hno=c.hno
 			WHERE b.qauser=-1 AND s.siteid LIKE ?
 			GROUP BY b.badgeid
-			ORDER BY c.name,b.name";
+			ORDER BY sites, c.name,b.name";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -787,18 +787,19 @@
 			return "Prepare failed in Check_BadgesToQA()";
 		}
 		$stmt->store_result();
-		$stmt->bind_result($customer, $badgeID, $hNo, $name, $badgeNo, $status, $issue, $hand, $returned, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($sites, $customer, $badgeID, $hNo, $name, $badgeNo, $status, $issue, $hand, $returned, $editUserID, $editDate, $qaUserID, $qaDate);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno","Status","Issue","Enroll"),true);
+			$longResult.= CreateDataTableHeader(array("Site","Customer","Name","Badgeno","Status","Issue","Enroll"),true);
 			//list result data
 			while ($stmt->fetch()) 
 			{
 				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($sites)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>"."<A href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a>"."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($badgeNo)."</td>\n";
@@ -881,7 +882,7 @@
 				INNER JOIN dcim_customer AS c ON c.hno=d.hno
 			WHERE d.qauser=-1 AND s.siteid LIKE ?
 			GROUP BY d.deviceid
-			ORDER BY d.name, d.member";
+			ORDER BY s.name, d.name, d.member";
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_CustomerToQA() - (" . $mysqli->errno . ") " . $mysqli->error;
@@ -970,12 +971,14 @@
 		$reportTitle = "Devices Without Customer or Location";
 		$reportNote = "Disconnected record(s) or in Unknown.";
 		
-		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model, d.locationid, l.locationid, l.name
+		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model, d.locationid, l.locationid, l.name, r.name, s.name
 			FROM dcim_device AS  d
 				LEFT JOIN dcim_customer AS c ON d.hno=c.hno
 				LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+				LEFT JOIN dcim_room AS r ON r.roomid=l.roomid
+				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
 			WHERE c.name IS NULL OR l.locationid IS NULL OR l.name='Unknown'
-			ORDER BY d.name";
+			ORDER BY s.name, d.name";
 		
 		if (!($stmt = $mysqli->prepare($query)))
 		{
@@ -985,7 +988,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $locationID, $linkedLocationID,$locationName);
+		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $locationID, $linkedLocationID,$locationName, $room, $site);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -996,6 +999,7 @@
 				
 			while ($stmt->fetch())
 			{
+				$fullLocationName = FormatLocation($site, $room, $locationName);
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
 				$longResult.= "<tr class='dataRow'>\n";
@@ -1003,8 +1007,8 @@
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($locationID)."</a></td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$linkedLocationID'>".MakeHTMLSafe($linkedLocationID)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$linkedLocationID'>".MakeHTMLSafe($locationName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -1083,7 +1087,7 @@
 		$reportTitle = "Active badges where customer is not active";
 		$reportNote = "These badges need to be deactivated.";
 		
-		$query = "SELECT c.name AS cust,b.name,b.badgeno, b.hno 
+		$query = "SELECT GROUP_CONCAT(Distinct s.name) AS sites, c.name AS cust,b.name,b.badgeno, b.hno 
 			FROM dcim_site AS s
 				INNER JOIN dcim_room AS r ON r.siteid=s.siteid
 				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
@@ -1092,7 +1096,7 @@
 				INNER JOIN dcim_badge AS b ON b.hno=c.hno
 			WHERE c.status='I' AND NOT b.status IN ('D','R') AND s.siteid LIKE ?
 			GROUP BY b.badgeid
-			ORDER BY c.name,b.name";
+			ORDER BY sites, c.name,b.name";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -1102,7 +1106,7 @@
 		
 		$stmt->execute();
 		$stmt->store_result();
-		$stmt->bind_result($cust, $name, $badgeNo, $hno);
+		$stmt->bind_result($sites, $cust, $name, $badgeNo, $hno);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
@@ -1110,12 +1114,13 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Customer","Name","Badgeno"));
+			$longResult.= CreateDataTableHeader(array("Site", "Customer","Name","Badgeno"));
 			
 			//list result data
 			while ($stmt->fetch()) 
 			{
 				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($sites)."</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$name</td>\n";
 				$longResult.= "<td class='data-table-cell'>$badgeNo</td>\n";
@@ -1148,7 +1153,7 @@
 				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
 				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
 			WHERE s.siteid LIKE ? AND c.status='I' AND NOT d.status='I'
-			ORDER BY c.name, d.name, d.member";
+			ORDER BY s.name, c.name, d.name, d.member";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -1164,16 +1169,16 @@
 		//data title
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("Customer","Device", "Location"));
+			$longResult.= CreateDataTableHeader(array("Location","Customer","Device"));
 			while ($stmt->fetch())
 			{
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
 				$fullLocationName = FormatLocation($site, $room, $location);
 				
 				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($cust)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
 				$longResult.= "</tr>\n";
 			}
 			$longResult.= "</table>\n";
@@ -1199,13 +1204,13 @@
 		}
 		$filter = substr($filter,0,-1).")";
 		
-		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model
+		$query = "SELECT d.hno, d.deviceid, d.name, d.altname, d.member, d.model, s.name
 			FROM dcim_device AS  d
 				INNER JOIN dcim_location AS l ON l.locationid=d.locationid
 				INNER JOIN dcim_room AS r ON r.roomid=l.roomid
 				INNER JOIN dcim_site AS s ON s.siteid=r.siteid
 			WHERE s.siteid LIKE ? AND d.status='A' AND $filter
-			ORDER BY d.model";
+			ORDER BY s.name, d.model";
 		
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
@@ -1213,19 +1218,20 @@
 			return "Prepare failed in Check_DevicesWithUnknownModel()";
 		}
 		$stmt->store_result();
-		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model);
+		$stmt->bind_result($hno, $deviceID, $deviceName,$deviceAltName, $member, $model, $site);
 		$count = $stmt->num_rows;
 		
 		$shortResult = "";
 		$longResult = "";
 		if($count>0)
 		{
-			$longResult.= CreateDataTableHeader(array("DeviceID","Device","H#","Model"));
+			$longResult.= CreateDataTableHeader(array("Site","DeviceID","Device","H#","Model"));
 			while ($stmt->fetch())
 			{
 				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, false);
 				
 				$longResult.= "<tr class='dataRow'>\n";
+				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($site)."</td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceID)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?host=$hno'>".MakeHTMLSafe($hno)."</a></td>\n";
@@ -1253,7 +1259,7 @@
 				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
 				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
 			WHERE s.siteid LIKE ? AND pcl.powercircuitid IS NULL
-			ORDER BY pp.name, pc.circuit";
+			ORDER BY s.name, pp.name, pc.circuit";
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteIDFilter)|| !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: Check_PowerWithoutPowerLoc() - (" . $mysqli->errno . ") " . $mysqli->error;
