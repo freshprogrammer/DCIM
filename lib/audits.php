@@ -243,7 +243,7 @@
 		$reportTitle = "Circuits past threshhold ($threshold%) utilization";
 		$reportNote = "";
 		
-		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, (pc.load/pc.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, pc.edituser, pc.editdate, pc.qauser, pc.qadate
+		$query = "SELECT s.name AS site, l.locationid, r.name, l.name AS location, pp.powerpanelid, pp.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, (pc.load/pc.amps*100) AS utilization, d.deviceid, d.name, c.hno, c.name, pc.edituser, pc.editdate, pc.qauser, pc.qadate
 			FROM dcim_powercircuit AS pc
 				LEFT JOIN dcim_powercircuitloc AS pcl ON pc.powercircuitid=pcl.powercircuitid
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
@@ -262,7 +262,7 @@
 			return "Prepare failed in Check_CircuitOverLoaded()";
 		}
 		$stmt->store_result();
-		$stmt->bind_result($site, $locationID, $room, $location, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
+		$stmt->bind_result($site, $locationID, $room, $location, $powerPanelID, $panel, $circuit, $volts, $amps, $status, $load, $utilization, $deviceID, $deviceName, $hNo, $customer, $editUserID, $editDate, $qaUserID, $qaDate);
 		$shortResult = ""; $longResult = "";
 		if($stmt->num_rows>0)
 		{
@@ -272,7 +272,7 @@
 				$fullLocationName = FormatLocation($site, $room, $location);
 				$longResult.= "<tr class='dataRow'>\n";
 				$longResult.= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>\n";
-				$longResult.= "<td class='data-table-cell'>$panel</td>\n";
+				$longResult.= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panel)."</a></td>\n";
 				$longResult.= "<td class='data-table-cell'>$circuit</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($volts)."V</td>\n";
 				$longResult.= "<td class='data-table-cell'>".MakeHTMLSafe($amps)."A</td>\n";
