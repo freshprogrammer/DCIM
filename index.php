@@ -331,45 +331,39 @@
 					echo "</div>\n";
 					echo "<div class=\"panel-body\">\n\n";
 					
-					//search for sites (name, fullname)
-					echo ListSites("?", $search);
-					echo "<BR>\n";
+					ListCustomers_Search($search);//search in customer (hno, cno, name, note)
 					
-					//search for rooms (name, fullname)
-					echo ListRooms("?", $search);
 					echo "<BR>\n";
-					
-					//search in customer (hno, cno, name, note)
-					ListSearchCustomers($search);
-					echo "<BR>\n";
+					ListDevices(true,$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
 					
 					if($config_badgesEnabled)
 					{
-						//search in badge (name, badgeno)
-						ListBadges(true,$search);
 						echo "<BR>\n";
+						ListBadges(true,$search);//search in badge (name, badgeno)
 					}
-					
-					//search in locaion/device (l.name, l.altname, l.note, d.name, d.model, d.asset, d.serial, d.note)
-					ListDevices(true,$search);
-					echo "<BR>\n";
 					
 					if($config_subnetsEnabled)
 					{
-						//search in VLANs (vlan name, subnet, note)
-						ListCustomerSubnets("?",$search);
 						echo "<BR>\n";
+						ListSubnets("?",$search);//search in VLANs (vlan name, subnet, note)
 					}
 					
-					//search in powerups (name, note)
-					echo ListUPSs("?",$search);
 					echo "<BR>\n";
+					ListLocationsAndDevices("?",$search);//search in locaions (l.name, l.altname, l.keyno, l.note)
 					
-					//search in powerpanel (name, note)
-					ListPowerPanels("?", $search);
+					echo "<BR>\n";
+					ListPowerPanels("?", $search);//search in powerpanel (name, note)
 					
-					echo "</div>\n";
-					echo "</div>\n";
+					echo "<BR>\n";
+					echo ListSites("?", $search);//search for sites (name, fullname)
+					
+					echo "<BR>\n";
+					echo ListRooms("?", $search);//search for rooms (name, fullname)
+					
+					echo "<BR>\n";
+					echo ListUPSs("?",$search);//search in powerups (name, note)
+					
+					echo "</div>\n</div>\n";
 				}
 				else
 				{

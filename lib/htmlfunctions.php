@@ -891,7 +891,7 @@
 			//VLANs
 			if($config_subnetsEnabled)
 			{
-				$vlanCount = ListCustomerSubnets("C",$hNo);
+				$vlanCount = ListSubnets("C",$hNo);
 				echo "<BR>\n";
 			}
 			//Power Circuits of devices
@@ -1670,6 +1670,7 @@
 	function ListDevices($search, $input)
 	{
 		global $mysqli;
+		global $errorMessage;
 		
 		$formAction = "./?host=$input";
 		if($search)
@@ -1677,28 +1678,13 @@
 			$input = "%".$input."%";
 			
 			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
-					FROM dcim_device AS d
-						LEFT JOIN dcim_customer AS c ON c.hno=d.hno
-						LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
-						LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-						LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-					WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
-				UNION
-					SELECT '', s.name, r.roomID, r.name, '', '',  l.locationid, l.name, l.note, '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-						FROM dcim_location AS l
-							LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
-							LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-						WHERE CONCAT(l.name,'~',l.altname,'~',l.keyno,'~',l.note) LIKE ?
-				ORDER BY site, room, loc, length(name) DESC, unit DESC,name, member";
-			
-			if (!($stmt = $mysqli->prepare($query))) 
-			{
-				//TODO hadnle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-			}
-			$stmt->bind_Param('ss', $input, $input);
-			
-			echo "<span class='tableTitle'>Locations and Devices</span>\n";
+				FROM dcim_device AS d
+					LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
+				ORDER BY s.name, r.name, l.name, d.unit, d.name, d.member";
 		}
 		else
 		{//customer page
@@ -1710,33 +1696,32 @@
 			WHERE d.hno=?
 			ORDER BY status, site, room, loc, unit, name, member";
 			
-			if (!($stmt = $mysqli->prepare($query))) 
-			{
-				//TODO hadnle errors better
-				echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-			}
-			$stmt->bind_Param('s', $input);
-			
-			echo "<span class='tableTitle'>Devices</span>\n";
 		}
 		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($deviceID, $site, $roomID, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
-		$count = $stmt->num_rows;
-		
-		if(!$search && UserHasWritePermission())
+		$count = 0;
+		echo "<span class='tableTitle'>Devices</span>\n";
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
 		{
-			// add button to add new Device
-			//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
-			echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			$errorMessage[] = "Prepare failed: ListDevices($search, $input) (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($deviceID, $site, $roomID, $room, $hNo, $customer, $locationID, $location, $locationNote, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$count = $stmt->num_rows;
+			
+			if(!$search && UserHasWritePermission())
+			{
+				// add button to add new Device
+				//EditDevice(add, deviceID, roomID, hNo, name, altname, fullname, type, size, locationID, unit, status, notes, model, member, asset, serial)
+				echo "<button class='editButtons_hidden' onclick=\"EditDevice(true, -1, -1, '$input', '$input-?', '', '$input-?', 'S', '1U', -1, '0', 'A', '', '', '-1', '', '')\">Add New</button>\n";
+			}
 		}
 		echo "<BR>\n";
-		
 		if($count>0)
 		{
 			if($search)
-				echo CreateDataTableHeader(array("Location&#x25B2;", "Location Note","Customer","Device","AltName","Model","Serial","Asset","Note"));
+				echo CreateDataTableHeader(array("Location&#x25B2;","Customer","Device","AltName","Model","Serial","Asset","Note"));
 			else
 				echo CreateDataTableHeader(array("Location&#x25B2;", "Device","Unit","AltName","Model","Size","Type","Status","Notes"),true,UserHasWritePermission(),UserHasWritePermission());
 			
@@ -1757,7 +1742,6 @@
 				echo "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
 				if($search)
 				{
-					echo "<td class='data-table-cell'>".TruncateWithSpanTitle(MakeHTMLSafe($locationNote))."</td>";
 					echo "<td class='data-table-cell'><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
 				}
 				echo "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
@@ -2351,7 +2335,7 @@
 		<?php
 	}
 	
-	function ListSearchCustomers($input)
+	function ListCustomers_Search($input)
 	{
 		global $mysqli;
 		
@@ -2909,7 +2893,7 @@
 			echo "<div class='panel-header'>$fullRoomName Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 
-			ListRoomLocationsAndDevices($roomID);
+			ListLocationsAndDevices("R", $roomID);
 			echo "<BR>";
 			ListPowerPanels("R", $roomID);
 			
@@ -2925,70 +2909,58 @@
 		//return $count;
 	}
 	
-	function ListRoomLocationsAndDevices($roomID)
+	function ListLocationsAndDevices($page,$input)
 	{
 		//show all customers/devices at given locations - IE all devices in room 5 sorted by location - from nav links 	
 		global $mysqli;
+		global $errorMessage;
 		
 		$result = "";
 		
 		$showEmpty = true;///this was a test feature to hide empty locations
+		$searchTitle = "Locations";
 		
-		//lookup site/room name for headers
-		$query = "SELECT s.siteid, s.name, r.roomid, r.name, r.fullname
-			FROM dcim_room AS r
-				LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
-			WHERE r.roomid=?";
+		$deviceJoin = "LEFT";
+		if(!$showEmpty) $deviceJoin = "INNER";
 		
-		if (!($stmt = $mysqli->prepare($query)))
-		{
-			//TODO handle errors better
-			$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+		$roomPage = false;
+		if($page=="R")
+		{//room page
+			$roomPage = true;
+			$filter = "r.roomid=?";
+		}
+		else if($page=="?")
+		{//location search
+			$input= "%".$input."%";
+			$filter = "CONCAT(l.name,'~',l.altname,'~',l.keyno,'~',l.note) LIKE ?";
 		}
 		
-		$stmt->bind_Param('i', $roomID);
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($siteID, $site, $roomID, $room, $roomFullName);
-		$count = $stmt->num_rows;
 		
-		if($count==1 && $stmt->fetch())
-		{//sucsessfull lookup
-			$panelDescription = "Locations & devices in $site $roomFullName";
-			$searchTitle = "$site $roomFullName Locations";
-			
-			$deviceJoin = "LEFT";
-			if(!$showEmpty)
-				$deviceJoin = "INNER";
-			
-			$query = "SELECT s.name AS site, r.name, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.keyno, l.allocation, l.order, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
-					c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.altname AS devicealtname, d.model, d.member,
-					COUNT(d.locationid) AS count
-				FROM dcim_location AS l
-					$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
-					LEFT JOIN dcim_customer c ON c.hno = d.hno
-					LEFT JOIN dcim_room r ON l.roomid=r.roomid
-					LEFT JOIN dcim_site s ON r.siteid=s.siteid
-				WHERE r.roomid=?
-				GROUP BY l.locationid
-				ORDER BY r.name, l.name";
-			
-			if (!($stmt = $mysqli->prepare($query)))
-			{
-				//TODO handle errors better
-				$result .= "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-			}
-			
-			$stmt->bind_Param('s', $roomID);
-			
-			$stmt->execute();
+		$query = "SELECT s.name AS site, r.roomid, r.name, r.fullname, l.locationid, l.name, l.altname, l.type, l.units, l.orientation, l.keyno, l.allocation, l.order, l.xpos, l.ypos, l.width, l.depth, l.note, l.edituser, l.editdate, l.qauser, l.qadate, 
+				c.hNo, c.name AS customer, d.deviceid, d.name AS devicename, d.altname AS devicealtname, d.model, d.member,
+				COUNT(d.locationid) AS count
+			FROM dcim_location AS l
+				$deviceJoin JOIN dcim_device d ON l.locationID = d.locationid AND d.status='A'
+				LEFT JOIN dcim_customer c ON c.hno = d.hno
+				LEFT JOIN dcim_room r ON l.roomid=r.roomid
+				LEFT JOIN dcim_site s ON r.siteid=s.siteid
+			WHERE $filter
+			GROUP BY l.locationid
+			ORDER BY r.name, l.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input) || !$stmt->execute())
+		{
+			$errorMessage[]= "ListLocationsAndDevices Prepare 1 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		}
+		else
+		{
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $altName, $locType, $units, $orientation, $keyno, $allocation, $order, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $deviceCount);
+			$stmt->bind_result($site, $roomID, $room, $roomFullName, $locationID, $location, $altName, $locType, $units, $orientation, $keyno, $allocation, $order, $xPos, $yPos, $width, $depth, $note, $editUserID, $editDate, $qaUserID, $qaDate, $hNo, $customer, $deviceID, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $deviceCount);
 			$count = $stmt->num_rows;
 			
-			$result .= "<span class='tableTitle'>$searchTitle ($count)</span>\n";
+			$result .= "<span class='tableTitle'>$searchTitle</span>\n";
 			//add location button
-			if(CustomFunctions::UserHasLocationPermission())
+			if($roomPage && CustomFunctions::UserHasLocationPermission())
 			{
 				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
 				$params = "true, -1, $roomID, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3.5, ''";
@@ -2998,7 +2970,7 @@
 			
 			if($count>0)
 			{//show results
-				$result .= CreateDataTableHeader(array("Location","Size","Units","Customer","Device","Allocation","Key#","Notes"), true, CustomFunctions::UserHasLocationPermission(), CustomFunctions::UserHasLocationPermission());
+				$result .= CreateDataTableHeader(array("Location", "AltName","Size","Units","Customer","Device","Allocation","Key#","Notes"), true, $roomPage && CustomFunctions::UserHasLocationPermission(), $roomPage && CustomFunctions::UserHasLocationPermission());
 				
 				//list result data
 				$lastLocID = -1;
@@ -3016,8 +2988,9 @@
 					if(!$additionalDevice)
 					{
 						$result .= "<td class='data-table-cell'><a href='./?locationid=$locationID'>".MakeHTMLSafe($fullLocationName)."</a></td>";
+						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($altName)."</td>";
 						$result .= "<td class='data-table-cell'>$size</td>";
-						$result .= "<td class='data-table-cell'>$units ($order)</td>";
+						$result .= "<td class='data-table-cell'>$units (<span title='".LocationOrder($order)."'>$order</span>)</td>";
 					}
 					
 					if(strlen($customer) > 0)
@@ -3032,25 +3005,23 @@
 						$result .= "<td class='data-table-cell'>$deviceCount Devices</td>";
 					
 					if(!$additionalDevice)
-					{//on spanned location record
+					{//not on spanned location record
 						$result .= "<td class='data-table-cell'>".LocationAllocation($allocation)."</td>";
 						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($keyno)."</td>";
 						$displayNote = Truncate($note);
 						$result .= "<td class='data-table-cell'>".MakeHTMLSafe($displayNote)."</td>";
 						$result .= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 						
-						if(CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
+						if($roomPage && CustomFunctions::UserHasLocationPermission())//disabled cuz there could be multiples entries for this location for each device and that seems confusing and there is no real need to edit the location here anyways
 						{
 							$jsSafeName = MakeJSSafeParam($location);
 							$jsSafeAltName = MakeJSSafeParam($altName);
 							$jsSafeNote = MakeJSSafeParam($note);
 							$jsSafeKeyno = MakeJSSafeParam($keyno);
 							//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
-							
 							$params = "false, $locationID, $roomID, '$jsSafeName', '$jsSafeAltName', '$locType', $units, '$orientation', '$jsSafeKeyno', '$allocation', '$order', $xPos, $yPos, $width, $depth, '$jsSafeNote'";
 						
 							$result .= "<td class='data-table-cell-button editButtons_hidden'><button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Edit</button></td>";
-							
 							$result .= CreateQACell("dcim_location", $locationID, "", $editUserID, $editDate, $qaUserID, $qaDate, true, 1);
 						}
 					}
@@ -3060,17 +3031,13 @@
 			}
 			else 
 			{
-				$result .= "No Locations or devices found in $roomFullName.<BR>\n";
+				$result .= "No locations found.<BR>\n";
 			}
-		}//sucsessfull lookup
-		else
-		{
-			$result .= "Room($roomID) not found.<BR>\n";
 		}
 		
 		echo $result;
 		
-		if(CustomFunctions::UserHasLocationPermission())
+		if($roomPage && CustomFunctions::UserHasLocationPermission())
 			EditLocationForm();
 		
 		return $count;
@@ -3375,7 +3342,7 @@
 		<?php
 	}
 	
-	function ListCustomerSubnets($page, $key)
+	function ListSubnets($page, $key)
 	{
 		global $mysqli;
 		global $errorMessage;
