@@ -2057,7 +2057,7 @@
 		global $mysqli;
 		global $errorMessage;
 		
-		$query = "SELECT pc.powercircuitid, pp.powerpanelid, pp.name, s.name, r.name, l.locationid, l.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, pc.logtype
+		$query = "SELECT pc.powercircuitid, pp.powerpanelid, pp.name, s.name, r.name, l.locationid, l.name, pc.circuit, pc.volts, pc.amps, pc.status, pc.load, pc.edituser, pc.editdate, pc.qauser, pc.qadate, pc.logtype, COUNT(l.locationid) AS loccount
 			FROM dcimlog_powercircuit AS pc
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
@@ -2065,7 +2065,7 @@
 				LEFT JOIN dcimlog_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
 				LEFT JOIN dcimlog_location AS l ON l.locationid=pcl.locationid
 			WHERE pc.powerpanelid=?
-			GROUP BY pc.powercircuitlogid, pcl.powercircuitid, l.locationid
+			GROUP BY pc.powercircuitlogid, pcl.powercircuitid
 			ORDER BY pc.circuit%2=0, pc.circuit, pc.editdate DESC";
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
@@ -2078,7 +2078,7 @@
 			$result = "<span class='tableTitle'>Power Panel Circuit History</span> - Grouped by circuit\n<BR>\n";
 			
 			$stmt->store_result();
-			$stmt->bind_result($powerCircuitID, $powerPanelID, $panelName, $siteName, $roomName, $locationID, $locationName, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate, $logType);
+			$stmt->bind_result($powerCircuitID, $powerPanelID, $panelName, $siteName, $roomName, $locationID, $locationName, $circuit, $volts, $amps, $status, $load, $editUserID, $editDate, $qaUserID, $qaDate, $logType, $locCount);
 			$count = $stmt->num_rows;
 			
 			if($count>0)
@@ -2101,9 +2101,12 @@
 					else $rowClass = "dataRowTwo";
 					
 					$panelName = MakeHTMLSafe($siteName." ".$panelName);
-					$location = "None";
-					if($locationID!=null)
+					if($locCount==0)
+						$location = "None";
+					else if($locCount==1)
 						$location = "<a href='./?locationid=$locationID'>".MakeHTMLSafe($locationName)."</a>";
+					else
+						$location = "Multiple";
 					
 					$result .= "<tr class='$rowClass' $rowStyle>";
 					$result .= "<td class='data-table-cell'><a href='./?powerpanelid=$powerPanelID'>".MakeHTMLSafe($panelName)."</a></td>";
