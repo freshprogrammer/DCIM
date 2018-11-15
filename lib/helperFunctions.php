@@ -344,6 +344,46 @@
 		return $logTable;
 	}
 	
+	function GetParentTable($table)
+	{
+		if($table=="dcim_badge")				$parentTable='dcim_customer';
+		else if($table=="dcim_customer")		$parentTable=false;
+		else if($table=="dcim_device")			$parentTable='dcim_customer';
+		else if($table=="dcim_deviceport")		$parentTable='dcim_device';
+		else if($table=="dcim_portconnection")	$parentTable='dcim_deviceport';
+		else if($table=="dcim_location")		$parentTable='dcim_room';
+		else if($table=="dcim_portvlan")		$parentTable='dcim_deviceport';
+		else if($table=="dcim_powerpanel")		$parentTable='dcim_powerups';
+		else if($table=="dcim_powerups")		$parentTable='dcim_site';
+		else if($table=="dcim_powercircuit")	$parentTable='dcim_powerpanel';
+		else if($table=="dcim_powercircuitloc")	$parentTable='dcim_powercircuit';
+		else if($table=="dcim_room")			$parentTable='dcim_site';
+		else if($table=="dcim_site")			$parentTable=false;
+		else if($table=="dcim_vlan")			$parentTable=false;
+		else $parentTable= false;
+		return $parentTable;
+	}
+	
+	function GetTableNameField($table)
+	{
+		if($table=="dcim_badge")				$nameField='name';
+		else if($table=="dcim_customer")		$nameField='name';
+		else if($table=="dcim_device")			$nameField='name';
+		else if($table=="dcim_deviceport")		$nameField='port';
+		else if($table=="dcim_portconnection")	$nameField='portconnectionid';
+		else if($table=="dcim_location")		$nameField='name';
+		else if($table=="dcim_portvlan")		$nameField='portvlanid';
+		else if($table=="dcim_powerpanel")		$nameField='name';
+		else if($table=="dcim_powerups")		$nameField='name';
+		else if($table=="dcim_powercircuit")	$nameField='circuit';
+		else if($table=="dcim_powercircuitloc")	$nameField='powercircuitlocid';
+		else if($table=="dcim_room")			$nameField='name';
+		else if($table=="dcim_site")			$nameField='name';
+		else if($table=="dcim_vlan")			$nameField='vlan';
+		else $nameField= false;
+		return $nameField;
+	}
+	
 	function DoesTableHaveQAFields($table)
 	{
 		$result = true;

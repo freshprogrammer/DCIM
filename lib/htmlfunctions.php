@@ -590,6 +590,7 @@
 		
 		if(UserHasAdminPermission()) $pageSubTitle = "Accounts"; 
 		else $pageSubTitle = "Account";
+		$name = "";
 		
 /////////////////user details
 		$maxPasswordLength = 15;//totly arbitrary, MD5 conversion so len doesnt really matter
@@ -741,9 +742,15 @@
 			 $action = "./?host=$input";
 			 EditDeviceForm($action);
 			 }*/
-			echo "</div>\n";
-			echo "</div>\n\n";
-			echo "<BR>\n";
+			echo "</div>\n</div>\n";
+			
+			echo "<div class='panel'>\n";
+			echo "<div class='panel-header'>User Activity</div>\n";
+			echo "<div class='panel-body'>\n\n";
+			
+			echo ListUserActivity($input, $name);
+			
+			echo "</div>\n</div>\n";
 		}
 	}
 	
@@ -2420,6 +2427,78 @@
 			}
 		}
 		return $count;
+	}
+	
+	function ListUserActivity($userID, $name)
+	{
+		global $mysqli;
+		global $errorMessage;
+		
+		$result = "";
+		$days = 90;
+		
+		$valid = $stmt = $mysqli->prepare("SET @days=$days;");
+		if($valid) $valid = $stmt->execute();
+		if($valid) $valid = $stmt = $mysqli->prepare("SET @userid=?;");
+		if($valid) $valid = $stmt->bind_Param('s', $userID);
+		if($valid) $valid = $stmt->execute();
+		
+		$query = "
+			SELECT * FROM (SELECT 'dcim_device'     AS `table`, deviceid,	  name, hno,      logtype,editdate FROM dcimlog_device     WHERE edituser=@userid AND editdate BETWEEN NOW() - INTERVAL @days DAY AND NOW()  ORDER BY editdate DESC) AS cur GROUP BY 2 
+			UNION
+			SELECT * FROM (SELECT 'dcim_customer'   AS `table`, hno, 		  name, -1,       logtype,editdate FROM dcimlog_customer   WHERE edituser=@userid AND editdate BETWEEN NOW() - INTERVAL @days DAY AND NOW()  ORDER BY editdate DESC) AS cur GROUP BY 2 
+			UNION
+			SELECT * FROM (SELECT 'dcim_deviceport' AS `table`, deviceportid, port, deviceid, logtype,editdate FROM dcimlog_deviceport WHERE edituser=@userid AND editdate BETWEEN NOW() - INTERVAL @days DAY AND NOW()  ORDER BY editdate DESC) AS cur GROUP BY 2 
+			UNION
+			SELECT * FROM (SELECT 'dcim_location'   AS `table`, locationid,   name, roomid,   logtype,editdate FROM dcimlog_location   WHERE edituser=@userid AND editdate BETWEEN NOW() - INTERVAL @days DAY AND NOW()  ORDER BY editdate DESC) AS cur GROUP BY 2 
+			ORDER BY editdate DESC";
+		
+		if($valid && !($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+		{
+			$errorMessage[] = "ListUserActivity($userID, $name) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			$result .= "Failed to look up user activity<BR>\n";
+		}
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($table, $id, $name, $parentID, $logType, $editDate);
+			$count = $stmt->num_rows;
+			
+			$result .= "<span class='tableTitle'>Activity for $name - last $days days</span>\n<BR>\n";
+			if($count>0)
+			{
+				$result .= CreateDataTableHeader(array("Record","ID","Name", "Parent","Type","Date&#x25B2;"));
+				//list result data
+				while ($stmt->fetch())
+				{
+					$recDescription = GetTableRecordDescription($table);
+					$pageKeyName = GetRecordPageKey($table);
+					if($pageKeyName!=false)
+					{
+						$idLinkStart = "<a href='./?$pageKeyName=$id'>";
+						$idLinkEnd = "</a>";
+					}else {$idLinkStart = "";$idLinkEnd= "";}
+					$parentPageKeyName = GetRecordPageKey(GetParentTable($table));
+					$result .= "<tr class='dataRow'>";
+					$result .= "<td class='data-table-cell'>$recDescription</td>";
+					$result .= "<td class='data-table-cell'>$idLinkStart$id$idLinkEnd</td>";
+					$result .= "<td class='data-table-cell'>$idLinkStart".MakeHTMLSafe($name)."$idLinkEnd</td>";
+					if($parentID!=-1)
+						$result .= "<td class='data-table-cell'>".GetTableRecordDescription(GetParentTable($table))."# <a href='./?$parentPageKeyName=$parentID'>$parentID</a></td>";
+					else
+						$result .= "<td class='data-table-cell'>N/A</a></td>";
+					$result .= "<td class='data-table-cell'>".ChangeLogType($logType)."</td>";
+					$result .= "<td class='data-table-cell'>$editDate</td>";
+					$result .= "</tr>";
+				}
+				$result .= "</table>\n";
+			}
+			else
+			{
+				$result .= "No activity found for $name.<BR>\n";
+			}
+		}
+		return $result;
 	}
 	
 	function ShowSiteListPage()
