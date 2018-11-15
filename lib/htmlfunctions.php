@@ -561,11 +561,11 @@
 							<table style='width:100%;'>
 								<tr>
 									<td align=left>
-										<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=14>Delete</button>
+										<button id='EditLocation_deletebtn' type='button' onclick='DeleteLocation()' tabindex=102>Delete</button>
 									</td>
 									<td align='right'>
-										<button type='button' onclick='HideAllEditForms()' tabindex=16>Cancel</button>
-										<input type='submit' value='Save' tabindex=15>
+										<button type='button' onclick='HideAllEditForms()' tabindex=101>Cancel</button>
+										<input type='submit' value='Save' tabindex=100>
 									</td>
 								</tr>
 							</table>
@@ -3327,11 +3327,11 @@
 					<tr>
 						<td colspan=2><table style='width:100%;'><tr>
 							<td align=left>
-								<?php if($deleteEnabled)echo "<button id='EditPowerCircuit_deletebutton' type='button' onclick='DeletePowerCircuit()' tabindex=10>Delete</button>";?>
+								<?php if($deleteEnabled)echo "<button id='EditPowerCircuit_deletebutton' type='button' onclick='DeletePowerCircuit()' tabindex=102>Delete</button>";?>
 							</td>
 							<td align='right'>
-								<button type="button" onclick="HideAllEditForms()" tabindex=9>Cancel</button>
-								<input type="submit" value="Save" tabindex=8>
+								<button type="button" onclick="HideAllEditForms()" tabindex=101>Cancel</button>
+								<input type="submit" value="Save" tabindex=100>
 							</td>
 						</tr></table></td>
 					</tr>
