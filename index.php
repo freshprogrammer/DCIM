@@ -53,7 +53,7 @@
 	$userID = -1;
 	$focusSearch = true;// can be diabled by functions when switching to a form page (like adding a new cust)
 	
-	$search = GetInput("search");
+	$search = trim(GetInput("search"));
 	$page = GetInput("page");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
@@ -326,15 +326,13 @@
 				{
 					$pageSubTitle = "Search:\"".MakeHTMLSafe($search)."\"";
 					echo "<div class=\"panel\">\n";
-					echo "<div class=\"panel-header\">\n";
-					echo "Search for \"".MakeHTMLSafe($search)."\" yields:\n";
-					echo "</div>\n";
+					echo "<div class=\"panel-header\">Search for \"".MakeHTMLSafe($search)."\" yields:</div>\n";
 					echo "<div class=\"panel-body\">\n\n";
 					
 					ListCustomers_Search($search);//search in customer (hno, cno, name, note)
 					
 					echo "<BR>\n";
-					ListDevices(true,$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
+					ListDevices("?",$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
 					
 					if($config_badgesEnabled)
 					{
@@ -364,6 +362,19 @@
 					echo ListUPSs("?",$search);//search in powerups (name, note)
 					
 					echo "</div>\n</div>\n";
+					
+					
+					echo "<div class=\"panel\">\n";
+					echo "<div class=\"panel-header\">History Search for \"".MakeHTMLSafe($search)."\" yields:</div>\n";
+					echo "<div class=\"panel-body\">\n\n";
+					
+					ListCustomers_Search($search, true);//search in customer (hno, cno, name, note)
+					
+					echo "<BR>\n";
+					ListDevices("H?",$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
+					
+					echo "</div>\n</div>\n";
+					
 				}
 				else
 				{

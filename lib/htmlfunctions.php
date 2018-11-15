@@ -874,7 +874,7 @@
 			echo "<div class='panel-body'>\n\n";
 				
 			//show devices linked to this hNo
-			$deviceCount = ListDevices(false,$hNo);
+			$deviceCount = ListDevices("C",$hNo);
 			echo "<BR>\n";
 			
 			//badges
@@ -1667,14 +1667,16 @@
 		<?php  
 	}
 	
-	function ListDevices($search, $input)
+	function ListDevices($page, $input)
 	{
 		global $mysqli;
 		global $errorMessage;
 		
+		$search = false;
 		$formAction = "./?host=$input";
-		if($search)
+		if($page=="?")
 		{
+			$search = true;
 			$input = "%".$input."%";
 			
 			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
@@ -1684,6 +1686,21 @@
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 				WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
+				ORDER BY s.name, r.name, l.name, d.unit, d.name, d.member";
+		}
+		else if($page=="H?")
+		{
+			$search = true;
+			$input = "%".$input."%";
+			
+			$query = "SELECT d.deviceid, s.name AS site, r.roomID, r.name AS room, c.hno, c.name AS cust, l.locationid, l.name as loc, l.note, d.unit, d.name, d.altname, d.member, d.size, d.type, d.status, d.note, d.asset, d.serial, d.model, d.edituser, d.editdate, d.qauser, d.qadate
+				FROM dcimlog_device AS d
+					LEFT JOIN dcim_customer AS c ON c.hno=d.hno
+					LEFT JOIN dcim_location AS l ON d.locationid=l.locationid
+					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
+					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE CONCAT(d.name,'~',d.altname,'~',d.asset,'~',d.note,'~',d.serial,'~',d.model) LIKE ?
+				GROUP BY d.deviceid
 				ORDER BY s.name, r.name, l.name, d.unit, d.name, d.member";
 		}
 		else
@@ -1699,10 +1716,13 @@
 		}
 		
 		$count = 0;
-		echo "<span class='tableTitle'>Devices</span>\n";
+		if($page=="H?")
+			echo "<span class='tableTitle'>Device History</span>\n";
+		else
+			echo "<span class='tableTitle'>Devices</span>\n";
 		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
 		{
-			$errorMessage[] = "Prepare failed: ListDevices($search, $input) (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "Prepare failed: ListDevices($page, $input) (" . $mysqli->errno . ") " . $mysqli->error;
 		}
 		else
 		{
@@ -2338,53 +2358,63 @@
 		<?php
 	}
 	
-	function ListCustomers_Search($input)
+	function ListCustomers_Search($input, $history=false)
 	{
 		global $mysqli;
+		global $errorMessage;
 		
-		$query = "SELECT hno, cno, name, note, status, edituser
-		FROM dcim_customer
-		WHERE CONCAT('H',hno) LIKE ? OR CONCAT('C',cno) LIKE ? OR name LIKE ? OR note LIKE ?
-		ORDER BY name";
+		if(!$history)
+		{
+			$query = "SELECT hno, cno, name, note, status, edituser
+			FROM dcim_customer
+			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			ORDER BY name";
+		}
+		else
+		{
+			$query = "SELECT hno, cno, name, note, status, edituser
+			FROM dcimlog_customer
+			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			GROUP BY hno
+			ORDER BY name";
+		}
 		
+		$count = 0;
 		$input = "%".$input."%";
-		if (!($stmt = $mysqli->prepare($query))) 
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $input)|| !$stmt->execute())
 		{
-			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$errorMessage[] = "ListCustomers_Search($input, $history) Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error;
+			echo "Failed Customer search prepare<BR>\n";
 		}
-		
-		$stmt->bind_Param('ssss', $input, $input, $input, $input);
-		
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($hNo, $cNo, $name, $note, $status, $editUser);
-		$count = $stmt->num_rows;
-		
-		echo "<span class='tableTitle'>Customers</span>\n";
-		echo "<BR>\n";
-		
-		if($count>0)
+		else
 		{
-			echo CreateDataTableHeader(array("H#","C#","Name&#x25B2;","Status","Note"));
+			$stmt->store_result();
+			$stmt->bind_result($hNo, $cNo, $name, $note, $status, $editUser);
+			$count = $stmt->num_rows;
 			
-			//list result data
-			while ($stmt->fetch()) 
+			echo "<span class='tableTitle'>Customers</span>\n<BR>\n";
+			
+			if($count>0)
 			{
-				$note = Truncate($note);
-				echo "<tr class='dataRow'>";
-				echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>$hNo</a>"."</td>";
-				echo "<td class='data-table-cell'>$cNo</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
-				echo "<td class='data-table-cell'>".CustomerStatus($status)."</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
-				echo "</tr>";
+				echo CreateDataTableHeader(array("H#","C#","Name&#x25B2;","Status","Note"));
+				//list result data
+				while ($stmt->fetch()) 
+				{
+					$note = Truncate($note);
+					echo "<tr class='dataRow'>";
+					echo "<td class='data-table-cell'>"."<A href='./?host=$hNo'>$hNo</a>"."</td>";
+					echo "<td class='data-table-cell'>$cNo</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($name)."</td>";
+					echo "<td class='data-table-cell'>".CustomerStatus($status)."</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($note)."</td>";
+					echo "</tr>";
+				}
+				echo "</table>\n";
 			}
-			echo "</table>\n";
-		}
-		else 
-		{
-			echo "No Customers Found.<BR>\n";
+			else 
+			{
+				echo "No Customers Found.<BR>\n";
+			}
 		}
 		return $count;
 	}
