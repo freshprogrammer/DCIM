@@ -2309,9 +2309,9 @@
 					<tr id='EditDevice_interalFields_row1'>
 						<td align='right' width=1>Model:</td>
 						<td align='left'>
-							<select id=EditDevice_model name="model" tabindex=9>
-							<?php 
-							//This should be a list of all switch (or other non colo device) models
+							<input list="devicemodels" id="EditDevice_model" name="model" tabindex=9 />
+							<datalist id=devicemodels>
+							<?php
 							foreach($deviceModels as $model)
 							{
 								if($model->coloDevice==false)
@@ -2319,9 +2319,8 @@
 									echo "<option value='$model->name'>$model->name</option>\n";
 								}
 							}
-							//also include unknown to prevent accedental defualts
 							?>
-							</select>
+							</datalist>
 							Member:
 							<select id=EditDevice_member name="member" tabindex=10>
 							<?php 
