@@ -28,7 +28,7 @@
 <script type='text/javascript'>
 function ConfirmIntent()
 {
-	var needConfirm = true;
+	var needConfirm = false;
 	//only prompt on values that do things. - Could algo give custom messges here
 	if(needConfirm)
 	{
@@ -75,7 +75,9 @@ function SelectImportForm()
 	
 	if(CustomFunctions::UserHasDevPermission())
 	{
-		$debugMessage[]= "-Start - has permision()";
+		$debugMessage[]= "-Start - has permission()";
+		BuildDeviceModelArrays();
+		
 		$validSession = IsValidSession();
 		if($validSession)
 			$commited = true; //TestUserCommitment($dbScriptID);//validated in JS
@@ -92,13 +94,6 @@ function SelectImportForm()
 		{
 			$errorMessage[]="User not commited. Aborted.";
 		}
-		
-		$debugMessageString  = implode("<BR>\n",$debugMessage);
-		$errorMessageString  = implode("<BR>\n",$errorMessage);
-		$resultMessageString = implode("<BR>\n",$resultMessage);
-		if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
-		if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
-		if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
 		
 		$selectOptions = "";
 		$importForms = "";
@@ -127,6 +122,12 @@ function SelectImportForm()
 		$importForms .= CreateImportForm($formType,$expextedFields);
 		$selectOptions .= "<option value='$formType'>$formType</option>\n";
 		
+		//Device import form
+		$formType = "Device";
+		$expextedFields = "siteName,roomName,locName,hno,name,altname,member,model,unit,type,size,status,asset,serial,note";
+		$importForms .= CreateImportForm($formType,$expextedFields);
+		$selectOptions .= "<option value='$formType'>$formType</option>\n";
+		
 		echo "</BR>";
 		echo "Import Type:
 		<select id='importselect' name='scriptid' onchange='SelectImportForm()'>
@@ -135,6 +136,13 @@ function SelectImportForm()
 		</select>
 		</BR>";
 		echo $importForms;
+		
+		$debugMessageString  = implode("<BR>\n",$debugMessage);
+		$errorMessageString  = implode("<BR>\n",$errorMessage);
+		$resultMessageString = implode("<BR>\n",$resultMessage);
+		if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
+		if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
+		if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
 	}
 	else
 	{
@@ -168,6 +176,7 @@ function SelectImportForm()
 		if($importType=="Location")	ImportLocations($fullProcessing);
 		else if($importType=="Power Panel")	ImportPowerPanels($fullProcessing);
 		else if($importType=="Power Circuits")	ImportPowerCircuits($fullProcessing);
+		else if($importType=="Device")	ImportDevices($fullProcessing);
 	}
 	
 	class LocationRec
@@ -762,5 +771,243 @@ function SelectImportForm()
 		}
 		$resultMessage[] = "Successfully added $totalAffectedCount records.";
 		$userID = $importUserID;
+	}
+	
+	class DeviceImportRec
+	{
+		public $siteName;
+		public $roomName;
+		public $locName;
+		public $hno;
+		public $name;
+		public $altname;
+		public $member;
+		public $model;
+		public $unit;
+		public $type;
+		public $size;
+		public $status;
+		public $asset;
+		public $serial;
+		public $note;
+		
+		function __construct($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note)
+		{
+			$this->siteName	= $siteName;
+			$this->roomName	= $roomName;
+			$this->locName	= $locName;
+			$this->hno		= $hno;
+			$this->name		= $name;
+			$this->altname	= $altname;
+			$this->member	= $member;
+			$this->model	= $model;
+			$this->unit		= $unit;
+			$this->type		= $type;
+			$this->size		= $size;
+			$this->status	= $status;
+			$this->asset	= $asset;
+			$this->serial	= $serial;
+			$this->note		= $note;
+		}
+	}
+	
+	function ImportDevices($fullProcessing=false)
+	{
+		global $errorMessage;
+		global $resultMessage;
+		
+		//locations- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
+		$deviceData= GetInput("importdata",true,false);
+		
+		$deviceData= str_replace("\n",",",$deviceData);
+		$deviceData= explode(",", $deviceData);
+		
+		$importObjects = array();
+		$i = 0;
+		$fields = 15;
+		
+		$siteName="";
+		$roomName="";
+		$locName="";
+		$hno="";
+		$name="";
+		$altname="";
+		$member="";
+		$model="";
+		$unit="";
+		$type="";
+		$size="";
+		$status="";
+		$asset="";
+		$serial="";
+		$note="";
+		
+		foreach ($deviceData as $rec)
+		{
+			if(strlen($rec)>2 && $rec[0]=='"' && substr($rec,-1)=='"')
+			{
+				$rec = substr($rec, 1, -1);//trim start and end quotes
+				$rec= str_replace('""', '', $rec);//replace double double quotes with single double quotes
+			}
+			switch($i % $fields)
+			{
+				case 0:$siteName	= ($rec);break;
+				case 1:$roomName	= ($rec);break;
+				case 2:$locName		= ($rec);break;
+				case 3:$hno			= ($rec);break;
+				case 4:$name		= ($rec);break;
+				case 5:$altname		= ($rec);break;
+				case 6:$member		= ($rec);break;
+				case 7:$model		= ($rec);break;
+				case 8:$unit		= ($rec);break;
+				case 9:$type		= ($rec);break;
+				case 10:$size		= ($rec);break;
+				case 11:$status		= ($rec);break;
+				case 12:$asset		= ($rec);break;
+				case 13:$serial		= ($rec);break;
+				case 14:$note		= ($rec);
+				
+				$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
+				break;
+			}
+			$i++;
+		}
+		
+		//add Location
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." devices...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." devices";
+		
+		$validCount = 0;
+		foreach ($importObjects as $rec)
+		{
+			if(ImportDevice_Test($rec))$validCount++;
+		}
+		$resultMessage[]="Sucsess with  $validCount devices...";
+	}
+	
+	function ImportDevice_Test($rec)
+	{//reports all exceptions
+		global $errorMessage;
+		global $resultMessage;
+		
+		global $deviceModels;
+		global $validModels;
+		$validModels = array();
+		foreach($deviceModels as $device) $validModels[] = $device->name;
+		
+		//test location - get locationid
+		$locationid = ValidImportLocation($rec->siteName, $rec->roomName, $rec->locName, $rec->name);
+		
+		//attempt hno extraction
+		//attempt altname extraction
+		
+		//report devices with no hno
+		//test unit
+		
+		/*
+		//testModel
+		if(!ValidImportDeviceModel($rec->model))
+		{
+			$errorMessage[]="Unknown Model (".$rec->model.") Device:".$rec->name;
+		}
+		else
+		{
+			//$resultMessage[]="Valid Model (".$rec->model.") Device:".$rec->name;
+		}*/
+		
+		
+		$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+	}
+	
+	function ValidImportLocation($site, $room, $loc, $deviceName="null")
+	{
+		//looks up location - returns locationid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$testRoom = true;
+		$result = -1;
+		
+		$validRoom = !$testRoom;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name 
+				FROM dcim_site AS s 
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validSite = true;
+				else $errorMessage[] = "ValidImportLocation() - Invalid Site for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		
+		if($validSite && $testRoom)
+		{
+			$query = "SELECT r.roomid, r.name
+				FROM dcim_room AS r
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $room) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validRoom = true;
+				else $errorMessage[] = "ValidImportLocation() - Invalid Room for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		
+		if($validSite && $validRoom)
+		{
+			$query = "SELECT l.locationid, l.name
+				FROM dcim_location AS l
+					INNER JOIN dcim_room AS r ON l.roomid=r.roomid
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=? AND l.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('sss', $site, $room, $loc) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l3) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1)
+				{
+					$stmt->bind_result($locationID, $location);
+					$stmt->fetch();
+					$result = $locationID;
+				}
+				else $errorMessage[] = "ValidImportLocation() - Invalid Location for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		
+	}
+	
+	function ValidImportDeviceModel(&$model)
+	{
+		global $validModels;
+		
+		$model = str_replace('Poweredge', 'PowerEdge', $model);
+		$model = str_replace('poweredge', 'PowerEdge', $model);
+		$model = str_replace('POWEREDGE', 'PowerEdge', $model);
+		
+			 if($model=="R410")$model= "Dell Poweredge $model";
+		else if($model=="R420")$model= "Dell Poweredge $model";
+		else if($model=="R710")$model= "Dell Poweredge $model";
+		else if($model=="R820")$model= "Dell Poweredge $model";
+		else if($model=="PowerEdge R410")$model= "Dell $model";
+		else if($model=="PowerEdge R420")$model= "Dell $model";
+		else if($model=="PowerEdge R710")$model= "Dell $model";
+		else if($model=="PowerEdge R810")$model= "Dell $model";
+		
+		return (in_array($model,$validModels));
 	}
 ?>
