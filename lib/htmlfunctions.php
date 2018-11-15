@@ -1340,7 +1340,7 @@
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
-			ListDevicePorts($deviceID,$deviceFullNameShort);//all Ports
+			ListDevicePorts($input,$deviceFullNameShort);//all Ports
 		}
 		else 
 		{
@@ -2343,9 +2343,12 @@
 						</td>
 					</tr>
 					<tr>
-						<td colspan='2' align='right'>
-							<button type="button" onclick="HideAllEditForms()" tabindex=15>Cancel</button>
-							<input type="submit" value="Save" tabindex=14>
+						<td align=left>
+							<button id='EditDevice_deletebtn' type='button' onclick='DeleteDevice()' tabindex=102>Delete</button>
+						</td>
+						<td align='right'>
+							<button type="button" onclick="HideAllEditForms()" tabindex=101>Cancel</button>
+							<input type="submit" value="Save" tabindex=100>
 						</td>
 					</tr>
 				</table>
@@ -3781,12 +3784,10 @@
 		global $mysqli;
 		global $config_subnetsEnabled;
 		
-		
 		if($onChassisPage)
 			$filter = "d.name=?";
 		else
 			$filter = "d.deviceid=?";
-		
 		
 		//group concat by port to combine vlans
 		$query = "SELECT
@@ -3795,7 +3796,7 @@
 				d.hno, dp.type, dp.speed, dp.note, dp.status, sc.hno AS switchhno, sc.name AS switchcust, dp.edituser, dp.editdate, dp.qauser, dp.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans
 			FROM dcim_device AS d
-				LEFT JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+				INNER JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
 				LEFT JOIN (
 							SELECT pcA.portconnectionid,pcA.childportid AS srcportid,pcA.parentportid AS destportid,pcA.patches,pcA.edituser,pcA.editdate FROM dcim_portconnection AS pcA
 							UNION ALL
@@ -3963,15 +3964,15 @@
 			
 			//Initialize show all ports
 			echo "<script type='text/javascript'>InitializeShowAllPortsButton();</script>\n";
-			
-			if(UserHasWritePermission())
-			{	
-				//TODO this could fail on chasis page if no ports are found... shouldn't be possible - deviceID will be null
-				EditDevicePortForm($formAction);
-			}
 		}
 		else
 			echo "No device port info found<BR>";
+		
+		if(UserHasWritePermission())
+		{
+			//TODO this could fail on chasis page if no ports are found... shouldn't be possible - deviceID will be null
+			EditDevicePortForm($formAction);
+		}
 		return $portCount;
 	}
 	

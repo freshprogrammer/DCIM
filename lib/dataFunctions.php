@@ -189,7 +189,7 @@
 			$redirectPage = ProcessCustomerAction($action);
 			$tookAction = true;
 		}
-		else if($action==="Device_Edit" || $action==="Device_Add")
+		else if($action==="Device_Edit" || $action==="Device_Add" || $action==="Device_Delete")
 		{
 			$redirectPage = ProcessDeviceAction($action);
 			$tookAction = true;
@@ -247,7 +247,7 @@
 
 		if($tookAction && $redirectAroundFormResubmitWarning)
 		{
-			$_SESSION['resultMessage'] = $resultMessage;
+			$_SESSION['resultMessage'] = $resultMessage;//pass info msgs through redirect
 			$_SESSION['errorMessage'] = $errorMessage;
 			$_SESSION['debugMessage'] = $debugMessage;
 			
@@ -2425,10 +2425,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $errorMessage;
 		global $resultMessage;
 		
+		$redirectPage = "";
 		$totalAffectedCount = 0;
 		$valid = true;
 		
 		$add = $action==="Device_Add";
+		$delete = $action==="Device_Delete";
 		
 		$deviceID = GetInput("deviceid");
 		$hNo = GetInput("hno");
@@ -2480,18 +2482,16 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		if($valid)$valid = ValidCustomer($hNo,true); 
 		
 		//advanced checks
-		if($valid)
-		{
-			//set false untill DB checks validate - if crash, following SQL shouln't execute
-			$passedDBChecks = false;
+		if($valid && !$delete)
+		{//check for name duplicate
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
 			
 			//check if Device (name) already exists before insertion
 			$query = "SELECT deviceid, name, member FROM dcim_device WHERE name=? AND member=? AND NOT(deviceid=?)";
 			
 			if (!($stmt = $mysqli->prepare($query)))
 			{
-				//TODO handle errors better
-				$errorMessage[] = "Prepare failed: ($action-1) (" . $mysqli->errno . ") " . $mysqli->error;
+				$errorMessage[] = "Prepare failed: ($action-v1) (" . $mysqli->errno . ") " . $mysqli->error;
 			}
 			else
 			{
@@ -2507,22 +2507,49 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					$stmt->bind_result($foundDeviceID, $foundName, $foundMember);
 					$stmt->fetch();
 					
-					$errorMessage[] = "Error: Existing Device named \"".MakeHTMLSafe($foundName)." Member $foundMember\" ID:$foundDeviceID found.";
+					$errorMessage[] = "Error: Existing Device named \"".MakeHTMLSafe($foundName)." Member $foundMember\" ID:<a href='./?deviceid=$foundDeviceID'>$foundDeviceID</a> found.";
+				}
+			}
+			$valid = $passedDBChecks;
+		}
+		
+		if($valid && $delete)
+		{//check this device has linked ports - cannot delete while it has ports linked to it
+			$passedDBChecks = false;//set false untill DB checks validate - if crash, following SQL shouln't execute
+			
+			//check if Device (name) already exists before insertion
+			$query = "SELECT d.name, d.member, dp.pic,  dp.port, dp.status, pc.portconnectionid
+				FROM dcim_device AS d
+					INNER JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
+					INNER JOIN dcim_portconnection AS pc ON dp.deviceportid=pc.parentportid OR dp.deviceportid=pc.childportid
+				WHERE d.deviceid=?";
+			
+			if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID)|| !$stmt->execute())
+			{
+				$errorMessage[] = "Prepare failed: ($action-d1) (" . $mysqli->errno . ") " . $mysqli->error;
+			}
+			else
+			{
+				$stmt->store_result();
+				$activePortCount = $stmt->num_rows;
+				$passedDBChecks = $activePortCount==0;
+				
+				if(!$passedDBChecks)
+				{//build error msg
+					$errorMessage[] = "Error: $activePortCount active device ports found. Remove active connection before deleting this device.";
 				}
 			}
 			$valid = $passedDBChecks;
 		}
 		
 		if($valid)
-		{
-			//push changes to DB
+		{//push changes to DB
 			if($add)
 			{
 				$query = "INSERT INTO dcim_device
 					(hno, locationid, name, altname, member, note, unit, type, size, status, asset, serial, model, edituser, editdate) 
 					VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
 				
-				//TODO handle errors better
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Insert Prepare failed: ($action -2) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
@@ -2588,25 +2615,66 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 					}	
 				}
 			}
+			else if($delete)
+			{
+				$query = "DELETE FROM dcim_deviceport WHERE deviceid=?";
+				
+				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID) || !$stmt->execute())
+					$errorMessage[] = "Process Device Delete Prepare failed: ($action-d10) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$affectedCount = $stmt->affected_rows;
+					$totalAffectedCount += $affectedCount;
+					if($affectedCount>=1)
+					{
+						$resultMessage[] = "Successfully Deleted $affectedCount Device Ports from device#$deviceID '$deviceName'";
+						LogDBChange("dcim_deviceport","","D","deviceid=$deviceID");
+						$redirectPage = "./?host=$hNo";
+					}
+					else $errorMessage[] = "Device Port Delete Success, but affected $affectedCount rows.";
+					
+					$query = "DELETE FROM dcim_device WHERE deviceid=? LIMIT 1";
+					
+					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $deviceID) || !$stmt->execute())
+						$errorMessage[] = "Process Device Delete Prepare failed: ($action-d11) (" . $mysqli->errno . ") " . $mysqli->error;
+					else
+					{
+						$affectedCount = $stmt->affected_rows;
+						$totalAffectedCount += $affectedCount;
+						if($affectedCount==1)
+						{
+							$resultMessage[] = "Successfully Deleted Device#$deviceID '$deviceName'";
+							LogDBChange("dcim_device",$deviceID,"D");
+							$redirectPage = "./?host=$hNo";
+						}
+						else $errorMessage[] = "Device Delete Success, but affected $affectedCount rows.";
+					}
+				}
+			}
 			else
 			{
 				$query = "UPDATE dcim_device SET
-						locationid = ?,unit = ?, 
-						altname = ?, 
+						locationid = ?,
+						name = ?,
+						altname = ?,
+						member = ?,
+						note = ?,
+						unit = ?,
+						type = ?,
+						size = ?,
 						status = ?, 
 						asset = ?,
 						serial = ?,
-						note = ?
+						model = ?
 						WHERE deviceid =? LIMIT 1 ";
 				
 				if (!($stmt = $mysqli->prepare($query)))
 					$errorMessage[] = "Process Device Update Prepare failed: ($action-3) (" . $mysqli->errno . ") " . $mysqli->error;
 				else
-				{//					   luasasnd
-					$stmt->bind_Param('iisssssi', $locationID, $unit, $deviceAltName, $status, $asset, $serial, $notes, $deviceID);
+				{//					   lnamnutssasmd
+					$stmt->bind_Param('issisissssssi', $locationID, $deviceName, $deviceAltName, $member, $notes, $unit, $type, $size, $status, $asset, $serial, $model, $deviceID);
 					
 					if (!$stmt->execute())//execute 
-						//failed (errorNo-error)
 						$errorMessage[] = "Failed to execute Device edit (" . $stmt->errno . "-" . $stmt->error . ") ";
 					else
 					{							
@@ -2618,14 +2686,12 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 							UpdateRecordEditUser("dcim_device","deviceid",$deviceID);//do this seperate to distinquish actual record changes from identical updates
 							LogDBChange("dcim_device",$deviceID,"U");
 						}
-						else 
-						{
-							$resultMessage[] = "Success, but affected $affectedCount rows.";
-						}
+						else $resultMessage[] = "Success, but affected $affectedCount rows.";
 					}
 				}
 			}
 		}//end valid SQL do - if not valid error should be set above
+		return $redirectPage;
 	}
 	
 	function ProcessConnectionAction($action)
