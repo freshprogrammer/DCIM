@@ -2376,14 +2376,14 @@
 		{
 			$query = "SELECT hno, cno, name, note, status, edituser
 			FROM dcim_customer
-			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			WHERE CAST(CONCAT('H',hno,'~','C',cno,'~',name,'~',note) AS CHAR) LIKE ?
 			ORDER BY name";
 		}
 		else
 		{
 			$query = "SELECT hno, cno, name, note, status, edituser
 			FROM dcimlog_customer
-			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			WHERE CAST(CONCAT('H',hno,'~','C',cno,'~',name,'~',note) AS CHAR) LIKE ?
 			GROUP BY hno
 			ORDER BY name";
 		}
