@@ -5295,7 +5295,7 @@
 		}
 		else
 		{
-			$heightMax = 650;
+			$heightMax = 650*2;
 			$widthMax = 948;
 			
 			$renderHeight = $heightMax;
