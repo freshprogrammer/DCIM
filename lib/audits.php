@@ -82,7 +82,7 @@
 		$result .= "<a class='' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		*/
 		
-		$result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$siteIDFilter\"'>Export $siteFullName Location Power Readings as CSV</button>";
+		$result .= "<button type='button' title='Creates a spreadsheet listing all power circuits sorted and grouped by location with customer names. CSV format but for viewing, not import.' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerLocationList&siteid=$siteIDFilter\"'>Export $siteFullName Location Power Readings as CSV</button>";
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{

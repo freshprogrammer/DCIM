@@ -68,7 +68,7 @@
 			From there you can easily save it with an appropriate name and upoad.<BR>
 			<BR>
 			<a href='#' onClick='var input= prompt(\"Please enter a date\", \"$date\");
-			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerHistory&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
+			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
 			<a href='./files/RPP Audit Creator.exe'>RPP Audit Creation Tool</a><BR>
 			<a href='./files/RPP Audit - Template.xlsx'>Template File</a>
 			</span>";

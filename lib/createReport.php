@@ -16,9 +16,9 @@
 	
 	if($report==="ActiveBadgeList")
 		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
+	else if($report==="PowerLocationList")
+		OutputCSV("Location Power List - ".date("Y-m-d").".csv",CreateLocationPowerAuditExportArray($siteID));
 	else if($report==="PowerAudit")
-		OutputCSV("Location Power Audit - ".date("Y-m-d").".csv",CreateLocationPowerAuditExportArray($siteID));
-	else if($report==="PowerHistory")
 		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray($date, $siteID));
 	else
 	{
