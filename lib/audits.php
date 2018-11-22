@@ -73,7 +73,7 @@
 			$result .= "</BR></BR>\n";
 		}
 		
-		/*disabled till multi site support 
+		/*disabled till multi site support  - this outputs all badges in DCIM when you probably want just badges for that site - requires filtereing baced on customers at site
 		if($config_badgesEnabled) $result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export $siteFullName Active Badge List as CSV</button><BR><BR>";
 		*/
 		

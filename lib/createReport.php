@@ -13,16 +13,41 @@
 	$report = GetInput("report");
 	$date = GetInput("date");
 	$siteID= GetInput("siteid");
+	$dump= GetInput("dump");
+	
+	$dataDump = $dump=="T";//data dumps will just dump the data to the source instead of returning as a CSV
 	
 	if($report==="ActiveBadgeList")
-		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
+	{
+		$output = CreateBadgeExportArray();
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Active Badge List-".date("Y-m-d").".csv",$output);
+	}
 	else if($report==="PowerLocationList")
-		OutputCSV("Location Power List - ".date("Y-m-d").".csv",CreateLocationPowerAuditExportArray($siteID));
+	{
+		$output = CreateLocationPowerAuditExportArray($siteID);
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Location Power List - ".date("Y-m-d").".csv",$output);
+	}
 	else if($report==="PowerAudit")
-		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray($date, $siteID));
+	{
+		$output = CreatePowerHistoryExportArray($date, $siteID);
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Power Audit - $date.csv",$output);
+	}
 	else
 	{
 		echo "No Report Specified";
+	}
+	
+	function FormatCSVArrayAsString($data)
+	{
+		$result = "";
+		foreach($data as $line)
+		{
+			$result .= implode($line, ",")."\n";
+		}
+		return $result;
 	}
 	
 	function CreateBadgeExportArray()
