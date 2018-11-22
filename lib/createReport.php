@@ -205,14 +205,14 @@
 				if($result==null)
 				{//headers
 					$result = array();
-					$result[] = array("All $site Power Readings as of date($date)");//
+					$result[] = array("All $site Power Readings as of date($date)");
 					$result[] = array("Panel","Circuit","Reading","Reading%","Amps","Volts","On/Off","Date");
 				}
-				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
 				
-				if($volts==208)$circuit = "=\"".Format208CircuitNumber($circuit)."\"";
+				$panel = str_replace(",","",$panel);//replace out comma for csv files
+				if($volts==208)$circuit = Format208CircuitNumber($circuit);
 				$volts=FormatVolts($volts);
-				$result[] = array($panel,$circuit,$load,substr($percent,0,5)."%",$amps,$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
+				$result[] = array($panel, $circuit, $load, substr($percent,0,5)."%", $amps, $volts, ($status==="A")?"On":"Off", substr($editDate,0,10));
 			}
 		}
 		return $result;
