@@ -35,6 +35,10 @@
 		if($dataDump) echo FormatCSVArrayAsString($output);
 		else OutputCSV("Power Audit - $date.csv",$output);
 	}
+	else if($report==="SiteName")
+	{
+		echo GetSiteName($siteID);
+	}
 	else
 	{
 		echo "No Report Specified";
@@ -216,5 +220,25 @@
 			}
 		}
 		return $result;
+	}
+
+	function GetSiteName($siteID)
+	{
+		global $mysqli;
+		
+		$query = "SELECT name FROM dcim_site WHERE siteid=?";
+		
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteID)|| !$stmt->execute())
+		{
+			echo "Prepare failed: GetSiteName($siteID) - (" . $mysqli->errno . ") " . $mysqli->error;
+			return;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($siteName);
+		if($stmt->num_rows>0)
+		{
+			$stmt->fetch();
+			return $siteName;
+		}
 	}
 ?>
