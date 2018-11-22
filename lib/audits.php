@@ -77,12 +77,17 @@
 		if($config_badgesEnabled) $result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export $siteFullName Active Badge List as CSV</button><BR><BR>";
 		*/
 		
-		/*disabled till multi site support
+		/*disabled till multi site support - replaced by new RPP tool
 		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
 		$result .= "<a class='' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		*/
 		
-		$result .= "<button type='button' title='Creates a spreadsheet listing all power circuits sorted and grouped by location with customer names. CSV format but for viewing, not import.' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerLocationList&siteid=$siteIDFilter\"'>Export $siteFullName Location Power Readings as CSV</button>";
+		$result .= "<button type='button' title='Creates a spreadsheet listing all power circuits sorted and grouped by location with customer names. CSV format but for viewing, not import.' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=PowerLocationList&siteid=$siteIDFilter\"'>Export $siteFullName Location Power Readings as CSV</button>\n";
+		
+		$result .= "<BR>\n";
+		$result .= "<BR>\n";
+		$result .= "<a href='./files/DCIM_Tools-RPPReportCreator.exe'>RPP Audit Tool</a>\n";
+		
 		
 		if(CustomFunctions::UserHasDevPermission())
 		{
