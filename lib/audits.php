@@ -77,7 +77,7 @@
 		if($config_badgesEnabled) $result .= "<button type='button' style='display:inline;' onClick='parent.location=\"./lib/createReport.php?report=ActiveBadgeList\"'>Export $siteFullName Active Badge List as CSV</button><BR><BR>";
 		*/
 		
-		/*disabled till multi site support - replaced by new RPP tool
+		/*disabled till multi site support - replaced by new DCIM Tools, RPP tool
 		$result .= "<div id='rppAuditHelpPopup' class='helpPopup'>".CustomFunctions::RemotePowerPanelAuditHelpPopup()."</div>";
 		$result .= "<a class='' href='javascript:void(0)' onclick = \"CreatePopup('rppAuditHelpPopup');\">Create Remote Power Panel Audit Form</a>\n<BR><BR>";
 		*/
