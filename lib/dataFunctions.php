@@ -2700,6 +2700,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		global $userID;
 		global $errorMessage;
 		global $resultMessage;
+		global $config_subnetsEnabled;
 		
 		$totalAffectedCount = 0;
 		$valid = true;
@@ -2720,7 +2721,7 @@ DROP TEMPORARY TABLE IF EXISTS tmptable_1;
 		{
 			$valid = ValidGenericID($portConnectionID,"Port Connection ID");
 			
-			if($valid)
+			if($valid && $config_subnetsEnabled)//only test this if subnets are enabled
 			{
 				$validFlags = array('T','F');
 				$valid = ValidFlag($updatePorts,"Update Ports Choice",$validFlags);

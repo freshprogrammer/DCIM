@@ -13,16 +13,45 @@
 	$report = GetInput("report");
 	$date = GetInput("date");
 	$siteID= GetInput("siteid");
+	$dump= GetInput("dump");
+	
+	$dataDump = $dump=="T";//data dumps will just dump the data to the source instead of returning as a CSV
 	
 	if($report==="ActiveBadgeList")
-		OutputCSV("Active Badge List-".date("Y-m-d").".csv",CreateBadgeExportArray());
+	{
+		$output = CreateBadgeExportArray();
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Active Badge List-".date("Y-m-d").".csv",$output);
+	}
+	else if($report==="PowerLocationList")
+	{
+		$output = CreateLocationPowerAuditExportArray($siteID);
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Location Power List - ".date("Y-m-d").".csv",$output);
+	}
 	else if($report==="PowerAudit")
-		OutputCSV("Location Power Audit - ".date("Y-m-d").".csv",CreateLocationPowerAuditExportArray($siteID));
-	else if($report==="PowerHistory")
-		OutputCSV("Power Audit - $date.csv",CreatePowerHistoryExportArray($date, $siteID));
+	{
+		$output = CreatePowerHistoryExportArray($date, $siteID);
+		if($dataDump) echo FormatCSVArrayAsString($output);
+		else OutputCSV("Power Audit - $date.csv",$output);
+	}
+	else if($report==="SiteName")
+	{
+		echo GetSiteName($siteID);
+	}
 	else
 	{
 		echo "No Report Specified";
+	}
+	
+	function FormatCSVArrayAsString($data)
+	{
+		$result = "";
+		foreach($data as $line)
+		{
+			$result .= implode($line, ",")."\n";
+		}
+		return $result;
 	}
 	
 	function CreateBadgeExportArray()
@@ -180,16 +209,36 @@
 				if($result==null)
 				{//headers
 					$result = array();
-					$result[] = array("All $site Power Readings as of date($date)");//
+					$result[] = array("All $site Power Readings as of date($date)");
 					$result[] = array("Panel","Circuit","Reading","Reading%","Amps","Volts","On/Off","Date");
 				}
-				$panel = (strrpos($panel, '-')||strrpos($panel, '/'))?("=\"$panel\""):$panel;
 				
-				if($volts==208)$circuit = "=\"".Format208CircuitNumber($circuit)."\"";
+				$panel = str_replace(",","",$panel);//replace out comma for csv files
+				if($volts==208)$circuit = Format208CircuitNumber($circuit);
 				$volts=FormatVolts($volts);
-				$result[] = array($panel,$circuit,$load,substr($percent,0,5)."%",$amps,$volts,($status==="A")?"On":"Off",substr($editDate,0,10));
+				$result[] = array($panel, $circuit, $load, substr($percent,0,5)."%", $amps, $volts, ($status==="A")?"On":"Off", substr($editDate,0,10));
 			}
 		}
 		return $result;
+	}
+
+	function GetSiteName($siteID)
+	{
+		global $mysqli;
+		
+		$query = "SELECT name FROM dcim_site WHERE siteid=?";
+		
+		if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $siteID)|| !$stmt->execute())
+		{
+			echo "Prepare failed: GetSiteName($siteID) - (" . $mysqli->errno . ") " . $mysqli->error;
+			return;
+		}
+		$stmt->store_result();
+		$stmt->bind_result($siteName);
+		if($stmt->num_rows>0)
+		{
+			$stmt->fetch();
+			return $siteName;
+		}
 	}
 ?>

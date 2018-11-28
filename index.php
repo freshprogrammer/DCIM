@@ -175,10 +175,7 @@
 	{
 		
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-		if(UserHasAdminPermission())
-			$menuItems .= "	<a href='./?userid=$userID'>Accounts</a>\n";
-		else
-			$menuItems .= "	<a href='./?userid=$userID'>Account</a>\n";
+		$menuItems .= "	<a href='./?userid=$userID'>Users</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(CustomFunctions::UserHasDevPermission())

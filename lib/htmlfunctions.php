@@ -679,78 +679,76 @@
 	</td></tr></table><BR></div>
 				<?php 
 			}
-		}
-		else
-		{
-			echo "User ($input) not Found\n";
-		}
-		echo "</div>\n";
-		echo "</div>\n\n";
-		
-		if(UserHasAdminPermission())
-		{
-			echo "<div class='panel'>\n";
-			echo "<div class='panel-header'>User List</div>\n";
-			echo "<div class='panel-body'>\n\n";
 			
-			$query = "SELECT u.siteid, s.name, u.userid, u.username, u.name, u.initials, u.permission, u.lastactivity, u.edituser, u.editdate, (SELECT COUNT(siteid) FROM dcim_user WHERE siteid=u.siteid) AS siteCount
-					FROM dcim_user AS u
-						LEFT JOIN dcim_site AS s ON s.siteid=u.siteid
-					ORDER BY s.name, u.name";
-			
-			if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
-				$errorMessage[] = "ShowUserPage() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
-			else
-			{
-				$stmt->store_result();
-				$stmt->bind_result($dbSiteID, $dbSiteName, $dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate, $siteCount);
-				$count = $stmt->num_rows;
-				
-				echo "<span class='tableTitle'>Users</span>\n";
-				//Add User button here?
-				echo "<BR>\n";
-				
-				if($count>0)
-				{
-					echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
-					
-					$lastSiteID = -1;
-					//list result data
-					while ($stmt->fetch())
-					{
-						echo "<tr class='dataRow'>";
-						if($dbSiteID!=$lastSiteID)
-							echo "<td class='data-table-cell' rowspan=$siteCount><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
-						
-						echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
-						echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
-						echo "<td class='data-table-cell'>$dbInitials</td>";
-						echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,DCIMCustomFunctions::UserHasDevPermission())."</td>";
-						echo "<td class='data-table-cell'>$dbLastActivity</td>";
-						echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
-						echo "</tr>";
-						$lastSiteID = $dbSiteID;
-					}
-					echo "</table>";
-				}
-				else
-					echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
-			}
-			
-			/*if(UserHasWritePermission())
-			 {
-			 $action = "./?host=$input";
-			 EditDeviceForm($action);
-			 }*/
-			echo "</div>\n</div>\n";
+			echo "</div>\n</div>\n\n";
 			
 			echo "<div class='panel'>\n";
 			echo "<div class='panel-header'>User Activity</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			
 			echo ListUserActivity($input, $name);
+		}
+		else
+		{
+			echo "User ($input) not Found\n";
+		}
+		
+		echo "</div>\n</div>\n\n";
+		
+		//list all users
+		echo "<div class='panel'>\n";
+		echo "<div class='panel-header'>User List</div>\n";
+		echo "<div class='panel-body'>\n\n";
+		
+		$query = "SELECT u.siteid, s.name, u.userid, u.username, u.name, u.initials, u.permission, u.lastactivity, u.edituser, u.editdate, (SELECT COUNT(siteid) FROM dcim_user WHERE siteid=u.siteid) AS siteCount
+				FROM dcim_user AS u
+					LEFT JOIN dcim_site AS s ON s.siteid=u.siteid
+				ORDER BY s.name, u.name";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute())
+			$errorMessage[] = "ShowUserPage() Prepare 2 failed: (" . $mysqli->errno . ") " . $mysqli->error;
+		else
+		{
+			$stmt->store_result();
+			$stmt->bind_result($dbSiteID, $dbSiteName, $dbUserID, $dbUserName, $dbName, $dbInitials, $dbPermission, $dbLastActivity, $editUserID, $editDate, $siteCount);
+			$count = $stmt->num_rows;
 			
-			echo "</div>\n</div>\n";
+			echo "<span class='tableTitle'>Users</span>\n";
+			//Add User button here?
+			echo "<BR>\n";
+			
+			if($count>0)
+			{
+				echo CreateDataTableHeader(array("Site","Name","User Name","Initials","Permission","Last Activity"),true);
+				
+				$lastSiteID = -1;
+				//list result data
+				while ($stmt->fetch())
+				{
+					echo "<tr class='dataRow'>";
+					if($dbSiteID!=$lastSiteID)
+						echo "<td class='data-table-cell' rowspan=$siteCount><a href='./?siteid=$dbSiteID'>".MakeHTMLSafe($dbSiteName)."</a></td>";
+					
+					echo "<td class='data-table-cell'><a href='./?userid=$dbUserID'>".MakeHTMLSafe($dbName)."</a></td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($dbUserName)."</td>";
+					echo "<td class='data-table-cell'>$dbInitials</td>";
+					echo "<td class='data-table-cell'>".DescribeUserPermissionLevel($dbPermission,true,DCIMCustomFunctions::UserHasDevPermission())."</td>";
+					echo "<td class='data-table-cell'>$dbLastActivity</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate)."</td>";
+					echo "</tr>";
+					$lastSiteID = $dbSiteID;
+				}
+				echo "</table>";
+				
+				/*if(UserHasWritePermission())
+				 {
+				 $action = "./?host=$input";
+				 EditDeviceForm($action);
+				 }*/
+				echo "</div>\n</div>\n";
+			}
+			else
+				echo "No users found. Ummmm....<BR>\n";//shouldn't be possible
 		}
 	}
 	
@@ -2376,14 +2374,14 @@
 		{
 			$query = "SELECT hno, cno, name, note, status, edituser
 			FROM dcim_customer
-			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			WHERE CAST(CONCAT('H',hno,'~','C',cno,'~',name,'~',note) AS CHAR) LIKE ?
 			ORDER BY name";
 		}
 		else
 		{
 			$query = "SELECT hno, cno, name, note, status, edituser
 			FROM dcimlog_customer
-			WHERE CONCAT('H',hno,'~','C',cno,'~',name,'~',note) LIKE ?
+			WHERE CAST(CONCAT('H',hno,'~','C',cno,'~',name,'~',note) AS CHAR) LIKE ?
 			GROUP BY hno
 			ORDER BY name";
 		}
@@ -5295,7 +5293,7 @@
 		}
 		else
 		{
-			$heightMax = 650;
+			$heightMax = 650*2;
 			$widthMax = 948;
 			
 			$renderHeight = $heightMax;
