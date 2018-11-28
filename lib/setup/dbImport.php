@@ -307,11 +307,12 @@ function SelectImportForm()
 	
 	class PowerPanelRec
 	{
-		public $upsid;
-		public $roomid;
+		public $site;
+		public $room;
 		public $name;
-		public $amps;
+		public $ups;
 		public $circuits;
+		public $amps;
 		public $xpos;
 		public $ypos;
 		public $width;
@@ -319,13 +320,14 @@ function SelectImportForm()
 		public $orientation;
 		public $notes;
 		
-		function __construct($upsid,$roomid,$name,$amps,$circuits,$xpos,$ypos,$width,$depth,$orientation,$notes)
+		function __construct($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes)
 		{
-			$this->upsid		= $upsid;
-			$this->roomid		= $roomid;
+			$this->site			= $site;
+			$this->room			= $room;
 			$this->name			= $name;
-			$this->amps			= $amps;
+			$this->ups			= $ups;
 			$this->circuits		= $circuits;
+			$this->amps			= $amps;
 			$this->xpos			= $xpos;
 			$this->ypos			= $ypos;
 			$this->width		= $width;
@@ -337,7 +339,7 @@ function SelectImportForm()
 	
 	function ImportPowerPanels($fullProcessing=false)
 	{
-		global $mysqli;
+		global $errorMessage;
 		global $resultMessage;
 		
 		//Power Panels- powerupsid,roomid,name,amps,circuits,xpos,ypos,width,depth,orientation,notes
@@ -348,13 +350,14 @@ function SelectImportForm()
 		
 		$importObjects = array();
 		$i = 0;
-		$fields = 11;
+		$fields = 12;
 		
-		$upsid = "";
-		$roomid = "";
+		$site = "";
+		$room = "";
 		$name = "";
-		$amps = "";
+		$ups = "";
 		$circuits = "";
+		$amps = "";
 		$xpos = "";
 		$ypos = "";
 		$width = "";
@@ -366,43 +369,55 @@ function SelectImportForm()
 		{
 			switch($i % $fields)
 			{
-				case 0:$upsid		=trim($rec);break;
-				case 1:$roomid		=trim($rec);break;
+				case 0:$site		=trim($rec);break;
+				case 1:$room		=trim($rec);break;
 				case 2:$name		=trim($rec);break;
-				case 3:$amps		=trim($rec);break;
+				case 3:$ups			=trim($rec);break;
 				case 4:$circuits	=trim($rec);break;
-				case 5:$xpos		=trim($rec);break;
-				case 6:$ypos		=trim($rec);break;
-				case 7:$width		=trim($rec);break;
-				case 8:$depth		=trim($rec);break;
-				case 9:$orientation	=trim($rec);break;
-				case 10:$notes		=trim($rec);
+				case 5:$amps		=trim($rec);break;
+				case 6:$xpos		=trim($rec);break;
+				case 7:$ypos		=trim($rec);break;
+				case 8:$width		=trim($rec);break;
+				case 9:$depth		=trim($rec);break;
+				case 10:$orientation=trim($rec);break;
+				case 11:$notes		=trim($rec);
 				
-				$importObjects[]= new PowerPanelRec($upsid,$roomid,$name,$amps,$circuits,$xpos,$ypos,$width,$depth,$orientation,$notes);
+				$importObjects[]= new PowerPanelRec($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes);
 				break;
 			}
 			$i++;
 		}
 		
-		//add Location
+		//add Panel
 		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." power panels...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." power panels";
 		
 		foreach ($importObjects as $rec)
-		{//spoof input
-			$_GET['upsid']= $rec->upsid;
-			$_GET['roomid']= $rec->roomid;
-			$_GET['name']= $rec->name;
-			$_GET['amps']= $rec->amps;
-			$_GET['circuits']= $rec->circuits;
-			$_GET['xpos']= $rec->xpos;
-			$_GET['ypos']= $rec->ypos;
-			$_GET['width']= $rec->width;
-			$_GET['depth']= $rec->depth;
-			$_GET['orientation']= $rec->orientation;
-			$_GET['notes']= $rec->notes;
+		{
+			//get upsid
+			$upsID = ValidImportUPS($rec->site,$rec->ups,$rec->name);
 			
-			if($fullProcessing)ProcessPowerPanelAction("PowerPanel_Add");
+			//get roomid
+			$roomID = ValidImportRoom($rec->site,$rec->room,$rec->name);
+			
+			if($upsID !=-1 && $roomID !=-1)
+			{//Do import - spoof input
+				$_GET['upsid']= $upsID;
+				$_GET['roomid']= $roomID;
+				$_GET['name']= $rec->name;
+				$_GET['amps']= $rec->amps;
+				$_GET['circuits']= $rec->circuits;
+				$_GET['xpos']= $rec->xpos;
+				$_GET['ypos']= $rec->ypos;
+				$_GET['width']= $rec->width;
+				$_GET['depth']= $rec->depth;
+				$_GET['orientation']= $rec->orientation;
+				$_GET['notes']= $rec->notes;
+				
+				if($fullProcessing)ProcessPowerPanelAction("PowerPanel_Add");
+				else $resultMessage[]= "Would have processed Panel(".$rec->name.")";
+			}
+			else $errorMessage[]= "Failed to import panel(".$rec->name.") - upsid($upsID) roomid($roomID)"; 
 		}
 	}
 	
@@ -919,6 +934,114 @@ function SelectImportForm()
 		$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
 	}
 	
+	function ValidImportUPS($site, $ups, $searchIdentifier="null")
+	{
+		//looks up location - returns locationid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$result = -1;
+		
+		$validUPS = false;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name
+				FROM dcim_site AS s
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportUPS() - Prepare failed: (u1) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1) $validSite = true;
+					else $errorMessage[] = "ValidImportUPS() - Invalid Site for ValidImportUPS($site $ups) iden:($searchIdentifier)";
+				}
+		}
+		
+		if($validSite)
+		{
+			$query = "SELECT pu.powerupsid, pu.name
+				FROM dcim_powerups AS pu
+					INNER JOIN dcim_site AS s ON pu.siteid=s.siteid
+				WHERE s.name=? AND pu.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $ups) || !$stmt->execute())
+				$errorMessage[] = "ValidImportUPS() - Prepare failed: (u2) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1)
+					{
+						$validUPS= true;
+						$stmt->bind_result($upsID, $ups);
+						$stmt->fetch();
+						$result = $upsID;
+					}
+					else $errorMessage[] = "ValidImportUPS() - Invalid UPS for ValidImportUPS($site $ups) iden:($searchIdentifier)";
+				}
+		}
+		return $result;
+	}
+	
+	function ValidImportRoom($site, $room, $searchIdentifier="null")
+	{
+		//looks up location - returns locationid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$result = -1;
+		
+		$validRoom = false;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name
+				FROM dcim_site AS s
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportRoom() - Prepare failed: (r1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validSite = true;
+				else $errorMessage[] = "ValidImportRoom() - Invalid Site for ValidImportRoom($site $room) iden:($searchIdentifier)";
+			}
+		}
+		
+		if($validSite)
+		{
+			$query = "SELECT r.roomid, r.name
+				FROM dcim_room AS r
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $room) || !$stmt->execute())
+				$errorMessage[] = "ValidImportRoom() - Prepare failed: (r2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1)
+				{
+					$validRoom = true;
+					$stmt->bind_result($roomID, $room);
+					$stmt->fetch();
+					$result = $roomID;
+				}
+				else $errorMessage[] = "ValidImportRoom() - Invalid Room for ValidImportRoom($site $room) iden:($searchIdentifier)";
+			}
+		}
+		return $result;
+	}
+	
 	function ValidImportLocation($site, $room, $loc, $deviceName="null")
 	{
 		//looks up location - returns locationid or -1 if not found
@@ -988,7 +1111,7 @@ function SelectImportForm()
 				else $errorMessage[] = "ValidImportLocation() - Invalid Location for ValidImportLocation($site $room $loc) device:($deviceName)";
 			}
 		}
-		
+		return $result;
 	}
 	
 	function ValidImportDeviceModel(&$model)
