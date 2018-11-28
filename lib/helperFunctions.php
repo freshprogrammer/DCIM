@@ -1944,7 +1944,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 	
 	function ValidPowerCircuitAmps($input)
 	{
-		$validFlags = array('20','30','40','50','100');
+		$validFlags = array('15','20','30','40','50','60','100');
 		return ValidFlag($input,"Power Circuit Amps",$validFlags);
 	}
 	

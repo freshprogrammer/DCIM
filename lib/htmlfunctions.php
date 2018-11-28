@@ -3417,10 +3417,12 @@
 							</select>
 							Amps:
 							<select id=EditPowerCircuit_amps name="amps" tabindex=5>
-								<option value='20'>20A</option>
+								<option value='15'>15A</option>
+								<option value='20' selected>20A</option>
 								<option value='30'>30A</option>
 								<option value='40'>40A</option>
 								<option value='50'>50A</option>
+								<option value='60'>60A</option>
 								<option value='100'>100A</option>
 							</select>
 						</td>
