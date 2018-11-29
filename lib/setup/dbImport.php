@@ -541,8 +541,6 @@ function SelectImportForm()
 				$volts = 308;
 			}
 			
-			
-			/*   validation code coppied from processCircuitAction() */
 			if($valid)
 			{//Do import - spoof input
 				$_GET['powerpanelid']= $powerPanelID;
@@ -554,10 +552,10 @@ function SelectImportForm()
 				$_GET['load']= $load;
 				
 				if($fullProcessing)ProcessPowerCircuitAction("PowerCircuit_Add");
-				else $resultMessage[]= "Would have processed Circuit(".$rec->name.")";
+				else $resultMessage[]= "Would have processed Circuit(".$rec->site." ".$rec->panel." C#".$rec->circuit.")";
 				$totalAffectedCount++;
 			}
-			else $errorMessage[]= "Failed to import Circuit(".$rec->name." ".$rec->name.") -powerpanelid($powerPanelID) locationid($locationID)";
+			else $errorMessage[]= "Failed to import Circuit(".$rec->site." ".$rec->panel." C#".$rec->circuit.") -powerpanelid($powerPanelID) locationid($locationID)";
 		}
 		$resultMessage[] = "Successfully added $totalAffectedCount records.";
 		$userID = $importUserID;
