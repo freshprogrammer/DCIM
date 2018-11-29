@@ -28,7 +28,7 @@
 <script type='text/javascript'>
 function ConfirmIntent()
 {
-	var needConfirm = true;
+	var needConfirm = false;
 	//only prompt on values that do things. - Could algo give custom messges here
 	if(needConfirm)
 	{
@@ -75,7 +75,9 @@ function SelectImportForm()
 	
 	if(CustomFunctions::UserHasDevPermission())
 	{
-		$debugMessage[]= "-Start - has permision()";
+		$debugMessage[]= "-Start - has permission()";
+		BuildDeviceModelArrays();
+		
 		$validSession = IsValidSession();
 		if($validSession)
 			$commited = true; //TestUserCommitment($dbScriptID);//validated in JS
@@ -93,13 +95,6 @@ function SelectImportForm()
 			$errorMessage[]="User not commited. Aborted.";
 		}
 		
-		$debugMessageString  = implode("<BR>\n",$debugMessage);
-		$errorMessageString  = implode("<BR>\n",$errorMessage);
-		$resultMessageString = implode("<BR>\n",$resultMessage);
-		if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
-		if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
-		if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
-		
 		$selectOptions = "";
 		$importForms = "";
 		
@@ -111,19 +106,25 @@ function SelectImportForm()
 		
 		//Power Panel import form
 		$formType = "Power Panel";
-		$expextedFields = "powerupsid,roomid,name,amps,circuits,xpos,ypos,width,depth,orientation,notes";
+		$expextedFields = "site,room,name,ups,circuits,amps,xpos,ypos,width,depth,orientation,notes";
 		$importForms .= CreateImportForm($formType,$expextedFields);
 		$selectOptions .= "<option value='$formType'>$formType</option>\n";
 		
 		//Power Circuits import form
 		$formType = "Power Circuits";
-		$expextedFields = "panel,circuit,volts,amps,load,status,user,date,site,room,location";
+		$expextedFields = "site, room, location, panel, circuit, volts, amps, status, load, phase";
 		$importForms .= CreateImportForm($formType,$expextedFields);
 		$selectOptions .= "<option value='$formType'>$formType</option>\n";
 		
 		//Customer import form
 		$formType = "Customer";
 		$expextedFields = "hno,cno,name,note,status";
+		$importForms .= CreateImportForm($formType,$expextedFields);
+		$selectOptions .= "<option value='$formType'>$formType</option>\n";
+		
+		//Device import form
+		$formType = "Device";
+		$expextedFields = "siteName,roomName,locName,hno,name,altname,member,model,unit,type,size,status,asset,serial,note";
 		$importForms .= CreateImportForm($formType,$expextedFields);
 		$selectOptions .= "<option value='$formType'>$formType</option>\n";
 		
@@ -135,6 +136,13 @@ function SelectImportForm()
 		</select>
 		</BR>";
 		echo $importForms;
+		
+		$debugMessageString  = implode("<BR>\n",$debugMessage);
+		$errorMessageString  = implode("<BR>\n",$errorMessage);
+		$resultMessageString = implode("<BR>\n",$resultMessage);
+		if(strlen($debugMessageString) > 0) echo "<!-- DEBUG MESSAGE  -->\n<div id='debugMessage'  class='debugMessage'>$debugMessageString</div>\n";
+		if(strlen($errorMessageString) > 0) echo "<!-- ERROR MESSAGE  -->\n<div id='errorMessage'  class='errorMessage'>$errorMessageString</div>\n";
+		if(strlen($resultMessageString) > 0)echo "<!-- RESULT MESSAGE -->\n<div id='resultMessage' class='resultMessage'>$resultMessageString</div>\n";
 	}
 	else
 	{
@@ -168,6 +176,7 @@ function SelectImportForm()
 		if($importType=="Location")	ImportLocations($fullProcessing);
 		else if($importType=="Power Panel")	ImportPowerPanels($fullProcessing);
 		else if($importType=="Power Circuits")	ImportPowerCircuits($fullProcessing);
+		else if($importType=="Device")	ImportDevices($fullProcessing);
 	}
 	
 	class LocationRec
@@ -298,11 +307,12 @@ function SelectImportForm()
 	
 	class PowerPanelRec
 	{
-		public $upsid;
-		public $roomid;
+		public $site;
+		public $room;
 		public $name;
-		public $amps;
+		public $ups;
 		public $circuits;
+		public $amps;
 		public $xpos;
 		public $ypos;
 		public $width;
@@ -310,13 +320,14 @@ function SelectImportForm()
 		public $orientation;
 		public $notes;
 		
-		function __construct($upsid,$roomid,$name,$amps,$circuits,$xpos,$ypos,$width,$depth,$orientation,$notes)
+		function __construct($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes)
 		{
-			$this->upsid		= $upsid;
-			$this->roomid		= $roomid;
+			$this->site			= $site;
+			$this->room			= $room;
 			$this->name			= $name;
-			$this->amps			= $amps;
+			$this->ups			= $ups;
 			$this->circuits		= $circuits;
+			$this->amps			= $amps;
 			$this->xpos			= $xpos;
 			$this->ypos			= $ypos;
 			$this->width		= $width;
@@ -328,10 +339,10 @@ function SelectImportForm()
 	
 	function ImportPowerPanels($fullProcessing=false)
 	{
-		global $mysqli;
+		global $errorMessage;
 		global $resultMessage;
 		
-		//Power Panels- powerupsid,roomid,name,amps,circuits,xpos,ypos,width,depth,orientation,notes
+		//Power Panels- site,room,name,ups,circuits,amps,xpos,ypos,width,depth,orientation,notes
 		$panelData= GetInput("importdata",true,false);
 		
 		$panelData= str_replace("\n",",",$panelData);
@@ -339,13 +350,14 @@ function SelectImportForm()
 		
 		$importObjects = array();
 		$i = 0;
-		$fields = 11;
+		$fields = 12;
 		
-		$upsid = "";
-		$roomid = "";
+		$site = "";
+		$room = "";
 		$name = "";
-		$amps = "";
+		$ups = "";
 		$circuits = "";
+		$amps = "";
 		$xpos = "";
 		$ypos = "";
 		$width = "";
@@ -357,73 +369,83 @@ function SelectImportForm()
 		{
 			switch($i % $fields)
 			{
-				case 0:$upsid		=trim($rec);break;
-				case 1:$roomid		=trim($rec);break;
+				case 0:$site		=trim($rec);break;
+				case 1:$room		=trim($rec);break;
 				case 2:$name		=trim($rec);break;
-				case 3:$amps		=trim($rec);break;
+				case 3:$ups			=trim($rec);break;
 				case 4:$circuits	=trim($rec);break;
-				case 5:$xpos		=trim($rec);break;
-				case 6:$ypos		=trim($rec);break;
-				case 7:$width		=trim($rec);break;
-				case 8:$depth		=trim($rec);break;
-				case 9:$orientation	=trim($rec);break;
-				case 10:$notes		=trim($rec);
+				case 5:$amps		=trim($rec);break;
+				case 6:$xpos		=trim($rec);break;
+				case 7:$ypos		=trim($rec);break;
+				case 8:$width		=trim($rec);break;
+				case 9:$depth		=trim($rec);break;
+				case 10:$orientation=trim($rec);break;
+				case 11:$notes		=trim($rec);
 				
-				$importObjects[]= new PowerPanelRec($upsid,$roomid,$name,$amps,$circuits,$xpos,$ypos,$width,$depth,$orientation,$notes);
+				$importObjects[]= new PowerPanelRec($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes);
 				break;
 			}
 			$i++;
 		}
 		
-		//add Location
+		//add Panel
 		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." power panels...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." power panels";
 		
 		foreach ($importObjects as $rec)
-		{//spoof input
-			$_GET['upsid']= $rec->upsid;
-			$_GET['roomid']= $rec->roomid;
-			$_GET['name']= $rec->name;
-			$_GET['amps']= $rec->amps;
-			$_GET['circuits']= $rec->circuits;
-			$_GET['xpos']= $rec->xpos;
-			$_GET['ypos']= $rec->ypos;
-			$_GET['width']= $rec->width;
-			$_GET['depth']= $rec->depth;
-			$_GET['orientation']= $rec->orientation;
-			$_GET['notes']= $rec->notes;
+		{
+			//get upsid
+			$upsID = ValidImportUPS($rec->site,$rec->ups,$rec->name);
 			
-			if($fullProcessing)ProcessPowerPanelAction("PowerPanel_Add");
+			//get roomid
+			$roomID = ValidImportRoom($rec->site,$rec->room,$rec->name);
+			
+			if($upsID !=-1 && $roomID !=-1)
+			{//Do import - spoof input
+				$_GET['upsid']= $upsID;
+				$_GET['roomid']= $roomID;
+				$_GET['name']= $rec->name;
+				$_GET['amps']= $rec->amps;
+				$_GET['circuits']= $rec->circuits;
+				$_GET['xpos']= $rec->xpos;
+				$_GET['ypos']= $rec->ypos;
+				$_GET['width']= $rec->width;
+				$_GET['depth']= $rec->depth;
+				$_GET['orientation']= $rec->orientation;
+				$_GET['notes']= $rec->notes;
+				
+				if($fullProcessing)ProcessPowerPanelAction("PowerPanel_Add");
+				else $resultMessage[]= "Would have processed Panel(".$rec->name.")";
+			}
+			else $errorMessage[]= "Failed to import panel(".$rec->name.") - upsid($upsID) roomid($roomID)"; 
 		}
 	}
 	
 	class PowerCircuitRec
 	{
+		public $site;
+		public $room;
+		public $location;
 		public $panel;
 		public $circuit;
 		public $volts;
 		public $amps;
-		public $load;
 		public $status;
-		public $user;
-		public $date;
-		public $site;
-		public $room;
-		public $location;
+		public $load;
+		public $phase;
 		
-		function __construct($panel,$circuit,$volts,$amps,$load,$status,$user,$date,$site,$room,$location)
+		function __construct($site,$room,$location,$panel,$circuit,$volts,$amps,$status,$load,$phase)
 		{
+			$this->site			= $site;
+			$this->room			= $room;
+			$this->location 	= $location;
 			$this->panel		= $panel;
 			$this->circuit		= $circuit;
 			$this->volts		= $volts;
 			$this->amps			= $amps;
-			$this->load			= $load;
 			$this->status 		= $status;
-			$this->user			= $user;
-			$this->date			= $date;
-			$this->site			= $site;
-			$this->room			= $room;
-			$this->location 	= $location;
+			$this->load			= $load;
+			$this->phase		= $phase;
 		}
 	}
 	
@@ -436,7 +458,7 @@ function SelectImportForm()
 		global $userID;
 		$importUserID = $userID;
 		
-		//Power Panels- powerupsid,roomid,name,amps,circuits,xpos,ypos,width,depth,orientation,notes
+		//Power Circuits- site, room, location, panel, circuit, volts, amps, status, load, phase
 		$data= GetInput("importdata",true,false);
 		
 		$data= str_replace("\n",",",$data);
@@ -444,37 +466,35 @@ function SelectImportForm()
 		
 		$importObjects = array();
 		$i = 0;
-		$fields = 11;
+		$fields = 10;
 		
+		$site = "";
+		$room = "";
+		$location = "";
 		$panel = "";
 		$circuit = "";
 		$volts = "";
 		$amps = "";
-		$load = "";
 		$status = "";
-		$user = "";
-		$date = "";
-		$site = "";
-		$room = "";
-		$location = "";
+		$load = "";
+		$phase = "";
 		
 		foreach ($data as $rec)
 		{
 			switch($i % $fields)
 			{
-				case 0:$panel		=trim($rec);break;
-				case 1:$circuit		=trim($rec);break;
-				case 2:$volts		=trim($rec);break;
-				case 3:$amps		=trim($rec);break;
-				case 4:$load		=trim($rec);break;
-				case 5:$status		=trim($rec);break;
-				case 6:$user		=trim($rec);break;
-				case 7:$date		=trim($rec);break;
-				case 8:$site		=trim($rec);break;
-				case 9:$room		=trim($rec);break;
-				case 10:$location 	=trim($rec);
+				case 0:$site		=trim($rec);break;
+				case 1:$room		=trim($rec);break;
+				case 2:$location 	=trim($rec);break;
+				case 3:$panel		=trim($rec);break;
+				case 4:$circuit		=trim($rec);break;
+				case 5:$volts		=trim($rec);break;
+				case 6:$amps		=trim($rec);break;
+				case 7:$status		=trim($rec);break;
+				case 8:$load		=trim($rec);break;
+				case 9:$phase		=trim($rec);
 				
-				$importObjects[]= new PowerCircuitRec($panel,$circuit,$volts,$amps,$load,$status,$user,$date,$site,$room,$location);
+				$importObjects[]= new PowerCircuitRec($site,$room,$location,$panel,$circuit,$volts,$amps,$status,$load,$phase);
 				break;
 			}
 			$i++;
@@ -490,26 +510,20 @@ function SelectImportForm()
 			//validate fields
 			$powerPanelID = GetPowerPanelID($rec->site,$rec->panel);
 			$locationID = GetLocationID($rec->site,$rec->room,$rec->location);
-			$userID = GetUserID($rec->user);
+			$userID = 0;
 			
-			if($locationID==-1 && strlen($rec->room.$rec->location)>0)
-				$errorMessage[]="ImportPowerCircuits() Failed to locate location (".$rec->site.",".$rec->room.",".$rec->location.") - proceeding to attempt circuit add";
-			
-			$add = true;
 			$valid = true;
-			$circuitExisted = false;
+			if($locationID==-1)
+			{
+				$valid = strlen($rec->location)==0;
+				if(!$valid)$errorMessage[]="ImportPowerCircuits() Failed to locate location (".$rec->site.",".$rec->room.",".$rec->location.")";
+			}
 			
 			if($valid)
 			{
 				$valid = $powerPanelID!=-1;
 				if(!$valid)
 					$errorMessage[]="ImportPowerCircuits() Panel (".$rec->site.",".$rec->panel.") not found - aborting circuit validate - ";
-			}
-			if($valid)
-			{
-				$valid = $userID!=-1;
-				if(!$valid)
-					$errorMessage[]="ImportPowerCircuits() User (".$rec->user.") not found - aborting circuit validate - ";
 			}
 			
 			$powerCircuitID = -1;
@@ -519,248 +533,434 @@ function SelectImportForm()
 			$status = $rec->status;
 			$load = $rec->load;
 			
+			if($status!="On") $status = "D";
+			else $status = "A";
+			
+			if($rec->phase==3)
+			{
+				$volts = 308;
+			}
+			
 			
 			/*   validation code coppied from processCircuitAction() */
-			if(!isset($status) || strlen($status)==0)
-				$status = "D";
-			
-			if($valid)$valid = ValidPowerCircuitVolts($volts);
-			if($valid)$valid = ValidPowerCircuitAmps($amps);
-			if($valid)$valid = ValidPowerCircuitStatus($status);
-			if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
-			
-			$isDoubleCircuit = (int)$volts == 208;
-			$isTrippleCircuit = (int)$volts == 308;
-			$updateAll = false;//need to update all 3 in 3 phase
-			
-			//DB CHECKS
-			//check valid IDs in tables
-			if($valid && $add && $locationID!=-1)$valid = ValidRecord("locationid","Location ID",$locationID,"dcim_location",true);
-			
 			if($valid)
-			{//validate panel and look up info
-				$valid = false;
-				$query = "SELECT pp.powerpanelid, pp.name, pp.circuits
-					FROM dcim_powerpanel AS pp
-					WHERE pp.powerpanelid=?";
+			{//Do import - spoof input
+				$_GET['powerpanelid']= $powerPanelID;
+				$_GET['locationid']= $locationID;
+				$_GET['circuit']= $circuit;
+				$_GET['volts']= $volts;
+				$_GET['amps']= $amps;
+				$_GET['status']= $status;
+				$_GET['load']= $load;
 				
-				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
-					$errorMessage[] = "Prepare 0 failed: ImportPowerCircuits($action) (" . $mysqli->errno . ") " . $mysqli->error;
-				else
-				{
-					$stmt->store_result();
-					$count = $stmt->num_rows;
-					
-					if($count==1)
-					{
-						$valid=true;
-						$stmt->bind_result($powerPanelID, $powerPanelName, $panelCircuits);
-						$stmt->fetch();
-					}
-					else if($count==0)
-						$errorMessage[] = "ImportPowerCircuits() Power Panel #$powerPanelID not found";
-					else
-						$errorMessage[] = "ImportPowerCircuits() Found more than 1 Power Panel with ID#$powerPanelID";
-				}
+				if($fullProcessing)ProcessPowerCircuitAction("PowerCircuit_Add");
+				else $resultMessage[]= "Would have processed Circuit(".$rec->name.")";
+				$totalAffectedCount++;
 			}
-			
-			if($valid)$valid = ValidPowerCircuitNo($circuit, $panelCircuits);
-			if($valid && $add && ($isDoubleCircuit || $isTrippleCircuit))$valid = ValidPowerCircuitNo($circuit+2, $panelCircuits);
-			if($valid && $add && $isTrippleCircuit)$valid = ValidPowerCircuitNo($circuit+4, $panelCircuits);
-			
-			//check for existing panel circuit combo
-			if($add && $valid)
-			{
-				$valid = false;
-				$passedDBChecks = false;
-				//this could be optomised by filtering inner selects by panel and/or range of circuit
-				$filter = "";
-				if($isDoubleCircuit)
-					$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=?)";
-				else if($isTrippleCircuit)
-					$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
-				else
-					$filter = "csr.powerpanelid=? AND csr.circuit=?";
-					
-				$query = "SELECT pp.name, csr.* FROM (
-					SELECT powerpanelid,powercircuitid,circuit,volts,amps, '' AS reserved
-					FROM dcim_powercircuit
-					UNION
-					SELECT powerpanelid,powercircuitid,IF(volts=208,circuit+2,NULL) AS cir,volts,amps, 'T'
-					FROM dcim_powercircuit HAVING NOT(cir IS NULL)
-					) AS csr
-					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=csr.powerpanelid
-					WHERE $filter
-					ORDER BY circuit";
-				
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "ImportPowerCircuits() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-				else
-				{
-					$failed = false;
-					if($isDoubleCircuit)
-					{
-						$secondCircuit = 2+(int)$circuit;
-						$failed = !$stmt->bind_Param('iss', $powerPanelID, $circuit, $secondCircuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					else if($isTrippleCircuit)
-					{
-						$secondCircuit = 2+(int)$circuit;
-						$thirdCircuit = 4+(int)$circuit;
-						$failed = !$stmt->bind_Param('isss', $powerPanelID, $circuit, $secondCircuit,$thirdCircuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b3 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					else
-					{
-						$failed = !$stmt->bind_Param('is', $powerPanelID, $circuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b1 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					if (!$failed && !$stmt->execute())//execute
-						$errorMessage[] = "ImportPowerCircuits() Execute 2c failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					else
-					{
-						$stmt->store_result();
-						$count = $stmt->num_rows;
-						
-						if($count==0)
-							$passedDBChecks = true;
-						else
-						{
-							$stmt->bind_result($ppName, $ppID,$existingCircuitID, $c, $v, $a, $r);
-							$stmt->fetch();
-							
-							$circuitExisted= true;
-							$passedDBChecks = true;//will ignore circuit add bellow
-							//$errorMessage[] = "Existing panel Circuit conflict found (Power Panel:$ppName(#$ppID), Circuit#$c) ID#$existingCircuitID. Cannot create duplicate.";
-						}
-					}
-				}
-				$valid=$passedDBChecks;
-			}
-			
-			if($valid && $isTrippleCircuit && !$add)
-			{
-				//look up 2083p power circuits
-				$lookupResult = Get3PhasePowerLookup($powerPanelID,$powerCircuitID);
-				if($lookupResult==null)$valid = false;
-				if($valid)
-				{
-					list($c1,$c2,$c3) = $lookupResult;
-					//changes that should be pushed to all 3 records
-					if($c1->status!=$status || $c2->status!=$status || $c3->status!=$status)$updateAll = true;
-					if($c1->amps!=$amps|| $c2->amps!=$amps|| $c3->amps!=$amps)$updateAll = true;
-				}
-			}
-			
-			if($valid)
-			{//do work
-				if(!$circuitExisted)
-				{//Import/add circuits
-					$query = "INSERT INTO dcim_powercircuit
-						(powerpanelid,circuit,volts,amps,status,`load`,edituser,editdate)
-						VALUES(?,?,?,?,?,?,?,?)";
-					
-					//															   pcvaslud
-					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssssis', $powerPanelID, $circuit, $volts, $amps, $status, $load, $userID, $rec->date) || !$stmt->execute())
-						$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a1) (" . $mysqli->errno . ") " . $mysqli->error;
-					else
-					{
-						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
-						if($affectedCount==1)
-						{
-							LogDBChange("dcim_powercircuit",-1,"I","powerpanelid='$powerPanelID' AND circuit='$circuit'");
-							$resultMessage[] = "Successfully added power circuit (Panel#:".$powerPanelID." Circuit#".$circuit.").";
-						}
-						else
-							$errorMessage[] = "ImportPowerCircuits() Power circuit added successfully, but affected $affectedCount rows.";
-					}
-				}
-				if($circuitExisted || $affectedCount==1)
-				{
-					//look up inserted id
-					$query = "SELECT pc.powercircuitid, pp.name
-		FROM dcim_powercircuit AS pc
-			LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
-		WHERE pc.powerpanelid=? AND pc.circuit=?";
-					
-					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('is', $powerPanelID, $circuit) || !$stmt->execute())
-						$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a2) (" . $mysqli->errno . ") " . $mysqli->error;
-					else
-					{
-						$stmt->store_result();
-						$count = $stmt->num_rows;
-						if($count==1)
-						{
-							$stmt->bind_result($powerCircuitID, $powerPanelName);
-							$stmt->fetch();
-							//update result message with the more usefull panel name
-							if(!$circuitExisted) 
-							{
-								array_pop($resultMessage);
-								$resultMessage[]= "Successfully added power circuit (Panel:".$powerPanelName." Circuit#".$circuit.").";
-							}
-						}
-						
-						if($count==1 && $locationID!=-1)
-						{//create power circuit loc record
-							//check if this powercircuitLoc rec exists
-							$valid = false;
-							$query = "SELECT pcl.powercircuitlocid
-								FROM dcim_powercircuitloc AS pcl
-								WHERE pcl.powercircuitid=? AND pcl.locationid=?";
-							if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $powerCircuitID,$locationID)|| !$stmt->execute())
-							{
-								$errorMessage[] = "ImportPowerCircuits()_pcl lookup: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-								return false;
-							}
-							$stmt->store_result();
-							$stmt->bind_result($id);
-							$valid = $stmt->num_rows==0;
-							
-							if($valid)
-							{
-								//sucsessfull Insert - insert circuit-location link record
-								$query = "INSERT INTO dcim_powercircuitloc
-									(powercircuitid,locationid,edituser,editdate)
-									VALUES(?,?,?,?)";
-								
-								//															   plud
-								if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iiis', $powerCircuitID, $locationID, $userID,$rec->date) || !$stmt->execute())
-									$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a3) (" . $mysqli->errno . ") " . $mysqli->error;
-								else
-								{
-									$affectedCount = $stmt->affected_rows;
-									$totalAffectedCount += $affectedCount;
-									
-									if($affectedCount==1)
-									{
-										LogDBChange("dcim_powercircuitloc",-1,"I","powercircuitid=$powerCircuitID AND locationid=$locationID");
-										$resultMessage[] = "Successfully added power circuit location link (powerCircuitID:".$powerCircuitID.",locationID:".$locationID.").";
-									}
-									else
-										$errorMessage[] = "ImportPowerCircuits() Power circuit location link added successfully, but affected $affectedCount rows.";
-								}
-							}
-							else
-							{//existing pcl record already exists
-								$errorMessage[] = "ImportPowerCircuits() PowerCircuitLoc rec already exists ($powerCircuitID, $locationID).";
-							}
-						}
-						else
-						{
-							if($count!=1)//only report error if circuit was not found, otherwist location was deleberately skipped
-								$errorMessage[] = "ImportPowerCircuits() Failed to locate inserted record. Power (if created) is not linked to Location. PowerID:$powerPanelID Circuit:$circuit";
-						}
-					}
-				}
-			}
+			else $errorMessage[]= "Failed to import Circuit(".$rec->name." ".$rec->name.") -powerpanelid($powerPanelID) locationid($locationID)";
 		}
 		$resultMessage[] = "Successfully added $totalAffectedCount records.";
 		$userID = $importUserID;
+	}
+	
+	class DeviceImportRec
+	{
+		public $siteName;
+		public $roomName;
+		public $locName;
+		public $hno;
+		public $name;
+		public $altname;
+		public $member;
+		public $model;
+		public $unit;
+		public $type;
+		public $size;
+		public $status;
+		public $asset;
+		public $serial;
+		public $note;
+		
+		function __construct($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note)
+		{
+			$this->siteName	= $siteName;
+			$this->roomName	= $roomName;
+			$this->locName	= $locName;
+			$this->hno		= $hno;
+			$this->name		= $name;
+			$this->altname	= $altname;
+			$this->member	= $member;
+			$this->model	= $model;
+			$this->unit		= $unit;
+			$this->type		= $type;
+			$this->size		= $size;
+			$this->status	= $status;
+			$this->asset	= $asset;
+			$this->serial	= $serial;
+			$this->note		= $note;
+		}
+	}
+	
+	function ImportDevices($fullProcessing=false)
+	{
+		global $errorMessage;
+		global $resultMessage;
+		
+		//locations- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
+		$deviceData= GetInput("importdata",true,false);
+		
+		$deviceData= str_replace("\n",",",$deviceData);
+		$deviceData= explode(",", $deviceData);
+		
+		$importObjects = array();
+		$i = 0;
+		$fields = 15;
+		
+		$siteName="";
+		$roomName="";
+		$locName="";
+		$hno="";
+		$name="";
+		$altname="";
+		$member="";
+		$model="";
+		$unit="";
+		$type="";
+		$size="";
+		$status="";
+		$asset="";
+		$serial="";
+		$note="";
+		
+		foreach ($deviceData as $rec)
+		{
+			if(strlen($rec)>2 && $rec[0]=='"' && substr($rec,-1)=='"')
+			{
+				$rec = substr($rec, 1, -1);//trim start and end quotes
+				$rec= str_replace('""', '', $rec);//replace double double quotes with single double quotes
+			}
+			switch($i % $fields)
+			{
+				case 0:$siteName	= ($rec);break;
+				case 1:$roomName	= ($rec);break;
+				case 2:$locName		= ($rec);break;
+				case 3:$hno			= ($rec);break;
+				case 4:$name		= ($rec);break;
+				case 5:$altname		= ($rec);break;
+				case 6:$member		= ($rec);break;
+				case 7:$model		= ($rec);break;
+				case 8:$unit		= ($rec);break;
+				case 9:$type		= ($rec);break;
+				case 10:$size		= ($rec);break;
+				case 11:$status		= ($rec);break;
+				case 12:$asset		= ($rec);break;
+				case 13:$serial		= ($rec);break;
+				case 14:$note		= ($rec);
+				
+				$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
+				break;
+			}
+			$i++;
+		}
+		
+		//add Location
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." devices...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." devices";
+		
+		$validCount = 0;
+		foreach ($importObjects as $rec)
+		{
+			if(ImportDevice_Test($rec))$validCount++;
+		}
+		$resultMessage[]="Sucsess with  $validCount devices...";
+	}
+	
+	function ImportDevice_Test($rec)
+	{//reports all exceptions
+		global $errorMessage;
+		global $resultMessage;
+		
+		global $deviceModels;
+		global $validModels;
+		$validModels = array();
+		foreach($deviceModels as $device) $validModels[] = $device->name;
+		
+		//test location - get locationid
+		$locationid = ValidImportLocation($rec->siteName, $rec->roomName, $rec->locName, $rec->name);
+		
+		//attempt hno extraction
+		//attempt altname extraction
+		
+		//report devices with no hno
+		//test unit
+		
+		/*
+		//testModel
+		if(!ValidImportDeviceModel($rec->model))
+		{
+			$errorMessage[]="Unknown Model (".$rec->model.") Device:".$rec->name;
+		}
+		else
+		{
+			//$resultMessage[]="Valid Model (".$rec->model.") Device:".$rec->name;
+		}*/
+		
+		
+		$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+	}
+	
+	function ValidImportUPS($site, $ups, $searchIdentifier="null")
+	{
+		//looks up ups - returns upsid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$result = -1;
+		
+		$validUPS = false;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name
+				FROM dcim_site AS s
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportUPS() - Prepare failed: (u1) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1) $validSite = true;
+					else $errorMessage[] = "ValidImportUPS() - Invalid Site for ValidImportUPS($site $ups) iden:($searchIdentifier)";
+				}
+		}
+		
+		if($validSite)
+		{
+			$query = "SELECT pu.powerupsid, pu.name
+				FROM dcim_powerups AS pu
+					INNER JOIN dcim_site AS s ON pu.siteid=s.siteid
+				WHERE s.name=? AND pu.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $ups) || !$stmt->execute())
+				$errorMessage[] = "ValidImportUPS() - Prepare failed: (u2) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1)
+					{
+						$validUPS= true;
+						$stmt->bind_result($upsID, $ups);
+						$stmt->fetch();
+						$result = $upsID;
+					}
+					else $errorMessage[] = "ValidImportUPS() - Invalid UPS for ValidImportUPS($site $ups) iden:($searchIdentifier)";
+				}
+		}
+		return $result;
+	}
+	
+	function ValidImportRoom($site, $room, $searchIdentifier="null")
+	{
+		//looks up room - returns roomid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$result = -1;
+		
+		$validRoom = false;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name
+				FROM dcim_site AS s
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportRoom() - Prepare failed: (r1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validSite = true;
+				else $errorMessage[] = "ValidImportRoom() - Invalid Site for ValidImportRoom($site $room) iden:($searchIdentifier)";
+			}
+		}
+		
+		if($validSite)
+		{
+			$query = "SELECT r.roomid, r.name
+				FROM dcim_room AS r
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $room) || !$stmt->execute())
+				$errorMessage[] = "ValidImportRoom() - Prepare failed: (r2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1)
+				{
+					$validRoom = true;
+					$stmt->bind_result($roomID, $room);
+					$stmt->fetch();
+					$result = $roomID;
+				}
+				else $errorMessage[] = "ValidImportRoom() - Invalid Room for ValidImportRoom($site $room) iden:($searchIdentifier)";
+			}
+		}
+		return $result;
+	}
+	
+	function ValidImportPowerPanel($site, $panel, $searchIdentifier="null")
+	{
+		//looks up power panel - returns powerpanelid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$result = -1;
+		
+		$validPanel = false;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name
+				FROM dcim_site AS s
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportPowerPanel() - Prepare failed: (pp1) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1) $validSite = true;
+					else $errorMessage[] = "ValidImportPowerPanel() - Invalid Site for ValidImportPowerPanel($site $panel) iden:($searchIdentifier)";
+				}
+		}
+		
+		if($validSite)
+		{
+			$query = "SELECT pp.powerpanelid, pp.name
+				FROM dcim_powerpanel AS pp
+					INNER JOIN dcim_room AS r ON pp.roomid=r.roomid
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND pp.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $panel) || !$stmt->execute())
+				$errorMessage[] = "ValidImportPowerPanel() - Prepare failed: (pp2) (" . $mysqli->errno . ") " . $mysqli->error;
+				else
+				{
+					$stmt->store_result();
+					if($stmt->num_rows==1)
+					{
+						$validPanel= true;
+						$stmt->bind_result($roomID, $panel);
+						$stmt->fetch();
+						$result = $roomID;
+					}
+					else $errorMessage[] = "ValidImportPowerPanel() - Invalid Panel for ValidImportPowerPanel($site $panel) iden:($searchIdentifier)";
+				}
+		}
+		return $result;
+	}
+	
+	function ValidImportLocation($site, $room, $loc, $deviceName="null")
+	{
+		//looks up location - returns locationid or -1 if not found
+		global $mysqli;
+		global $errorMessage;
+		global $resultMessage;
+		global $debugMessage;
+		
+		$testSite = true;
+		$testRoom = true;
+		$result = -1;
+		
+		$validRoom = !$testRoom;
+		$validSite = !$testSite;
+		if($testSite)
+		{
+			$query = "SELECT s.siteid, s.name 
+				FROM dcim_site AS s 
+				WHERE s.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $site) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l1) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validSite = true;
+				else $errorMessage[] = "ValidImportLocation() - Invalid Site for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		
+		if($validSite && $testRoom)
+		{
+			$query = "SELECT r.roomid, r.name
+				FROM dcim_room AS r
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $site, $room) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l2) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1) $validRoom = true;
+				else $errorMessage[] = "ValidImportLocation() - Invalid Room for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		
+		if($validSite && $validRoom)
+		{
+			$query = "SELECT l.locationid, l.name
+				FROM dcim_location AS l
+					INNER JOIN dcim_room AS r ON l.roomid=r.roomid
+					INNER JOIN dcim_site AS s ON r.siteid=s.siteid
+				WHERE s.name=? AND r.name=? AND l.name=?";
+			
+			if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('sss', $site, $room, $loc) || !$stmt->execute())
+				$errorMessage[] = "ValidImportLocation() - Prepare failed: (l3) (" . $mysqli->errno . ") " . $mysqli->error;
+			else
+			{
+				$stmt->store_result();
+				if($stmt->num_rows==1)
+				{
+					$stmt->bind_result($locationID, $location);
+					$stmt->fetch();
+					$result = $locationID;
+				}
+				else $errorMessage[] = "ValidImportLocation() - Invalid Location for ValidImportLocation($site $room $loc) device:($deviceName)";
+			}
+		}
+		return $result;
+	}
+	
+	function ValidImportDeviceModel(&$model)
+	{
+		global $validModels;
+		
+		$model = str_replace('Poweredge', 'PowerEdge', $model);
+		$model = str_replace('poweredge', 'PowerEdge', $model);
+		$model = str_replace('POWEREDGE', 'PowerEdge', $model);
+		
+			 if($model=="R410")$model= "Dell Poweredge $model";
+		else if($model=="R420")$model= "Dell Poweredge $model";
+		else if($model=="R710")$model= "Dell Poweredge $model";
+		else if($model=="R820")$model= "Dell Poweredge $model";
+		else if($model=="PowerEdge R410")$model= "Dell $model";
+		else if($model=="PowerEdge R420")$model= "Dell $model";
+		else if($model=="PowerEdge R710")$model= "Dell $model";
+		else if($model=="PowerEdge R810")$model= "Dell $model";
+		
+		return (in_array($model,$validModels));
 	}
 ?>
