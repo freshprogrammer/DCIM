@@ -2087,8 +2087,8 @@
 				LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
 				LEFT JOIN dcim_room AS r ON r.roomid=pp.roomid
 				LEFT JOIN dcim_site AS s ON s.siteid=r.siteid
-				LEFT JOIN dcimlog_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
-				LEFT JOIN dcimlog_location AS l ON l.locationid=pcl.locationid
+				LEFT JOIN dcim_powercircuitloc AS pcl ON pcl.powercircuitid=pc.powercircuitid
+				LEFT JOIN dcim_location AS l ON l.locationid=pcl.locationid
 			WHERE pc.powerpanelid=?
 			GROUP BY pc.powercircuitlogid, pcl.powercircuitid
 			ORDER BY pc.circuit%2=0, pc.circuit, pc.editdate DESC";
