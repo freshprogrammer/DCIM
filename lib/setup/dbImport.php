@@ -557,7 +557,7 @@ function SelectImportForm()
 				else $resultMessage[]= "Would have processed Circuit(".$rec->name.")";
 				$totalAffectedCount++;
 			}
-			else $errorMessage[]= "Failed to import Circuit(".$rec->name." ".$rec->name.") - upsid($powerPanelID) roomid($locationID)";
+			else $errorMessage[]= "Failed to import Circuit(".$rec->name." ".$rec->name.") -powerpanelid($powerPanelID) locationid($locationID)";
 		}
 		$resultMessage[] = "Successfully added $totalAffectedCount records.";
 		$userID = $importUserID;
