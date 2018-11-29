@@ -512,15 +512,12 @@ function SelectImportForm()
 			$locationID = GetLocationID($rec->site,$rec->room,$rec->location);
 			$userID = 0;
 			
+			$valid = true;
 			if($locationID==-1)
 			{
 				$valid = strlen($rec->location)==0;
 				if(!$valid)$errorMessage[]="ImportPowerCircuits() Failed to locate location (".$rec->site.",".$rec->room.",".$rec->location.")";
 			}
-			
-			$add = true;
-			$valid = true;
-			$circuitExisted = false;
 			
 			if($valid)
 			{
@@ -546,244 +543,21 @@ function SelectImportForm()
 			
 			
 			/*   validation code coppied from processCircuitAction() */
-			if(!isset($status) || strlen($status)==0)
-				$status = "D";
-			
-			if($valid)$valid = ValidPowerCircuitVolts($volts);
-			if($valid)$valid = ValidPowerCircuitAmps($amps);
-			if($valid)$valid = ValidPowerCircuitStatus($status);
-			if($valid)$valid = ValidPowerCircuitLoad($load, $amps);
-			
-			$isDoubleCircuit = (int)$volts == 208;
-			$isTrippleCircuit = (int)$volts == 308;
-			$updateAll = false;//need to update all 3 in 3 phase
-			
-			//DB CHECKS
-			//check valid IDs in tables
-			if($valid && $add && $locationID!=-1)$valid = ValidRecord("locationid","Location ID",$locationID,"dcim_location",true);
-			
 			if($valid)
-			{//validate panel and look up info
-				$valid = false;
-				$query = "SELECT pp.powerpanelid, pp.name, pp.circuits
-					FROM dcim_powerpanel AS pp
-					WHERE pp.powerpanelid=?";
+			{//Do import - spoof input
+				$_GET['powerpanelid']= $powerPanelID;
+				$_GET['locationid']= $locationID;
+				$_GET['circuit']= $circuit;
+				$_GET['volts']= $volts;
+				$_GET['amps']= $amps;
+				$_GET['status']= $status;
+				$_GET['load']= $load;
 				
-				if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('i', $powerPanelID) || !$stmt->execute())
-					$errorMessage[] = "Prepare 0 failed: ImportPowerCircuits($action) (" . $mysqli->errno . ") " . $mysqli->error;
-				else
-				{
-					$stmt->store_result();
-					$count = $stmt->num_rows;
-					
-					if($count==1)
-					{
-						$valid=true;
-						$stmt->bind_result($powerPanelID, $powerPanelName, $panelCircuits);
-						$stmt->fetch();
-					}
-					else if($count==0)
-						$errorMessage[] = "ImportPowerCircuits() Power Panel #$powerPanelID not found";
-					else
-						$errorMessage[] = "ImportPowerCircuits() Found more than 1 Power Panel with ID#$powerPanelID";
-				}
+				if($fullProcessing)ProcessPowerCircuitAction("PowerCircuit_Add");
+				else $resultMessage[]= "Would have processed Circuit(".$rec->name.")";
+				$totalAffectedCount++;
 			}
-			
-			if($valid)$valid = ValidPowerCircuitNo($circuit, $panelCircuits);
-			if($valid && $add && ($isDoubleCircuit || $isTrippleCircuit))$valid = ValidPowerCircuitNo($circuit+2, $panelCircuits);
-			if($valid && $add && $isTrippleCircuit)$valid = ValidPowerCircuitNo($circuit+4, $panelCircuits);
-			
-			//check for existing panel circuit combo
-			if($add && $valid)
-			{
-				$valid = false;
-				$passedDBChecks = false;
-				//this could be optomised by filtering inner selects by panel and/or range of circuit
-				$filter = "";
-				if($isDoubleCircuit)
-					$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=?)";
-				else if($isTrippleCircuit)
-					$filter = "csr.powerpanelid=? AND (csr.circuit=? OR csr.circuit=? OR csr.circuit=?)";
-				else
-					$filter = "csr.powerpanelid=? AND csr.circuit=?";
-					
-				$query = "SELECT pp.name, csr.* FROM (
-					SELECT powerpanelid,powercircuitid,circuit,volts,amps, '' AS reserved
-					FROM dcim_powercircuit
-					UNION
-					SELECT powerpanelid,powercircuitid,IF(volts=208,circuit+2,NULL) AS cir,volts,amps, 'T'
-					FROM dcim_powercircuit HAVING NOT(cir IS NULL)
-					) AS csr
-					LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=csr.powerpanelid
-					WHERE $filter
-					ORDER BY circuit";
-				
-				if (!($stmt = $mysqli->prepare($query)))
-					$errorMessage[] = "ImportPowerCircuits() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-				else
-				{
-					$failed = false;
-					if($isDoubleCircuit)
-					{
-						$secondCircuit = 2+(int)$circuit;
-						$failed = !$stmt->bind_Param('iss', $powerPanelID, $circuit, $secondCircuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					else if($isTrippleCircuit)
-					{
-						$secondCircuit = 2+(int)$circuit;
-						$thirdCircuit = 4+(int)$circuit;
-						$failed = !$stmt->bind_Param('isss', $powerPanelID, $circuit, $secondCircuit,$thirdCircuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b3 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					else
-					{
-						$failed = !$stmt->bind_Param('is', $powerPanelID, $circuit);
-						if($failed)
-							$errorMessage[] = "ImportPowerCircuits() Bind 2b1 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					}
-					if (!$failed && !$stmt->execute())//execute
-						$errorMessage[] = "ImportPowerCircuits() Execute 2c failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
-					else
-					{
-						$stmt->store_result();
-						$count = $stmt->num_rows;
-						
-						if($count==0)
-							$passedDBChecks = true;
-						else
-						{
-							$stmt->bind_result($ppName, $ppID,$existingCircuitID, $c, $v, $a, $r);
-							$stmt->fetch();
-							
-							$circuitExisted= true;
-							$passedDBChecks = true;//will ignore circuit add bellow
-							//$errorMessage[] = "Existing panel Circuit conflict found (Power Panel:$ppName(#$ppID), Circuit#$c) ID#$existingCircuitID. Cannot create duplicate.";
-						}
-					}
-				}
-				$valid=$passedDBChecks;
-			}
-			
-			if($valid && $isTrippleCircuit && !$add)
-			{
-				//look up 2083p power circuits
-				$lookupResult = Get3PhasePowerLookup($powerPanelID,$powerCircuitID);
-				if($lookupResult==null)$valid = false;
-				if($valid)
-				{
-					list($c1,$c2,$c3) = $lookupResult;
-					//changes that should be pushed to all 3 records
-					if($c1->status!=$status || $c2->status!=$status || $c3->status!=$status)$updateAll = true;
-					if($c1->amps!=$amps|| $c2->amps!=$amps|| $c3->amps!=$amps)$updateAll = true;
-				}
-			}
-			
-			if($valid)
-			{//do work
-				if(!$circuitExisted)
-				{//Import/add circuits
-					$query = "INSERT INTO dcim_powercircuit
-						(powerpanelid,circuit,volts,amps,status,`load`,edituser,editdate)
-						VALUES(?,?,?,?,?,?,?,CURRENT_TIMESTAMP)";
-					
-					//															   pcvaslu
-					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('isssssi', $powerPanelID, $circuit, $volts, $amps, $status, $load, $userID) || !$stmt->execute())
-						$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a1) (" . $mysqli->errno . ") " . $mysqli->error;
-					else
-					{
-						$affectedCount = $stmt->affected_rows;
-						$totalAffectedCount += $affectedCount;
-						if($affectedCount==1)
-						{
-							LogDBChange("dcim_powercircuit",-1,"I","powerpanelid='$powerPanelID' AND circuit='$circuit'");
-							$resultMessage[] = "Successfully added power circuit (Panel#:".$powerPanelID." Circuit#".$circuit.").";
-						}
-						else
-							$errorMessage[] = "ImportPowerCircuits() Power circuit added successfully, but affected $affectedCount rows.";
-					}
-				}
-				if($circuitExisted || $affectedCount==1)
-				{
-					//look up inserted id
-					$query = "SELECT pc.powercircuitid, pp.name
-		FROM dcim_powercircuit AS pc
-			LEFT JOIN dcim_powerpanel AS pp ON pp.powerpanelid=pc.powerpanelid
-		WHERE pc.powerpanelid=? AND pc.circuit=?";
-					
-					if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('is', $powerPanelID, $circuit) || !$stmt->execute())
-						$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a2) (" . $mysqli->errno . ") " . $mysqli->error;
-					else
-					{
-						$stmt->store_result();
-						$count = $stmt->num_rows;
-						if($count==1)
-						{
-							$stmt->bind_result($powerCircuitID, $powerPanelName);
-							$stmt->fetch();
-							//update result message with the more usefull panel name
-							if(!$circuitExisted) 
-							{
-								array_pop($resultMessage);
-								$resultMessage[]= "Successfully added power circuit (Panel:".$powerPanelName." Circuit#".$circuit.").";
-							}
-						}
-						
-						if($count==1 && $locationID!=-1)
-						{//create power circuit loc record
-							//check if this powercircuitLoc rec exists
-							$valid = false;
-							$query = "SELECT pcl.powercircuitlocid
-								FROM dcim_powercircuitloc AS pcl
-								WHERE pcl.powercircuitid=? AND pcl.locationid=?";
-							if(!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ii', $powerCircuitID,$locationID)|| !$stmt->execute())
-							{
-								$errorMessage[] = "ImportPowerCircuits()_pcl lookup: Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-								return false;
-							}
-							$stmt->store_result();
-							$stmt->bind_result($id);
-							$valid = $stmt->num_rows==0;
-							
-							if($valid)
-							{
-								//sucsessfull Insert - insert circuit-location link record
-								$query = "INSERT INTO dcim_powercircuitloc
-									(powercircuitid,locationid,edituser,editdate)
-									VALUES(?,?,?,CURRENT_TIMESTAMP)";
-								
-								//															   plu
-								if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('iii', $powerCircuitID, $locationID, $userID) || !$stmt->execute())
-									$errorMessage[] = "ImportPowerCircuits_Add - Prepare failed: (a3) (" . $mysqli->errno . ") " . $mysqli->error;
-								else
-								{
-									$affectedCount = $stmt->affected_rows;
-									$totalAffectedCount += $affectedCount;
-									
-									if($affectedCount==1)
-									{
-										LogDBChange("dcim_powercircuitloc",-1,"I","powercircuitid=$powerCircuitID AND locationid=$locationID");
-										$resultMessage[] = "Successfully added power circuit location link (powerCircuitID:".$powerCircuitID.",locationID:".$locationID.").";
-									}
-									else
-										$errorMessage[] = "ImportPowerCircuits() Power circuit location link added successfully, but affected $affectedCount rows.";
-								}
-							}
-							else
-							{//existing pcl record already exists
-								$errorMessage[] = "ImportPowerCircuits() PowerCircuitLoc rec already exists ($powerCircuitID, $locationID).";
-							}
-						}
-						else
-						{
-							if($count!=1)//only report error if circuit was not found, otherwist location was deleberately skipped
-								$errorMessage[] = "ImportPowerCircuits() Failed to locate inserted record. Power (if created) is not linked to Location. PowerID:$powerPanelID Circuit:$circuit";
-						}
-					}
-				}
-			}
+			else $errorMessage[]= "Failed to import Circuit(".$rec->name." ".$rec->name.") - upsid($powerPanelID) roomid($locationID)";
 		}
 		$resultMessage[] = "Successfully added $totalAffectedCount records.";
 		$userID = $importUserID;
