@@ -889,18 +889,21 @@
 				echo "<BR>\n";
 			}
 			
-			//port connections
-			$portCount = ListActiveCustomerDeviceConnections("C",$hNo);
-			echo "<BR>\n";
-			
-			//VLANs
-			if($config_subnetsEnabled)
-			{
-				$vlanCount = ListSubnets("C",$hNo);
+			if($deviceCount>0)
+			{//port connections
+				$portCount = ListActiveCustomerDeviceConnections("C",$hNo,$hNo);
 				echo "<BR>\n";
+			
+				//VLANs
+				if($config_subnetsEnabled)
+				{
+					$vlanCount = ListSubnets("C",$hNo);
+					echo "<BR>\n";
+				}
+				
+				//Power Circuits of devices
+				$powerCircuitsCount = ListPowerCircuits("C",$hNo, -1);
 			}
-			//Power Circuits of devices
-			$powerCircuitsCount = ListPowerCircuits("C",$hNo, -1);
 			//end search (or customer details) panel and panel body
 		}
 		
@@ -1349,7 +1352,7 @@
 			
 			
 			echo "<BR><BR>\n";
-			$portCount = ListActiveCustomerDeviceConnections("D",$input);
+			$portCount = ListActiveCustomerDeviceConnections("D",$input,$hNo);
 		}
 		else 
 		{
@@ -3740,55 +3743,62 @@
 		$actionText = "Addy";
 		$patchesInput = "patches input";
 		
+		$internalHNos = implode(",",CustomFunctions::GetInternalNetworkingHNos());
+		
 		//build list of devices combo options
-		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.model, d.member
-			FROM dcim_device AS d
-			ORDER BY d.hno='$hNo', d.name, d.member";
-			
-		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute()) 
+		//'_search' tables find sites where this hno exists - returns all  active devices in sites where this hno has active devices - sorted with customer devices, then internal, then everything else
+		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.model, d.member, d.hno IN ($internalHNos) AS internal
+			FROM dcim_device AS d_search
+				INNER JOIN dcim_location AS l_search ON l_search.locationid=d_search.locationid
+				INNER JOIN dcim_room AS r_search ON r_search.roomid=l_search.roomid
+				INNER JOIN dcim_room AS r ON r.siteid=r_search.siteid
+				INNER JOIN dcim_location AS l ON l.roomid=r.roomid
+				INNER JOIN dcim_device AS d ON d.locationid=l.locationid AND d.status='A'
+			WHERE d_search.hno=? AND d_search.status='A'
+			GROUP BY d.deviceid
+			ORDER BY d.hno=? DESC, internal DESC, d.name, d.member";
+		
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('ss', $hNo, $hNo)|| !$stmt->execute()) 
 		{
-			$errorMessage[] = "ProcessPowerCircuitAction() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
+			$errorMessage[] = "EditConnectionForm($action, $hNo) Prepare  failed:(" . $mysqli->errno . ") " . $mysqli->error.".";
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
 		$stmt->store_result();
-		$stmt->bind_result($deviceID, $deviceHNo, $deviceName,$deviceAltName, $deviceModel, $deviceMember);
+		$stmt->bind_result($deviceID, $deviceHNo, $deviceName,$deviceAltName, $deviceModel, $deviceMember, $internal);
 		$count = $stmt->num_rows;
 		
+		$lastHno = -1;
+		$lastRecInternal = false;
 		$childDeviceOptions = "";
 		$parentDeviceOptions = "";
-		
-		$customerDeviceOptions = "";
-		$customerAndInternalOptions = "";
 		$allDeviceOptions = "";
 		if($count>0)
 		{
-			$allDeviceOptions .= "<option value='-1'>--Internal devices--</option>\n";
-			$short = true;
+			$shortDeviceName = true;
 			while ($stmt->fetch()) 
 			{
-				$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember,$deviceAltName, $short);
-				if($hNo==$deviceHNo)
-				{
-					$customerDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
-					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				if($lastHno==-1)
+				{//first record
+					$allDeviceOptions .= "<option value='-1'>--Customer devices--</option>\n";
 				}
+				else if ($lastRecInternal!=$internal && $internal)
+				{//first internal rec
+					$allDeviceOptions .= "<option value='-1'>--Internal devices--</option>\n";
+				}
+				else if ($lastRecInternal!=$internal && !$internal)
+				{//first rec after internal devices
+					$allDeviceOptions .= "<option value='-1'>--Other devices in customer's site(s)--</option>\n";
+				}
+					
+				$fullName = GetDeviceFullName($deviceName, $deviceModel, $deviceMember,$deviceAltName, $shortDeviceName);
 				$allDeviceOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
 				
-				//TODO: Hadle this selection better - put 'local' devices at top and maybe a divider between them - maybe add a internal flag to customer record #77
-				if($deviceHNo=='189165')//Internal
-					$customerAndInternalOptions .= "<option value='$deviceID'>".MakeHTMLSafe($fullName)."</option>\n";
+				$lastHno = $deviceHNo;
+				$lastRecInternal = $internal;
 			}
-			
-			$childDeviceOptions = $customerDeviceOptions;
-			$parentDeviceOptions = $customerAndInternalOptions;
-			
-			//if(CustomFunctions::UserHasDevPermission())//limit to this customer
-			{
-				//dont limit to just this customers devices - show all devices as child and parent
-				$childDeviceOptions = $allDeviceOptions;
-				$parentDeviceOptions = $allDeviceOptions;
-			}
+			$childDeviceOptions = $allDeviceOptions;
+			$parentDeviceOptions = $allDeviceOptions;
 		}
 		
 		?>
@@ -4059,7 +4069,7 @@
 		return $portCount;
 	}
 	
-	function ListActiveCustomerDeviceConnections($page,$key)
+	function ListActiveCustomerDeviceConnections($page,$key,$hNo)
 	{
 		global $errorMessage;
 		global $mysqli;
@@ -4067,7 +4077,6 @@
 		
 		$resultHTML = "";
 		
-		$hNo = "-1";//should be set by select but if not this is a default for edit connection form
 		if($page=='C')
 		{//cust page
 			$formAction = "./?host=$key";
@@ -4107,13 +4116,13 @@
 		
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
 		{
-			$errorMessage[] = "Prepare failed: ListActiveCustomerDeviceConnections($page,$key) (" . $mysqli->errno . ") " . $mysqli->error;
+			$errorMessage[] = "Prepare failed: ListActiveCustomerDeviceConnections($page,$key,$hNo) (" . $mysqli->errno . ") " . $mysqli->error;
 			$resultHTML .= "Failed to look up device connections";
 		}
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, $hno,
+			$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, $hNo,
 							   $switchID, $switchPortID, $switchName,$switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, 
 							   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
 								$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
@@ -4207,7 +4216,7 @@
 		
 		echo $resultHTML;
 		if(UserHasWritePermission())
-		{	
+		{
 			EditConnectionForm($formAction, $hNo);
 		}
 		return $count;

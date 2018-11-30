@@ -50,9 +50,26 @@
 			return UserHasAdminPermission();
 		}
 		
+		public static function GetInternalNetworkingHNos()
+		{//h#s of internal networking equipment
+			$result = array();
+			$result[]=387046;
+			$result[]=215003;
+			return $result;
+		}
+		
+		public static function GetInternalHNos()
+		{//h#s of all internal equipment
+			$result = array();
+			$result[]=387046;
+			$result[]=215003;
+			$result[]=202020;
+			return $result;
+		}
+		
 		public static function IsThisHNoInternal($hNo)
 		{
-			return $hNo=="387046";
+			return array_search($hNo,GetInternalHNos());
 		}
 		
 		public static function RemotePowerPanelAuditHelpPopup()
