@@ -497,7 +497,7 @@
 					<tr>
 						<td align='right' width=1>Units:</td>
 						<td align='left'>
-							<input id=EditLocation_units type='number' tabindex=6 size=6 name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
+							<input id=EditLocation_units type='number' tabindex=6 style='width:4em' name='units' min='0' max='50' step='1' value='<?php echo $unitsInput;?>' placeholder='42' class=''>
 							Order:
 							<div class='inputToolTipContainer'>
 								<select id=EditLocation_order onchange='' name="order" tabindex=7>
@@ -524,11 +524,11 @@
 						<td align='right' width=1>Left:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_xpos type='number' tabindex=9 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_xpos type='number' tabindex=9 style='width:6em' min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from left room edge to back left corner of location in feet (negative for distance from right wall)</span></div>
 							Foreward:
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_ypos type='number' tabindex=10 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_ypos type='number' tabindex=10 style='width:6em' min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>Distance from far room edge to back left corner of location in feet (negative for distance from close wall)</span></div>
 						</td>
 					</tr>
@@ -536,11 +536,11 @@
 						<td align='right' width=1>Width:</td>
 						<td align='left'>
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_width type='number' tabindex=11 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_width type='number' tabindex=11 style='width:6em' min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>In feet</span></div>
 							Depth:
 							<div class='inputToolTipContainer'>
-								<input id=EditLocation_depth type='number' tabindex=12 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
+								<input id=EditLocation_depth type='number' tabindex=12 style='width:6em' min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="12.34" class='' >
 							<span class=inputTooltip>In feet</span></div>
 						</td>
 					</tr>
@@ -1609,15 +1609,15 @@
 					</tr>
 					<tr>
 						<td align='right' width=1>Pic:</td>
-						<td align='left'>
-							<input id=EditDevicePort_pic type='number' tabindex=2 name='pic' value='0' min=0 max=99 placeholder='0' class='' style='width:50px' >
+						<td align='left' nowrap>
+							<input id=EditDevicePort_pic type='number' tabindex=2 name='pic' value='0' min=0 max=99 placeholder='0' class='' style='width:4em' >
 							Port:
-							<input id=EditDevicePort_portno type='number' tabindex=3 name='portno' value='0' min=0 max=99 placeholder='0' class='' style='width:50px' >
+							<input id=EditDevicePort_portno type='number' tabindex=3 name='portno' value='0' min=0 max=99 placeholder='0' class='' style='width:4em' >
 						</td>
 					</tr>
 					<tr>
 						<td colspan=1 align=right>Type:</td>
-						<td align='left'>
+						<td align='left' nowrap>
 							<select id=EditDevicePort_type name="type" tabindex=4>
 								<option value="E">Ethernet</option>
 								<option value="F">Fiber</option>
@@ -3390,12 +3390,12 @@
 				<table>
 					<tr>
 						<td align='right'>Panel:</td>
-						<td>
+						<td nowrap>
 							<select id=EditPowerCircuit_powerpanelid name="powerpanelid" tabindex=1>
 								<?php echo $panelOptions; ?>
 							</select>
 							Circuit:
-							<div class='inputToolTipContainer'><input id='EditPowerCircuit_circuit' type='number' tabindex=2 size=5 name='circuit' value='' placeholder='1' step=1 min=1 max='<?php echo $panelCircuits;?>'>
+							<div class='inputToolTipContainer'><input id='EditPowerCircuit_circuit' type='number' tabindex=2 style='width:4em' name='circuit' value='' placeholder='1' step=1 min=1 max='<?php echo $panelCircuits;?>'>
 							<span class=inputTooltip>If 208v this must be the lesser circuit</span></div>
 						</td>
 					</tr>
@@ -3409,7 +3409,7 @@
 					</tr>
 					<tr>
 						<td align='right' width=1>Volts:</td>
-						<td align='left'>
+						<td align='left' nowrap>
 							<select id=EditPowerCircuit_volts name="volts" tabindex=4>
 								<option value='120'>120v</option>
 								<option value='208'>208v</option>
@@ -3429,10 +3429,10 @@
 					</tr>
 					<tr>
 						<td align='right'>Active</td>
-						<td width=1 align='left'>
+						<td width=1 align='left' nowrap>
 							<input id=EditPowerCircuit_status type='checkbox' tabindex=6 name='status' value='A' onclick='EditPowerCircuit_StatusClicked()' class=''>
 							Load:
-							<input id=EditPowerCircuit_load type='number' tabindex=7 name='load' size=5 placeholder='2.04' min=0 max=100 step=0.01 onchange='EditPowerCircuit_LoadChanged()' class=''>
+							<input id=EditPowerCircuit_load type='number' tabindex=7 name='load' style='width:6em' placeholder='2.04' min=0 max=100 step=0.01 onchange='EditPowerCircuit_LoadChanged()' class=''>
 						</td>
 					</tr>
 					<tr>
@@ -4503,10 +4503,10 @@
 						</tr>
 						<tr>
 							<td align='right' width=1>Amps:</td>
-							<td align='left'>
-								<input id=EditPowerPanel_amps type='number' tabindex=3 size=6 name='amps' min='0' max='500' step='1' value='<?php echo $ampsInput;?>' placeholder='225' class=''>
+							<td align='left' nowrap>
+								<input id=EditPowerPanel_amps type='number' tabindex=3 style='width:4em' name='amps' min='0' max='500' step='1' value='<?php echo $ampsInput;?>' placeholder='225' class=''>
 								Circuits:
-								<input id=EditPowerPanel_circuits type='number' tabindex=4 size=6 name='circuits' min='1' max='150' step='1' value='<?php echo $circuitsInput;?>' placeholder='42' class=''>
+								<input id=EditPowerPanel_circuits type='number' tabindex=4 style='width:4em' name='circuits' min='1' max='150' step='1' value='<?php echo $circuitsInput;?>' placeholder='42' class=''>
 							</td>
 						</tr>
 						<tr>
@@ -4532,25 +4532,25 @@
 						</tr>
 						<tr>
 							<td align='right' width=1>Left:</td>
-							<td align='left'>
+							<td align='left' nowrap>
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_xpos type='number' tabindex=7 size=3 min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
+									<input id=EditPowerPanel_xpos type='number' tabindex=7 style='width:6em' min='-9999.99' max='9999.99' step='0.01' name='xpos' value='<?php echo $xPosInput;?>' placeholder="12.34" class='' >
 								<span class=inputTooltip>Distance from left room edge to back left corner of panel in feet (negative for distance from right wall)</span></div>
 								Foreward:
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_ypos type='number' tabindex=8 size=3 min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
+									<input id=EditPowerPanel_ypos type='number' tabindex=8 style='width:6em' min='-9999.99' max='9999.99' step='0.01' name='ypos' value='<?php echo $yPosInput;?>' placeholder="12.34" class='' >
 								<span class=inputTooltip>Distance from far room edge to back left corner of panel in feet (negative for distance from close wall)</span></div>
 							</td>
 						</tr>
 						<tr>
 							<td align='right' width=1>Width:</td>
-							<td align='left'>
+							<td align='left' nowrap>
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_width type='number' tabindex=9 size=3 min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="1.67" class='' >
+									<input id=EditPowerPanel_width type='number' tabindex=9 style='width:6em' min='0' max='9999.99' step='0.01' name='width' value='<?php echo $widthInput;?>' placeholder="1.67" class='' >
 								<span class=inputTooltip>In feet</span></div>
 								Depth:
 								<div class='inputToolTipContainer'>
-									<input id=EditPowerPanel_depth type='number' tabindex=10 size=3 min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="0.56" class='' >
+									<input id=EditPowerPanel_depth type='number' tabindex=10 style='width:6em' min='0' max='9999.99' step='0.01' name='depth' value='<?php echo $depthInput;?>' placeholder="0.56" class='' >
 								<span class=inputTooltip>In feet</span></div>
 							</td>
 						</tr>
@@ -4742,7 +4742,7 @@
 					$loadFieldID = "PowerAuditPanel_Circuit".$circuit."_load";
 					$checked = ($status==="A") ? " checked" : "";
 					echo "	<input id='$statusFieldID' type='checkbox' name='c".$circuit."status' value='A' onclick='PowerAuditCircuit_StatusClicked(\"$statusFieldID\",\"$loadFieldID\");' $checked>\n";
-					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex size=5 placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");' style='position:relative; z-index:2; width:70px;'>\n";
+					echo "	<input id='$loadFieldID' type='number' name='c".$circuit."load' tabindex=$tabIndex placeholder='$load' min=0 max=$amps step=0.01 onchange='PowerAuditCircuit_LoadChanged(\"$loadFieldID\",\"$statusFieldID\");' style='position:relative; z-index:2; width:4em;'>\n";
 					echo "	<input id=PowerAuditPanel_Circuit".$circuit."_powercircuitid type='hidden' name='c".$circuit."powercircuitid' value='$powerCircuitID'>\n";
 					echo "	</td></tr>\n";
 					echo "	</table>\n";
