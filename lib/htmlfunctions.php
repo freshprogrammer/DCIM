@@ -889,8 +889,8 @@
 				echo "<BR>\n";
 			}
 			
-			//ports
-			$portCount = ListActiveCustomerDeviceConnections($hNo);
+			//port connections
+			$portCount = ListActiveCustomerDeviceConnections("C",$hNo);
 			echo "<BR>\n";
 			
 			//VLANs
@@ -1346,6 +1346,10 @@
 			echo "<div class='panel-header'>Device Details</div>\n";
 			echo "<div class='panel-body'>\n\n";
 			ListDevicePorts($input,$deviceFullNameShort);//all Ports
+			
+			
+			echo "<BR><BR>\n";
+			$portCount = ListActiveCustomerDeviceConnections("D",$input);
 		}
 		else 
 		{
@@ -3778,7 +3782,7 @@
 			$childDeviceOptions = $customerDeviceOptions;
 			$parentDeviceOptions = $customerAndInternalOptions;
 			
-			//if(CustomFunctions::UserHasDevPermission())
+			//if(CustomFunctions::UserHasDevPermission())//limit to this customer
 			{
 				//dont limit to just this customers devices - show all devices as child and parent
 				$childDeviceOptions = $allDeviceOptions;
@@ -4054,11 +4058,23 @@
 		return $portCount;
 	}
 	
-	function ListActiveCustomerDeviceConnections($hNo)
+	function ListActiveCustomerDeviceConnections($page,$key)
 	{
+		global $errorMessage;
 		global $mysqli;
 		global $config_subnetsEnabled;
-		$formAction = "./?host=$hNo";
+		
+		if($page=='C')
+		{//cust page
+			$formAction = "./?host=$key";
+			$filter = "d.hno=?";
+		}
+		else
+		{//device page
+			$formAction = "./?deviceid=$key";
+			$filter = "d.deviceid=?";
+		}
+		
 		
 		$query = "SELECT 
 				dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.mac,
@@ -4070,11 +4086,11 @@
 				INNER JOIN dcim_deviceport AS dp ON d.deviceid=dp.deviceid
 				INNER JOIN (
 							SELECT pcA.portconnectionid,pcA.childportid AS childportid,pcA.parentportid AS parentportid,
-									pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate, 'Child' AS relationship 
+									pcA.patches,pcA.edituser,pcA.editdate,pcA.qauser,pcA.qadate, 'Child' AS relationship
 								FROM dcim_portconnection AS pcA
 							UNION ALL
 							SELECT pcB.portconnectionid,pcB.parentportid AS childportid,pcB.childportid AS parentportid,
-									pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate, 'Parent' AS relationship 
+									pcB.patches,pcB.edituser,pcB.editdate,pcB.qauser,pcB.qadate, 'Parent' AS relationship
 								FROM dcim_portconnection AS pcB)
 					AS pc ON dp.deviceportid=pc.childportid
 				INNER JOIN dcim_deviceport AS sp ON pc.parentportid=sp.deviceportid
@@ -4082,112 +4098,112 @@
 				LEFT JOIN dcim_portvlan AS pv ON sp.deviceportid=pv.deviceportid
 				INNER JOIN dcim_location AS l ON d.locationid=l.locationid
 				INNER JOIN dcim_location AS sl ON s.locationid=sl.locationid
-			WHERE d.hno=?
+			WHERE $filter
 			GROUP BY pc.portconnectionid
-			ORDER BY 3,4,6,7";
+			ORDER BY d.name,d.altname,d.member,d.model";
 		
-		if (!($stmt = $mysqli->prepare($query)))
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
 		{
-			//TODO handle errors better
-			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
-		}
-		
-		$stmt->bind_Param('s', $hNo);
-		$stmt->execute();
-		$stmt->store_result();
-		$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, 
-						   $switchID, $switchPortID, $switchName,$switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, 
-						   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
-							$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
-		$count = $stmt->num_rows;
-		
-		
-		echo "<span class='tableTitle'>Device Connections</span>\n";
-		if(UserHasWritePermission())
-		{
-			// add button to add new Connection
-			echo "<button class='editButtons_hidden' onclick=\"EditConnection(true,-1,$deviceID,-1,-1,-1,'','')\">Add New</button>\n";
-		}
-		echo "<BR>\n";
-		
-		if($count>0)
-		{
-			if($config_subnetsEnabled)
-				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
-			else
-				echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
-			
-			
-			//list result data
-			$lastDevicePortID = -1;
-			$lastSwitchPortID = -1;
-			while ($stmt->fetch()) 
-			{
-				$portFullName = FormatPort($member, $model, $pic, $port, $type);
-				$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
-				
-				$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
-				$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
-				
-				$devicePortTitle = "";
-				$switchPortTitle = "";
-				if(CustomFunctions::UserHasDevPermission())
-				{
-					$devicePortTitle = "switchportid=$devicePortID";
-					$switchPortTitle = "switchportid=$switchPortID";
-				}
-				
-				$childCells = "<td class='data-table-cell'><a href='./?locationid=$dLocID'>".MakeHTMLSafe($dLocName)."</a></td>\n";
-				$childCells .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
-				$childCells .=  "<td class='data-table-cell'><span title='$devicePortTitle'>$portFullName</span></td>\n";
-
-				$parentCells = "<td class='data-table-cell'><a href='./?locationid=$sLocID'>".MakeHTMLSafe($sLocName)."</a></td>\n";
-				$parentCells .=  "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>\n";
-				$parentCells .=  "<td class='data-table-cell'><span title='$switchPortTitle'>$switchPortFullName</span></td>\n";
-				
-				if($relationship!="Child")
-				{//swap parent and child
-					$t = $childCells;
-					$childCells = $parentCells;
-					$parentCells = $t;
-				}
-				
-				echo "<tr class='dataRow'>";
-				echo $childCells;
-				echo $parentCells;
-				
-				if($config_subnetsEnabled)
-					echo "<td class='data-table-cell'>$vlan</td>";
-				echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
-				echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
-				
-				//edit button cell
-				if(UserHasWritePermission())
-				{
-					//edit button
-					echo "<td class='data-table-cell-button editButtons_hidden'>\n";
-					
-					$jsSafePatchs = MakeJSSafeParam($patches);
-					$editDescription = "$deviceName $portFullName <-> $switchName $switchPortFullName";
-					$params = "false,$portConnectionID,$deviceID,$devicePortID,$switchID,$switchPortID,'$jsSafePatchs','$editDescription'";
-					?><button onclick="EditConnection(<?php echo $params;?>)">Edit</button>
-					<?php 
-					echo "</td>\n";
-					
-					echo CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
-				}
-				echo "</tr>";
-				$lastDevicePortID = $devicePortID;
-				$lastSwitchPortID = $switchPortID;
-			}
-			echo "</table>";
+			$errorMessage[] = "Prepare failed: ListActiveCustomerDeviceConnections($page,$key) (" . $mysqli->errno . ") " . $mysqli->error;
+			echo "Failed to look up device connections";
 		}
 		else
-			echo "No device connections found<BR>";
+		{
+			$stmt->store_result();
+			$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, 
+							   $switchID, $switchPortID, $switchName,$switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, 
+							   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
+								$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
+			$count = $stmt->num_rows;
+			
+			
+			echo "<span class='tableTitle'>Device Connections</span>\n";
+			if(UserHasWritePermission())
+			{
+				// add button to add new Connection
+				echo "<button class='editButtons_hidden' onclick=\"EditConnection(true,-1,$deviceID,-1,-1,-1,'','')\">Add New</button>\n";
+			}
+			echo "<BR>\n";
+			
+			if($count>0)
+			{
+				if($config_subnetsEnabled)
+					echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+				else
+					echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+				
+				
+				//list result data
+				$lastDevicePortID = -1;
+				$lastSwitchPortID = -1;
+				while ($stmt->fetch())
+				{
+					$portFullName = FormatPort($member, $model, $pic, $port, $type);
+					$switchPortFullName = FormatPort($switchMember, $switchModel, $switchPic, $switchPort, $type);
+					
+					$deviceFullName = GetDeviceFullName($deviceName, $model, $member,$deviceAltName, true);
+					$switchFullName = GetDeviceFullName($switchName, $switchModel, $switchMember,$switchAltName, true);
+					
+					$devicePortTitle = "";
+					$switchPortTitle = "";
+					if(CustomFunctions::UserHasDevPermission())
+					{
+						$devicePortTitle = "switchportid=$devicePortID";
+						$switchPortTitle = "switchportid=$switchPortID";
+					}
+					
+					$childCells = "<td class='data-table-cell'><a href='./?locationid=$dLocID'>".MakeHTMLSafe($dLocName)."</a></td>\n";
+					$childCells .= "<td class='data-table-cell'><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>\n";
+					$childCells .=  "<td class='data-table-cell'><span title='$devicePortTitle'>$portFullName</span></td>\n";
+	
+					$parentCells = "<td class='data-table-cell'><a href='./?locationid=$sLocID'>".MakeHTMLSafe($sLocName)."</a></td>\n";
+					$parentCells .=  "<td class='data-table-cell'><a href='./?deviceid=$switchID'>".MakeHTMLSafe($switchFullName)."</a></td>\n";
+					$parentCells .=  "<td class='data-table-cell'><span title='$switchPortTitle'>$switchPortFullName</span></td>\n";
+					
+					if($relationship!="Child")
+					{//swap parent and child
+						$t = $childCells;
+						$childCells = $parentCells;
+						$parentCells = $t;
+					}
+					
+					echo "<tr class='dataRow'>";
+					echo $childCells;
+					echo $parentCells;
+					
+					if($config_subnetsEnabled)
+						echo "<td class='data-table-cell'>$vlan</td>";
+					echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
+					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+					
+					//edit button cell
+					if(UserHasWritePermission())
+					{
+						//edit button
+						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
+						
+						$jsSafePatchs = MakeJSSafeParam($patches);
+						$editDescription = "$deviceName $portFullName <-> $switchName $switchPortFullName";
+						$params = "false,$portConnectionID,$deviceID,$devicePortID,$switchID,$switchPortID,'$jsSafePatchs','$editDescription'";
+						?><button onclick="EditConnection(<?php echo $params;?>)">Edit</button>
+						<?php 
+						echo "</td>\n";
+						
+						echo CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+					}
+					echo "</tr>";
+					$lastDevicePortID = $devicePortID;
+					$lastSwitchPortID = $switchPortID;
+				}
+				echo "</table>";
+			}
+			else
+				echo "No device connections found<BR>";
+		}
 	
 		if(UserHasWritePermission())
 		{	
-			EditConnectionForm($formAction, $hNo);
+			EditConnectionForm($formAction, $key);
 		}
 		return $count;
 	}

@@ -132,6 +132,11 @@
 				echo "<option value='$devicePortID'>$portFullName</option>\n";
 			}
 		}
+		else
+		{
+			if($deviceID==-1) echo "<option value=-1>-Select a device-</option>\n";
+			else echo "<option value=-1>-No available ports found</option->\n";
+		}
 	}
 	
 	function vlanFilter($v)
