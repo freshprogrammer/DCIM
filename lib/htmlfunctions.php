@@ -3731,6 +3731,7 @@
 	
 	function EditConnectionForm($action, $hNo)
 	{
+		global $errorMessage;
 		global $mysqli;
 		global $config_subnetsEnabled;
 		
@@ -3742,15 +3743,14 @@
 		//build list of devices combo options
 		$query = "SELECT d.deviceid, d.hno, d.name, d.altname, d.model, d.member
 			FROM dcim_device AS d
-			ORDER BY /*d.type='S' DESC,*/ d.name, d.member";
+			ORDER BY d.hno='$hNo', d.name, d.member";
 			
-		if (!($stmt = $mysqli->prepare($query))) 
+		if (!($stmt = $mysqli->prepare($query)) || !$stmt->execute()) 
 		{
-			//TODO handle errors better
+			$errorMessage[] = "ProcessPowerCircuitAction() Prepare 2 failed: ($action) (" . $mysqli->errno . ") " . $mysqli->error.".";
 			echo "Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 		}
 		
-		$stmt->execute();
 		$stmt->store_result();
 		$stmt->bind_result($deviceID, $deviceHNo, $deviceName,$deviceAltName, $deviceModel, $deviceMember);
 		$count = $stmt->num_rows;
@@ -3763,6 +3763,7 @@
 		$allDeviceOptions = "";
 		if($count>0)
 		{
+			$allDeviceOptions .= "<option value='-1'>--Internal devices--</option>\n";
 			$short = true;
 			while ($stmt->fetch()) 
 			{
@@ -4064,6 +4065,9 @@
 		global $mysqli;
 		global $config_subnetsEnabled;
 		
+		$resultHTML = "";
+		
+		$hNo = "-1";//should be set by select but if not this is a default for edit connection form
 		if($page=='C')
 		{//cust page
 			$formAction = "./?host=$key";
@@ -4075,9 +4079,8 @@
 			$filter = "d.deviceid=?";
 		}
 		
-		
 		$query = "SELECT 
-				dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.mac,
+				dp.deviceid, dp.deviceportid, d.name, d.altname, d.member, d.model, dp.pic, dp.port, dp.mac, d.hno,
 				sp.deviceid AS sid, sp.deviceportid AS spid, s.name AS sname, s.altname AS saltname, s.member AS smember, s.model AS smodel, sp.pic AS spic, sp.port AS sport,
 				dp.type, dp.speed, dp.note, dp.status, pc.portconnectionid, pc.patches, pc.relationship, pc.edituser, pc.editdate, pc.qauser, pc.qadate,
 				CAST(GROUP_CONCAT(IF(pv.vlan<0,CONCAT('Temp-',ABS(pv.vlan)),pv.vlan) ORDER BY pv.vlaN<0, ABS(pv.vlaN) SEPARATOR ', ') AS CHAR) AS vlans,
@@ -4105,32 +4108,24 @@
 		if (!($stmt = $mysqli->prepare($query)) || !$stmt->bind_Param('s', $key) || !$stmt->execute())
 		{
 			$errorMessage[] = "Prepare failed: ListActiveCustomerDeviceConnections($page,$key) (" . $mysqli->errno . ") " . $mysqli->error;
-			echo "Failed to look up device connections";
+			$resultHTML .= "Failed to look up device connections";
 		}
 		else
 		{
 			$stmt->store_result();
-			$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, 
+			$stmt->bind_result($deviceID, $devicePortID, $deviceName,$deviceAltName, $member, $model, $pic, $port, $mac, $hno,
 							   $switchID, $switchPortID, $switchName,$switchAltName, $switchMember, $switchModel, $switchPic, $switchPort, 
 							   $type, $speed, $note, $status, $portConnectionID, $patches, $relationship, $editUserID, $editDate, $qaUserID, $qaDate, 
 								$vlan, $dLocID, $dLocName, $sLocID, $sLocName);
 			$count = $stmt->num_rows;
 			
-			
-			echo "<span class='tableTitle'>Device Connections</span>\n";
-			if(UserHasWritePermission())
-			{
-				// add button to add new Connection
-				echo "<button class='editButtons_hidden' onclick=\"EditConnection(true,-1,$deviceID,-1,-1,-1,'','')\">Add New</button>\n";
-			}
-			echo "<BR>\n";
-			
+			/*use seperate HTML vaiables here so I can use data(deviceid) from this select in the html just above the table*/
 			if($count>0)
 			{
 				if($config_subnetsEnabled)
-					echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+					$tableHTML .= CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 				else
-					echo CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+					$tableHTML.= CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 				
 				
 				//list result data
@@ -4167,43 +4162,53 @@
 						$parentCells = $t;
 					}
 					
-					echo "<tr class='dataRow'>";
-					echo $childCells;
-					echo $parentCells;
+					$tableHTML.= "<tr class='dataRow'>";
+					$tableHTML.= $childCells;
+					$tableHTML.= $parentCells;
 					
 					if($config_subnetsEnabled)
-						echo "<td class='data-table-cell'>$vlan</td>";
-					echo "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
-					echo "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
+						$tableHTML.= "<td class='data-table-cell'>$vlan</td>";
+					$tableHTML.= "<td class='data-table-cell'>".MakeHTMLSafe($patches)."</td>";
+					$tableHTML.= "<td class='data-table-cell'>".FormatTechDetails($editUserID, $editDate,"", $qaUserID, $qaDate)."</td>";
 					
 					//edit button cell
 					if(UserHasWritePermission())
 					{
 						//edit button
-						echo "<td class='data-table-cell-button editButtons_hidden'>\n";
+						$tableHTML.= "<td class='data-table-cell-button editButtons_hidden'>\n";
 						
 						$jsSafePatchs = MakeJSSafeParam($patches);
 						$editDescription = "$deviceName $portFullName <-> $switchName $switchPortFullName";
 						$params = "false,$portConnectionID,$deviceID,$devicePortID,$switchID,$switchPortID,'$jsSafePatchs','$editDescription'";
-						?><button onclick="EditConnection(<?php echo $params;?>)">Edit</button>
-						<?php 
-						echo "</td>\n";
+						$tableHTML.= "<button onclick=\"EditConnection($params)\">Edit</button>\n";
+						$tableHTML.= "</td>\n";
 						
-						echo CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
+						$tableHTML.= CreateQACell("dcim_portconnection", $portConnectionID, $formAction, $editUserID, $editDate, $qaUserID, $qaDate);
 					}
-					echo "</tr>";
+					$tableHTML.= "</tr>";
 					$lastDevicePortID = $devicePortID;
 					$lastSwitchPortID = $switchPortID;
 				}
-				echo "</table>";
+				$tableHTML.= "</table>";
 			}
-			else
-				echo "No device connections found<BR>";
+			else $tableHTML.= "No device connections found<BR>";
+			
+			$resultHTML .= "<span class='tableTitle'>Device Connections</span>\n";
+			if(UserHasWritePermission())
+			{
+				// add button to add new Connection - add, portConnectionID, childDeviceID, childPortID, parentDeviceID, parentPortID, patches, description
+				$deviceID = MakeJSSafeParam($deviceID);//just in case
+				$resultHTML .= "<button class='editButtons_hidden' onclick=\"EditConnection(true,-1,$deviceID,-1,$deviceID,-1,'','')\">Add New</button>\n";
+			}
+			$resultHTML .= "<BR>\n";
+			
+			$resultHTML .= $tableHTML;
 		}
-	
+		
+		echo $resultHTML;
 		if(UserHasWritePermission())
 		{	
-			EditConnectionForm($formAction, $key);
+			EditConnectionForm($formAction, $hNo);
 		}
 		return $count;
 	}
