@@ -3784,7 +3784,7 @@
 				}
 				else if ($lastRecInternal!=$internal && $internal)
 				{//first internal rec
-					$allDeviceOptions .= "<option value='-1'>--Internal devices--</option>\n";
+					$allDeviceOptions .= "<option value='-1'>--Internal networking devices--</option>\n";
 				}
 				else if ($lastRecInternal!=$internal && !$internal)
 				{//first rec after internal devices
@@ -4132,9 +4132,9 @@
 			if($count>0)
 			{
 				if($config_subnetsEnabled)
-					$tableHTML .= CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+					$tableHTML = CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","VLAN","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 				else
-					$tableHTML.= CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
+					$tableHTML = CreateDataTableHeader(array("Loc","Child Device","Port&#x25B2;","Loc","Parent Device","Port","Patches"),true,UserHasWritePermission(),UserHasWritePermission());
 				
 				
 				//list result data

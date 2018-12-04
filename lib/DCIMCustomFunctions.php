@@ -69,7 +69,7 @@
 		
 		public static function IsThisHNoInternal($hNo)
 		{
-			return array_search($hNo,GetInternalHNos());
+			return array_search($hNo,CustomFunctions::GetInternalHNos());
 		}
 		
 		public static function RemotePowerPanelAuditHelpPopup()
