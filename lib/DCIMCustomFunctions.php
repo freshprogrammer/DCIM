@@ -81,7 +81,11 @@
 <li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_device');\">Devices</a></li>
 <li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_deviceport');\">Device Ports</a></li>
 <li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_portconnection');\">Device Connections</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_badge');\">Badges</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_customerdecom');\">Customer Decommission</a></li>
 <li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_location');\">Locations</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_powerpanel');\">Power Panels</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_powercircuit');\">Power Circuits</a></li>
 </ul>
 </span>
 </div>";
@@ -97,6 +101,50 @@
 <li>Requires unique H# and C#</li>
 <li>Should be set to inactive on decommision. Cannot be deleted</li>
 </ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_CustomerDecom()
+		{
+			global $config_subnetsEnabled;
+			
+			$result = "<div id='helpPopup_customerdecom' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>\n";
+			if($config_subnetsEnabled)$result .= "Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>\n";
+			$result .= "Delete connections to match cabling in DC.<BR>
+Disable & delete badges to match badge server.<BR>
+Update circuits turning off power if location is empty as you should at the panel.<BR>
+Mark device(s) inactive (will remain linked to this location for history).<BR>
+Mark customer as inactive.<BR>
+Ask co-worker to QA your work.<BR>
+<BR>
+Basically update everything as necessary to match the real counterparts (cables, badges, circuits)
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Badge()
+		{
+			$result = "<div id='helpPopup_badge' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Badges</span><BR>
+All badge information here should match the information in the badge server with badges added, removed or disabled in both places at the same time.<BR>
+<BR>
+<span class='helpHeading'>Badge Statuses</span><BR>
+<span class='helpDefinition'>Pending</span>Badge created and pending enrolment in hand scanner. Badge not given to customer yet.<BR>
+<span class='helpDefinition'>Enroll</span>Updates badge enrolment date and changes status to Active.<BR>
+<span class='helpDefinition'>Active</span>Badge is ready for use by the customer.<BR>
+<span class='helpDefinition'>Disabled</span>Badge has been disabled manually disabled revoking customer access and can be deleted here and on the badge server at the discretion of the internal staff.<BR>
+<span class='helpDefinition'>Returned</span>Badge has been returned to internal staff and can be deleted from here and badge server.<BR>
+<BR>
+<span class='helpDefinition'>Issue Date</span>Date badge is created.<BR>
+<span class='helpDefinition'>Enroll Date</span>Date badge holder is enrolled in hand scanner.<BR>
+<span class='helpDefinition'>Badge #</span>Badge number as it appears on the physical badge and in the badge server.<BR>
+<BR>
+<span class='helpHeading'>Badge Deletion</span><BR>
+Once a badge holder has returned their badge or it has been disabled it can be deleted with the delete button.
 </span>
 </div>";
 			return $result;
@@ -166,6 +214,35 @@
 <li>Colo : Cyan</li>
 <li>Reserved : Light Cyan</li>
 </ul>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PowerPanel()
+		{
+			$result = "<div id='helpPopup_powerpanel' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Power Panels</span><BR>
+<ul class='helpBullets'>
+<li>Added from Room page</li>
+<li>Edited from Room page, UPS page, or Panel page</li>
+<li>Requires unique name within the Site</li>
+<li>Mouse over position fields for additional help</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PowerCircuit()
+		{
+			$result = "<div id='helpPopup_powercircuit' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Power Circuits</span><BR>
+<ul class='helpBullets'>
+<li>Added from Power Panel page</li>
+<li>Edited from the Panel page, Location page, and Customer page</li>
+<li>Entire panel readings can updated on the panel audit page</li>
 </ul>
 </span>
 </div>";

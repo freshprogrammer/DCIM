@@ -454,44 +454,6 @@
 		return null;
 	}
 	
-	function CustomerDecomHelpPopup()
-	{
-		global $config_subnetsEnabled;
-		
-		$result = "<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>\n";
-		if($config_subnetsEnabled)$result .= "Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>\n";
-		$result .= "Delete connections to match cabling in DC.<BR>
-Disable & delete badges to match badge server.<BR>
-Update circuits turning off power if location is empty as you should at the panel.<BR>
-Mark device(s) inactive (will remain linked to this location for history).<BR>
-Mark customer as inactive.<BR>
-Ask co-worker to QA your work.<BR>
-<BR>
-Basically update everything as necessary to match the real counterparts (cables, badges, circuits)</span>";
-		return $result;
-	}
-	
-	function BadgeHelpPopup()
-	{
-		$result = "<span class='helpText'><span class='helpHeading'>Badges</span><BR>
-All badge information here should match the information in the badge server with badges added, removed or disabled in both places at the same time.<BR>
-<BR>
-<span class='helpHeading'>Badge Statuses</span><BR>
-<span class='helpDefinition'>Pending</span>Badge created and pending enrolment in hand scanner. Badge not given to customer yet.<BR>
-<span class='helpDefinition'>Enroll</span>Updates badge enrolment date and changes status to Active.<BR>
-<span class='helpDefinition'>Active</span>Badge is ready for use by the customer.<BR>
-<span class='helpDefinition'>Disabled</span>Badge has been disabled manually disabled revoking customer access and can be deleted here and on the badge server at the discretion of the internal staff.<BR>
-<span class='helpDefinition'>Returned</span>Badge has been returned to internal staff and can be deleted from here and badge server.<BR>
-<BR>
-<span class='helpDefinition'>Issue Date</span>Date badge is created.<BR>
-<span class='helpDefinition'>Enroll Date</span>Date badge holder is enrolled in hand scanner.<BR>
-<span class='helpDefinition'>Badge #</span>Badge number as it appears on the physical badge and in the badge server.<BR>
-<BR>
-<span class='helpHeading'>Badge Deletion</span><BR>
-Once a badge holder has returned their badge or it has been disabled it can be deleted with the delete button.</span>";
-		return $result;
-	}
-	
 	function UpdateSettingsForiPad()
 	{
 		global $config_loginCookieDurration;

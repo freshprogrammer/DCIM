@@ -218,8 +218,14 @@
 	
 	$helpPopups = CustomFunctions::HelpPopup_MainHelp();
 	$helpPopups.= CustomFunctions::HelpPopup_Customer();
+	$helpPopups.= CustomFunctions::HelpPopup_CustomerDecom();
+	$helpPopups.= CustomFunctions::HelpPopup_Badge();
 	$helpPopups.= CustomFunctions::HelpPopup_Device();
+	$helpPopups.= CustomFunctions::HelpPopup_DevicePort();
+	$helpPopups.= CustomFunctions::HelpPopup_PortConnection();
 	$helpPopups.= CustomFunctions::HelpPopup_Location();
+	$helpPopups.= CustomFunctions::HelpPopup_PowerPanel();
+	$helpPopups.= CustomFunctions::HelpPopup_PowerCircuit();
 	echo $helpPopups;
 	?>
 		</tr>

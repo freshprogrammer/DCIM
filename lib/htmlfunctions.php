@@ -814,8 +814,7 @@
 				//edit Customer button - not visible till in edit mode
 				if(UserHasWritePermission())
 				{
-					echo "<div id='customerDecomHelpPopup' class='helpPopup'>".CustomerDecomHelpPopup()."</div>";
-					echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('customerDecomHelpPopup');\">Decom Help</a></span>\n";
+					echo "<span class='editButtons_hidden'><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_customerdecom');\">Decom Help</a></span>\n";
 					
 					$formAction = "./?host=$hNo";
 					echo CreateQACell("dcim_customer", $hNo, $formAction,$editUserID, $editDate, $qaUserID, $qaDate,false);
@@ -1458,8 +1457,7 @@
 			// add button to add new badge
 			echo "<button class='editButtons_hidden' onclick=\"EditBadge(true,-1,'$input','','','P','".date("Y-m-d")."')\">Add New</button>\n";
 			
-			echo "<div id='badgeHelpPopup' class='helpPopup'>".BadgeHelpPopup()."</div>";
-			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('badgeHelpPopup');\">Help</a></span>\n";
+			echo "<span class=''><a class='helpLink' href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_badge');\">Help</a></span>\n";
 		}
 		echo "<BR>\n";
 		
