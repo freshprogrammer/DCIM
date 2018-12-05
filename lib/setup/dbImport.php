@@ -395,12 +395,14 @@ function SelectImportForm()
 		foreach ($importObjects as $rec)
 		{
 			//get upsid
-			$upsID = ValidImportUPS($rec->site,$rec->ups,$rec->name);
+			if(strlen($rec->ups)>0)$upsID = ValidImportUPS($rec->site,$rec->ups,$rec->name);
+			else $upsID = -1;
+			$validUPS = $upsID!=-1 || strlen($rec->ups)==0;
 			
 			//get roomid
 			$roomID = ValidImportRoom($rec->site,$rec->room,$rec->name);
 			
-			if($upsID !=-1 && $roomID !=-1)
+			if($validUPS && $roomID !=-1)
 			{//Do import - spoof input
 				$_GET['upsid']= $upsID;
 				$_GET['roomid']= $roomID;
@@ -714,6 +716,11 @@ function SelectImportForm()
 		global $errorMessage;
 		global $resultMessage;
 		global $debugMessage;
+		
+		if(strlen($ups)==0)
+		{//null ups is allowed
+			return -1;
+		}
 		
 		$testSite = true;
 		$result = -1;
