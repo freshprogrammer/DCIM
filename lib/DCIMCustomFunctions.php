@@ -72,23 +72,103 @@
 			return array_search($hNo,CustomFunctions::GetInternalHNos());
 		}
 		
-		public static function RemotePowerPanelAuditHelpPopup()
+		public static function HelpPopup_MainHelp()
 		{
-			global $userSiteID;
-			//Power Audit Creator can be found in a seperate repo here http://github.com/freshprogrammer/ExcelController/releases
-			
-			$date = date("Y-m-d");
-			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Creator</span><BR>
-			After a DC power audit has been done and the data has all been updated in DCIM a RPP Audit workbook can be created.<BR>
-			Simply export the power data then run the RPP Audit creation tool.
-			The tool will prompt for a data file and a template file and then create the new workbook for you.
-			From there you can easily save it with an appropriate name and upoad.<BR>
-			<BR>
-			<a href='#' onClick='var input= prompt(\"Please enter a date\", \"$date\");
-			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerAudit&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
-			<a href='./files/RPP Audit Creator.exe'>RPP Audit Creation Tool</a><BR>
-			<a href='./files/RPP Audit - Template.xlsx'>Template File</a>
-			</span>";
+			$result = "<div id='helpPopup_main' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Help Topics</span><BR>
+<ul class='helpBullets'>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_customer');\">Customers</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_device');\">Devices</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_deviceport');\">Device Ports</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_portconnection');\">Device Connections</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_location');\">Locations</a></li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Customer()
+		{
+			$result = "<div id='helpPopup_customer' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Customers</span><BR>
+<ul class='helpBullets'>
+<li>Added from link in header</li>
+<li>Requires unique H# and C#</li>
+<li>Should be set to inactive on decommision. Cannot be deleted</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Device()
+		{
+			$result = "<div id='helpPopup_device' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Devices</span><BR>
+<ul class='helpBullets'>
+<li>Added from their customers page</li>
+<li>Edited from Customer page or Device page</li>
+<li>Requires a unique device name/member combo. (IRV01.VC1 Member 0 and IRV01.VC1 Member 1 are allowed)</li>
+<li>Device Name should be the official device name (123456-7) whenever possible with the AltName being the user friendly name (DB_Web_01)</li>
+<li>Colo Space should be added as a colo device (usualy Size:Full, Unit:0)</li>
+<li>Internal devices should be added to the correct internal H#</li>
+<li>Correct number of ports will be automaticly created for the seleced model. (Unknown models are created with just 1 port)</li>
+<li>Should never be deleted. Should be set as Inactive durring decommision with noted ticket number. (Inactive devices will not show up on location page or in device drop downs)</li>
+<li>When adding or removing devices, make sure to ask your local Admin to update the location allocation</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_DevicePort()
+		{
+			$result = "<div id='helpPopup_deviceport' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Device Port</span><BR>
+<ul class='helpBullets'>
+<li>Added/Edited from the Device page</li>
+<li>Patch ports should match the patch name as best as possible</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PortConnection()
+		{
+			$result = "<div id='helpPopup_portconnection' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Device Connections</span><BR>
+<ul class='helpBullets'>
+<li>Added/Edited from the Customer Page or the Device page</li>
+<li>Connection drop down only shows available ports</li>
+<li>Please note any patches between the 2 devices</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Location()
+		{
+			$result = "<div id='helpPopup_location' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Locations</span><BR>
+<ul class='helpBullets'>
+<li>Added from Room page</li>
+<li>Edited from Room page or Location Page</li>
+<li>Requires unique name within the Room</li>
+<li>Mouse over position fields for additional help</li>
+<li>Visualy colored baced on allocation</li>
+<ul style='margin-left:40px;'>
+<li>Empty : Light Gray</li>
+<li>Managed : Dark Gray</li>
+<li>Internal : Purple</li>
+<li>Colo : Cyan</li>
+<li>Reserved : Light Cyan</li>
+</ul>
+</ul>
+</span>
+</div>";
 			return $result;
 		}
 		

@@ -153,6 +153,8 @@
 	$menuItems .= "</td>\n";
 	
 	$multipleSites = true;
+	$showHelpMenu = true;
+	
 	if($multipleSites)
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
@@ -176,6 +178,13 @@
 		
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
 		$menuItems .= "	<a href='./?userid=$userID'>Users</a>\n";
+		$menuItems .= "</td>\n";
+	}
+	if($showHelpMenu)
+	{
+		
+		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
+		$menuItems .= "<a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_main');\">Help</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(CustomFunctions::UserHasDevPermission())
@@ -202,11 +211,16 @@
 		$menuItems .= "</td>\n";
 	}
 	else
-	{
-		//keep format and left seperator
+	{//keep format and left seperator
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item'>&nbsp;</td>\n";
 	}
 	echo $menuItems;
+	
+	$helpPopups = CustomFunctions::HelpPopup_MainHelp();
+	$helpPopups.= CustomFunctions::HelpPopup_Customer();
+	$helpPopups.= CustomFunctions::HelpPopup_Device();
+	$helpPopups.= CustomFunctions::HelpPopup_Location();
+	echo $helpPopups;
 	?>
 		</tr>
 		</tbody>

@@ -456,16 +456,18 @@
 	
 	function CustomerDecomHelpPopup()
 	{
-		$result = "<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>
-1.) Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>
-2.) Delete connections to match cabling in DC.<BR>
-3.) Disable & delete badges to match badge server.<BR>
-4.) Update circuits turning off power if location is empty as you should at the panel.<BR>
-5.) Mark device(s) inactive (will remain linked to this location for history).<BR>
-6.) Mark customer as inactive.<BR>
-7.) Ask co-worker to QA your work.<BR>
+		global $config_subnetsEnabled;
+		
+		$result = "<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>\n";
+		if($config_subnetsEnabled)$result .= "Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>\n";
+		$result .= "Delete connections to match cabling in DC.<BR>
+Disable & delete badges to match badge server.<BR>
+Update circuits turning off power if location is empty as you should at the panel.<BR>
+Mark device(s) inactive (will remain linked to this location for history).<BR>
+Mark customer as inactive.<BR>
+Ask co-worker to QA your work.<BR>
 <BR>
-Basically update everything as necessary to match the real counterparts (IPs, cables, badges, circuits)</span>";
+Basically update everything as necessary to match the real counterparts (cables, badges, circuits)</span>";
 		return $result;
 	}
 	
@@ -481,7 +483,7 @@ All badge information here should match the information in the badge server with
 <span class='helpDefinition'>Disabled</span>Badge has been disabled manually disabled revoking customer access and can be deleted here and on the badge server at the discretion of the internal staff.<BR>
 <span class='helpDefinition'>Returned</span>Badge has been returned to internal staff and can be deleted from here and badge server.<BR>
 <BR>
-<span class='helpDefinition'>Issue Date</span>Date badge is created.<BR> 
+<span class='helpDefinition'>Issue Date</span>Date badge is created.<BR>
 <span class='helpDefinition'>Enroll Date</span>Date badge holder is enrolled in hand scanner.<BR>
 <span class='helpDefinition'>Badge #</span>Badge number as it appears on the physical badge and in the badge server.<BR>
 <BR>
