@@ -740,7 +740,7 @@
 					LEFT JOIN dcim_room AS r ON l.roomid=r.roomid
 					LEFT JOIN dcim_site AS s ON r.siteid=s.siteid
 					LEFT JOIN dcim_customer AS c ON dl.hno=c.hno
-				WHERE s.siteid LIKE '%' AND (dl.status<>d.status || dl.status<>dh.status || d.status<>dh.status || d.status IS NULL || dh.status IS NULL)
+				WHERE s.siteid LIKE ? AND (dl.status<>d.status || dl.status<>dh.status || d.status<>dh.status || d.status IS NULL || dh.status IS NULL)
 				ORDER BY dl.status IS NULL DESC, dl.status DESC,d.status,d.editdate DESC";
 		
 		if(!($stmt = $mysqli->prepare($query2)) || !$stmt->bind_Param('s', $siteIDFilter) || !$stmt->execute())
@@ -756,53 +756,46 @@
 		$longResult = "";
 		if($count>0 || $count2>0)
 		{
-			/*
-Log	Device	Hist			
-DL	D	DH			
-A	A	A		Good	
-A	A	I			Marked Active
-A	A	N			New
-A	I	A		Shouldn't be possible	
-A	I	I		Shouldn't be possible	
-A	I	N		Shouldn't be possible	
-A	N	A			Deleted
-A	N	I			Deleted
-A	N	N			Deleted Long Ago
-I	A	A		Shouldn't be possible	
-I	A	I		Shouldn't be possible	
-I	A	N		Shouldn't be possible	
-I	I	A			Marked Inactive
-I	I	I		Good	
-I	I	N			New and Inactive
-I	N	A			Deleted
-I	N	I			Deleted
-I	N	N		Good	Deleted Long Ago
-N	A	A		Impossible	
-N	A	I		Impossible	
-N	A	N		Impossible	
-N	I	A		Impossible	
-N	I	I		Impossible	
-N	I	N		Impossible	
-N	N	A		Impossible	
-N	N	I		Impossible	
-N	N	N		Impossible	
-
-			 */
 			$longResult.= CreateDataTableHeader(array("Change&#x25B2;","Device","Location","Unit","Model","Size","Type","Asset","Status","Notes","Tech","Date&#x25BC;"));
 			
 			while ($stmt->fetch())
 			{//list added devices and status changes
-				$change = ($status=="A") ? "Marked Acitve" : "Marked Inacitve";
-				if($dlStatus==null || strlen($dlStatus)==0)$change = "New";
+				//build stati variable with 3 character (IE 'IAI' or 'NAI') for log status, current status and history status
+				$stati = "";
+				$stati.= ($dlStatus==null) ? "N" : $dlStatus;
+				$stati.= ($dStatus==null) ? "N" : $dStatus;
+				$stati.= ($dhStatus==null) ? "N" : $dhStatus;
 				
-				if($dlStatus==$dStatus)
-				{//device record is correct
-					if()
-				}
-				else
-				{
-					if($dStatus==null || strlen($dStatus)==0) $change = "Deleted";
-				}
+				//create change description baced on all possibilities breakdown - many of these are filtered out by the SQL
+				if     ($stati=="AAA")$change = "Good";
+				else if($stati=="AAI")$change = "Marked Active";
+				else if($stati=="AAN")$change = "New";
+				else if($stati=="AIA")$change = "Shouldn't be possible";
+				else if($stati=="AII")$change = "Shouldn't be possible";
+				else if($stati=="AIN")$change = "Shouldn't be possible";
+				else if($stati=="ANA")$change = "Deleted";
+				else if($stati=="ANI")$change = "Deleted";
+				else if($stati=="ANN")$change = "Deleted Long Ago";
+				else if($stati=="IAA")$change = "Shouldn't be possible";
+				else if($stati=="IAI")$change = "Shouldn't be possible";
+				else if($stati=="IAN")$change = "Shouldn't be possible";
+				else if($stati=="IIA")$change = "Marked Inactive";
+				else if($stati=="III")$change = "Good";
+				else if($stati=="IIN")$change = "New and Inactive";
+				else if($stati=="INA")$change = "Deleted";
+				else if($stati=="INI")$change = "Deleted";
+				else if($stati=="INN")$change = "Added then deleted";//deleted
+				else if($stati=="NAA")$change = "Impossible";
+				else if($stati=="NAI")$change = "Impossible";
+				else if($stati=="NAN")$change = "Impossible";
+				else if($stati=="NIA")$change = "Impossible";
+				else if($stati=="NII")$change = "Impossible";
+				else if($stati=="NIN")$change = "Impossible";
+				else if($stati=="NNA")$change = "Impossible";
+				else if($stati=="NNI")$change = "Impossible";
+				else if($stati=="NNN")$change = "Impossible";
+				else                  $change = "Unknown";
+				//$change .= "($stati)";//show all 3 stati for debuging
 				
 				$visibleNotes = TruncateWithSpanTitle(MakeHTMLSafe(htmlspecialchars($notes)));
 				$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
