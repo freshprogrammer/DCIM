@@ -810,23 +810,22 @@ function SelectImportForm()
 		if(!ValidImportDeviceModel($rec->model))
 		{
 			$rec->size = "1U";
-			$errorMessage[]="Unknown Model (".$rec->model.") Device:".$rec->name;
+			$errorMessage[]="Warning - Unknown Model (".$rec->model.") Device:".$rec->name;
 		}
 		else
 		{
-			$rec->size = "1U";//pull from model array
-			//$resultMessage[]="Valid Model (".$rec->model.") Device:".$rec->name;
+			$deviceInfo = GetDeviceFromModelName($rec->model);
+			$rec->size = $deviceInfo->units."U";//pull from model array
 		}
 		
 		$valid = true;
 		if($locationid==-1)$valid = false;
 		if($hno==-1)$valid = false;
 		
-		if($valid)
+		if($valid)//additional validation will be done when actualy adding the device
 		{
 			if($fullProcessing)
 				$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
-			$rec->locationid = $locationid;
 			$rec->locationid = $locationid;
 		}
 		else
