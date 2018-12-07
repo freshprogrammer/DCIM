@@ -1624,17 +1624,17 @@
 	
 	function ValidHNo($input)
 	{
-		return ValidNumber($input,"Hosting Account #",5,6);
+		return ValidNumber($input,"Hosting Account #",4,6);
 	}
 	
 	function ValidCNo($input)
 	{
-		return ValidNumber($input,"Customer #",5,6);
+		return ValidNumber($input,"Customer #",4,6);
 	}
 	
 	function ValidCustomerName($input)
 	{
-		return ValidString($input,"Customer Name",3,50);
+		return ValidString($input,"Customer Name",3,128);
 	}
 	
 	function ValidCustomerStatus($input)
