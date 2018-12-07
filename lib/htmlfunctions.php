@@ -3077,7 +3077,7 @@
 			if($roomPage && CustomFunctions::UserHasLocationPermission())
 			{
 				//add, locationID, roomID, name, altName, type, units, orientation, keyno, allocation, order, x, y, width, depth, note)
-				$params = "true, -1, $roomID, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3.5, ''";
+				$params = "true, -1, $input, '', '', '', 42, 'N', '', 'E', 'R', 0, 0, 2, 3.5, ''";
 				$result .= "<button type='button' class='editButtons_hidden' onclick=\"EditLocation($params);\">Add New</button>";
 			}
 			$result .= "<BR>";
