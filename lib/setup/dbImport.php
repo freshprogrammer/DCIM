@@ -339,20 +339,20 @@ function SelectImportForm()
 			{
 				switch($i % $fieldCount)
 				{
-					case 0:$roomid		=trim($rec);break;
-					case 1:$name		=trim($rec);break;
-					case 2:$altname		=trim($rec);break;
-					case 3:$allocation	=trim($rec);break;
-					case 4:$keyno		=trim($rec);break;
-					case 5:$type		=trim($rec);break;
-					case 6:$units		=trim($rec);break;
-					case 7:$order		=trim($rec);break;
-					case 8:$xpos		=trim($rec);break;
-					case 9:$ypos		=trim($rec);break;
-					case 10:$width		=trim($rec);break;
-					case 11:$depth		=trim($rec);break;
-					case 12:$orientation=trim($rec);break;
-					case 13:$notes		=trim($rec);break;
+					case 0:$roomid		=trim($field);break;
+					case 1:$name		=trim($field);break;
+					case 2:$altname		=trim($field);break;
+					case 3:$allocation	=trim($field);break;
+					case 4:$keyno		=trim($field);break;
+					case 5:$type		=trim($field);break;
+					case 6:$units		=trim($field);break;
+					case 7:$order		=trim($field);break;
+					case 8:$xpos		=trim($field);break;
+					case 9:$ypos		=trim($field);break;
+					case 10:$width		=trim($field);break;
+					case 11:$depth		=trim($field);break;
+					case 12:$orientation=trim($field);break;
+					case 13:$notes		=trim($field);break;
 				}
 				$i++;
 			}
@@ -432,8 +432,8 @@ function SelectImportForm()
 		$depth = "";
 		$orientation = "";
 		$notes = "";
-		$fieldCount = 5;
-		$descriptor = "customer";//for error reporting
+		$fieldCount = 12;
+		$descriptor = "power panel";//for error reporting
 		
 		$importData= GetInput("importdata",true,false);
 		$lines = explode("\n", $importData);
@@ -451,18 +451,18 @@ function SelectImportForm()
 			{
 				switch($i % $fieldCount)
 				{
-					case 0:$site		=trim($rec);break;
-					case 1:$room		=trim($rec);break;
-					case 2:$name		=trim($rec);break;
-					case 3:$ups			=trim($rec);break;
-					case 4:$circuits	=trim($rec);break;
-					case 5:$amps		=trim($rec);break;
-					case 6:$xpos		=trim($rec);break;
-					case 7:$ypos		=trim($rec);break;
-					case 8:$width		=trim($rec);break;
-					case 9:$depth		=trim($rec);break;
-					case 10:$orientation=trim($rec);break;
-					case 11:$notes		=trim($rec);break;
+					case 0:$site		=trim($field);break;
+					case 1:$room		=trim($field);break;
+					case 2:$name		=trim($field);break;
+					case 3:$ups			=trim($field);break;
+					case 4:$circuits	=trim($field);break;
+					case 5:$amps		=trim($field);break;
+					case 6:$xpos		=trim($field);break;
+					case 7:$ypos		=trim($field);break;
+					case 8:$width		=trim($field);break;
+					case 9:$depth		=trim($field);break;
+					case 10:$orientation=trim($field);break;
+					case 11:$notes		=trim($field);break;
 				}
 				$i++;
 			}
@@ -569,16 +569,16 @@ function SelectImportForm()
 			{
 				switch($i % $fieldCount)
 				{
-					case 0:$site		=trim($rec);break;
-					case 1:$room		=trim($rec);break;
-					case 2:$location 	=trim($rec);break;
-					case 3:$panel		=trim($rec);break;
-					case 4:$circuit		=trim($rec);break;
-					case 5:$volts		=trim($rec);break;
-					case 6:$amps		=trim($rec);break;
-					case 7:$status		=trim($rec);break;
-					case 8:$load		=trim($rec);break;
-					case 9:$phase		=trim($rec);break;
+					case 0:$site		=trim($field);break;
+					case 1:$room		=trim($field);break;
+					case 2:$location 	=trim($field);break;
+					case 3:$panel		=trim($field);break;
+					case 4:$circuit		=trim($field);break;
+					case 5:$volts		=trim($field);break;
+					case 6:$amps		=trim($field);break;
+					case 7:$status		=trim($field);break;
+					case 8:$load		=trim($field);break;
+					case 9:$phase		=trim($field);break;
 				}
 				$i++;
 			}
@@ -754,7 +754,7 @@ function SelectImportForm()
 	}
 	
 	function ImportDevice_Test($rec)
-	{//reports all exceptions
+	{//test device reports all exceptions
 		global $errorMessage;
 		global $resultMessage;
 		
