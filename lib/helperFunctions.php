@@ -18,6 +18,7 @@
 		public $partOfChasis = false;
 		public $doubleRow = false;
 		public $portsPerSet = 12;
+		public $units = 1;
 		public $showDeviceImage = false;
 		
 		//further defined in constructor based on model
@@ -25,7 +26,7 @@
 		public $deviceHeightPx = 97;
 		public $deviceImage = "images/devices/ex4200_front.jpg";
 		
-		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet,$showDeviceImage) 
+		function __construct($name, $startPort, $portCount, $coloDevice, $gigabit, $partOfChasis, $doubleRow, $portsPerSet, $units,$showDeviceImage) 
 		{
 			$this->name = $name;
 			$this->startPort = $startPort;
@@ -35,6 +36,7 @@
 			$this->partOfChasis = $partOfChasis;
 			$this->doubleRow = $doubleRow;
 			$this->portsPerSet = $portsPerSet;
+			$this->units = $units;
 			$this->showDeviceImage = $showDeviceImage;
 			
 			//device render properties that are differnet for each model
@@ -169,7 +171,7 @@
 	{
 		global $deviceModels;
 		global $genericDeviceModel;
-		$genericDeviceModel = new DeviceModel("Generic Device", 1, 1,false,true,false,false, 1,false);
+		$genericDeviceModel = new DeviceModel("Generic Device", 1, 1,false,true,false,false, 1, 1,false);
 		
 		/* This is here and not in a small lookup table just because other code in ShowDevicePage() is customizing CSS for basicly each device and I feel better with code dependant on code instead of DB records
 		 * I supose this could be a modelID in dcim_device and and a dcim_model table which might make future device additions easier but then small CSS tweaks show be done in DB values which sounds super anoying.
@@ -181,61 +183,60 @@
 		 */
 		$deviceModels = array();
 		
-		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, true);//colo cabs and cages
-		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1, 2,true,false,false,false, 6, true);
-		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 2,true,false,false,false, 6,false);
+		$deviceModels[] = new DeviceModel("Colo Cabinet"				, 1, 2,true,false,false,false, 6, 1, true);//colo cabs and cages
+		$deviceModels[] = new DeviceModel("Colo Half Cabinet"			, 1, 2,true,false,false,false, 6, 1, true);
+		$deviceModels[] = new DeviceModel("Colo Cage"					, 1, 2,true,false,false,false, 6, 1,false);
 		
-		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Misc"						, 1, 1,false,true,false,false, 1, 1,false);
 		
-		$deviceModels[] = new DeviceModel("Alert Logic"					, 1, 1,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Cisco ASA 5505"				, 0, 8,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Cisco ASA 5510"				, 0, 3,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Cisco Catalyst 3550"			, 1,48,false,false,false, true,16, true);
-		$deviceModels[] = new DeviceModel("Cisco WS-X6348"				, 1,48,false,false, true, true,12, true);
-		$deviceModels[] = new DeviceModel("Cisco WS-X6K-SUP2-2GE"		, 1, 2,false, true, true,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1550"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1650"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1750"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850G2"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G2"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G3"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G2"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G3"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge 5324"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R200"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R300"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R310"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R410"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R430"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R510"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R610"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R630"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R710"			, 1, 4,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R720"			, 1, 4,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Dell PowerEdge R730"			, 1, 4,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("EMC DS-300B"					, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper EX3200 24p"			, 0,24,false,true,false,true ,12,true);
-		$deviceModels[] = new DeviceModel("Juniper EX3200 48p"			, 0,48,false,true,false,true ,12,true);
-		$deviceModels[] = new DeviceModel("Juniper EX3300 48p"			, 0,48,false,true,false,true ,12,true);
-		$deviceModels[] = new DeviceModel("Juniper EX4200 24p"			, 0,24,false,true,true ,true ,12,true);
-		$deviceModels[] = new DeviceModel("Juniper EX4200 48p"			, 0,48,false,true,true ,true ,12,true);
-		$deviceModels[] = new DeviceModel("F5 BIG-IP 1600"				, 0, 4,false,true,true ,true , 2,true);
-		$deviceModels[] = new DeviceModel("Juniper MX80"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SRX100"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SRX100H2"			, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SRX220"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SRX650"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1,false);//duplicate
-		$deviceModels[] = new DeviceModel("Juniper SSG5"				, 0, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("SuperMicro 6026T"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("SuperMicro 6027R"			, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("SuperMicro SSG-6027R"		, 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("SuperMicro CSE-836E16-R1200B", 1, 2,false,true,false,false, 1,false);
-		$deviceModels[] = new DeviceModel("SuperMicro SC811T-260"		, 1, 2,false,true,false,false, 1,false);
+		$deviceModels[] = new DeviceModel("Alert Logic"					, 1, 1,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco ASA 5505"				, 0, 8,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco ASA 5510"				, 0, 3,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Cisco Catalyst 3550"			, 1,48,false,false,false,true,16, 1, true);
+		$deviceModels[] = new DeviceModel("Cisco WS-X6348"				, 1,48,false,false,true, true,12, 1, true);
+		$deviceModels[] = new DeviceModel("Cisco WS-X6K-SUP2-2GE"		, 1, 2,false,true, true,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1550"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1650"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1750"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1850G2"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G2"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 1950G3"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G2"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 2950G3"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge 5324"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R200"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R300"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R310"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R410"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R430"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R510"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R610"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R630"			, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R710"			, 1, 4,false,true,false,false, 1, 2,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R720"			, 1, 4,false,true,false,false, 1, 2,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R730"			, 1, 4,false,true,false,false, 1, 2,false);
+		$deviceModels[] = new DeviceModel("EMC DS-300B"					, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("F5 BIG-IP 1600"				, 0, 4,false,true,true ,true , 2, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX3200 24p"			, 0,24,false,true,false,true ,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX3200 48p"			, 0,48,false,true,false,true ,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX3300 48p"			, 0,48,false,true,false,true ,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX4200 24p"			, 0,24,false,true,true ,true ,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX4200 48p"			, 0,48,false,true,true ,true ,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper MX80"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX100"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX100H2"			, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX220"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SRX650"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG140"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("Juniper SSG5"				, 0, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro 6026T"			, 1, 2,false,true,false,false, 1, 2,false);
+		$deviceModels[] = new DeviceModel("SuperMicro 6027R"			, 1, 2,false,true,false,false, 1, 2,false);
+		$deviceModels[] = new DeviceModel("SuperMicro SSG-6027R"		, 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro CSE-836E16-R1200B", 1, 2,false,true,false,false, 1, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro SC811T-260"		, 1, 2,false,true,false,false, 1, 1,false);
 	}
 	
 	function GetTableRecordDescription($table)
