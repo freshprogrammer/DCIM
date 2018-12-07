@@ -87,7 +87,7 @@ function SelectImportForm()
 		if($commited)
 		{//must have passed all checks
 			$debugMessage[]= "-Start - RunImport()";
-			RunImport(false);
+			RunImport(true);
 			$debugMessage[]= "-End - RunImport()";
 		}
 		else
@@ -750,7 +750,7 @@ function SelectImportForm()
 		$validCount = 0;
 		foreach ($importObjects as $rec)
 		{
-			if(ImportDevice_Test($rec,$fullProcessing))
+			if(ImportDevice_processing($rec,$fullProcessing))
 			{//spoof input - do import
 				$_GET['hno']= $rec->hno;
 				$_GET['devicename']= $rec->name;
