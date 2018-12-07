@@ -239,7 +239,7 @@ function SelectImportForm()
 			}
 			$importObjects[]= new CustomerRec($hno,$cno,$name,$status,$notes);
 		}
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		if($fullProcessing) $resultMessage[]="Atempting import of ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
@@ -358,7 +358,7 @@ function SelectImportForm()
 			}
 			$importObjects[]= new LocationRec($roomid,$name,$altname,$allocation,$keyno,$type,$units,$order,$xpos,$ypos,$width,$depth,$orientation,$notes);
 		}
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		if($fullProcessing) $resultMessage[]="Atempting import of ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
@@ -468,7 +468,7 @@ function SelectImportForm()
 			}
 			$importObjects[]= new PowerPanelRec($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes);
 		}
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		if($fullProcessing) $resultMessage[]="Atempting import of ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
@@ -584,7 +584,7 @@ function SelectImportForm()
 			}
 			$importObjects[]= new PowerCircuitRec($site,$room,$location,$panel,$circuit,$volts,$amps,$status,$load,$phase);
 		}
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		if($fullProcessing) $resultMessage[]="Atempting import of ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		$totalAffectedCount = 0;
@@ -744,13 +744,13 @@ function SelectImportForm()
 			}
 			$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
 		}
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		if($fullProcessing) $resultMessage[]="Atempting import of ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		$validCount = 0;
 		foreach ($importObjects as $rec)
 		{
-			if(ImportDevice_processing($rec,$fullProcessing))
+			if(ImportDevice_Validation($rec,$fullProcessing))
 			{//spoof input - do import
 				$_GET['hno']= $rec->hno;
 				$_GET['devicename']= $rec->name;
@@ -761,7 +761,7 @@ function SelectImportForm()
 				$_GET['unit']= $rec->unit;
 				$_GET['status']= $rec->status;
 				$_GET['notes']= $rec->note;
-				$_GET['model']= $rec->ypos;
+				$_GET['model']= $rec->model;
 				$_GET['member']= $rec->member;
 				$_GET['asset']= $rec->asset;
 				$_GET['serial']= $rec->serial;
@@ -770,10 +770,10 @@ function SelectImportForm()
 				if($fullProcessing) ProcessDeviceAction("Device_Add");
 			}
 		}
-		$resultMessage[]="Sucsess with  $validCount devices...";
+		$resultMessage[]="Processed $validCount devices past initial validation";
 	}
 	
-	function ImportDevice_processing($rec,$fullProcessing)
+	function ImportDevice_Validation($rec,$fullProcessing)
 	{//test device reports all exceptions - and/or update fields for import process - return true if data seems valid
 		global $errorMessage;
 		global $resultMessage;
@@ -808,9 +808,9 @@ function SelectImportForm()
 		
 		//testModel - update size
 		if(!ValidImportDeviceModel($rec->model))
-		{
+		{//unknown model
 			$rec->size = "1U";
-			$errorMessage[]="Warning - Unknown Model (".$rec->model.") Device:".$rec->name;
+			//$errorMessage[]="Warning - Unknown Model (".$rec->model.") Device:".$rec->name;
 		}
 		else
 		{
@@ -824,12 +824,10 @@ function SelectImportForm()
 		
 		if($valid)//additional validation will be done when actualy adding the device
 		{
-			if($fullProcessing)
-				$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+			//if($fullProcessing)$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
 			$rec->locationid = $locationid;
 		}
-		else
-			$errorMessage[]="Failed Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+		
 		return $valid;
 	}
 	
@@ -1027,7 +1025,7 @@ function SelectImportForm()
 			{
 				$stmt->store_result();
 				if($stmt->num_rows==1) $validSite = true;
-				else $errorMessage[] = "ValidImportLocation() - Invalid Site for ValidImportLocation($site $room $loc) device:($deviceName)";
+				else $errorMessage[] = "ValidImportLocation($site $room $loc) - Invalid Site for device:($deviceName)";
 			}
 		}
 		
@@ -1044,7 +1042,7 @@ function SelectImportForm()
 			{
 				$stmt->store_result();
 				if($stmt->num_rows==1) $validRoom = true;
-				else $errorMessage[] = "ValidImportLocation() - Invalid Room for ValidImportLocation($site $room $loc) device:($deviceName)";
+				else $errorMessage[] = "ValidImportLocation($site $room $loc) - Invalid Room for device:($deviceName)";
 			}
 		}
 		
@@ -1067,7 +1065,7 @@ function SelectImportForm()
 					$stmt->fetch();
 					$result = $locationID;
 				}
-				else $errorMessage[] = "ValidImportLocation() - Invalid Location for ValidImportLocation($site $room $loc) device:($deviceName)";
+				else $errorMessage[] = "ValidImportLocation($site $room $loc) - Invalid Location for device:($deviceName)";
 			}
 		}
 		return $result;

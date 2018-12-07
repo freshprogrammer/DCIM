@@ -1312,12 +1312,11 @@
 		
 		$query = "SELECT * 
 			FROM dcim_customer
-			WHERE hno =?";
+			WHERE hno = ?";
 				
 		if (!($stmt = $mysqli->prepare($query))) 
 		{
-			//TODO handle Errors better
-			$errorMessage[] = "ValidCustomer($hNo): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
+			$errorMessage[] = "ValidCustomer(H#$hNo): Prepare failed: (" . $mysqli->errno . ") " . $mysqli->error . "<BR>";
 			return false;
 		}
 		$stmt->bind_Param('s', $hNo);
@@ -1332,20 +1331,20 @@
 				return true;
 			else
 			{
-				$errorMessage[] = "Customer already exists - ValidCustomer($hNo).";
+				$errorMessage[] = "Customer already exists - ValidCustomer(H#$hNo).";
 				return false;
 			}
 		}
 		else if($count==2)
 		{
-			$errorMessage[] = "Multiple Customers found in ValidCustomer($hNo). Contact Admin.";
+			$errorMessage[] = "Multiple Customers found in ValidCustomer(H#$hNo). Contact Admin.";
 			return false;
 		}
 		else
 		{
 			if($shouldFind)
 			{
-				$errorMessage[] = "Customer not found - ValidCustomer($hNo).";
+				$errorMessage[] = "Customer not found - ValidCustomer(H#$hNo).";
 				return false;
 			}
 			else
