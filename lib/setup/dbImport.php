@@ -205,40 +205,44 @@ function SelectImportForm()
 		global $resultMessage;
 		
 		//customer - hno,cno,name,status,note
-		$customerData= GetInput("importdata",true,false);
-		
-		$customerData= str_replace("\n",",",$customerData);
-		$customerData= explode(",", $customerData);
-		
-		$importObjects = array();
-		$i = 0;
-		$fields = 5;
-		
 		$hno="";
 		$cno="";
 		$name="";
 		$status="";
 		$notes="";
+		$fieldCount = 5;
+		$descriptor = "customer";//for error reporting
 		
-		foreach ($customerData as $rec)
+		$importData= GetInput("importdata",true,false);
+		$lines = explode("\n", $importData);
+		$importObjects = array();
+		foreach ($lines as $line)
 		{
-			switch($i % $fields)
+			$fields= explode(",", $line);
+			if(count($fields)!=$fieldCount)
 			{
-				case 0:$hno		=trim($rec);break;
-				case 1:$cno		=trim($rec);break;
-				case 2:$name	=trim($rec);break;
-				case 3:$status	=trim($rec);break;
-				case 4:$notes	=trim($rec);
-				
-				$importObjects[]= new CustomerRec($hno,$cno,$name,$status,$notes);
-				break;
+				$errorMessage[]="Unknown field count while adding $descriptor - $line";
+				continue;
 			}
-			$i++;
+			$i = 0;
+			foreach ($fields as $field)
+			{
+				switch($i % $fieldCount)
+				{
+					case 0:$hno		=trim($field);break;
+					case 1:$cno		=trim($field);break;
+					case 2:$name	=trim($field);break;
+					case 3:$status	=trim($field);break;
+					case 4:$notes	=trim($field);break;
+				}
+				$i++;
+			}
+			$importObjects[]= new CustomerRec($hno,$cno,$name,$status,$notes);
 		}
 		
 		//add Customer
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." Customers...";
-		else $resultMessage[]="Dry run adding ".count($importObjects)." Customers";
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
 		{//spoof input
@@ -678,15 +682,6 @@ function SelectImportForm()
 		global $resultMessage;
 		
 		//locations- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
-		$deviceData= GetInput("importdata",true,false);
-		
-		$deviceData= str_replace("\n",",",$deviceData);
-		$deviceData= explode(",", $deviceData);
-		
-		$importObjects = array();
-		$i = 0;
-		$fields = 15;
-		
 		$siteName="";
 		$roomName="";
 		$locName="";
@@ -702,36 +697,44 @@ function SelectImportForm()
 		$asset="";
 		$serial="";
 		$note="";
+		$fieldCount = 15;
+		$descriptor = "device";//for error reporting
 		
-		foreach ($deviceData as $rec)
+		$importData= GetInput("importdata",true,false);
+		$lines = explode("\n", $importData);
+		$importObjects = array();
+		foreach ($lines as $line)
 		{
-			if(strlen($rec)>2 && $rec[0]=='"' && substr($rec,-1)=='"')
+			$fields= explode(",", $line);
+			if(count($fields)!=$fieldCount)
 			{
-				$rec = substr($rec, 1, -1);//trim start and end quotes
-				$rec= str_replace('""', '', $rec);//replace double double quotes with single double quotes
+				$errorMessage[]="Unknown field count while adding $descriptor - $line";
+				continue;
 			}
-			switch($i % $fields)
+			$i = 0;
+			foreach ($fields as $field)
 			{
-				case 0:$siteName	= ($rec);break;
-				case 1:$roomName	= ($rec);break;
-				case 2:$locName		= ($rec);break;
-				case 3:$hno			= ($rec);break;
-				case 4:$name		= ($rec);break;
-				case 5:$altname		= ($rec);break;
-				case 6:$member		= ($rec);break;
-				case 7:$model		= ($rec);break;
-				case 8:$unit		= ($rec);break;
-				case 9:$type		= ($rec);break;
-				case 10:$size		= ($rec);break;
-				case 11:$status		= ($rec);break;
-				case 12:$asset		= ($rec);break;
-				case 13:$serial		= ($rec);break;
-				case 14:$note		= ($rec);
-				
-				$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
-				break;
+				switch($i % $fieldCount)
+				{
+					case 0:$siteName	= ($field);break;
+					case 1:$roomName	= ($field);break;
+					case 2:$locName		= ($field);break;
+					case 3:$hno			= ($field);break;
+					case 4:$name		= ($field);break;
+					case 5:$altname		= ($field);break;
+					case 6:$member		= ($field);break;
+					case 7:$model		= ($field);break;
+					case 8:$unit		= ($field);break;
+					case 9:$type		= ($field);break;
+					case 10:$size		= ($field);break;
+					case 11:$status		= ($field);break;
+					case 12:$asset		= ($field);break;
+					case 13:$serial		= ($field);break;
+					case 14:$note		= ($field);break;
+				}
+				$i++;
 			}
-			$i++;
+			$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
 		}
 		
 		//add Location
