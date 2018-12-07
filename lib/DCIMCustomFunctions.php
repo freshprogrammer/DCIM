@@ -202,6 +202,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$result = "<div id='helpPopup_location' class='helpPopup'>
 <span class='helpText'><span class='helpHeading'>Locations</span><BR>
 <ul class='helpBullets'>
+<li>Requires Admin privileges</li>
 <li>Added from Room page</li>
 <li>Edited from Room page or Location Page</li>
 <li>Requires unique name within the Room</li>
@@ -225,6 +226,7 @@ Once a badge holder has returned their badge or it has been disabled it can be d
 			$result = "<div id='helpPopup_powerpanel' class='helpPopup'>
 <span class='helpText'><span class='helpHeading'>Power Panels</span><BR>
 <ul class='helpBullets'>
+<li>Requires Admin privileges</li>
 <li>Added from Room page</li>
 <li>Edited from Room page, UPS page, or Panel page</li>
 <li>Requires unique name within the Site</li>
