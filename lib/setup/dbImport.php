@@ -239,8 +239,6 @@ function SelectImportForm()
 			}
 			$importObjects[]= new CustomerRec($hno,$cno,$name,$status,$notes);
 		}
-		
-		//add Customer
 		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
 		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
@@ -308,15 +306,6 @@ function SelectImportForm()
 		global $resultMessage;
 		
 		//locations- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
-		$locationData= GetInput("importdata",true,false);
-		
-		$locationData= str_replace("\n",",",$locationData);
-		$locationData= explode(",", $locationData);
-		
-		$importObjects = array();
-		$i = 0;
-		$fields = 14;
-		
 		$roomid="";
 		$name="";
 		$altname="";
@@ -331,35 +320,46 @@ function SelectImportForm()
 		$depth="";
 		$orientation="";
 		$notes="";
+		$fieldCount = 14;
+		$descriptor = "location";//for error reporting
 		
-		foreach ($locationData as $rec)
+		$importData= GetInput("importdata",true,false);
+		$lines = explode("\n", $importData);
+		$importObjects = array();
+		foreach ($lines as $line)
 		{
-			switch($i % $fields)
+			$fields= explode(",", $line);
+			if(count($fields)!=$fieldCount)
 			{
-				case 0:$roomid		=trim($rec);break;
-				case 1:$name		=trim($rec);break;
-				case 2:$altname		=trim($rec);break;
-				case 3:$allocation	=trim($rec);break;
-				case 4:$keyno		=trim($rec);break;
-				case 5:$type		=trim($rec);break;
-				case 6:$units		=trim($rec);break;
-				case 7:$order		=trim($rec);break;
-				case 8:$xpos		=trim($rec);break;
-				case 9:$ypos		=trim($rec);break;
-				case 10:$width		=trim($rec);break;
-				case 11:$depth		=trim($rec);break;
-				case 12:$orientation=trim($rec);break;
-				case 13:$notes		=trim($rec);
-				
-				$importObjects[]= new LocationRec($roomid,$name,$altname,$allocation,$keyno,$type,$units,$order,$xpos,$ypos,$width,$depth,$orientation,$notes);
-				break;
+				$errorMessage[]="Unknown field count while adding $descriptor - $line";
+				continue;
 			}
-			$i++;
+			$i = 0;
+			foreach ($fields as $field)
+			{
+				switch($i % $fieldCount)
+				{
+					case 0:$roomid		=trim($rec);break;
+					case 1:$name		=trim($rec);break;
+					case 2:$altname		=trim($rec);break;
+					case 3:$allocation	=trim($rec);break;
+					case 4:$keyno		=trim($rec);break;
+					case 5:$type		=trim($rec);break;
+					case 6:$units		=trim($rec);break;
+					case 7:$order		=trim($rec);break;
+					case 8:$xpos		=trim($rec);break;
+					case 9:$ypos		=trim($rec);break;
+					case 10:$width		=trim($rec);break;
+					case 11:$depth		=trim($rec);break;
+					case 12:$orientation=trim($rec);break;
+					case 13:$notes		=trim($rec);break;
+				}
+				$i++;
+			}
+			$importObjects[]= new LocationRec($roomid,$name,$altname,$allocation,$keyno,$type,$units,$order,$xpos,$ypos,$width,$depth,$orientation,$notes);
 		}
-		
-		//add Location
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." locations...";
-		else $resultMessage[]="Dry run adding ".count($importObjects)." locations";
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
 		{//spoof input
@@ -420,15 +420,6 @@ function SelectImportForm()
 		global $resultMessage;
 		
 		//Power Panels- site,room,name,ups,circuits,amps,xpos,ypos,width,depth,orientation,notes
-		$panelData= GetInput("importdata",true,false);
-		
-		$panelData= str_replace("\n",",",$panelData);
-		$panelData= explode(",", $panelData);
-		
-		$importObjects = array();
-		$i = 0;
-		$fields = 12;
-		
 		$site = "";
 		$room = "";
 		$name = "";
@@ -441,33 +432,44 @@ function SelectImportForm()
 		$depth = "";
 		$orientation = "";
 		$notes = "";
+		$fieldCount = 5;
+		$descriptor = "customer";//for error reporting
 		
-		foreach ($panelData as $rec)
+		$importData= GetInput("importdata",true,false);
+		$lines = explode("\n", $importData);
+		$importObjects = array();
+		foreach ($lines as $line)
 		{
-			switch($i % $fields)
+			$fields= explode(",", $line);
+			if(count($fields)!=$fieldCount)
 			{
-				case 0:$site		=trim($rec);break;
-				case 1:$room		=trim($rec);break;
-				case 2:$name		=trim($rec);break;
-				case 3:$ups			=trim($rec);break;
-				case 4:$circuits	=trim($rec);break;
-				case 5:$amps		=trim($rec);break;
-				case 6:$xpos		=trim($rec);break;
-				case 7:$ypos		=trim($rec);break;
-				case 8:$width		=trim($rec);break;
-				case 9:$depth		=trim($rec);break;
-				case 10:$orientation=trim($rec);break;
-				case 11:$notes		=trim($rec);
-				
-				$importObjects[]= new PowerPanelRec($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes);
-				break;
+				$errorMessage[]="Unknown field count while adding $descriptor - $line";
+				continue;
 			}
-			$i++;
+			$i = 0;
+			foreach ($fields as $field)
+			{
+				switch($i % $fieldCount)
+				{
+					case 0:$site		=trim($rec);break;
+					case 1:$room		=trim($rec);break;
+					case 2:$name		=trim($rec);break;
+					case 3:$ups			=trim($rec);break;
+					case 4:$circuits	=trim($rec);break;
+					case 5:$amps		=trim($rec);break;
+					case 6:$xpos		=trim($rec);break;
+					case 7:$ypos		=trim($rec);break;
+					case 8:$width		=trim($rec);break;
+					case 9:$depth		=trim($rec);break;
+					case 10:$orientation=trim($rec);break;
+					case 11:$notes		=trim($rec);break;
+				}
+				$i++;
+			}
+			$importObjects[]= new PowerPanelRec($site,$room,$name,$ups,$circuits,$amps,$xpos,$ypos,$width,$depth,$orientation,$notes);
 		}
-		
-		//add Panel
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." power panels...";
-		else $resultMessage[]="Dry run adding ".count($importObjects)." power panels";
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		foreach ($importObjects as $rec)
 		{
@@ -536,15 +538,6 @@ function SelectImportForm()
 		$importUserID = $userID;
 		
 		//Power Circuits- site, room, location, panel, circuit, volts, amps, status, load, phase
-		$data= GetInput("importdata",true,false);
-		
-		$data= str_replace("\n",",",$data);
-		$data= explode(",", $data);
-		
-		$importObjects = array();
-		$i = 0;
-		$fields = 10;
-		
 		$site = "";
 		$room = "";
 		$location = "";
@@ -555,31 +548,42 @@ function SelectImportForm()
 		$status = "";
 		$load = "";
 		$phase = "";
+		$fieldCount = 10;
+		$descriptor = "power circuit";//for error reporting
 		
-		foreach ($data as $rec)
+		$importData= GetInput("importdata",true,false);
+		$lines = explode("\n", $importData);
+		$importObjects = array();
+		foreach ($lines as $line)
 		{
-			switch($i % $fields)
+			$fields= explode(",", $line);
+			if(count($fields)!=$fieldCount)
 			{
-				case 0:$site		=trim($rec);break;
-				case 1:$room		=trim($rec);break;
-				case 2:$location 	=trim($rec);break;
-				case 3:$panel		=trim($rec);break;
-				case 4:$circuit		=trim($rec);break;
-				case 5:$volts		=trim($rec);break;
-				case 6:$amps		=trim($rec);break;
-				case 7:$status		=trim($rec);break;
-				case 8:$load		=trim($rec);break;
-				case 9:$phase		=trim($rec);
-				
-				$importObjects[]= new PowerCircuitRec($site,$room,$location,$panel,$circuit,$volts,$amps,$status,$load,$phase);
-				break;
+				$errorMessage[]="Unknown field count while adding $descriptor - $line";
+				continue;
 			}
-			$i++;
+			$i = 0;
+			foreach ($fields as $field)
+			{
+				switch($i % $fieldCount)
+				{
+					case 0:$site		=trim($rec);break;
+					case 1:$room		=trim($rec);break;
+					case 2:$location 	=trim($rec);break;
+					case 3:$panel		=trim($rec);break;
+					case 4:$circuit		=trim($rec);break;
+					case 5:$volts		=trim($rec);break;
+					case 6:$amps		=trim($rec);break;
+					case 7:$status		=trim($rec);break;
+					case 8:$load		=trim($rec);break;
+					case 9:$phase		=trim($rec);break;
+				}
+				$i++;
+			}
+			$importObjects[]= new PowerCircuitRec($site,$room,$location,$panel,$circuit,$volts,$amps,$status,$load,$phase);
 		}
-		
-		//add Location
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." power circuits...";
-		else $resultMessage[]="Dry run adding ".count($importObjects)." power circuits";
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		$totalAffectedCount = 0;
 		if($fullProcessing) foreach ($importObjects as $rec)
@@ -681,7 +685,7 @@ function SelectImportForm()
 		global $errorMessage;
 		global $resultMessage;
 		
-		//locations- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
+		//devices- roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes
 		$siteName="";
 		$roomName="";
 		$locName="";
@@ -736,10 +740,8 @@ function SelectImportForm()
 			}
 			$importObjects[]= new DeviceImportRec($siteName,$roomName,$locName,$hno,$name,$altname,$member,$model,$unit,$type,$size,$status,$asset,$serial,$note);
 		}
-		
-		//add Location
-		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." devices...";
-		else $resultMessage[]="Dry run adding ".count($importObjects)." devices";
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." ".$descriptor."s...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." ".$descriptor."s";
 		
 		$validCount = 0;
 		foreach ($importObjects as $rec)
