@@ -87,7 +87,7 @@ function SelectImportForm()
 		if($commited)
 		{//must have passed all checks
 			$debugMessage[]= "-Start - RunImport()";
-			RunImport(true);
+			RunImport(false);
 			$debugMessage[]= "-End - RunImport()";
 		}
 		else
@@ -646,6 +646,8 @@ function SelectImportForm()
 	
 	class DeviceImportRec
 	{
+		public $locationid;//infered from import
+		
 		public $siteName;
 		public $roomName;
 		public $locName;
@@ -748,13 +750,31 @@ function SelectImportForm()
 		$validCount = 0;
 		foreach ($importObjects as $rec)
 		{
-			if(ImportDevice_Test($rec))$validCount++;
+			if(ImportDevice_Test($rec,$fullProcessing))
+			{//spoof input - do import
+				$_GET['hno']= $rec->hno;
+				$_GET['devicename']= $rec->name;
+				$_GET['devicealtname']= $rec->altname;
+				$_GET['type']= $rec->type;
+				$_GET['size']= $rec->size;
+				$_GET['locationid']= $rec->locationid;
+				$_GET['unit']= $rec->unit;
+				$_GET['status']= $rec->status;
+				$_GET['notes']= $rec->note;
+				$_GET['model']= $rec->ypos;
+				$_GET['member']= $rec->member;
+				$_GET['asset']= $rec->asset;
+				$_GET['serial']= $rec->serial;
+				
+				$validCount++;
+				if($fullProcessing) ProcessDeviceAction("Device_Add");
+			}
 		}
 		$resultMessage[]="Sucsess with  $validCount devices...";
 	}
 	
-	function ImportDevice_Test($rec)
-	{//test device reports all exceptions
+	function ImportDevice_processing($rec,$fullProcessing)
+	{//test device reports all exceptions - and/or update fields for import process - return true if data seems valid
 		global $errorMessage;
 		global $resultMessage;
 		
@@ -766,25 +786,52 @@ function SelectImportForm()
 		//test location - get locationid
 		$locationid = ValidImportLocation($rec->siteName, $rec->roomName, $rec->locName, $rec->name);
 		
-		//attempt hno extraction
-		//attempt altname extraction
+		if($rec->type=="Rack Enclosure")
+		{
+			$rec->model = "Colo Cabinet";
+			$rec->type = "F";//full cab - assume - should be importing colo anyways
+		}
+		else
+		{
+			$rec->type = "S";//physical
+		}
 		
-		//report devices with no hno
-		//test unit
+		//update status
+		if($rec->status = "Active")$rec->status="A";
+		else $rec->status="I";
 		
-		/*
-		//testModel
+		//update member
+		if(strlen($rec->member)==0)
+		{
+			$rec->member=0;
+		}
+		
+		//testModel - update size
 		if(!ValidImportDeviceModel($rec->model))
 		{
+			$rec->size = "1U";
 			$errorMessage[]="Unknown Model (".$rec->model.") Device:".$rec->name;
 		}
 		else
 		{
+			$rec->size = "1U";//pull from model array
 			//$resultMessage[]="Valid Model (".$rec->model.") Device:".$rec->name;
-		}*/
+		}
 		
+		$valid = true;
+		if($locationid==-1)$valid = false;
+		if($hno==-1)$valid = false;
 		
-		$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+		if($valid)
+		{
+			if($fullProcessing)
+				$resultMessage[]="done with Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+			$rec->locationid = $locationid;
+			$rec->locationid = $locationid;
+		}
+		else
+			$errorMessage[]="Failed Device".$rec->name." at location #$locationid(".$rec->siteName.", ".$rec->roomName.", ".$rec->locName.")";
+		return $valid;
 	}
 	
 	function ValidImportUPS($site, $ups, $searchIdentifier="null")
