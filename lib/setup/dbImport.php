@@ -98,6 +98,18 @@ function SelectImportForm()
 		$selectOptions = "";
 		$importForms = "";
 		
+		//Customer import form
+		$formType = "Customer";
+		$expextedFields = "hno,cno,name,status,note";
+		$importForms .= CreateImportForm($formType,$expextedFields);
+		$selectOptions .= "<option value='$formType'>$formType</option>\n";
+		
+		//Device import form
+		$formType = "Device";
+		$expextedFields = "siteName,roomName,locName,hno,name,altname,member,model,unit,type,size,status,asset,serial,note";
+		$importForms .= CreateImportForm($formType,$expextedFields);
+		$selectOptions .= "<option value='$formType'>$formType</option>\n";
+		
 		//location import form
 		$formType = "Location";
 		$expextedFields = "roomid,name,altname,allocation,keyno,type,units,order,xpos,ypos,width,depth,orientation,notes";
@@ -113,18 +125,6 @@ function SelectImportForm()
 		//Power Circuits import form
 		$formType = "Power Circuits";
 		$expextedFields = "site, room, location, panel, circuit, volts, amps, status, load, phase";
-		$importForms .= CreateImportForm($formType,$expextedFields);
-		$selectOptions .= "<option value='$formType'>$formType</option>\n";
-		
-		//Customer import form
-		$formType = "Customer";
-		$expextedFields = "hno,cno,name,note,status";
-		$importForms .= CreateImportForm($formType,$expextedFields);
-		$selectOptions .= "<option value='$formType'>$formType</option>\n";
-		
-		//Device import form
-		$formType = "Device";
-		$expextedFields = "siteName,roomName,locName,hno,name,altname,member,model,unit,type,size,status,asset,serial,note";
 		$importForms .= CreateImportForm($formType,$expextedFields);
 		$selectOptions .= "<option value='$formType'>$formType</option>\n";
 		
@@ -173,10 +173,83 @@ function SelectImportForm()
 		$importType= GetInput("importtype",true,false);
 		$debugMessage[]="Running $importType Import";
 		
-		if($importType=="Location")	ImportLocations($fullProcessing);
+		if($importType=="Customer")	ImportCustomers($fullProcessing);
+		else if($importType=="Location")	ImportLocations($fullProcessing);
 		else if($importType=="Power Panel")	ImportPowerPanels($fullProcessing);
 		else if($importType=="Power Circuits")	ImportPowerCircuits($fullProcessing);
 		else if($importType=="Device")	ImportDevices($fullProcessing);
+	}
+	
+	class CustomerRec
+	{
+		public $hno;
+		public $cno;
+		public $name;
+		public $status;
+		public $notes;
+		
+		function __construct($hno,$cno,$name,$status,$notes)
+		{
+			//final data processing
+			$this->hno		= $hno;
+			$this->cno		= $cno;
+			$this->name		= $name;
+			$this->status	= $status;
+			$this->notes	= $notes;
+		}
+	}
+	
+	function ImportCustomers($fullProcessing=false)
+	{
+		global $errorMessage;
+		global $resultMessage;
+		
+		//customer - hno,cno,name,status,note
+		$customerData= GetInput("importdata",true,false);
+		
+		$customerData= str_replace("\n",",",$customerData);
+		$customerData= explode(",", $customerData);
+		
+		$importObjects = array();
+		$i = 0;
+		$fields = 5;
+		
+		$hno="";
+		$cno="";
+		$name="";
+		$status="";
+		$notes="";
+		
+		foreach ($customerData as $rec)
+		{
+			switch($i % $fields)
+			{
+				case 0:$hno		=trim($rec);break;
+				case 1:$cno		=trim($rec);break;
+				case 2:$name	=trim($rec);break;
+				case 3:$status	=trim($rec);break;
+				case 4:$notes	=trim($rec);
+				
+				$importObjects[]= new CustomerRec($hno,$cno,$name,$status,$notes);
+				break;
+			}
+			$i++;
+		}
+		
+		//add Customer
+		if($fullProcessing) $resultMessage[]="Adding ".count($importObjects)." Customers...";
+		else $resultMessage[]="Dry run adding ".count($importObjects)." Customers";
+		
+		foreach ($importObjects as $rec)
+		{//spoof input
+			$_GET['hno']= $rec->hno;
+			$_GET['cno']= $rec->cno;
+			$_GET['name']= $rec->name;
+			$_GET['notes']= $rec->notes;
+			$_GET['status']= $rec->status;
+			
+			if($fullProcessing) ProcessCustomerAction("Customer_Add");
+		}
 	}
 	
 	class LocationRec
