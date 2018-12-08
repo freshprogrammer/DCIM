@@ -484,7 +484,7 @@
 	function OutputCSV($fileName,$data) 
 	{
 		header("Content-Type: text/csv");
-		header("Content-Disposition: attachment; filename=$fileName");
+		header("Content-Disposition: attachment; filename=\"$fileName\"");
 		// Disable caching
 		header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1
 		header("Pragma: no-cache"); // HTTP 1.0

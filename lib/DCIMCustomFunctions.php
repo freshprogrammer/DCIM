@@ -50,28 +50,204 @@
 			return UserHasAdminPermission();
 		}
 		
-		public static function IsThisHNoInternal($hNo)
-		{
-			return $hNo=="387046";
+		public static function GetInternalNetworkingHNos()
+		{//h#s of internal networking equipment
+			$result = array();
+			$result[]=387046;
+			$result[]=215003;
+			return $result;
 		}
 		
-		public static function RemotePowerPanelAuditHelpPopup()
+		public static function GetInternalHNos()
+		{//h#s of all internal equipment
+			$result = array();
+			$result[]=387046;
+			$result[]=215003;
+			$result[]=202020;
+			return $result;
+		}
+		
+		public static function IsThisHNoInternal($hNo)
 		{
-			global $userSiteID;
-			//Power Audit Creator can be found in a seperate repo here http://github.com/freshprogrammer/ExcelController/releases
+			return array_search($hNo,CustomFunctions::GetInternalHNos());
+		}
+		
+		public static function HelpPopup_MainHelp()
+		{
+			$result = "<div id='helpPopup_main' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Help Topics</span><BR>
+<ul class='helpBullets'>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_customer');\">Customers</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_device');\">Devices</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_deviceport');\">Device Ports</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_portconnection');\">Device Connections</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_badge');\">Badges</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_customerdecom');\">Customer Decommission</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_location');\">Locations</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_powerpanel');\">Power Panels</a></li>
+<li><a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_powercircuit');\">Power Circuits</a></li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Customer()
+		{
+			$result = "<div id='helpPopup_customer' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Customers</span><BR>
+<ul class='helpBullets'>
+<li>Added from link in header</li>
+<li>Requires unique H# and C#</li>
+<li>Should be set to inactive on decommision. Cannot be deleted</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_CustomerDecom()
+		{
+			global $config_subnetsEnabled;
 			
-			$date = date("Y-m-d");
-			$result = "<span class='helpText'><span class='helpHeading'>Remote Power Panel Audit Creator</span><BR>
-			After a DC power audit has been done and the data has all been updated in DCIM a RPP Audit workbook can be created.<BR>
-			Simply export the power data then run the RPP Audit creation tool.
-			The tool will prompt for a data file and a template file and then create the new workbook for you.
-			From there you can easily save it with an appropriate name and upoad.<BR>
-			<BR>
-			<a href='#' onClick='var input= prompt(\"Please enter a date\", \"$date\");
-			if(input!=null)parent.location=\"./lib/createReport.php?report=PowerHistory&siteid=$userSiteID&date=\"+input;'>Export All Power Readings</a><BR>
-			<a href='./files/RPP Audit Creator.exe'>RPP Audit Creation Tool</a><BR>
-			<a href='./files/RPP Audit - Template.xlsx'>Template File</a>
-			</span>";
+			$result = "<div id='helpPopup_customerdecom' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Customer Decommission</span><BR>\n";
+			if($config_subnetsEnabled)$result .= "Delete subnets as IPs are decommissioned (note you can't currently delete IPs after deleting device connection).<BR>\n";
+			$result .= "Delete connections to match cabling in DC.<BR>
+Disable & delete badges to match badge server.<BR>
+Update circuits turning off power if location is empty as you should at the panel.<BR>
+Mark device(s) inactive (will remain linked to this location for history).<BR>
+Mark customer as inactive.<BR>
+Ask co-worker to QA your work.<BR>
+<BR>
+Basically update everything as necessary to match the real counterparts (cables, badges, circuits)
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Badge()
+		{
+			$result = "<div id='helpPopup_badge' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Badges</span><BR>
+All badge information here should match the information in the badge server with badges added, removed or disabled in both places at the same time.<BR>
+<BR>
+<span class='helpHeading'>Badge Statuses</span><BR>
+<span class='helpDefinition'>Pending</span>Badge created and pending enrolment in hand scanner. Badge not given to customer yet.<BR>
+<span class='helpDefinition'>Enroll</span>Updates badge enrolment date and changes status to Active.<BR>
+<span class='helpDefinition'>Active</span>Badge is ready for use by the customer.<BR>
+<span class='helpDefinition'>Disabled</span>Badge has been disabled manually disabled revoking customer access and can be deleted here and on the badge server at the discretion of the internal staff.<BR>
+<span class='helpDefinition'>Returned</span>Badge has been returned to internal staff and can be deleted from here and badge server.<BR>
+<BR>
+<span class='helpDefinition'>Issue Date</span>Date badge is created.<BR>
+<span class='helpDefinition'>Enroll Date</span>Date badge holder is enrolled in hand scanner.<BR>
+<span class='helpDefinition'>Badge #</span>Badge number as it appears on the physical badge and in the badge server.<BR>
+<BR>
+<span class='helpHeading'>Badge Deletion</span><BR>
+Once a badge holder has returned their badge or it has been disabled it can be deleted with the delete button.
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Device()
+		{
+			$result = "<div id='helpPopup_device' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Devices</span><BR>
+<ul class='helpBullets'>
+<li>Added from their customers page</li>
+<li>Edited from Customer page or Device page</li>
+<li>Requires a unique device name/member combo. (IRV01.VC1 Member 0 and IRV01.VC1 Member 1 are allowed)</li>
+<li>Device Name should be the official device name (123456-7) whenever possible with the AltName being the user friendly name (DB_Web_01)</li>
+<li>Colo Space should be added as a colo device (usualy Size:Full, Unit:0)</li>
+<li>Internal devices should be added to the correct internal H#</li>
+<li>Correct number of ports will be automaticly created for the seleced model. (Unknown models are created with just 1 port)</li>
+<li>Should never be deleted. Should be set as Inactive durring decommision with noted ticket number. (Inactive devices will not show up on location page or in device drop downs)</li>
+<li>When adding or removing devices, make sure to ask your local Admin to update the location allocation</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_DevicePort()
+		{
+			$result = "<div id='helpPopup_deviceport' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Device Port</span><BR>
+<ul class='helpBullets'>
+<li>Added/Edited from the Device page</li>
+<li>Patch ports should match the patch name as best as possible</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PortConnection()
+		{
+			$result = "<div id='helpPopup_portconnection' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Device Connections</span><BR>
+<ul class='helpBullets'>
+<li>Added/Edited from the Customer Page or the Device page</li>
+<li>Connection drop down only shows available ports</li>
+<li>Please note any patches between the 2 devices</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_Location()
+		{
+			$result = "<div id='helpPopup_location' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Locations</span><BR>
+<ul class='helpBullets'>
+<li>Requires Admin privileges</li>
+<li>Added from Room page</li>
+<li>Edited from Room page or Location Page</li>
+<li>Requires unique name within the Room</li>
+<li>Mouse over position fields for additional help</li>
+<li>Visualy colored baced on allocation</li>
+<ul style='margin-left:40px;'>
+<li>Empty : Light Gray</li>
+<li>Managed : Dark Gray</li>
+<li>Internal : Purple</li>
+<li>Colo : Cyan</li>
+<li>Reserved : Light Cyan</li>
+</ul>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PowerPanel()
+		{
+			$result = "<div id='helpPopup_powerpanel' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Power Panels</span><BR>
+<ul class='helpBullets'>
+<li>Requires Admin privileges</li>
+<li>Added from Room page</li>
+<li>Edited from Room page, UPS page, or Panel page</li>
+<li>Requires unique name within the Site</li>
+<li>Mouse over position fields for additional help</li>
+</ul>
+</span>
+</div>";
+			return $result;
+		}
+		
+		public static function HelpPopup_PowerCircuit()
+		{
+			$result = "<div id='helpPopup_powercircuit' class='helpPopup'>
+<span class='helpText'><span class='helpHeading'>Power Circuits</span><BR>
+<ul class='helpBullets'>
+<li>Added from Power Panel page</li>
+<li>Edited from the Panel page, Location page, and Customer page</li>
+<li>Entire panel readings can updated on the panel audit page</li>
+</ul>
+</span>
+</div>";
 			return $result;
 		}
 		

@@ -53,7 +53,7 @@
 	$userID = -1;
 	$focusSearch = true;// can be diabled by functions when switching to a form page (like adding a new cust)
 	
-	$search = GetInput("search");
+	$search = trim(GetInput("search"));
 	$page = GetInput("page");
 	$host = GetInput("host");
 	$chassisnameInput = GetInput("chassisname");
@@ -153,6 +153,8 @@
 	$menuItems .= "</td>\n";
 	
 	$multipleSites = true;
+	$showHelpMenu = true;
+	
 	if($multipleSites)
 	{
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
@@ -175,10 +177,14 @@
 	{
 		
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
-		if(UserHasAdminPermission())
-			$menuItems .= "	<a href='./?userid=$userID'>Accounts</a>\n";
-		else
-			$menuItems .= "	<a href='./?userid=$userID'>Account</a>\n";
+		$menuItems .= "	<a href='./?userid=$userID'>Users</a>\n";
+		$menuItems .= "</td>\n";
+	}
+	if($showHelpMenu)
+	{
+		
+		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item' width='1'>\n";
+		$menuItems .= "<a href='javascript:void(0)' onclick = \"CreatePopup('helpPopup_main');\">Help</a>\n";
 		$menuItems .= "</td>\n";
 	}
 	if(CustomFunctions::UserHasDevPermission())
@@ -205,11 +211,22 @@
 		$menuItems .= "</td>\n";
 	}
 	else
-	{
-		//keep format and left seperator
+	{//keep format and left seperator
 		$menuItems .= "<td class='dr-toolbar-int rich-toolbar-item'>&nbsp;</td>\n";
 	}
 	echo $menuItems;
+	
+	$helpPopups = CustomFunctions::HelpPopup_MainHelp();
+	$helpPopups.= CustomFunctions::HelpPopup_Customer();
+	$helpPopups.= CustomFunctions::HelpPopup_CustomerDecom();
+	$helpPopups.= CustomFunctions::HelpPopup_Badge();
+	$helpPopups.= CustomFunctions::HelpPopup_Device();
+	$helpPopups.= CustomFunctions::HelpPopup_DevicePort();
+	$helpPopups.= CustomFunctions::HelpPopup_PortConnection();
+	$helpPopups.= CustomFunctions::HelpPopup_Location();
+	$helpPopups.= CustomFunctions::HelpPopup_PowerPanel();
+	$helpPopups.= CustomFunctions::HelpPopup_PowerCircuit();
+	echo $helpPopups;
 	?>
 		</tr>
 		</tbody>
@@ -326,50 +343,55 @@
 				{
 					$pageSubTitle = "Search:\"".MakeHTMLSafe($search)."\"";
 					echo "<div class=\"panel\">\n";
-					echo "<div class=\"panel-header\">\n";
-					echo "Search for \"".MakeHTMLSafe($search)."\" yields:\n";
-					echo "</div>\n";
+					echo "<div class=\"panel-header\">Search for \"".MakeHTMLSafe($search)."\" yields:</div>\n";
 					echo "<div class=\"panel-body\">\n\n";
 					
-					//search for sites (name, fullname)
-					echo ListSites("?", $search);
-					echo "<BR>\n";
+					ListCustomers_Search($search);//search in customer (hno, cno, name, note)
 					
-					//search for rooms (name, fullname)
-					echo ListRooms("?", $search);
 					echo "<BR>\n";
-					
-					//search in customer (hno, cno, name, note)
-					ListSearchCustomers($search);
-					echo "<BR>\n";
+					ListDevices("?",$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
 					
 					if($config_badgesEnabled)
 					{
-						//search in badge (name, badgeno)
-						ListBadges(true,$search);
 						echo "<BR>\n";
+						ListBadges(true,$search);//search in badge (name, badgeno)
 					}
-					
-					//search in locaion/device (l.name, l.altname, l.note, d.name, d.model, d.asset, d.serial, d.note)
-					ListDevices(true,$search);
-					echo "<BR>\n";
 					
 					if($config_subnetsEnabled)
 					{
-						//search in VLANs (vlan name, subnet, note)
-						ListCustomerSubnets("?",$search);
 						echo "<BR>\n";
+						ListSubnets("?",$search);//search in VLANs (vlan name, subnet, note)
 					}
 					
-					//search in powerups (name, note)
-					echo ListUPSs("?",$search);
 					echo "<BR>\n";
+					ListLocationsAndDevices("?",$search);//search in locaions (l.name, l.altname, l.keyno, l.note)
 					
-					//search in powerpanel (name, note)
-					ListPowerPanels("?", $search);
+					echo "<BR>\n";
+					ListPowerPanels("?", $search);//search in powerpanel (name, note)
 					
-					echo "</div>\n";
-					echo "</div>\n";
+					echo "<BR>\n";
+					echo ListSites("?", $search);//search for sites (name, fullname)
+					
+					echo "<BR>\n";
+					echo ListRooms("?", $search);//search for rooms (name, fullname)
+					
+					echo "<BR>\n";
+					echo ListUPSs("?",$search);//search in powerups (name, note)
+					
+					echo "</div>\n</div>\n";
+					
+					
+					echo "<div class=\"panel\">\n";
+					echo "<div class=\"panel-header\">History Search for \"".MakeHTMLSafe($search)."\" yields:</div>\n";
+					echo "<div class=\"panel-body\">\n\n";
+					
+					ListCustomers_Search($search, true);//search in customer (hno, cno, name, note)
+					
+					echo "<BR>\n";
+					ListDevices("H?",$search);//search in devices (d.name, d.model, d.asset, d.serial, d.note)
+					
+					echo "</div>\n</div>\n";
+					
 				}
 				else
 				{

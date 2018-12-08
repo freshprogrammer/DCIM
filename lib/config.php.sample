@@ -17,7 +17,7 @@
 	//--config verification data - this must match the DB
 	$config_dbVersion = 3;//this must match the state and value in the DB (dcim_config.dbversion)
 	//--General code versioning - should be updated with every build (version numbers: here, bellow in defaults, DB config version note, readme)
-	$config_codeVersion = "2.3";
+	$config_codeVersion = "2.4";
 	
 	
 	////// All config variables below here are defaults only - they will be overwritten by the settings in the dcim_config table
@@ -31,7 +31,7 @@
 	//Prefix appended to the title of each page
 	$config_pageTitle = "DCIM Title";
 	//note shown under the site name
-	$config_versionNote = "v2.3 - Added history details and audits.";
+	$config_versionNote = "v2.4 - One build to rule them all.";
 	//durration of user and password cookies - extended on each page refresh
 	$config_loginCookieDurration = 8*60*60;//8 hours
 	$config_loginCookieDurrationOniPad = 2*60*60;//2 hours
