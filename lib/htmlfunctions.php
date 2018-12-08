@@ -4127,6 +4127,7 @@
 			$count = $stmt->num_rows;
 			
 			/*use seperate HTML vaiables here so I can use data(deviceid) from this select in the html just above the table*/
+			$tableHTML = "";
 			if($count>0)
 			{
 				if($config_subnetsEnabled)

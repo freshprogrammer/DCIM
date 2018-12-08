@@ -395,7 +395,7 @@
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServe 6015V-T"			, 0, 2,false,false,false,false, 2, 1,false);
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServe 6025W-NTR+"		, 0, 2,false,false,false,false, 2, 1,false);
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServe 6026T-NTR+"		, 0, 2,false,false,false,false, 2, 2,false);
-		$deviceModels[] = new DeviceModel("SuperMicro SuperServe SSG-6027R"			, 0, 4,false, true,false,false, 4, 1,false);
+		$deviceModels[] = new DeviceModel("SuperMicro SuperServe SSG-6027R"			, 0, 4,false, true,false,false, 4, 2,false);
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServer 4U"				, 0, 2,false,false,false,false, 2, 4,false);
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServer SYS-6025W-NTR+"	, 0, 2,false,false,false,false, 2, 1,false);
 		$deviceModels[] = new DeviceModel("SuperMicro SuperServer SYS-6026TT-BTRF"	, 0, 2,false,false,false,false, 2, 1,false);
