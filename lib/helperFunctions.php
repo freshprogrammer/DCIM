@@ -238,7 +238,7 @@
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R510"						, 0, 2,false,false,false,false, 2, 2,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R610"						, 0, 2,false,false,false,false, 2, 2,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R630"						, 0, 2,false,false,false,false, 2, 2,false);
-		$deviceModels[] = new DeviceModel("Dell Poweredge R710"						, 0, 2,false,false,false,false, 2, 2,false);
+		$deviceModels[] = new DeviceModel("Dell PowerEdge R710"						, 0, 2,false,false,false,false, 2, 2,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R720"						, 0, 2,false,false,false,false, 2, 2,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R730"						, 0, 2,false,false,false,false, 2, 2,false);
 		$deviceModels[] = new DeviceModel("Dell PowerEdge R730xd"					, 0, 2,false,false,false,false, 2, 2,false);
@@ -270,8 +270,8 @@
 		$deviceModels[] = new DeviceModel("HP ProCurve 2610-24"						, 0,24,false, true,false, true,12, 1,false);
 		$deviceModels[] = new DeviceModel("HP ProCurve 2650"						, 0,48,false, true,false, true,16, 1,false);
 		$deviceModels[] = new DeviceModel("HP ProCurve 2810-48G"					, 0,48,false, true,false, true,12, 1,false);
-		$deviceModels[] = new DeviceModel("HP Procurve 2824"						, 0,24,false, true,false, true,12, 2,false);
-		$deviceModels[] = new DeviceModel("HP Procurve 2848"						, 0,48,false, true,false, true,16, 2,false);
+		$deviceModels[] = new DeviceModel("HP ProCurve 2824"						, 0,24,false, true,false, true,12, 2,false);
+		$deviceModels[] = new DeviceModel("HP ProCurve 2848"						, 0,48,false, true,false, true,16, 2,false);
 		$deviceModels[] = new DeviceModel("HP ProCurve 2900-24G"					, 0,24,false, true,false, true,12, 1,false);
 		$deviceModels[] = new DeviceModel("HP ProCurve 2510G-24"					, 0,24,false, true,false, true,12, 2,false);
 		$deviceModels[] = new DeviceModel("HP ProLiant 1850R"						, 0, 0,false,false,false,false, 0, 8,false);
@@ -300,7 +300,7 @@
 		$deviceModels[] = new DeviceModel("Juniper EX4200-24F"						, 0,24,false, true,false, true,12, 1, true);
 		$deviceModels[] = new DeviceModel("Juniper EX4200-24P"						, 0,24,false, true,false, true,12, 1, true);
 		$deviceModels[] = new DeviceModel("Juniper EX4200-24PX"						, 0,24,false, true,false, true,12, 1, true);
-		$deviceModels[] = new DeviceModel("Juniper Ex4200-24T"						, 0,24,false, true,false, true,12, 1, true);
+		$deviceModels[] = new DeviceModel("Juniper EX4200-24T"						, 0,24,false, true,false, true,12, 1, true);
 		$deviceModels[] = new DeviceModel("Juniper EX4200-48P"						, 0,48,false, true,false, true,12, 1, true);
 		$deviceModels[] = new DeviceModel("Juniper EX4200-48PX"						, 0,48,false, true,false, true,12, 1, true);
 		$deviceModels[] = new DeviceModel("Juniper EX4200-48T"						, 0,48,false, true,false, true,12, 1, true);
@@ -817,7 +817,7 @@
 		$device = $genericDeviceModel;
 		foreach($deviceModels as $model)
 		{
-			if($model->name==$deviceModelName)
+			if(strcasecmp($model->name,$deviceModelName)==0)
 			{
 				$device = $model;
 				break;
