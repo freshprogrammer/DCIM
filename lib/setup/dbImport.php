@@ -786,10 +786,11 @@ function SelectImportForm()
 		//test location - get locationid
 		$locationid = ValidImportLocation($rec->siteName, $rec->roomName, $rec->locName, $rec->name);
 		
-		if($rec->type=="Rack Enclosure")
+		if($rec->type=="Rack Enclosure" || $rec->type=="Colo")
 		{
 			$rec->model = "Colo Cabinet";
 			$rec->type = "F";//full cab - assume - should be importing colo anyways
+			$rec->size = "Full";
 		}
 		else
 		{
