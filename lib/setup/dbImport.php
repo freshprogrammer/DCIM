@@ -820,7 +820,6 @@ function SelectImportForm()
 		
 		$valid = true;
 		if($locationid==-1)$valid = false;
-		if($hno==-1)$valid = false;
 		
 		if($valid)//additional validation will be done when actualy adding the device
 		{
