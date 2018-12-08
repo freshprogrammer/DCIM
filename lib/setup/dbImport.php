@@ -1106,7 +1106,7 @@ function SelectImportForm()
 		else if(strcasecmp($model,"PowerEdge R630")==0)$model="Dell PowerEdge R630";
 		else if(strcasecmp($model,"Ex3200-48T")==0)$model="Juniper Ex3200-48T";
 		else if(strcasecmp($model,"DS-300B-8G")==0)$model="EMC Connectrix DS-300B-8G";
-		else if(strcasecmp($model,"SSG-6027R")==0)$model="Juniper SSG-6027R";
+		else if(strcasecmp($model,"SSG-6027R")==0)$model="SuperMicro SuperServe SSG-6027R";
 		else if(strcasecmp($model,"SRX220H")==0)$model="Juniper SRX220H";
 		else if(strcasecmp($model,"WS-C2960-48TC-L")==0)$model="Cisco Catalyst WS-C2960-48TC-L";
 		else if(strcasecmp($model,"ProCurve 2650")==0)$model="HP ProCurve 2650";
