@@ -425,7 +425,7 @@ INSERT INTO `dcim_badge` VALUES(471, 296041, 'Paul Alexander', '2373083', 'P', '
 -- Dumping data for table `dcim_config`
 --
 
-INSERT INTO `dcim_config` VALUES(1, 'Data Center Infrastructure Management', 'DCIM', 'v2.1 - Upgraded DB and power systems', 36, 2, 'T', 'T', 'T', 'T', '3');
+INSERT INTO `dcim_config` VALUES(1, 'Data Center Infrastructure Management', 'DCIM', 'v2.4 - One build to rule them all', 36, 2, 'T', 'T', 'T', 'T', '3');
 
 --
 -- Dumping data for table `dcim_customer`
