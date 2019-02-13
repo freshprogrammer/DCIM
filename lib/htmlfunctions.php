@@ -260,7 +260,7 @@
 			
 			$stmt->execute();
 			$stmt->store_result();
-			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $unit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
+			$stmt->bind_result($site, $room, $locationID, $location, $hNo, $customer, $deviceID, $deviceUnit, $name,$deviceAltName, $member, $size, $type, $status, $notes, $asset, $serial, $model, $editUserID, $editDate, $qaUserID, $qaDate);
 			$count = $stmt->num_rows;
 			
 			
@@ -272,24 +272,24 @@
 				echo CreateDataTableHeader(array("Unit","Customer","Device","Model","Size","Type","Status","Note"),true);
 				
 				//list result data
-				$lastUnit = $unitStart;
+				$curUnit = $unitStart;
 				while ($stmt->fetch())
 				{
-					if($unit==0 && $count==1)//if there is only one device at 0 skip the rest - colo
+					if($deviceUnit==0 && $count==1)//if there is only one device at 0 skip the rest - colo
 						$showEmptyUnits = false;
 					
-					if($unit!=0 && $showEmptyUnits)
+					if($deviceUnit!=0 && $showEmptyUnits)
 					{
-						while($lastUnit!=$unit && $lastUnit>-100 && $lastUnit<200)
+						while($curUnit!=$deviceUnit && (($descendingUnits && $curUnit>$unitLimit) || (!$descendingUnits && $curUnit<$unitLimit)))
 						{
 							if($descendingUnits)
-								$lastUnit--;
+								$curUnit--;
 							else
-								$lastUnit++;
-							if($lastUnit!=$unit)
+								$curUnit++;
+							if($curUnit!=$deviceUnit)
 							{//empty unit
 								echo "<tr class='dataRow'>";
-								echo "<td class='data-table-cell'>$lastUnit</td>";
+								echo "<td class='data-table-cell'>$curUnit</td>";
 								echo "<td class='data-table-cell' colspan=8></td>";
 								echo "</tr>";
 							}
@@ -300,31 +300,31 @@
 					$visibleNotes = TruncateWithSpanTitle(htmlspecialchars(MakeHTMLSafe($notes)));
 					$deviceFullName = GetDeviceFullName($name, $model, $member,$deviceAltName, true);
 
-					$unitSize=1;
+					$deviceUnitSize=1;
 					if($size[strlen($size)-1]=="U" && $status=="A")
 					{
-						$unitSize = substr($size,0,strlen($size)-1);
-						if($unitSize<1)
-							$unitSize=1;
+						$deviceUnitSize = substr($size,0,strlen($size)-1);
+						if($deviceUnitSize<1)
+							$deviceUnitSize=1;
 					}
 					
 					echo "<tr class='dataRow'>";
-					echo "<td class='data-table-cell'>$unit</td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize>$model</td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize>$size</td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceType($type)."</td>\n";
-					echo "<td class='data-table-cell' rowspan=$unitSize>".DeviceStatus($status)."</td>\n";
-					echo "<td class='data-table-cell' rowspan=$unitSize>$visibleNotes</td>";
-					echo "<td class='data-table-cell' rowspan=$unitSize>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
+					echo "<td class='data-table-cell'>$deviceUnit</td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize><a href='./?host=$hNo'>".MakeHTMLSafe($customer)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize><a href='./?deviceid=$deviceID'>".MakeHTMLSafe($deviceFullName)."</a></td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>$model</td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>$size</td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>".DeviceType($type)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>".DeviceStatus($status)."</td>\n";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>$visibleNotes</td>";
+					echo "<td class='data-table-cell' rowspan=$deviceUnitSize>".FormatTechDetails($editUserID, $editDate, "", $qaUserID, $qaDate)."</td>";
 					echo "</tr>";
 					
-					if($unitSize>1)
+					if($deviceUnitSize>1)
 					{
 						if($descendingUnits)
 						{
-							for ($i = $unit-1; $i >= $unit-$unitSize+1; $i--)
+							for ($i = $deviceUnit-1; $i >= $deviceUnit-$deviceUnitSize+1; $i--)
 							{
 								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
@@ -333,7 +333,7 @@
 						}
 						else
 						{
-							for ($i = $unit+1; $i <= $unit+$unitSize-1; $i++)
+							for ($i = $deviceUnit+1; $i <= $deviceUnit+$deviceUnitSize-1; $i++)
 							{
 								echo "<tr class='dataRow'>";
 								echo "<td class='data-table-cell'>$i</td>";
@@ -342,23 +342,23 @@
 						}
 					}
 
-					if($unit!=0)
+					if($deviceUnit!=0)
 					{
 						if($descendingUnits)
-							$lastUnit=$unit-$unitSize+1;
+							$curUnit=$deviceUnit-$deviceUnitSize+1;
 						else
-							$lastUnit=$unit+$unitSize-1;
+							$curUnit=$deviceUnit+$deviceUnitSize-1;
 					}
 				}
-				while($showEmptyUnits && $lastUnit!=$unitLimit && $lastUnit>-100 && $lastUnit<200)
+				while($showEmptyUnits && (($descendingUnits && $curUnit>$unitLimit) || (!$descendingUnits && $curUnit<$unitLimit)))
 				{
 					if($descendingUnits)
-						$lastUnit--;
+						$curUnit--;
 					else
-						$lastUnit++;
+						$curUnit++;
 					//empty unit
 					echo "<tr class='dataRow'>";
-					echo "<td class='data-table-cell'>$lastUnit</td>";
+					echo "<td class='data-table-cell'>$curUnit</td>";
 					echo "<td class='data-table-cell' colspan=8></td>";
 					echo "</tr>";
 				}
